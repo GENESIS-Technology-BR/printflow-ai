@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# GENESIS local environment
+.env
+*.db
+*.sqlite
+*.sqlite3
+__pycache__/
+*.py[cod]
