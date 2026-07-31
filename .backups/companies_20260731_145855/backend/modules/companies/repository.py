@@ -1,4 +1,3 @@
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backend.modules.companies.model import Company
@@ -6,7 +5,10 @@ from backend.modules.companies.schema import CompanyCreate
 
 
 class CompanyRepository:
-    """Responsável pelo acesso aos dados de empresas."""
+    """
+    Responsável por acessar a tabela companies.
+    Nenhuma regra de negócio deve ficar aqui.
+    """
 
     def __init__(self, db: Session):
         self.db = db
@@ -19,11 +21,3 @@ class CompanyRepository:
         self.db.refresh(db_company)
 
         return db_company
-
-    def list_all(self) -> list[Company]:
-        statement = select(Company).order_by(Company.id)
-        return list(self.db.scalars(statement).all())
-
-    def get_by_name(self, name: str) -> Company | None:
-        statement = select(Company).where(Company.name == name)
-        return self.db.scalar(statement)

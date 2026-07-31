@@ -1,4 +1,3 @@
-from backend.modules.companies.router import router as companies_router
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -32,5 +31,3 @@ def root():
         "status": "online",
         "version": settings.version,
     }
-
-app.include_router(companies_router, prefix="/api/v1")

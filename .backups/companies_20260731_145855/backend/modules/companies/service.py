@@ -6,18 +6,12 @@ from backend.modules.companies.schema import CompanyCreate
 
 
 class CompanyService:
-    """Camada de regras de negócio de empresas."""
+    """
+    Camada de regras de negócio.
+    """
 
     def __init__(self, db: Session):
         self.repository = CompanyRepository(db)
 
     def create_company(self, company: CompanyCreate) -> Company:
-        existing_company = self.repository.get_by_name(company.name)
-
-        if existing_company:
-            raise ValueError("Já existe uma empresa com esse nome.")
-
         return self.repository.create(company)
-
-    def list_companies(self) -> list[Company]:
-        return self.repository.list_all()
