@@ -224,3 +224,4 @@ __marimo__/
 *.sqlite3
 __pycache__/
 *.py[cod]
+.backups/
