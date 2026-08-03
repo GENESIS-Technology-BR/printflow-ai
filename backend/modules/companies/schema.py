@@ -1,23 +1,13 @@
 from datetime import datetime
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class CompanyCreate(BaseModel):
-    name: str = Field(
-        min_length=2,
-        max_length=150,
-        examples=["GENESIS Technology"],
-    )
-
-
 class CompanyUpdate(BaseModel):
-    name: str | None = Field(
-        default=None,
-        min_length=2,
-        max_length=150,
-    )
-
+    name: str | None = Field(default=None, min_length=2, max_length=180)
+    document: str | None = None
+    city: str | None = None
+    state: str | None = Field(default=None, max_length=2)
+    plan: str | None = None
     active: bool | None = None
 
 
@@ -27,5 +17,10 @@ class CompanyResponse(BaseModel):
     id: int
     uuid: str
     name: str
+    document: str | None
+    city: str | None
+    state: str | None
+    plan: str
+    agent_token: str
     active: bool
     created_at: datetime

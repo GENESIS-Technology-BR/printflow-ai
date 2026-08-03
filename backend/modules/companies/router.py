@@ -1,42 +1,53 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import secrets
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.app.database.session import get_db
-from backend.modules.companies.schema import CompanyCreate, CompanyResponse
-from backend.modules.companies.service import CompanyService
+from backend.modules.auth.dependencies import get_current_user
+from backend.modules.auth.model import User
+from backend.modules.companies.model import Company
+from backend.modules.companies.schema import CompanyResponse, CompanyUpdate
 
-router = APIRouter(
-    prefix="/companies",
-    tags=["Companies"],
-)
+router = APIRouter(prefix="/companies", tags=["Companies"])
 
 
-@router.post(
-    "",
-    response_model=CompanyResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_company(
-    company: CompanyCreate,
+@router.get("/current", response_model=CompanyResponse)
+def current_company(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> CompanyResponse:
-    service = CompanyService(db)
-
-    try:
-        return service.create_company(company)
-    except ValueError as error:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(error),
-        ) from error
+):
+    company = db.query(Company).filter(Company.id == current_user.company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa não encontrada")
+    return company
 
 
-@router.get(
-    "",
-    response_model=list[CompanyResponse],
-)
-def list_companies(
+@router.patch("/current", response_model=CompanyResponse)
+def update_current_company(
+    payload: CompanyUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> list[CompanyResponse]:
-    service = CompanyService(db)
-    return service.list_companies()
+):
+    company = db.query(Company).filter(Company.id == current_user.company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa não encontrada")
+
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(company, field, value)
+
+    db.commit()
+    db.refresh(company)
+    return company
+
+
+@router.post("/current/regenerate-agent-token", response_model=CompanyResponse)
+def regenerate_agent_token(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    company = db.query(Company).filter(Company.id == current_user.company_id).first()
+    company.agent_token = secrets.token_urlsafe(32)
+    db.commit()
+    db.refresh(company)
+    return company

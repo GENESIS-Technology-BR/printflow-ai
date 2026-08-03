@@ -6,10 +6,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.config.settings import settings
 from backend.app.database.connection import Base, engine
 from backend.app.routers.health import router as health_router
+from backend.modules.auth.model import User
+from backend.modules.auth.router import router as auth_router
 from backend.modules.companies.model import Company
 from backend.modules.companies.router import router as companies_router
-from backend.modules.printers.model import Printer
-from backend.modules.printers.router import router as printers_router
+
+try:
+    from backend.modules.printers.model import Printer
+    from backend.modules.printers.router import router as printers_router
+except ImportError:
+    printers_router = None
 
 
 @asynccontextmanager
@@ -37,8 +43,11 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(companies_router, prefix="/api/v1")
-app.include_router(printers_router, prefix="/api/v1")
+
+if printers_router:
+    app.include_router(printers_router, prefix="/api/v1")
 
 
 @app.get("/", tags=["Platform"])
