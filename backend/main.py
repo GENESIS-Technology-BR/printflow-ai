@@ -2,6 +2,7 @@ from backend.modules.companies.router import router as companies_router
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.config.settings import settings
 from backend.app.database.connection import Base, engine
@@ -22,6 +23,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://printflow-web.onrender.com",
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(health_router)
 
 
@@ -32,5 +44,6 @@ def root():
         "status": "online",
         "version": settings.version,
     }
+
 
 app.include_router(companies_router, prefix="/api/v1")

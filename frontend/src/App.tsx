@@ -9,6 +9,8 @@ type Company = {
   created_at: string
 }
 
+const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "")
+
 function App() {
   const [companies, setCompanies] = useState<Company[]>([])
   const [apiOnline, setApiOnline] = useState(false)
@@ -18,8 +20,8 @@ function App() {
     async function loadDashboard() {
       try {
         const [healthResponse, companiesResponse] = await Promise.all([
-          fetch("/health"),
-          fetch("/api/v1/companies"),
+          fetch(`${API_URL}/health`),
+          fetch(`${API_URL}/api/v1/companies`),
         ])
 
         setApiOnline(healthResponse.ok)
@@ -27,7 +29,8 @@ function App() {
         if (companiesResponse.ok) {
           setCompanies(await companiesResponse.json())
         }
-      } catch {
+      } catch (error) {
+        console.error("Falha ao conectar com a API:", error)
         setApiOnline(false)
       } finally {
         setLoading(false)
@@ -69,7 +72,6 @@ function App() {
             <p className="eyebrow">Visão geral</p>
             <h1>Dashboard</h1>
           </div>
-
           <div className="user-card">
             <div className="avatar">GT</div>
             <div>
@@ -83,12 +85,8 @@ function App() {
           <div>
             <span className="hero-badge">PRINTFLOW AI · v0.2</span>
             <h2>Gestão inteligente do ambiente de impressão</h2>
-            <p>
-              Acompanhe empresas, impressoras, agentes e alertas em uma única
-              plataforma.
-            </p>
+            <p>Acompanhe empresas, impressoras, agentes e alertas em uma única plataforma.</p>
           </div>
-
           <div className={`system-status ${apiOnline ? "online" : "offline"}`}>
             <span />
             {apiOnline ? "Sistema operacional" : "API indisponível"}
@@ -104,33 +102,9 @@ function App() {
               <small>cadastradas na plataforma</small>
             </div>
           </article>
-
-          <article className="metric-card">
-            <span className="metric-icon">▧</span>
-            <div>
-              <p>Impressoras</p>
-              <strong>0</strong>
-              <small>aguardando Agent</small>
-            </div>
-          </article>
-
-          <article className="metric-card">
-            <span className="metric-icon">◉</span>
-            <div>
-              <p>Agentes</p>
-              <strong>0</strong>
-              <small>nenhum instalado</small>
-            </div>
-          </article>
-
-          <article className="metric-card">
-            <span className="metric-icon">△</span>
-            <div>
-              <p>Alertas</p>
-              <strong>0</strong>
-              <small>ambiente estável</small>
-            </div>
-          </article>
+          <article className="metric-card"><span className="metric-icon">▧</span><div><p>Impressoras</p><strong>0</strong><small>aguardando Agent</small></div></article>
+          <article className="metric-card"><span className="metric-icon">◉</span><div><p>Agentes</p><strong>0</strong><small>nenhum instalado</small></div></article>
+          <article className="metric-card"><span className="metric-icon">△</span><div><p>Alertas</p><strong>0</strong><small>ambiente estável</small></div></article>
         </section>
 
         <section className="dashboard-grid">
@@ -151,15 +125,11 @@ function App() {
               <div className="company-list">
                 {companies.map((company) => (
                   <div className="company-row" key={company.uuid}>
-                    <div className="company-logo">
-                      {company.name.slice(0, 2).toUpperCase()}
-                    </div>
-
+                    <div className="company-logo">{company.name.slice(0, 2).toUpperCase()}</div>
                     <div className="company-info">
                       <strong>{company.name}</strong>
                       <span>ID #{company.id}</span>
                     </div>
-
                     <span className={company.active ? "badge-active" : "badge-inactive"}>
                       {company.active ? "Ativa" : "Inativa"}
                     </span>
@@ -176,13 +146,9 @@ function App() {
                 <h3>PRINTFLOW Agent</h3>
               </div>
             </div>
-
             <div className="agent-illustration">◉</div>
             <h4>Aguardando instalação</h4>
-            <p>
-              Instale o Agent no ambiente do cliente para descobrir impressoras
-              e enviar dados de monitoramento.
-            </p>
+            <p>Instale o Agent no ambiente do cliente para descobrir impressoras e enviar dados de monitoramento.</p>
             <button className="secondary-button">Preparar instalação</button>
           </article>
         </section>
