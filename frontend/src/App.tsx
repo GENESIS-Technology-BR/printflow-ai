@@ -9,36 +9,62 @@ type Company = {
   created_at: string
 }
 
+type Printer = {
+  id: number
+  uuid: string
+  ip: string
+  name: string
+  manufacturer?: string | null
+  model?: string | null
+  status: string
+  source: string
+  page_count?: number | null
+  active: boolean
+  last_seen: string
+  created_at: string
+}
+
 const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "")
 
 function App() {
   const [companies, setCompanies] = useState<Company[]>([])
+  const [printers, setPrinters] = useState<Printer[]>([])
   const [apiOnline, setApiOnline] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    async function loadDashboard() {
-      try {
-        const [healthResponse, companiesResponse] = await Promise.all([
-          fetch(`${API_URL}/health`),
-          fetch(`${API_URL}/api/v1/companies`),
-        ])
+  async function loadDashboard() {
+    try {
+      const [healthResponse, companiesResponse, printersResponse] = await Promise.all([
+        fetch(`${API_URL}/health`),
+        fetch(`${API_URL}/api/v1/companies`),
+        fetch(`${API_URL}/api/v1/printers`),
+      ])
 
-        setApiOnline(healthResponse.ok)
+      setApiOnline(healthResponse.ok)
 
-        if (companiesResponse.ok) {
-          setCompanies(await companiesResponse.json())
-        }
-      } catch (error) {
-        console.error("Falha ao conectar com a API:", error)
-        setApiOnline(false)
-      } finally {
-        setLoading(false)
+      if (companiesResponse.ok) {
+        setCompanies(await companiesResponse.json())
       }
-    }
 
+      if (printersResponse.ok) {
+        setPrinters(await printersResponse.json())
+      }
+    } catch (error) {
+      console.error("Falha ao conectar com a API:", error)
+      setApiOnline(false)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     loadDashboard()
+    const interval = window.setInterval(loadDashboard, 15000)
+    return () => window.clearInterval(interval)
   }, [])
+
+  const onlinePrinters = printers.filter((printer) => printer.status === "online").length
+  const offlinePrinters = printers.length - onlinePrinters
 
   return (
     <div className="app-shell">
@@ -83,9 +109,9 @@ function App() {
 
         <section className="hero">
           <div>
-            <span className="hero-badge">PRINTFLOW AI · v0.2</span>
+            <span className="hero-badge">PRINTFLOW AI · v0.3</span>
             <h2>Gestão inteligente do ambiente de impressão</h2>
-            <p>Acompanhe empresas, impressoras, agentes e alertas em uma única plataforma.</p>
+            <p>Dados reais enviados pelo PRINTFLOW Agent e atualizados automaticamente.</p>
           </div>
           <div className={`system-status ${apiOnline ? "online" : "offline"}`}>
             <span />
@@ -96,42 +122,56 @@ function App() {
         <section className="metrics">
           <article className="metric-card">
             <span className="metric-icon">▣</span>
-            <div>
-              <p>Empresas</p>
-              <strong>{loading ? "..." : companies.length}</strong>
-              <small>cadastradas na plataforma</small>
-            </div>
+            <div><p>Empresas</p><strong>{loading ? "..." : companies.length}</strong><small>cadastradas</small></div>
           </article>
-          <article className="metric-card"><span className="metric-icon">▧</span><div><p>Impressoras</p><strong>0</strong><small>aguardando Agent</small></div></article>
-          <article className="metric-card"><span className="metric-icon">◉</span><div><p>Agentes</p><strong>0</strong><small>nenhum instalado</small></div></article>
-          <article className="metric-card"><span className="metric-icon">△</span><div><p>Alertas</p><strong>0</strong><small>ambiente estável</small></div></article>
+
+          <article className="metric-card">
+            <span className="metric-icon">▧</span>
+            <div><p>Impressoras</p><strong>{loading ? "..." : printers.length}</strong><small>{onlinePrinters} online</small></div>
+          </article>
+
+          <article className="metric-card">
+            <span className="metric-icon">◉</span>
+            <div><p>Online</p><strong>{onlinePrinters}</strong><small>respondendo</small></div>
+          </article>
+
+          <article className="metric-card">
+            <span className="metric-icon">△</span>
+            <div><p>Offline</p><strong>{offlinePrinters}</strong><small>sem comunicação</small></div>
+          </article>
         </section>
 
         <section className="dashboard-grid">
           <article className="panel companies-panel">
             <div className="panel-header">
               <div>
-                <p className="eyebrow">Organizações</p>
-                <h3>Empresas cadastradas</h3>
+                <p className="eyebrow">Inventário real</p>
+                <h3>Impressoras monitoradas</h3>
               </div>
-              <button className="primary-button">Nova empresa</button>
+              <button className="primary-button" onClick={loadDashboard}>Atualizar</button>
             </div>
 
             {loading ? (
-              <div className="empty-state">Carregando empresas...</div>
-            ) : companies.length === 0 ? (
-              <div className="empty-state">Nenhuma empresa cadastrada.</div>
+              <div className="empty-state">Carregando impressoras...</div>
+            ) : printers.length === 0 ? (
+              <div className="empty-state">
+                Nenhuma impressora recebida. Execute o PRINTFLOW Agent.
+              </div>
             ) : (
               <div className="company-list">
-                {companies.map((company) => (
-                  <div className="company-row" key={company.uuid}>
-                    <div className="company-logo">{company.name.slice(0, 2).toUpperCase()}</div>
-                    <div className="company-info">
-                      <strong>{company.name}</strong>
-                      <span>ID #{company.id}</span>
+                {printers.map((printer) => (
+                  <div className="company-row" key={printer.uuid}>
+                    <div className="company-logo">
+                      {(printer.manufacturer || "PR").slice(0, 2).toUpperCase()}
                     </div>
-                    <span className={company.active ? "badge-active" : "badge-inactive"}>
-                      {company.active ? "Ativa" : "Inativa"}
+                    <div className="company-info">
+                      <strong>{printer.name}</strong>
+                      <span>
+                        {printer.ip} · {printer.model || "Modelo não identificado"}
+                      </span>
+                    </div>
+                    <span className={printer.status === "online" ? "badge-active" : "badge-inactive"}>
+                      {printer.status === "online" ? "Online" : "Offline"}
                     </span>
                   </div>
                 ))}
@@ -147,9 +187,13 @@ function App() {
               </div>
             </div>
             <div className="agent-illustration">◉</div>
-            <h4>Aguardando instalação</h4>
-            <p>Instale o Agent no ambiente do cliente para descobrir impressoras e enviar dados de monitoramento.</p>
-            <button className="secondary-button">Preparar instalação</button>
+            <h4>{printers.length > 0 ? "Agent comunicando" : "Aguardando execução"}</h4>
+            <p>
+              {printers.length > 0
+                ? `Últimos dados recebidos de ${printers.length} impressora(s).`
+                : "Execute o Agent no Windows para registrar a HP 10.2.0.124."}
+            </p>
+            <button className="secondary-button" onClick={loadDashboard}>Sincronizar agora</button>
           </article>
         </section>
       </main>
