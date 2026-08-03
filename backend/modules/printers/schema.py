@@ -1,0 +1,22 @@
+from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class PrinterUpsert(BaseModel):
+    ip: str = Field(min_length=7, max_length=45)
+    name: str = Field(default="Impressora", min_length=1, max_length=150)
+    manufacturer: str | None = None
+    model: str | None = None
+    status: str = "online"
+    source: str = "agent"
+    page_count: int | None = None
+
+
+class PrinterResponse(PrinterUpsert):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    uuid: str
+    active: bool
+    last_seen: datetime
+    created_at: datetime
