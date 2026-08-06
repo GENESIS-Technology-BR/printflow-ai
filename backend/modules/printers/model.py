@@ -13,7 +13,7 @@ class Printer(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     company_id: Mapped[int] = mapped_column(
-        ForeignKey("companies.id"),
+        ForeignKey("companies_v2.id"),
         index=True
     )
 
