@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import type { FormEvent } from "react"
 import "./App.css"
+import Dashboard from "./components/Dashboard"
 
 const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "")
 
@@ -28,7 +29,7 @@ function App() {
   const [mode, setMode] = useState<"login" | "register">("login")
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(false)
-  const [page, setPage] = useState<"dashboard" | "printers" | "agents">("dashboard")
+  const [page, setPage] = useState<"dashboard" | "printers" | "company" | "agents">("dashboard")
   const [printers, setPrinters] = useState<any[]>([])
   const [printersLoading, setPrintersLoading] = useState(false)
 
@@ -192,8 +193,18 @@ function App() {
       <aside>
         <div className="brand"><span>P</span><strong>PRINTFLOW AI</strong></div>
         <nav>
-          <button className="selected">Dashboard</button>
-          <button onClick={() => setPage("dashboard")}>Empresa</button>
+          <button
+          className={page === "dashboard" ? "active" : ""}
+          onClick={() => setPage("dashboard")}
+        >
+          Visão Geral
+        </button>
+          <button
+          className={page === "company" ? "active" : ""}
+          onClick={() => setPage("company")}
+        >
+          Empresa e Agent
+        </button>
           <button className={page === "printers" ? "active" : ""} onClick={() => { setPage("printers"); void loadPrinters() }}>Impressoras</button>
           <button className={page === "agents" ? "active" : ""} onClick={() => setPage("agents")}>Agentes</button>
         </nav>
@@ -385,7 +396,7 @@ function App() {
             </article>
           </section>
         </>
-      ) : (
+      ) : page === "company" ? (
         <>
         <header>
           <div><small>SPRINT COMERCIAL</small><h1>Empresa e Agent</h1></div>
@@ -433,7 +444,9 @@ function App() {
         )}
         {message && <div className="message success">{message}</div>}
               </>
-      )}
+                ) : (
+            <Dashboard />
+          )}
     </main>
     </div>
   )

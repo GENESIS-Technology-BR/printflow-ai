@@ -227,3 +227,5 @@ __pycache__/
 .backups/
 agent/python/output/
 agent/python/logs/
+frontend/src/App.tsx.backup_pf008*
+frontend/src/App.tsx.backup_pf008*
