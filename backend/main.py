@@ -10,6 +10,7 @@ from backend.modules.auth.model import User
 from backend.modules.auth.router import router as auth_router
 from backend.modules.companies.model import Company
 from backend.modules.companies.router import router as companies_router
+from backend.modules.dashboard.router import router as dashboard_router
 
 try:
     from backend.modules.printers.model import Printer
@@ -48,6 +49,7 @@ app.include_router(companies_router, prefix="/api/v1")
 
 if printers_router:
     app.include_router(printers_router, prefix="/api/v1")
+app.include_router(dashboard_router)
 
 
 @app.get("/", tags=["Platform"])
