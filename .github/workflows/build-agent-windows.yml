@@ -1,0 +1,85 @@
+name: Build PRINTFLOW Agent Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "agent/python/**"
+      - "agent/windows/**"
+      - ".github/workflows/build-agent-windows.yml"
+      - "requirements.txt"
+
+jobs:
+  build-windows-agent:
+    runs-on: windows-latest
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Instalar dependências
+        shell: powershell
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Validar Agent
+        shell: powershell
+        run: |
+          python -m py_compile agent/python/main.py
+          python -m py_compile agent/python/config/settings.py
+          python -m py_compile agent/python/core/service.py
+          python -m py_compile agent/python/network_manager.py
+          python -m py_compile agent/python/discovery_runner.py
+          python -m py_compile agent/python/snmp/engine.py
+          python -m py_compile agent/python/api/client.py
+
+      - name: Gerar executável
+        shell: powershell
+        run: |
+          pyinstaller `
+            --noconfirm `
+            --clean `
+            --onefile `
+            --console `
+            --name PRINTFLOW-Agent `
+            --paths agent/python `
+            --collect-all pysnmp `
+            --collect-all pyasn1 `
+            --hidden-import psutil `
+            --hidden-import requests `
+            --hidden-import config.settings `
+            --hidden-import core.logger `
+            --hidden-import core.scheduler `
+            --hidden-import core.service `
+            --hidden-import api.client `
+            --hidden-import snmp.engine `
+            --hidden-import snmp.oids `
+            agent/python/main.py
+
+      - name: Montar pacote de teste
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path package
+          Copy-Item dist/PRINTFLOW-Agent.exe package/
+          Copy-Item agent/windows/Executar-PRINTFLOW-Agent.bat package/
+          Copy-Item agent/windows/README-TESTE.txt package/
+          Compress-Archive `
+            -Path package/* `
+            -DestinationPath PRINTFLOW-Agent-Windows-Teste.zip
+
+      - name: Publicar pacote
+        uses: actions/upload-artifact@v4
+        with:
+          name: PRINTFLOW-Agent-Windows-Teste
+          path: PRINTFLOW-Agent-Windows-Teste.zip
+          retention-days: 15

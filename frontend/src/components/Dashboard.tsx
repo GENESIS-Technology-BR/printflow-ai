@@ -1,9 +1,12 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
+import AlertCenter from "./AlertCenter";
+import FleetInsights from "./FleetInsights";
 import HealthGauge from "./HealthGauge";
 import MetricCard from "./MetricCard";
 import PrinterTable from "./PrinterTable";
@@ -34,9 +37,24 @@ const EMPTY_SUMMARY: DashboardSummary = {
 };
 
 function formatNumber(value: number): string {
-  return new Intl.NumberFormat(
-    "pt-BR",
-  ).format(value);
+  return new Intl.NumberFormat("pt-BR").format(value);
+}
+
+function formatUpdateDate(value: string): string {
+  if (!value) {
+    return "Aguardando primeira atualização";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Atualização não informada";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "medium",
+  }).format(date);
 }
 
 export default function Dashboard() {
@@ -103,20 +121,29 @@ export default function Dashboard() {
     };
   }, [loadDashboard]);
 
+  const criticalPrinters = useMemo(
+    () =>
+      printers.filter(
+        (printer) =>
+          printer.status === "offline" ||
+          printer.health_score < 70,
+      ).length,
+    [printers],
+  );
+
   return (
     <section className="dashboard-page">
       <header className="dashboard-header">
         <div>
           <span className="dashboard-eyebrow">
-            PRINTFLOW CONTROL CENTER
+            PRINTFLOW EXECUTIVE CONTROL CENTER
           </span>
 
-          <h1>Visão geral do parque</h1>
+          <h1>Gestão inteligente do parque</h1>
 
           <p>
-            Monitoramento centralizado,
-            inteligência operacional e saúde
-            das impressoras.
+            Operação, disponibilidade, riscos e
+            desempenho das impressoras em uma única visão.
           </p>
         </div>
 
@@ -140,6 +167,18 @@ export default function Dashboard() {
           </button>
         </div>
       </header>
+
+      <div className="dashboard-update-row">
+        <span>
+          Última atualização:
+          {" "}
+          {formatUpdateDate(summary.generated_at)}
+        </span>
+
+        <span>
+          Atualização automática a cada 30 segundos
+        </span>
+      </div>
 
       {error && (
         <div className="dashboard-error">
@@ -177,18 +216,16 @@ export default function Dashboard() {
         />
 
         <MetricCard
-          title="Alertas"
-          value={summary.alerts}
+          title="Riscos"
+          value={criticalPrinters}
           icon="⚠️"
           color="#ffbe55"
-          subtitle="Ocorrências prioritárias"
+          subtitle="Equipamentos prioritários"
         />
 
         <MetricCard
           title="Páginas"
-          value={formatNumber(
-            summary.total_pages,
-          )}
+          value={formatNumber(summary.total_pages)}
           icon="📄"
           color="#ab8cff"
           subtitle="Contador acumulado"
@@ -198,6 +235,13 @@ export default function Dashboard() {
       <HealthGauge
         value={summary.health_average}
       />
+
+      <FleetInsights
+        summary={summary}
+        printers={printers}
+      />
+
+      <AlertCenter printers={printers} />
 
       <section className="dashboard-list-panel">
         <div className="dashboard-section-title">
@@ -222,7 +266,8 @@ export default function Dashboard() {
       </section>
 
       <footer className="dashboard-footer">
-        Atualização automática a cada 30 segundos.
+        PRINTFLOW AI — Inteligência operacional
+        para gestão de impressão.
       </footer>
     </section>
   );

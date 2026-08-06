@@ -3,7 +3,10 @@ import type { FormEvent } from "react"
 import "./App.css"
 import Dashboard from "./components/Dashboard"
 
-const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "")
+const API_URL = (
+  import.meta.env.VITE_API_URL ||
+  "https://printflow-api-genesis.onrender.com"
+).replace(/\/$/, "")
 
 type Company = {
   id: number
