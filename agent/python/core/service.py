@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from api.client import PrintflowApiClient
 from config.settings import AgentSettings
 from discovery_runner import scan_network
 from network_manager import get_authorized_networks
@@ -24,6 +25,16 @@ class PrintflowAgentService:
         self.settings = settings
         self.logger = logger
         self.manual_networks = manual_networks or []
+
+        self.api_client = PrintflowApiClient(
+            api_url=settings.api_url,
+            agent_token=settings.agent_token,
+            logger=logger,
+            queue_directory=(
+                settings.output_directory
+                / "api_queue"
+            ),
+        )
 
     def discover_devices(self) -> list[Any]:
         networks = get_authorized_networks(
@@ -120,6 +131,7 @@ class PrintflowAgentService:
         self,
         devices: list[Any],
         printers: list[dict[str, Any]],
+        api_result: dict[str, Any],
     ) -> Path:
         self.settings.output_directory.mkdir(
             parents=True,
@@ -149,12 +161,25 @@ class PrintflowAgentService:
                         "snmp_online"
                     )
                 ),
+                "api_success": api_result.get(
+                    "success",
+                    0,
+                ),
+                "api_failed": api_result.get(
+                    "failed",
+                    0,
+                ),
+                "api_skipped": api_result.get(
+                    "skipped",
+                    0,
+                ),
             },
             "devices": [
                 asdict(device)
                 for device in devices
             ],
             "printers": printers,
+            "api_sync": api_result,
         }
 
         output_file.write_text(
@@ -168,6 +193,47 @@ class PrintflowAgentService:
 
         return output_file
 
+    def synchronize_api(
+        self,
+        printers: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        if not self.api_client.is_configured:
+            self.logger.warning(
+                "PRINTFLOW_AGENT_TOKEN não configurado. "
+                "Inventário será mantido apenas localmente."
+            )
+
+            return self.api_client.send_inventory(
+                printers=printers
+            )
+
+        queue_result = (
+            self.api_client.retry_queue()
+        )
+
+        if queue_result["processed"]:
+            self.logger.info(
+                "Fila anterior: %s processado(s), "
+                "%s enviado(s), %s falha(s).",
+                queue_result["processed"],
+                queue_result["success"],
+                queue_result["failed"],
+            )
+
+        result = self.api_client.send_inventory(
+            printers=printers
+        )
+
+        self.logger.info(
+            "Sincronização API: %s sucesso(s), "
+            "%s falha(s), %s ignorado(s).",
+            result["success"],
+            result["failed"],
+            result["skipped"],
+        )
+
+        return result
+
     def run_cycle(self) -> int:
         self.logger.info(
             "Iniciando ciclo do PRINTFLOW Agent."
@@ -179,9 +245,14 @@ class PrintflowAgentService:
             self.collect_snmp_data(devices)
         )
 
+        api_result = self.synchronize_api(
+            printers=printers
+        )
+
         output_file = self.save_inventory(
             devices=devices,
             printers=printers,
+            api_result=api_result,
         )
 
         self.logger.info(
