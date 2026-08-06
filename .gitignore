@@ -226,3 +226,4 @@ __pycache__/
 *.py[cod]
 .backups/
 agent/python/output/
+agent/python/logs/

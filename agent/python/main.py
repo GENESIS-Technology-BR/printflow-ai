@@ -1,69 +1,106 @@
-import json
-import socket
-import sys
-from datetime import datetime, timezone
+from __future__ import annotations
 
-from api import send_printer
-from config import (
-    API_URL,
-    MANUFACTURER,
-    MODEL,
-    PRINTER_IP,
-    PRINTER_NAME,
-    TIMEOUT,
-)
-from discovery import ping, test_http
-from snmp import collect_snmp
+import argparse
+import sys
+from pathlib import Path
+
+
+CURRENT_DIR = Path(__file__).resolve().parent
+
+if str(CURRENT_DIR) not in sys.path:
+    sys.path.insert(
+        0,
+        str(CURRENT_DIR),
+    )
+
+
+from config.settings import AgentSettings
+from core.logger import configure_logger
+from core.scheduler import AgentScheduler
+from core.service import PrintflowAgentService
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "PRINTFLOW Agent Core — "
+            "Discovery, SNMP e Inventário"
+        )
+    )
+
+    parser.add_argument(
+        "--network",
+        action="append",
+        default=[],
+        help=(
+            "Rede adicional autorizada. "
+            "Exemplo: --network 10.2.0.0/24"
+        ),
+    )
+
+    parser.add_argument(
+        "--daemon",
+        action="store_true",
+        help=(
+            "Mantém o Agent ativo e executa "
+            "novos ciclos automaticamente."
+        ),
+    )
+
+    return parser.parse_args()
+
+
+def print_banner(
+    settings: AgentSettings,
+) -> None:
+    print()
+    print("=" * 72)
+    print(
+        f"{settings.agent_name.upper()} "
+        f"v{settings.agent_version}"
+    )
+    print("=" * 72)
+    print("Discovery automático")
+    print("Consulta SNMP")
+    print("Inventário local")
+    print("=" * 72)
+    print()
 
 
 def main() -> int:
-    print("=" * 60)
-    print("GENESIS Agent v0.2")
-    print("=" * 60)
-    print(f"API: {API_URL}")
-    print(f"Impressora: {PRINTER_NAME}")
-    print(f"IP: {PRINTER_IP}")
-    print()
+    arguments = parse_arguments()
+    settings = AgentSettings.load()
 
-    print("[1/3] Testando conectividade...")
-    ping_ok = ping(PRINTER_IP)
-    http_ok = test_http(PRINTER_IP, TIMEOUT)
+    print_banner(settings)
 
-    if not ping_ok and not http_ok:
-        print("ERRO: impressora offline ou inacessível.")
-        return 1
+    logger = configure_logger(
+        settings.logs_directory
+    )
 
-    print(f"Ping: {'OK' if ping_ok else 'não respondeu'}")
-    print(f"HTTP: {'OK' if http_ok else 'não respondeu'}")
+    service = PrintflowAgentService(
+        settings=settings,
+        logger=logger,
+        manual_networks=arguments.network,
+    )
 
-    print("[2/3] Coletando informações...")
-    snmp_data = collect_snmp(PRINTER_IP)
+    if not arguments.daemon:
+        return service.run_cycle()
 
-    payload = {
-        "ip": PRINTER_IP,
-        "name": PRINTER_NAME,
-        "manufacturer": MANUFACTURER,
-        "model": MODEL,
-        "status": "online",
-        "source": "genesis-agent-python",
-        "page_count": snmp_data.get("page_count"),
-    }
+    logger.info(
+        "Modo serviço ativado."
+    )
 
-    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    scheduler = AgentScheduler(
+        interval_seconds=(
+            settings.scan_interval_seconds
+        ),
+        logger=logger,
+    )
 
-    print("[3/3] Enviando para a nuvem...")
-    try:
-        result = send_printer(API_URL, payload)
-    except Exception as error:
-        print(f"ERRO ao enviar para a API: {error}")
-        return 2
-
-    print("SUCESSO: impressora registrada.")
-    print(f"Resposta: {json.dumps(result, ensure_ascii=False)}")
-    print(f"Computador: {socket.gethostname()}")
-    print(f"Horário UTC: {datetime.now(timezone.utc).isoformat()}")
-    return 0
+    return scheduler.run(
+        service.run_cycle
+    )
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
