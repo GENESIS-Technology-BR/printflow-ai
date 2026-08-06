@@ -28,6 +28,9 @@ function App() {
   const [mode, setMode] = useState<"login" | "register">("login")
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState<"dashboard" | "printers" | "agents">("dashboard")
+  const [printers, setPrinters] = useState<any[]>([])
+  const [printersLoading, setPrintersLoading] = useState(false)
 
   async function api(path: string, options: RequestInit = {}) {
     const response = await fetch(`${API_URL}${path}`, {
@@ -40,7 +43,20 @@ function App() {
     })
 
     const data = await response.json().catch(() => ({}))
-    if (!response.ok) throw new Error(data.detail || "Erro na operação")
+    if (!response.ok) {
+      const detail =
+        typeof data.detail === "string"
+          ? data.detail
+          : Array.isArray(data.detail)
+            ? data.detail
+                .map((item: any) => item?.msg || JSON.stringify(item))
+                .join("; ")
+            : data.detail
+              ? JSON.stringify(data.detail)
+              : "Erro na operação"
+
+      throw new Error(detail)
+    }
     return data
   }
 
@@ -103,6 +119,24 @@ function App() {
     }
   }
 
+  async function loadPrinters() {
+    setPrintersLoading(true)
+    setMessage("")
+
+    try {
+      const result = await api("/api/v1/printers")
+      setPrinters(Array.isArray(result) ? result : [])
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar impressoras"
+      )
+    } finally {
+      setPrintersLoading(false)
+    }
+  }
+
   async function regenerateToken() {
     if (!confirm("Gerar um novo token? O token anterior deixará de funcionar.")) return
     const updated = await api("/api/v1/companies/current/regenerate-agent-token", {
@@ -159,14 +193,200 @@ function App() {
         <div className="brand"><span>P</span><strong>PRINTFLOW AI</strong></div>
         <nav>
           <button className="selected">Dashboard</button>
-          <button>Empresa</button>
-          <button>Impressoras</button>
-          <button>Agentes</button>
+          <button onClick={() => setPage("dashboard")}>Empresa</button>
+          <button className={page === "printers" ? "active" : ""} onClick={() => { setPage("printers"); void loadPrinters() }}>Impressoras</button>
+          <button className={page === "agents" ? "active" : ""} onClick={() => setPage("agents")}>Agentes</button>
         </nav>
         <button className="logout" onClick={logout}>Sair</button>
       </aside>
 
       <main className="dashboard">
+      {page === "printers" ? (
+        <>
+          <header>
+            <div>
+              <small>MONITORAMENTO</small>
+              <h1>Impressoras</h1>
+            </div>
+            <span className="online">● API Online</span>
+          </header>
+
+          <section className="hero">
+            <div>
+              <small>PRINTFLOW AI · PARQUE MONITORADO</small>
+              <h2>Impressoras da empresa</h2>
+              <p>
+                {printersLoading
+                  ? "Carregando equipamentos..."
+                  : `${printers.length} equipamento(s) encontrado(s).`}
+              </p>
+            </div>
+          </section>
+
+          <section className="content-grid">
+            <article
+              className="panel"
+              style={{ gridColumn: "1 / -1" }}
+            >
+              <div className="actions">
+                <button
+                  type="button"
+                  onClick={() => void loadPrinters()}
+                  disabled={printersLoading}
+                >
+                  {printersLoading ? "Atualizando..." : "Atualizar lista"}
+                </button>
+              </div>
+
+              {printers.length === 0 && !printersLoading ? (
+                <div className="status-box">
+                  <strong>Nenhuma impressora recebida</strong>
+                  <span>
+                    Execute o Agent usando o token da empresa para enviar
+                    os primeiros equipamentos.
+                  </span>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "12px",
+                    marginTop: "18px",
+                  }}
+                >
+                  {printers.map((printer: any, index: number) => (
+                    <div
+                      className="status-box"
+                      key={
+                        printer.id ||
+                        printer.serial_number ||
+                        printer.serial ||
+                        printer.ip ||
+                        index
+                      }
+                    >
+                      <strong>
+                        {printer.name ||
+                          printer.model ||
+                          printer.hostname ||
+                          `Impressora ${index + 1}`}
+                      </strong>
+
+                      <span>
+                        IP: {printer.ip || printer.ip_address || "Não informado"}
+                      </span>
+
+                      <span>
+                        Status: {printer.status || "Não informado"}
+                      </span>
+
+                      <span>
+                        Serial:{" "}
+                        {printer.serial_number ||
+                          printer.serial ||
+                          "Não informado"}
+                      </span>
+
+                      <span>
+                        Contador:{" "}
+                        {printer.total_counter ??
+                          printer.counter ??
+                          "Não informado"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </article>
+          </section>
+        </>
+      ) : page === "agents" ? (
+        <>
+          <header>
+            <div>
+              <small>COLETA E DESCOBERTA</small>
+              <h1>Agent PRINTFLOW</h1>
+            </div>
+            <span className="online">● API Online</span>
+          </header>
+
+          <section className="hero">
+            <div>
+              <small>PRINTFLOW AI · AGENT</small>
+              <h2>Conectar a rede da empresa</h2>
+              <p>
+                Configure o Agent para localizar impressoras e enviar os
+                dados ao PRINTFLOW.
+              </p>
+            </div>
+          </section>
+
+          <section className="content-grid">
+            <article className="panel">
+              <h3>Token do Agent</h3>
+              <p>
+                Copie este token e informe na configuração do Agent.
+              </p>
+
+              <code>{company?.agent_token || "Token não disponível"}</code>
+
+              <div className="actions">
+                <button
+                  type="button"
+                  onClick={() =>
+                    company?.agent_token &&
+                    navigator.clipboard.writeText(company.agent_token)
+                  }
+                >
+                  Copiar token
+                </button>
+
+                <button
+                  type="button"
+                  className="danger"
+                  onClick={regenerateToken}
+                >
+                  Gerar novo
+                </button>
+              </div>
+            </article>
+
+            <article className="panel">
+              <h3>Procedimento do Agent</h3>
+
+              <div className="status-box">
+                <strong>1. Instalar</strong>
+                <span>
+                  Executar o Agent em um computador Windows da rede do
+                  cliente.
+                </span>
+              </div>
+
+              <div className="status-box">
+                <strong>2. Configurar</strong>
+                <span>
+                  Informar a URL da API e o token desta empresa.
+                </span>
+              </div>
+
+              <div className="status-box">
+                <strong>3. Descobrir</strong>
+                <span>
+                  Localizar a HP 10.2.0.124 e demais impressoras via SNMP.
+                </span>
+              </div>
+
+              <div className="status-box">
+                <strong>4. Enviar</strong>
+                <span>
+                  Publicar modelo, serial, IP, status e contadores na API.
+                </span>
+              </div>
+            </article>
+          </section>
+        </>
+      ) : (
+        <>
         <header>
           <div><small>SPRINT COMERCIAL</small><h1>Empresa e Agent</h1></div>
           <span className="online">● API Online</span>
@@ -212,7 +432,9 @@ function App() {
           </section>
         )}
         {message && <div className="message success">{message}</div>}
-      </main>
+              </>
+      )}
+    </main>
     </div>
   )
 }
