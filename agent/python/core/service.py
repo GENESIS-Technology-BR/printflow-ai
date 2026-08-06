@@ -12,7 +12,7 @@ from api.client import PrintflowApiClient
 from config.settings import AgentSettings
 from discovery_runner import scan_network
 from network_manager import get_authorized_networks
-from snmp_probe import collect_printer
+from snmp.engine import collect_printer_intelligence
 
 
 class PrintflowAgentService:
@@ -111,7 +111,7 @@ class PrintflowAgentService:
                 device.ip_address,
             )
 
-            snmp_result = await collect_printer(
+            snmp_result = await collect_printer_intelligence(
                 ip_address=device.ip_address,
                 community=self.settings.snmp_community,
                 timeout=self.settings.snmp_timeout,
