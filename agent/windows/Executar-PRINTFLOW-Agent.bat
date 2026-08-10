@@ -16,7 +16,7 @@ echo Pasta do Agent:
 echo %CD%
 echo.
 
-if not exist "%~dp0PRINTFLOW-Agent.exe" --network 10.2.0.0/24 (
+if not exist "%~dp0PRINTFLOW-Agent.exe" (
     echo ERRO: PRINTFLOW-Agent.exe nao foi encontrado.
     echo.
     echo Caminho procurado:
@@ -61,7 +61,25 @@ echo.
 echo Nao feche esta janela durante o teste.
 echo.
 
-"%~dp0PRINTFLOW-Agent.exe"
+echo.
+echo ============================================================
+echo REDE ADICIONAL
+echo ============================================================
+echo.
+set /p PRINTFLOW_EXTRA_NETWORK=Informe uma rede adicional em CIDR ou pressione ENTER para usar somente redes detectadas: 
+
+echo.
+
+if "%PRINTFLOW_EXTRA_NETWORK%"=="" (
+    echo Nenhuma rede adicional informada.
+    echo Executando somente descoberta automatica...
+    echo.
+    "%~dp0PRINTFLOW-Agent.exe"
+) else (
+    echo Rede adicional autorizada: %PRINTFLOW_EXTRA_NETWORK%
+    echo.
+    "%~dp0PRINTFLOW-Agent.exe" --network "%PRINTFLOW_EXTRA_NETWORK%"
+)
 
 set "AGENT_EXIT_CODE=%ERRORLEVEL%"
 
