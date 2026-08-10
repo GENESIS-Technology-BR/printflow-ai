@@ -16,7 +16,7 @@ echo Pasta do Agent:
 echo %CD%
 echo.
 
-if not exist "%~dp0PRINTFLOW-Agent.exe" (
+if not exist "%~dp0PRINTFLOW-Agent.exe" --network 10.2.0.0/24 (
     echo ERRO: PRINTFLOW-Agent.exe nao foi encontrado.
     echo.
     echo Caminho procurado:
