@@ -9,7 +9,7 @@ from backend.modules.printers.model import Printer
 from backend.modules.printers.schema import PrinterResponse, PrinterUpsert
 
 
-router = APIRouter(prefix="/api/v1/printers", tags=["Printers"])
+router = APIRouter(prefix="/printers", tags=["Printers"])
 
 
 @router.get("", response_model=list[PrinterResponse])
