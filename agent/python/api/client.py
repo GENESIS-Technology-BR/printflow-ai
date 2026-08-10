@@ -230,6 +230,19 @@ class PrintflowApiClient:
                     )
                     break
 
+                # BUILD11_HTTP_DETAIL
+                try:
+                    response_preview = response.text[:600]
+                except Exception:
+                    response_preview = "<resposta indisponivel>"
+                self.logger.error(
+                    "Falha API | IP=%s | HTTP=%s | URL=%s | Resposta=%s",
+                    payload.get("ip", "desconhecido"),
+                    response.status_code,
+                    self.printers_endpoint,
+                    response_preview,
+                )
+
                 last_error = (
                     f"API respondeu com HTTP "
                     f"{response.status_code}."
