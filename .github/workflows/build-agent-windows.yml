@@ -53,8 +53,15 @@ jobs:
             --console `
             --name PRINTFLOW-Agent `
             --paths agent/python `
+            --hidden-import pysnmp `
+            --hidden-import pysnmp.hlapi `
+            --hidden-import pysnmp.hlapi.v3arch `
+            --hidden-import pysnmp.hlapi.v3arch.asyncio `
             --collect-all pysnmp `
+            --collect-submodules pysnmp `
+            --copy-metadata pysnmp `
             --collect-all pyasn1 `
+            --collect-submodules pyasn1 `
             --hidden-import psutil `
             --hidden-import requests `
             --hidden-import config.settings `
