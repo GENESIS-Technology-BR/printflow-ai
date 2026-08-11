@@ -36,7 +36,7 @@ class PrintflowApiClient:
         self.retries = max(retries, 0)
 
         self.printers_endpoint = (
-            f"{self.api_url}/api/v1/printers"
+            f"{self.api_url}/api/v1/printers/agent"
         )
 
         self.queue_directory.mkdir(
