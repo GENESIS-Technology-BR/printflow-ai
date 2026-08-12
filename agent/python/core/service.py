@@ -232,6 +232,29 @@ class PrintflowAgentService:
             result["skipped"],
         )
 
+        # BUILD 14 - diagnóstico detalhado da sincronização.
+        # Exibe no log o IP, código HTTP e mensagem retornada pela API
+        # para cada equipamento que não conseguiu sincronizar.
+        for detail in result.get("details", []):
+            if detail.get("success"):
+                continue
+
+            ip_address = (
+                detail.get("ip")
+                or detail.get("ip_address")
+                or detail.get("host")
+                or "IP desconhecido"
+            )
+            status_code = detail.get("status_code")
+            message = detail.get("message") or "Sem mensagem da API"
+
+            self.logger.error(
+                "FALHA API | IP: %s | HTTP: %s | Motivo: %s",
+                ip_address,
+                status_code if status_code is not None else "SEM RESPOSTA",
+                message,
+            )
+
         return result
 
     def run_cycle(self) -> int:
