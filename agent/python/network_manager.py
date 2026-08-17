@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 import psutil
+import subprocess
 
 
 BLOCKED_INTERFACE_TERMS = (
@@ -312,6 +313,106 @@ def validate_manual_network(
     )
 
 
+
+def detect_routed_networks(
+    maximum_hosts: int = 1024,
+) -> list[str]:
+    """
+    Descobre redes IPv4 privadas explicitamente presentes
+    na tabela de rotas do Windows.
+
+    Regras de segurança:
+    - ignora rota default;
+    - ignora redes públicas;
+    - ignora loopback/link-local/multicast;
+    - ignora redes acima do limite maximum_hosts;
+    - não expande rotas grandes em várias sub-redes;
+    - remove duplicidades.
+
+    Em sistemas onde 'route print -4' não estiver disponível,
+    simplesmente retorna uma lista vazia.
+    """
+
+    try:
+        resultado = subprocess.run(
+            ["route", "print", "-4"],
+            capture_output=True,
+            text=True,
+            timeout=8,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return []
+
+    if resultado.returncode != 0:
+        return []
+
+    redes: set[str] = set()
+
+    for linha in resultado.stdout.splitlines():
+        partes = linha.split()
+
+        # Formato esperado do Windows:
+        # destino mascara gateway interface metrica
+        if len(partes) < 5:
+            continue
+
+        destino = partes[0]
+        mascara = partes[1]
+
+        try:
+            endereco = ipaddress.ip_address(destino)
+
+            if not isinstance(
+                endereco,
+                ipaddress.IPv4Address,
+            ):
+                continue
+
+            rede = ipaddress.ip_network(
+                f"{destino}/{mascara}",
+                strict=False,
+            )
+
+        except ValueError:
+            continue
+
+        # Rota default
+        if rede.prefixlen == 0:
+            continue
+
+        # Somente redes privadas
+        if not rede.is_private:
+            continue
+
+        # Redes especiais
+        if (
+            rede.network_address.is_loopback
+            or rede.network_address.is_link_local
+            or rede.network_address.is_multicast
+            or rede.network_address.is_unspecified
+        ):
+            continue
+
+        # Segurança: não escanear automaticamente redes enormes
+        if usable_hosts(rede) > maximum_hosts:
+            continue
+
+        redes.add(str(rede))
+
+    def chave(cidr: str):
+        rede = ipaddress.ip_network(
+            cidr,
+            strict=False,
+        )
+        return (
+            int(rede.network_address),
+            rede.prefixlen,
+        )
+
+    return sorted(redes, key=chave)
+
+
 def get_authorized_networks(
     manual_networks: list[str] | None = None,
     maximum_hosts: int = 1024,
@@ -321,6 +422,48 @@ def get_authorized_networks(
         maximum_hosts=maximum_hosts,
         safe_prefix=safe_prefix,
     )
+
+    # ========================================================
+    # MOTOR V2 - REDES ROTEADAS
+    # ========================================================
+    routed_cidrs = detect_routed_networks(
+        maximum_hosts=maximum_hosts,
+    )
+
+    local_cidrs = {
+        network.cidr
+        for network in networks
+    }
+
+    for cidr in routed_cidrs:
+        if cidr in local_cidrs:
+            continue
+
+        try:
+            validated = validate_manual_network(
+                cidr=cidr,
+                maximum_hosts=maximum_hosts,
+            )
+        except ValueError:
+            continue
+
+        routed_network = DetectedNetwork(
+            interface="rota-windows",
+            ip_address=validated.ip_address,
+            netmask=validated.netmask,
+            cidr=validated.cidr,
+            broadcast=validated.broadcast,
+            is_private=True,
+            scan_allowed=True,
+            reason=(
+                "Rede privada roteável detectada "
+                "automaticamente no Windows."
+            ),
+            original_cidr=validated.original_cidr,
+        )
+
+        networks.append(routed_network)
+        local_cidrs.add(routed_network.cidr)
 
     existing_cidrs = {
         network.cidr
