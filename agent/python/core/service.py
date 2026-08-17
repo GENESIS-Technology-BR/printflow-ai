@@ -37,23 +37,78 @@ class PrintflowAgentService:
         )
 
     def discover_devices(self) -> list[Any]:
-        networks = get_authorized_networks(
-            manual_networks=self.manual_networks,
-            maximum_hosts=self.settings.maximum_hosts,
+        """
+        PRINTFLOW SAFE DISCOVERY #17
+
+        Prioridade:
+        1 - Impressoras/portas TCP-IP conhecidas pelo Windows.
+        2 - Validacao somente dos IPs candidatos.
+        3 - Discovery de rede atual somente como fallback.
+        """
+
+        from discovery.safe_windows import (
+            discover_windows_printer_candidates,
         )
 
-        if not networks:
-            self.logger.warning(
-                "Nenhuma rede autorizada foi encontrada."
+        discovered_devices: dict[str, Any] = {}
+
+        candidates = discover_windows_printer_candidates()
+
+        if candidates:
+            self.logger.info(
+                "SAFE DISCOVERY: %s candidato(s) encontrado(s) no Windows.",
+                len(candidates),
             )
-            return []
+
+            for candidate in candidates:
+                self.logger.info(
+                    "SAFE DISCOVERY: verificando %s - porta %s.",
+                    candidate.ip_address,
+                    candidate.port_name,
+                )
+
+                devices = scan_network(
+                    cidr=f"{candidate.ip_address}/32",
+                    timeout=self.settings.network_timeout,
+                    workers=1,
+                    maximum_hosts=1,
+                    resolve_names=False,
+                )
+
+                for device in devices:
+                    current = discovered_devices.get(
+                        device.ip_address
+                    )
+
+                    if (
+                        current is None
+                        or device.confidence_score
+                        > current.confidence_score
+                    ):
+                        discovered_devices[
+                            device.ip_address
+                        ] = device
+
+            self.logger.info(
+                "SAFE DISCOVERY: %s candidato(s) responderam.",
+                len(discovered_devices),
+            )
+
+            return list(discovered_devices.values())
+
+        self.logger.info(
+            "SAFE DISCOVERY: Windows nao forneceu candidatos. "
+            "Usando discovery automatico como fallback."
+        )
+
+        networks = get_authorized_networks(
+            maximum_hosts=self.settings.maximum_hosts,
+        )
 
         self.logger.info(
             "%s rede(s) autorizada(s).",
             len(networks),
         )
-
-        discovered_devices: dict[str, Any] = {}
 
         for network in networks:
             self.logger.info(
@@ -84,9 +139,7 @@ class PrintflowAgentService:
                         device.ip_address
                     ] = device
 
-        return list(
-            discovered_devices.values()
-        )
+        return list(discovered_devices.values())
 
     async def collect_snmp_data(
         self,
