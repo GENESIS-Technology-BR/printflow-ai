@@ -67,7 +67,7 @@ class PrinterIntelligenceEngine:
                     engine,
                     CommunityData(
                         self.community,
-                        mpModel=1,
+                        mpModel=0,
                     ),
                     transport,
                     ContextData(),
@@ -156,7 +156,7 @@ class PrinterIntelligenceEngine:
                     engine,
                     CommunityData(
                         self.community,
-                        mpModel=1,
+                        mpModel=0,
                     ),
                     transport,
                     ContextData(),
