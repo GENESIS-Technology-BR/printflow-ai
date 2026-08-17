@@ -171,6 +171,29 @@ class PrintflowAgentService:
                 retries=self.settings.snmp_retries,
             )
 
+            # ==================================================
+            # DIAGNOSTICO SNMP
+            # ==================================================
+            if snmp_result.get("snmp_online"):
+                dados = snmp_result.get("dados") or {}
+
+                self.logger.info(
+                    "SNMP %s: OK | Fabricante=%s | Modelo=%s | "
+                    "Serial=%s | Contador=%s | Toner=%s%%",
+                    device.ip_address,
+                    dados.get("fabricante"),
+                    dados.get("modelo"),
+                    dados.get("serial"),
+                    dados.get("contador_paginas"),
+                    dados.get("toner_percentual"),
+                )
+            else:
+                self.logger.warning(
+                    "SNMP %s: SEM RESPOSTA | Erro=%s",
+                    device.ip_address,
+                    snmp_result.get("erro"),
+                )
+
             inventory.append(
                 {
                     "discovery": asdict(device),
