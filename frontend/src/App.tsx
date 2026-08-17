@@ -303,7 +303,8 @@ function App() {
 
                       <span>
                         Contador:{" "}
-                        {printer.total_counter ??
+                        {printer.page_count ??
+                  printer.total_counter ??
                           printer.counter ??
                           "Não informado"}
                       </span>
