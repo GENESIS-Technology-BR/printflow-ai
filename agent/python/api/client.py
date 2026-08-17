@@ -99,30 +99,84 @@ class PrintflowApiClient:
             or ""
         )
 
-        model = self._detect_model(
-            description=description,
-            fallback=printer.get("model"),
+        # ----------------------------------------------------
+        # MODELO
+        # Prioriza a inteligência do motor SNMP.
+        # ----------------------------------------------------
+        model = (
+            snmp_data.get("modelo")
+            or self._detect_model(
+                description=description,
+                fallback=printer.get("model"),
+            )
         )
 
-        manufacturer = self._detect_manufacturer(
-            description=description,
-            model=model,
+        # ----------------------------------------------------
+        # FABRICANTE
+        # Prioriza a inteligência do motor SNMP.
+        # ----------------------------------------------------
+        manufacturer = (
+            snmp_data.get("fabricante")
+            or self._detect_manufacturer(
+                description=description,
+                model=model,
+            )
         )
 
+        # ----------------------------------------------------
+        # CONTADOR
+        # ----------------------------------------------------
         page_count = self._parse_integer(
             snmp_data.get("contador_paginas")
         )
 
+        # ----------------------------------------------------
+        # SERIAL
+        # ----------------------------------------------------
+        serial = snmp_data.get("serial")
+
+        if serial is not None:
+            serial = str(serial).strip() or None
+
+        # ----------------------------------------------------
+        # TONER / HEALTH
+        # ----------------------------------------------------
+        toner_percent = self._parse_integer(
+            snmp_data.get("toner_percentual")
+        )
+
+        health_score = self._parse_integer(
+            snmp_data.get("health_score")
+        )
+
+        health_status = snmp_data.get(
+            "health_status"
+        )
+
+        if health_status is not None:
+            health_status = (
+                str(health_status).strip()
+                or None
+            )
+
+        # ----------------------------------------------------
+        # STATUS REAL
+        # Antes o Agent enviava "online" nos dois casos.
+        # ----------------------------------------------------
+        status = (
+            "online"
+            if snmp.get("snmp_online")
+            else "offline"
+        )
+
+        # ----------------------------------------------------
+        # NOME
+        # Prioriza hostname e modelo real.
+        # ----------------------------------------------------
         name = (
             hostname
             or model
             or f"Impressora {ip_address}"
-        )
-
-        status = (
-            "online"
-            if snmp.get("snmp_online")
-            else "online"
         )
 
         return {
@@ -134,13 +188,25 @@ class PrintflowApiClient:
                 else None
             ),
             "model": (
-                str(model)[:150]
+                str(model)[:180]
                 if model
+                else None
+            ),
+            "serial": (
+                str(serial)[:180]
+                if serial
                 else None
             ),
             "status": status,
             "source": "agent",
             "page_count": page_count,
+            "toner_percent": toner_percent,
+            "health_score": health_score,
+            "health_status": (
+                str(health_status)[:30]
+                if health_status
+                else None
+            ),
             "agent_token": self.agent_token,
         }
 

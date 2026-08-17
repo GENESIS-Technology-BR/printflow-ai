@@ -10,6 +10,10 @@ class PrinterBase(BaseModel):
     status: str = "online"
     source: str = "agent"
     page_count: int | None = None
+    serial: str | None = None
+    toner_percent: int | None = None
+    health_score: int | None = None
+    health_status: str | None = None
 
 
 class PrinterUpsert(PrinterBase):

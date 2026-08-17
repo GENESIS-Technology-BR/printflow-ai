@@ -27,6 +27,10 @@ class Printer(Base):
     status: Mapped[str] = mapped_column(String(30), default="online")
     source: Mapped[str] = mapped_column(String(30), default="agent")
     page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    serial: Mapped[str | None] = mapped_column(String(180), nullable=True)
+    toner_percent: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    health_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    health_status: Mapped[str | None] = mapped_column(String(30), nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_seen: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)

@@ -60,6 +60,10 @@ def receive_agent_data(
     printer.status = payload.status
     printer.source = payload.source
     printer.page_count = payload.page_count
+    printer.serial = payload.serial
+    printer.toner_percent = payload.toner_percent
+    printer.health_score = payload.health_score
+    printer.health_status = payload.health_status
     printer.active = True
     printer.last_seen = datetime.now(timezone.utc)
 
