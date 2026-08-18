@@ -358,6 +358,90 @@ class PrinterIntelligenceEngine:
             )
         )
 
+        # ====================================================
+        # PRINTFLOW SAFE WALK FALLBACK B13
+        #
+        # Executa somente quando identidade importante estiver
+        # ausente. Nunca substitui valores SNMP ja confirmados.
+        # Contadores encontrados pelo Learning permanecem apenas
+        # como diagnostico ate o OID ser validado.
+        # ====================================================
+
+        learning_diagnostic = None
+
+        if (
+            not self.is_valid_serial(serial)
+            or page_count is None
+        ):
+            try:
+                from intelligence.snmp_walk_executor import (
+                    safe_walk_printer,
+                )
+                from intelligence.snmp_safe_walk import (
+                    best_candidates,
+                )
+
+                walk_result = await safe_walk_printer(
+                    ip_address=ip_address,
+                    community=self.community,
+                    timeout=min(self.timeout, 1.0),
+                    retries=0,
+                )
+
+                serial_candidates = best_candidates(
+                    walk_result.analysis,
+                    "serial",
+                    limit=5,
+                )
+
+                counter_candidates = best_candidates(
+                    walk_result.analysis,
+                    "counter",
+                    limit=10,
+                )
+
+                # Serial: somente candidato de alta confianca.
+                # Valores ja existentes nunca sao substituidos.
+                if not self.is_valid_serial(serial):
+                    strong_serials = [
+                        candidate
+                        for candidate in serial_candidates
+                        if candidate.confidence >= 85
+                    ]
+
+                    if strong_serials:
+                        serial = strong_serials[0].value
+
+                learning_diagnostic = {
+                    "sys_object_id": (
+                        walk_result.sys_object_id
+                    ),
+                    "error": walk_result.error,
+                    "rows_seen": (
+                        walk_result.analysis.rows_seen
+                    ),
+                    "truncated": (
+                        walk_result.analysis.truncated
+                    ),
+                    "serial_candidates": [
+                        candidate.to_dict()
+                        for candidate in serial_candidates
+                    ],
+                    "counter_candidates": [
+                        candidate.to_dict()
+                        for candidate in counter_candidates
+                    ],
+                }
+
+            except Exception as exc:
+                learning_diagnostic = {
+                    "error": (
+                        f"{type(exc).__name__}: {exc}"
+                    ),
+                    "serial_candidates": [],
+                    "counter_candidates": [],
+                }
+
         return {
             "ip_address": ip_address,
             "community": self.community,
@@ -391,6 +475,7 @@ class PrinterIntelligenceEngine:
                     status_code or None
                 ),
                 "toner_percentual": lowest_toner,
+            "learning_diagnostic": learning_diagnostic,
                 "suprimentos": supplies,
                 "health_score": health_score,
                 "health_status": (
