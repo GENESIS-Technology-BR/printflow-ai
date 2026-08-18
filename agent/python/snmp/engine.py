@@ -34,6 +34,27 @@ class SnmpRequestResult:
     error: str | None = None
 
 
+
+# ============================================================
+# PRINTFLOW - PAGE COUNT INTELLIGENCE
+# ============================================================
+# Printer-MIB = fallback universal.
+#
+# OIDs privados somente vencem quando existe consenso entre
+# pelo menos dois contadores validos.
+#
+# Canon GX6000 validada em equipamento real.
+# ============================================================
+
+VENDOR_PAGE_COUNT_OIDS = {
+    "canon": (
+        "1.3.6.1.4.1.1602.1.11.2.1.1.3.1",
+        "1.3.6.1.4.1.1602.1.11.2.1.1.3.2",
+        "1.3.6.1.4.1.1602.1.11.2.1.1.3.4",
+    ),
+}
+
+
 class PrinterIntelligenceEngine:
     def __init__(
         self,
@@ -239,8 +260,14 @@ class PrinterIntelligenceEngine:
             ip_address=ip_address
         )
 
-        page_count = self.parse_integer(
-            raw_data.get("contador_paginas")
+        (
+            page_count,
+            page_count_source,
+            page_count_candidates,
+        ) = await self.resolve_page_count(
+            ip_address=ip_address,
+            vendor=vendor,
+            raw_data=raw_data,
         )
 
         uptime_ticks = self.parse_integer(
@@ -312,6 +339,8 @@ class PrinterIntelligenceEngine:
                     else None
                 ),
                 "contador_paginas": page_count,
+                "contador_origem": page_count_source,
+                "contador_candidatos": page_count_candidates,
                 "status_impressora": printer_status,
                 "status_codigo": (
                     status_code or None
@@ -328,6 +357,120 @@ class PrinterIntelligenceEngine:
             },
             "erros_oids": errors,
         }
+
+    async def resolve_page_count(
+        self,
+        ip_address: str,
+        vendor: str,
+        raw_data: dict[str, Any],
+    ) -> tuple[int | None, str, dict[str, int]]:
+        """
+        Seleciona o contador principal da impressora.
+
+        Prioridade:
+        - contador privado confiavel do fabricante;
+        - Printer-MIB como fallback universal.
+        """
+
+        parser = (
+            getattr(self, "parse_integer", None)
+            or getattr(self, "_parse_integer", None)
+        )
+
+        if parser is None:
+            raise RuntimeError(
+                "Parser de inteiros nao encontrado no motor SNMP."
+            )
+
+        generic_count = parser(
+            raw_data.get("contador_paginas")
+        )
+
+        vendor_key = str(
+            vendor or ""
+        ).strip().lower()
+
+        vendor_oids = VENDOR_PAGE_COUNT_OIDS.get(
+            vendor_key,
+            (),
+        )
+
+        candidates: dict[str, int] = {}
+
+        if not vendor_oids:
+            return (
+                generic_count,
+                "printer-mib",
+                candidates,
+            )
+
+        results = await asyncio.gather(
+            *[
+                self.get_value(
+                    ip_address=ip_address,
+                    oid=oid,
+                )
+                for oid in vendor_oids
+            ],
+            return_exceptions=True,
+        )
+
+        for oid, result in zip(vendor_oids, results):
+
+            if isinstance(result, Exception):
+                continue
+
+            if not getattr(result, "success", False):
+                continue
+
+            value = parser(
+                getattr(result, "value", None)
+            )
+
+            if value is None or value < 0:
+                continue
+
+            candidates[oid] = value
+
+        if not candidates:
+            return (
+                generic_count,
+                "printer-mib-fallback",
+                candidates,
+            )
+
+        frequencies: dict[int, int] = {}
+
+        for value in candidates.values():
+            frequencies[value] = (
+                frequencies.get(value, 0) + 1
+            )
+
+        selected_value = None
+        selected_frequency = 0
+
+        for value, frequency in frequencies.items():
+
+            if frequency > selected_frequency:
+                selected_value = value
+                selected_frequency = frequency
+
+        # No minimo dois OIDs precisam concordar.
+        if (
+            selected_value is not None
+            and selected_frequency >= 2
+        ):
+            return (
+                selected_value,
+                f"{vendor_key}-vendor-consensus",
+                candidates,
+            )
+
+        return (
+            generic_count,
+            "printer-mib-fallback",
+            candidates,
+        )
 
     async def collect_supplies(
         self,

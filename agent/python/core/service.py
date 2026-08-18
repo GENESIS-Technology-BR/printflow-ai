@@ -179,12 +179,15 @@ class PrintflowAgentService:
 
                 self.logger.info(
                     "SNMP %s: OK | Fabricante=%s | Modelo=%s | "
-                    "Serial=%s | Contador=%s | Toner=%s%%",
+                    "Serial=%s | Contador=%s | Origem=%s | Toner=%s%%",
                     device.ip_address,
                     dados.get("fabricante"),
                     dados.get("modelo"),
                     dados.get("serial"),
                     dados.get("contador_paginas"),
+
+                    dados.get("contador_origem"),
+
                     dados.get("toner_percentual"),
                 )
             else:
