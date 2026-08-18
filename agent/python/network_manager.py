@@ -394,6 +394,17 @@ def detect_routed_networks(
         ):
             continue
 
+        # PRINTFLOW Discovery V3.6B
+        #
+        # Rotas /32 da tabela do Windows representam hosts
+        # individuais, broadcasts ou rotas auxiliares.
+        # Elas nao devem virar redes de discovery automatico.
+        #
+        # Impressoras conhecidas pelo Windows continuam sendo
+        # verificadas separadamente pelo Safe Discovery.
+        if rede.prefixlen == 32:
+            continue
+
         # Segurança: não escanear automaticamente redes enormes
         if usable_hosts(rede) > maximum_hosts:
             continue
