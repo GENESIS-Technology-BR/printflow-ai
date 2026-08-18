@@ -16,6 +16,8 @@ from pysnmp.hlapi.v3arch.asyncio import (
     walk_cmd,
 )
 
+from intelligence.printer_v3 import build_identity, normalize_snmp_text
+
 from snmp.oids import (
     PRINTER_OIDS,
     PRINTER_STATUS_MAP,
@@ -307,6 +309,46 @@ class PrinterIntelligenceEngine:
             else None
         )
 
+        # ====================================================
+        # PRINTFLOW_V3_IDENTITY
+        # Normaliza fabricante/modelo/serial/nome.
+        # Contador, toner e status permanecem preservados.
+        # ====================================================
+
+        identity_v3 = build_identity(
+            manufacturer=vendor,
+            model=model,
+            serial=serial,
+            description=description,
+            device_name=device_name,
+            hostname=raw_data.get("nome"),
+            open_ports=(),
+            snmp_online=True,
+        )
+
+        if identity_v3.manufacturer:
+            vendor = identity_v3.manufacturer
+
+        if identity_v3.model:
+            model = identity_v3.model
+
+        if identity_v3.serial:
+            serial = identity_v3.serial
+
+        description = (
+            identity_v3.normalized_description
+            or normalize_snmp_text(description)
+            or description
+        )
+
+        device_name = (
+            identity_v3.normalized_name
+            or normalize_snmp_text(device_name)
+            or device_name
+        )
+
+        display_name_v3 = identity_v3.display_name
+
         health_score, health_reasons = (
             self.calculate_health_score(
                 snmp_online=True,
@@ -329,6 +371,9 @@ class PrinterIntelligenceEngine:
                 "fabricante": vendor,
                 "modelo": model,
                 "serial": serial,
+            "display_name": display_name_v3,
+            "identity_confidence": identity_v3.confidence_score,
+            "identity_v3": identity_v3.to_dict(),
                 "localizacao": raw_data.get(
                     "localizacao"
                 ),

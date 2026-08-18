@@ -174,7 +174,8 @@ class PrintflowApiClient:
         # Prioriza hostname e modelo real.
         # ----------------------------------------------------
         name = (
-            hostname
+            snmp_data.get("display_name")
+            or hostname
             or model
             or f"Impressora {ip_address}"
         )

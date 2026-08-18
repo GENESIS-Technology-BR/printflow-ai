@@ -71,6 +71,9 @@ jobs:
             --hidden-import api.client `
             --hidden-import snmp.engine `
             --hidden-import snmp.oids `
+          --hidden-import diagnostic_robot `
+          --hidden-import intelligence `
+          --hidden-import intelligence.printer_v3 `
             agent/python/main.py
 
       - name: Montar pacote de teste
