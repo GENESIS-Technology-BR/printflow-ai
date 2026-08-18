@@ -94,11 +94,10 @@ class PrintflowAgentService:
                 len(discovered_devices),
             )
 
-            return list(discovered_devices.values())
 
         self.logger.info(
-            "SAFE DISCOVERY: Windows nao forneceu candidatos. "
-            "Usando discovery automatico como fallback."
+            "SAFE DISCOVERY V3.4: complementando candidatos Windows com "
+            "discovery automatico das redes autorizadas."
         )
 
         networks = get_authorized_networks(
