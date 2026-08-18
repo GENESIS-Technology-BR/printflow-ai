@@ -32,6 +32,7 @@ ALLOWED_JOBS = {
     "CHECK_COUNTERS",
     "CHECK_SERIAL",
     "CHECK_SUPPLIES",
+    "SNMP_LEARN",
     "TEST_API",
     "SEND_DIAGNOSTICS",
     "REFRESH_INVENTORY",
@@ -186,6 +187,11 @@ class DiagnosticRobot:
             self._check_supplies,
         )
 
+        self.register(
+            "SNMP_LEARN",
+            self._snmp_learn,
+        )
+
     def register(
         self,
         job: str,
@@ -297,6 +303,63 @@ class DiagnosticRobot:
         }
 
     # ========================================================
+    @staticmethod
+    def _snmp_learn(
+        *,
+        ip_address: str,
+        vendor: str | None = None,
+        getter_factory: Any = None,
+        **_: Any,
+    ) -> dict[str, Any]:
+
+        from intelligence.diagnostic_learning_bridge import (
+            ALLOWED_LEARNING_JOB,
+            DiagnosticLearningRequest,
+            execute_learning_job,
+        )
+
+        import asyncio
+
+        if getter_factory is None:
+            return {
+                "success": False,
+                "job": ALLOWED_LEARNING_JOB,
+                "ip_address": ip_address,
+                "vendor": vendor,
+                "report": None,
+                "error": "getter_factory obrigatorio nesta etapa.",
+            }
+
+        request = DiagnosticLearningRequest(
+            job=ALLOWED_LEARNING_JOB,
+            ip_address=ip_address,
+            vendor=vendor,
+        )
+
+        async def run_learning():
+            return await execute_learning_job(
+                request=request,
+                getter_factory=getter_factory,
+            )
+
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            response = asyncio.run(
+                run_learning()
+            )
+            return response.to_dict()
+
+        return {
+            "success": False,
+            "job": ALLOWED_LEARNING_JOB,
+            "ip_address": ip_address,
+            "vendor": vendor,
+            "report": None,
+            "error": "Event loop ativo; execucao real sera integrada na proxima etapa.",
+        }
+
+
     # DISCOVER NETWORKS
     # ========================================================
 
