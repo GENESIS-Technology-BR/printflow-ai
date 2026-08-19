@@ -146,3 +146,73 @@ def test_hook_is_idempotent(
     assert integration.install_agent_cycle_hook() is True
     assert integration.install_agent_cycle_hook() is False
     assert len(registered) == 1
+
+
+def test_extract_ips_from_real_agent_inventory():
+    payload = {
+        "summary": {
+            "devices_found": 1,
+            "possible_printers": 1,
+        },
+        "printers": [
+            {
+                "discovery": {
+                    "ip_address": "10.2.0.122",
+                    "possible_printer": True,
+                },
+                "snmp": {
+                    "ip_address": "10.2.0.122",
+                    "snmp_online": True,
+                    "dados": {
+                        "fabricante": "Canon",
+                        "serial": "KNDK09992",
+                    },
+                },
+            },
+            {
+                "discovery": {
+                    "ip_address": "10.2.128.27",
+                    "possible_printer": True,
+                },
+                "snmp": {
+                    "ip_address": "10.2.128.27",
+                    "snmp_online": True,
+                },
+            },
+            {
+                "discovery": {
+                    "ip_address": "10.2.128.197",
+                    "possible_printer": True,
+                },
+                "snmp": {
+                    "ip_address": "10.2.128.197",
+                    "snmp_online": True,
+                },
+            },
+        ],
+    }
+
+    assert integration._extract_ips(payload) == [
+        "10.2.0.122",
+        "10.2.128.27",
+        "10.2.128.197",
+    ]
+
+
+def test_discovery_ip_wins_without_duplication():
+    payload = {
+        "printers": [
+            {
+                "discovery": {
+                    "ip_address": "10.2.0.122",
+                },
+                "snmp": {
+                    "ip_address": "10.2.0.122",
+                },
+            }
+        ]
+    }
+
+    assert integration._extract_ips(payload) == [
+        "10.2.0.122"
+    ]

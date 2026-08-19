@@ -101,6 +101,7 @@ class PrintflowAgentService:
         )
 
         networks = get_authorized_networks(
+            manual_networks=self.manual_networks,
             maximum_hosts=self.settings.maximum_hosts,
         )
 

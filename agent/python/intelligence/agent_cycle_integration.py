@@ -96,18 +96,36 @@ def _extract_ips(payload: Any) -> list[str]:
     result: list[str] = []
 
     for row in _inventory_rows(payload):
-        raw = (
-            row.get("ip_address")
-            or row.get("ip")
-            or row.get("endereco_ip")
-            or row.get("host")
-            or row.get("address")
+        discovery = row.get("discovery")
+        snmp = row.get("snmp")
+
+        if not isinstance(discovery, dict):
+            discovery = {}
+
+        if not isinstance(snmp, dict):
+            snmp = {}
+
+        raw_candidates = (
+            row.get("ip_address"),
+            row.get("ip"),
+            row.get("endereco_ip"),
+            row.get("host"),
+            row.get("address"),
+            discovery.get("ip_address"),
+            discovery.get("ip"),
+            snmp.get("ip_address"),
+            snmp.get("ip"),
         )
 
-        ip_address = _valid_ip(raw)
+        for raw in raw_candidates:
+            ip_address = _valid_ip(raw)
 
-        if ip_address and ip_address not in result:
-            result.append(ip_address)
+            if (
+                ip_address
+                and ip_address not in result
+            ):
+                result.append(ip_address)
+                break
 
     return result
 
