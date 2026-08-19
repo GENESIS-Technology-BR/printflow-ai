@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+
+# PRINTFLOW_C1_PRINTER_INTELLIGENCE_HOOK
+from intelligence.agent_cycle_integration import install_agent_cycle_hook
+install_agent_cycle_hook()
+
 import argparse
 import sys
 from pathlib import Path
