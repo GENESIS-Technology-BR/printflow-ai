@@ -26,6 +26,7 @@ import "./Dashboard.css";
 const EMPTY_SUMMARY: DashboardSummary = {
   total_printers: 0,
   active_printers: 0,
+  inactive_printers: 0,
   online: 0,
   offline: 0,
   unknown: 0,
@@ -206,11 +207,11 @@ export default function Dashboard() {
 
       <div className="metrics-grid">
         <MetricCard
-          title="Impressoras"
+          title="Frota registrada"
           value={summary.total_printers}
           icon="🖨️"
           color="#5ba8ff"
-          subtitle={`${summary.active_printers} ativas`}
+          subtitle={`${summary.active_printers} monitoradas • ${summary.inactive_printers} históricas`}
         />
 
         <MetricCard

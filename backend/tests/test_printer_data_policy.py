@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from backend.modules.dashboard.router import serialize_printer
 from backend.modules.printers.router import (
     _merge_optional,
+    _reconcile_inventory,
     _merge_trusted,
     _valid_serial,
     list_printers,
@@ -160,3 +161,33 @@ def test_canonical_agent_token_is_accepted():
         status="starting",
     )
     assert len(payload.agent_token) == 43
+
+
+def test_completed_inventory_keeps_history_but_deactivates_missing_printers():
+    printers = [
+        SimpleNamespace(ip="10.2.0.122", active=True),
+        SimpleNamespace(ip="10.2.128.27", active=True),
+        SimpleNamespace(ip="10.2.99.10", active=True),
+    ]
+
+    active, inactive = _reconcile_inventory(
+        printers,
+        ["10.2.0.122", "10.2.128.27"],
+    )
+
+    assert (active, inactive) == (2, 1)
+    assert [printer.active for printer in printers] == [True, True, False]
+
+
+def test_heartbeat_accepts_authoritative_inventory_snapshot():
+    payload = AgentHeartbeat(
+        agent_token="A" * 43,
+        agent_name="Agent",
+        agent_version="0.2.7",
+        status="healthy",
+        inventory_complete=True,
+        observed_printer_ips=["10.2.0.122", "10.2.128.27"],
+    )
+
+    assert payload.inventory_complete is True
+    assert payload.observed_printer_ips == ["10.2.0.122", "10.2.128.27"]

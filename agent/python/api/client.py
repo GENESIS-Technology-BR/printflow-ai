@@ -281,6 +281,8 @@ class PrintflowApiClient:
         agent_version: str,
         status: str,
         error: str | None = None,
+        inventory_complete: bool = False,
+        observed_printer_ips: list[str] | None = None,
     ) -> bool:
         if not self.is_configured:
             return False
@@ -293,6 +295,8 @@ class PrintflowApiClient:
                     "agent_version": agent_version,
                     "status": status,
                     "error": error[:500] if error else None,
+                    "inventory_complete": inventory_complete,
+                    "observed_printer_ips": observed_printer_ips or [],
                 },
                 timeout=self.timeout_seconds,
             )

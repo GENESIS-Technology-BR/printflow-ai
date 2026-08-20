@@ -6,6 +6,7 @@ const API_BASE_URL = (
 export type DashboardSummary = {
   total_printers: number;
   active_printers: number;
+  inactive_printers: number;
   online: number;
   offline: number;
   unknown: number;

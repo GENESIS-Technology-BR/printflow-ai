@@ -42,3 +42,5 @@ class AgentHeartbeat(BaseModel):
     agent_version: str = Field(min_length=1, max_length=30)
     status: str = Field(pattern="^(starting|running|healthy|error)$")
     error: str | None = Field(default=None, max_length=500)
+    inventory_complete: bool = False
+    observed_printer_ips: list[str] = Field(default_factory=list, max_length=4096)

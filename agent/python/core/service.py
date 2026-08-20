@@ -393,6 +393,12 @@ class PrintflowAgentService:
             agent_name=self.settings.agent_name,
             agent_version=self.settings.agent_version,
             status="healthy",
+            inventory_complete=True,
+            observed_printer_ips=[
+                str(printer.get("discovery", {}).get("ip_address", ""))
+                for printer in printers
+                if printer.get("discovery", {}).get("ip_address")
+            ],
         )
 
         return 0

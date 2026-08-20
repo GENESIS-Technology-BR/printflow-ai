@@ -114,6 +114,13 @@ def test_heartbeat_sends_current_agent_state(tmp_path, monkeypatch):
         agent_name="PRINTFLOW Agent Windows",
         agent_version="0.1.0",
         status="healthy",
+        inventory_complete=True,
+        observed_printer_ips=["10.2.0.122", "10.2.128.27"],
     ) is True
     assert posted["status"] == "healthy"
     assert posted["agent_token"] == "current-secret-token"
+    assert posted["inventory_complete"] is True
+    assert posted["observed_printer_ips"] == [
+        "10.2.0.122",
+        "10.2.128.27",
+    ]

@@ -65,6 +65,25 @@ def _merge_trusted(
     return current_value, current_confidence, False
 
 
+def _reconcile_inventory(
+    printers: list[Printer], observed_printer_ips: list[str]
+) -> tuple[int, int]:
+    observed_ips = {
+        ip.strip()
+        for ip in observed_printer_ips
+        if ip and ip.strip()
+    }
+    active = 0
+    inactive = 0
+    for printer in printers:
+        printer.active = printer.ip in observed_ips
+        if printer.active:
+            active += 1
+        else:
+            inactive += 1
+    return active, inactive
+
+
 @router.get("", response_model=list[PrinterResponse])
 def list_printers(
     db: Session = Depends(get_db),
@@ -105,6 +124,19 @@ def receive_agent_heartbeat(
     company.agent_name = payload.agent_name
     company.agent_version = payload.agent_version
     company.agent_last_error = _clean_text(payload.error)
+
+    # A lista só é autoritativa quando o Agent conclui todo o ciclo. Isso
+    # preserva a frota anterior em falhas parciais, desligamentos e timeouts.
+    if payload.status == "healthy" and payload.inventory_complete:
+        company_printers = (
+            db.query(Printer)
+            .filter(Printer.company_id == company.id)
+            .all()
+        )
+        _reconcile_inventory(
+            company_printers,
+            payload.observed_printer_ips,
+        )
     db.commit()
 
     return {"status": "received"}

@@ -151,7 +151,7 @@ export default function AgentMonitor({
         <article>
           <span>Status técnico</span>
           <strong>{agent?.status || "Aguardando"}</strong>
-          <small>{summary ? `${summary.total_printers} impressora(s) monitorada(s)` : "Carregando frota"}</small>
+          <small>{summary ? `${summary.active_printers} impressora(s) monitorada(s)` : "Carregando frota"}</small>
         </article>
       </div>
 

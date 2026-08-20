@@ -1,8 +1,8 @@
 name: Build PRINTFLOW Agent Windows
 
 env:
-  PRINTFLOW_BUILD_NUMBER: "36"
-  PRINTFLOW_AGENT_VERSION: "0.2.6"
+  PRINTFLOW_BUILD_NUMBER: "37"
+  PRINTFLOW_AGENT_VERSION: "0.2.7"
 
 on:
   workflow_dispatch:
@@ -13,6 +13,7 @@ on:
       - "agent/python/**"
       - "agent/windows/**"
       - "frontend/**"
+      - "backend/**"
       - ".github/workflows/build-agent-windows.yml"
       - "requirements.txt"
       - "requirements-dev.txt"

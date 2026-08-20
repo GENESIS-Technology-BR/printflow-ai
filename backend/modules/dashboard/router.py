@@ -72,6 +72,9 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
         getattr(printer, "active", True)
     )
 
+    if not active:
+        status = "inactive"
+
     health_score = 100
     health_reasons: list[str] = []
 
@@ -219,36 +222,39 @@ def dashboard_summary(
     online = sum(
         1
         for printer in serialized
-        if printer["status"] == "online"
+        if printer["active"] and printer["status"] == "online"
     )
 
     offline = sum(
         1
         for printer in serialized
-        if printer["status"] == "offline"
+        if printer["active"] and printer["status"] == "offline"
     )
-
-    unknown = total - online - offline
 
     active = sum(
         1
         for printer in serialized
         if printer["active"]
     )
+    monitored = [
+        printer for printer in serialized if printer["active"]
+    ]
 
     total_pages = sum(
         printer["page_count"]
-        for printer in serialized
+        for printer in monitored
         if printer["page_count"] is not None
     )
+    inactive = total - active
+    unknown = active - online - offline
     page_count_known = sum(
-        1 for printer in serialized
+        1 for printer in monitored
         if printer["page_count"] is not None
     )
 
     alerts = sum(
         1
-        for printer in serialized
+        for printer in monitored
         if (
             printer["health_score"] < 70
             or printer["status"] == "offline"
@@ -259,16 +265,16 @@ def dashboard_summary(
         round(
             sum(
                 printer["health_score"]
-                for printer in serialized
-            ) / total
+                for printer in monitored
+            ) / active
         )
-        if total
+        if active
         else 100
     )
 
     manufacturers: dict[str, int] = {}
 
-    for printer in serialized:
+    for printer in monitored:
         manufacturer = (
             printer["manufacturer"]
             or "Não identificado"
@@ -295,13 +301,14 @@ def dashboard_summary(
     return {
         "total_printers": total,
         "active_printers": active,
+        "inactive_printers": inactive,
         "online": online,
         "offline": offline,
         "unknown": unknown,
         "alerts": alerts,
         "total_pages": total_pages,
         "page_count_known": page_count_known,
-        "page_count_unknown": total - page_count_known,
+        "page_count_unknown": active - page_count_known,
         "health_average": health_average,
         "manufacturers": manufacturers,
         "agent": {
