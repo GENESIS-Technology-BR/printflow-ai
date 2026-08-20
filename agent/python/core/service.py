@@ -341,21 +341,34 @@ class PrintflowAgentService:
             "Iniciando ciclo do PRINTFLOW Agent."
         )
 
-        devices = self.discover_devices()
-
-        printers = asyncio.run(
-            self.collect_snmp_data(devices)
+        self.api_client.send_heartbeat(
+            agent_name=self.settings.agent_name,
+            agent_version=self.settings.agent_version,
+            status="running",
         )
 
-        api_result = self.synchronize_api(
-            printers=printers
-        )
-
-        output_file = self.save_inventory(
-            devices=devices,
-            printers=printers,
-            api_result=api_result,
-        )
+        try:
+            devices = self.discover_devices()
+            printers = asyncio.run(
+                self.collect_snmp_data(devices)
+            )
+            api_result = self.synchronize_api(
+                printers=printers
+            )
+            output_file = self.save_inventory(
+                devices=devices,
+                printers=printers,
+                api_result=api_result,
+            )
+        except Exception as error:
+            self.api_client.send_heartbeat(
+                agent_name=self.settings.agent_name,
+                agent_version=self.settings.agent_version,
+                status="error",
+                error=str(error),
+            )
+            self.logger.exception("Falha no ciclo do PRINTFLOW Agent.")
+            return 1
 
         self.logger.info(
             "Ciclo finalizado."
@@ -374,6 +387,12 @@ class PrintflowAgentService:
         self.logger.info(
             "Inventário salvo em %s.",
             output_file,
+        )
+
+        self.api_client.send_heartbeat(
+            agent_name=self.settings.agent_name,
+            agent_version=self.settings.agent_version,
+            status="healthy",
         )
 
         return 0

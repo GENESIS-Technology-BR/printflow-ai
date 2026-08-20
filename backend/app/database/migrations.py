@@ -9,6 +9,20 @@ PRINTER_COLUMNS = {
     "toner_percent": "INTEGER",
     "health_score": "INTEGER",
     "health_status": "VARCHAR(30)",
+    "serial_source": "VARCHAR(60)",
+    "serial_confidence": "INTEGER",
+    "serial_confirmed": "BOOLEAN DEFAULT FALSE",
+    "page_count_source": "VARCHAR(60)",
+    "page_count_confidence": "INTEGER",
+    "page_count_confirmed": "BOOLEAN DEFAULT FALSE",
+}
+
+COMPANY_AGENT_COLUMNS = {
+    "agent_last_seen": "TIMESTAMP",
+    "agent_status": "VARCHAR(30)",
+    "agent_name": "VARCHAR(120)",
+    "agent_version": "VARCHAR(30)",
+    "agent_last_error": "VARCHAR(500)",
 }
 
 
@@ -66,3 +80,80 @@ def ensure_printer_columns(engine: Engine) -> None:
     print(
         "[PRINTFLOW DB] Migração Motor V2 concluída."
     )
+
+
+def ensure_printer_company_ip_constraint(engine: Engine) -> None:
+    """Troca a unicidade global de IP pela unicidade por empresa.
+
+    Em bancos PostgreSQL existentes, remove somente constraints únicas
+    formadas exclusivamente por ``ip`` e cria ``(company_id, ip)``.
+    Bancos novos já recebem a constraint correta pelo modelo SQLAlchemy.
+    """
+    inspector = inspect(engine)
+
+    if "printers" not in inspector.get_table_names():
+        return
+
+    unique_constraints = inspector.get_unique_constraints("printers")
+    composite_exists = any(
+        set(item.get("column_names") or []) == {"company_id", "ip"}
+        for item in unique_constraints
+    )
+
+    if composite_exists:
+        return
+
+    if engine.dialect.name != "postgresql":
+        print(
+            "[PRINTFLOW DB] Constraint por empresa será aplicada "
+            "automaticamente em bancos novos."
+        )
+        return
+
+    global_ip_constraints = [
+        item.get("name")
+        for item in unique_constraints
+        if item.get("column_names") == ["ip"] and item.get("name")
+    ]
+    quote = engine.dialect.identifier_preparer.quote
+
+    with engine.begin() as connection:
+        for constraint_name in global_ip_constraints:
+            connection.execute(
+                text(
+                    "ALTER TABLE printers DROP CONSTRAINT "
+                    f"{quote(constraint_name)}"
+                )
+            )
+
+        connection.execute(
+            text(
+                "ALTER TABLE printers ADD CONSTRAINT "
+                "uq_printers_company_ip UNIQUE (company_id, ip)"
+            )
+        )
+
+    print(
+        "[PRINTFLOW DB] Unicidade de impressora atualizada "
+        "para empresa + IP."
+    )
+
+
+def ensure_company_agent_columns(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "companies_v2" not in inspector.get_table_names():
+        return
+    existing = {
+        column["name"]
+        for column in inspector.get_columns("companies_v2")
+    }
+    missing = {
+        name: sql_type
+        for name, sql_type in COMPANY_AGENT_COLUMNS.items()
+        if name not in existing
+    }
+    with engine.begin() as connection:
+        for name, sql_type in missing.items():
+            connection.execute(text(
+                f"ALTER TABLE companies_v2 ADD COLUMN {name} {sql_type}"
+            ))

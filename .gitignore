@@ -225,6 +225,9 @@ __marimo__/
 __pycache__/
 *.py[cod]
 .backups/
+.pytest-local-temp/
+.pytest-run-*/
+.pnpm-store/
 agent/python/output/
 agent/python/logs/
 frontend/src/App.tsx.backup_pf008*

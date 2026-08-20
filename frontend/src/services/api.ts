@@ -11,9 +11,19 @@ export type DashboardSummary = {
   unknown: number;
   alerts: number;
   total_pages: number;
+  page_count_known: number;
+  page_count_unknown: number;
   health_average: number;
   manufacturers: Record<string, number>;
   generated_at: string;
+  agent: {
+    online: boolean;
+    status: string | null;
+    name: string | null;
+    version: string | null;
+    last_seen: string | null;
+    last_error: string | null;
+  };
 };
 
 export type DashboardPrinter = {
@@ -25,7 +35,15 @@ export type DashboardPrinter = {
   model: string | null;
   status: string;
   source: string | null;
-  page_count: number;
+  page_count: number | null;
+  page_count_source: string | null;
+  page_count_confidence: number | null;
+  page_count_confirmed: boolean;
+  serial: string | null;
+  serial_source: string | null;
+  serial_confidence: number | null;
+  serial_confirmed: boolean;
+  toner_percent: number | null;
   active: boolean;
   last_seen: string | null;
   created_at: string | null;
@@ -37,11 +55,13 @@ export type DashboardPrinter = {
 async function request<T>(
   endpoint: string,
 ): Promise<T> {
+  const token = localStorage.getItem("printflow_token");
   const response = await fetch(
     `${API_BASE_URL}${endpoint}`,
     {
       headers: {
         Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     },
   );

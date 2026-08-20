@@ -25,6 +25,11 @@ class Company(Base):
         default=lambda: secrets.token_urlsafe(32),
     )
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    agent_last_seen: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    agent_status: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    agent_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    agent_version: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    agent_last_error: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

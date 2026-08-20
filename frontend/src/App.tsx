@@ -2,6 +2,9 @@ import { useEffect, useState } from "react"
 import type { FormEvent } from "react"
 import "./App.css"
 import Dashboard from "./components/Dashboard"
+import PrinterTable from "./components/PrinterTable"
+import { getDashboardPrinters } from "./services/api"
+import type { DashboardPrinter } from "./services/api"
 
 const API_URL = (
   import.meta.env.VITE_API_URL ||
@@ -33,7 +36,7 @@ function App() {
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState<"dashboard" | "printers" | "company" | "agents">("dashboard")
-  const [printers, setPrinters] = useState<any[]>([])
+  const [printers, setPrinters] = useState<DashboardPrinter[]>([])
   const [printersLoading, setPrintersLoading] = useState(false)
 
   async function api(path: string, options: RequestInit = {}) {
@@ -53,7 +56,7 @@ function App() {
           ? data.detail
           : Array.isArray(data.detail)
             ? data.detail
-                .map((item: any) => item?.msg || JSON.stringify(item))
+                .map((item: { msg?: string }) => item?.msg || JSON.stringify(item))
                 .join("; ")
             : data.detail
               ? JSON.stringify(data.detail)
@@ -69,6 +72,8 @@ function App() {
     api("/api/v1/companies/current")
       .then(setCompany)
       .catch(() => logout())
+  // A função api usa o token atual e é recriada junto com este efeito.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
   async function authenticate(event: FormEvent<HTMLFormElement>) {
@@ -128,8 +133,8 @@ function App() {
     setMessage("")
 
     try {
-      const result = await api("/api/v1/printers")
-      setPrinters(Array.isArray(result) ? result : [])
+      const result = await getDashboardPrinters()
+      setPrinters(result)
     } catch (error) {
       setMessage(
         error instanceof Error
@@ -252,66 +257,7 @@ function App() {
                 </button>
               </div>
 
-              {printers.length === 0 && !printersLoading ? (
-                <div className="status-box">
-                  <strong>Nenhuma impressora recebida</strong>
-                  <span>
-                    Execute o Agent usando o token da empresa para enviar
-                    os primeiros equipamentos.
-                  </span>
-                </div>
-              ) : (
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "12px",
-                    marginTop: "18px",
-                  }}
-                >
-                  {printers.map((printer: any, index: number) => (
-                    <div
-                      className="status-box"
-                      key={
-                        printer.id ||
-                        printer.serial_number ||
-                        printer.serial ||
-                        printer.ip ||
-                        index
-                      }
-                    >
-                      <strong>
-                        {printer.name ||
-                          printer.model ||
-                          printer.hostname ||
-                          `Impressora ${index + 1}`}
-                      </strong>
-
-                      <span>
-                        IP: {printer.ip || printer.ip_address || "Não informado"}
-                      </span>
-
-                      <span>
-                        Status: {printer.status || "Não informado"}
-                      </span>
-
-                      <span>
-                        Serial:{" "}
-                        {printer.serial_number ||
-                          printer.serial ||
-                          "Não informado"}
-                      </span>
-
-                      <span>
-                        Contador:{" "}
-                        {printer.page_count ??
-                  printer.total_counter ??
-                          printer.counter ??
-                          "Não informado"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <PrinterTable printers={printers} />
             </article>
           </section>
         </>

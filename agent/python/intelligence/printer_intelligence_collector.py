@@ -346,7 +346,29 @@ def best_serial_candidate(
     candidates: Iterable[
         dict[str, Any]
     ],
+    manufacturer: str | None = None,
 ) -> IntelligenceValue | None:
+
+    candidate_list = list(candidates)
+
+    if manufacturer == "Zebra":
+        for candidate in candidate_list:
+            oid = str(candidate.get("oid") or "")
+            value = candidate.get("value")
+
+            if oid != "1.3.6.1.4.1.10642.1.4.0":
+                continue
+
+            valid, score, _ = validate_serial(value)
+
+            if valid:
+                return IntelligenceValue(
+                    value=str(value).strip(),
+                    source="zebra-enterprise-oid",
+                    confidence=max(score, 99),
+                    value_type="serial",
+                    confirmed=True,
+                )
 
     ranked: list[
         tuple[
@@ -356,7 +378,7 @@ def best_serial_candidate(
         ]
     ] = []
 
-    for candidate in candidates:
+    for candidate in candidate_list:
 
         value = candidate.get(
             "value"
@@ -529,7 +551,8 @@ def build_report(
     if serial is None:
         learned_serial = (
             best_serial_candidate(
-                serial_candidates
+                serial_candidates,
+                manufacturer=manufacturer_value,
             )
         )
 

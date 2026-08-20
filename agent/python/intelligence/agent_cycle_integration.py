@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import atexit
 import json
 import os
@@ -11,14 +10,12 @@ from typing import Any
 
 from intelligence.printer_intelligence_collector import (
     PrinterIntelligenceReport,
-    collect_one,
+    build_report,
     save_reports,
 )
 
 
 OUTPUT_NAME = "PRINTFLOW-Printer-Intelligence.json"
-PER_PRINTER_TIMEOUT = 15.0
-TOTAL_TIMEOUT = 90.0
 
 _LOCK = threading.Lock()
 _INSTALLED = False
@@ -174,78 +171,48 @@ def _find_inventory() -> Path | None:
     return None
 
 
-def _error_report(
-    ip_address: str,
-    error: BaseException,
-) -> PrinterIntelligenceReport:
-    from intelligence.printer_intelligence_collector import (
-        utc_now,
-    )
-
-    return PrinterIntelligenceReport(
-        ip_address=ip_address,
-        manufacturer=None,
-        model=None,
-        serial=None,
-        counter=None,
-        toner=None,
-        sys_object_id=None,
-        serial_candidates=[],
-        counter_candidates=[],
-        learning_error=(
-            f"{type(error).__name__}: {error}"
-        ),
-        generated_at=utc_now(),
-    )
-
-
-async def _collect_reports(
-    *,
-    ip_addresses: list[str],
-    community: str,
-    per_printer_timeout: float,
-    total_timeout: float,
+def build_reports_from_inventory(
+    payload: Any,
 ) -> list[PrinterIntelligenceReport]:
     reports: list[PrinterIntelligenceReport] = []
-    loop = asyncio.get_running_loop()
-    deadline = loop.time() + total_timeout
 
-    for ip_address in ip_addresses:
-        remaining = deadline - loop.time()
+    for row in _inventory_rows(payload):
+        discovery = row.get("discovery")
+        snmp = row.get("snmp")
 
-        if remaining <= 0:
-            reports.append(
-                _error_report(
-                    ip_address,
-                    TimeoutError(
-                        "Tempo total do diagnostico esgotado."
-                    ),
-                )
-            )
-            continue
+        if not isinstance(discovery, dict):
+            discovery = {}
 
-        timeout = min(
-            per_printer_timeout,
-            remaining,
+        if not isinstance(snmp, dict):
+            snmp = {}
+
+        primary = snmp.get("dados")
+
+        if not isinstance(primary, dict):
+            primary = row
+
+        ip_address = _valid_ip(
+            discovery.get("ip_address")
+            or snmp.get("ip_address")
+            or row.get("ip_address")
+            or row.get("ip")
         )
 
-        try:
-            report = await asyncio.wait_for(
-                collect_one(
-                    ip_address=ip_address,
-                    community=community,
-                    timeout=2.0,
-                    retries=1,
-                ),
-                timeout=timeout,
-            )
-        except BaseException as exc:
-            report = _error_report(
-                ip_address,
-                exc,
-            )
+        if not ip_address:
+            continue
 
-        reports.append(report)
+        learning = primary.get("learning_diagnostic")
+
+        if not isinstance(learning, dict):
+            learning = {}
+
+        reports.append(
+            build_report(
+                ip_address=ip_address,
+                primary=primary,
+                learning=learning,
+            )
+        )
 
     return reports
 
@@ -254,9 +221,6 @@ def generate_from_inventory(
     *,
     inventory_path: str | Path | None = None,
     destination: str | Path | None = None,
-    community: str | None = None,
-    per_printer_timeout: float = PER_PRINTER_TIMEOUT,
-    total_timeout: float = TOTAL_TIMEOUT,
 ) -> Path | None:
     inventory = (
         Path(inventory_path).resolve()
@@ -321,26 +285,14 @@ def generate_from_inventory(
         )
         return output_path
 
-    snmp_community = (
-        community
-        or os.getenv("PRINTFLOW_SNMP_COMMUNITY")
-        or "public"
-    )
-
     print(
         "[Printer Intelligence] "
-        f"coletando {len(ip_addresses)} impressora(s)."
+        f"normalizando {len(ip_addresses)} impressora(s) "
+        "do inventario existente."
     )
 
     try:
-        reports = asyncio.run(
-            _collect_reports(
-                ip_addresses=ip_addresses,
-                community=snmp_community,
-                per_printer_timeout=per_printer_timeout,
-                total_timeout=total_timeout,
-            )
-        )
+        reports = build_reports_from_inventory(payload)
 
         saved_path = save_reports(
             reports=reports,
@@ -353,12 +305,7 @@ def generate_from_inventory(
 
         diagnostic["source_inventory"] = str(inventory)
         diagnostic["inventory_preserved"] = True
-        diagnostic["per_printer_timeout_seconds"] = (
-            per_printer_timeout
-        )
-        diagnostic["total_timeout_seconds"] = (
-            total_timeout
-        )
+        diagnostic["second_snmp_collection"] = False
 
         saved_path.write_text(
             json.dumps(

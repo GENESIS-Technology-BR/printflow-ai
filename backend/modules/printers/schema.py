@@ -9,10 +9,16 @@ class PrinterBase(BaseModel):
     model: str | None = None
     status: str = "online"
     source: str = "agent"
-    page_count: int | None = None
+    page_count: int | None = Field(default=None, ge=0)
+    page_count_source: str | None = Field(default=None, max_length=60)
+    page_count_confidence: int | None = Field(default=None, ge=0, le=100)
+    page_count_confirmed: bool = False
     serial: str | None = None
-    toner_percent: int | None = None
-    health_score: int | None = None
+    serial_source: str | None = Field(default=None, max_length=60)
+    serial_confidence: int | None = Field(default=None, ge=0, le=100)
+    serial_confirmed: bool = False
+    toner_percent: int | None = Field(default=None, ge=0, le=100)
+    health_score: int | None = Field(default=None, ge=0, le=100)
     health_status: str | None = None
 
 
@@ -28,3 +34,11 @@ class PrinterResponse(PrinterBase):
     active: bool
     last_seen: datetime
     created_at: datetime
+
+
+class AgentHeartbeat(BaseModel):
+    agent_token: str = Field(min_length=10)
+    agent_name: str = Field(min_length=1, max_length=120)
+    agent_version: str = Field(min_length=1, max_length=30)
+    status: str = Field(pattern="^(starting|running|healthy|error)$")
+    error: str | None = Field(default=None, max_length=500)

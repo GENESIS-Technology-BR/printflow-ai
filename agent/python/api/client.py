@@ -9,6 +9,8 @@ from typing import Any
 
 import requests
 
+from intelligence.printer_intelligence_collector import build_report
+
 
 @dataclass
 class ApiSyncResult:
@@ -19,6 +21,8 @@ class ApiSyncResult:
 
 
 class PrintflowApiClient:
+    MAX_QUEUE_FILES = 500
+    MAX_QUEUE_AGE_SECONDS = 30 * 24 * 60 * 60
     def __init__(
         self,
         api_url: str,
@@ -38,6 +42,10 @@ class PrintflowApiClient:
         self.printers_endpoint = (
             f"{self.api_url}/api/v1/printers/agent"
         )
+        self.health_endpoint = f"{self.api_url}/health"
+        self.heartbeat_endpoint = (
+            f"{self.api_url}/api/v1/printers/agent/heartbeat"
+        )
 
         self.queue_directory.mkdir(
             parents=True,
@@ -54,11 +62,11 @@ class PrintflowApiClient:
     def health_check(self) -> bool:
         try:
             response = requests.get(
-                self.printers_endpoint,
+                self.health_endpoint,
                 timeout=self.timeout_seconds,
             )
 
-            return response.status_code < 500
+            return response.status_code == 200
 
         except requests.RequestException:
             return False
@@ -88,6 +96,17 @@ class PrintflowApiClient:
             or ""
         )
 
+        learning = snmp_data.get("learning_diagnostic")
+
+        if not isinstance(learning, dict):
+            learning = {}
+
+        intelligence = build_report(
+            ip_address=ip_address,
+            primary=snmp_data,
+            learning=learning,
+        )
+
         description = (
             snmp_data.get("descricao")
             or ""
@@ -104,7 +123,12 @@ class PrintflowApiClient:
         # Prioriza a inteligência do motor SNMP.
         # ----------------------------------------------------
         model = (
-            snmp_data.get("modelo")
+            (
+                intelligence.model.value
+                if intelligence.model
+                else None
+            )
+            or snmp_data.get("modelo")
             or self._detect_model(
                 description=description,
                 fallback=printer.get("model"),
@@ -116,7 +140,12 @@ class PrintflowApiClient:
         # Prioriza a inteligência do motor SNMP.
         # ----------------------------------------------------
         manufacturer = (
-            snmp_data.get("fabricante")
+            (
+                intelligence.manufacturer.value
+                if intelligence.manufacturer
+                else None
+            )
+            or snmp_data.get("fabricante")
             or self._detect_manufacturer(
                 description=description,
                 model=model,
@@ -126,17 +155,23 @@ class PrintflowApiClient:
         # ----------------------------------------------------
         # CONTADOR
         # ----------------------------------------------------
-        page_count = self._parse_integer(
-            snmp_data.get("contador_paginas")
+        page_count = (
+            intelligence.counter.value
+            if intelligence.counter
+            else None
         )
 
         # ----------------------------------------------------
         # SERIAL
         # ----------------------------------------------------
-        serial = snmp_data.get("serial")
-
-        if serial is not None:
-            serial = str(serial).strip() or None
+        serial = (
+            intelligence.serial.value
+            if (
+                intelligence.serial
+                and intelligence.serial.confirmed
+            )
+            else None
+        )
 
         # ----------------------------------------------------
         # TONER / HEALTH
@@ -198,9 +233,37 @@ class PrintflowApiClient:
                 if serial
                 else None
             ),
+            "serial_source": (
+                intelligence.serial.source
+                if intelligence.serial
+                else None
+            ),
+            "serial_confidence": (
+                intelligence.serial.confidence
+                if intelligence.serial
+                else None
+            ),
+            "serial_confirmed": bool(
+                intelligence.serial
+                and intelligence.serial.confirmed
+            ),
             "status": status,
             "source": "agent",
             "page_count": page_count,
+            "page_count_source": (
+                intelligence.counter.source
+                if intelligence.counter
+                else None
+            ),
+            "page_count_confidence": (
+                intelligence.counter.confidence
+                if intelligence.counter
+                else None
+            ),
+            "page_count_confirmed": bool(
+                intelligence.counter
+                and intelligence.counter.confirmed
+            ),
             "toner_percent": toner_percent,
             "health_score": health_score,
             "health_status": (
@@ -210,6 +273,32 @@ class PrintflowApiClient:
             ),
             "agent_token": self.agent_token,
         }
+
+    def send_heartbeat(
+        self,
+        *,
+        agent_name: str,
+        agent_version: str,
+        status: str,
+        error: str | None = None,
+    ) -> bool:
+        if not self.is_configured:
+            return False
+        try:
+            response = requests.post(
+                self.heartbeat_endpoint,
+                json={
+                    "agent_token": self.agent_token,
+                    "agent_name": agent_name,
+                    "agent_version": agent_version,
+                    "status": status,
+                    "error": error[:500] if error else None,
+                },
+                timeout=self.timeout_seconds,
+            )
+            return response.status_code == 200
+        except requests.RequestException:
+            return False
 
     def send_printer(
         self,
@@ -414,6 +503,7 @@ class PrintflowApiClient:
         if not self.is_configured:
             return summary
 
+        self.prune_queue()
         queue_files = sorted(
             self.queue_directory.glob(
                 "*.json"
@@ -435,9 +525,32 @@ class PrintflowApiClient:
                     {}
                 )
 
+                if not isinstance(payload, dict):
+                    summary["failed"] += 1
+                    continue
+
+                # Arquivos antigos podem conter o token. Remove-o
+                # imediatamente do disco e usa a credencial atual
+                # apenas na requisição em memória.
+                payload.pop("agent_token", None)
+                content["payload"] = payload
+                queue_file.write_text(
+                    json.dumps(
+                        content,
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+
+                request_payload = {
+                    **payload,
+                    "agent_token": self.agent_token,
+                }
+
                 response = requests.post(
                     self.printers_endpoint,
-                    json=payload,
+                    json=request_payload,
                     timeout=self.timeout_seconds,
                 )
 
@@ -478,10 +591,16 @@ class PrintflowApiClient:
             / f"{timestamp}_{safe_ip}.json"
         )
 
+        safe_payload = {
+            key: value
+            for key, value in payload.items()
+            if key != "agent_token"
+        }
+
         content = {
             "reason": reason,
             "created_at_unix": timestamp,
-            "payload": payload,
+            "payload": safe_payload,
         }
 
         output_file.write_text(
@@ -493,7 +612,43 @@ class PrintflowApiClient:
             encoding="utf-8",
         )
 
+        self.prune_queue()
+
         return output_file
+
+    def prune_queue(self) -> dict[str, int]:
+        now_ms = int(time.time() * 1000)
+        maximum_age_ms = self.MAX_QUEUE_AGE_SECONDS * 1000
+        removed_expired = 0
+        removed_excess = 0
+        queue_files = sorted(
+            self.queue_directory.glob("*.json"),
+            key=lambda item: item.stat().st_mtime,
+        )
+
+        for queue_file in list(queue_files):
+            try:
+                content = json.loads(
+                    queue_file.read_text(encoding="utf-8")
+                )
+                created_at = int(content.get("created_at_unix", 0))
+            except (OSError, ValueError, TypeError):
+                created_at = 0
+
+            if created_at <= 0 or now_ms - created_at > maximum_age_ms:
+                queue_file.unlink(missing_ok=True)
+                queue_files.remove(queue_file)
+                removed_expired += 1
+
+        excess = max(0, len(queue_files) - self.MAX_QUEUE_FILES)
+        for queue_file in queue_files[:excess]:
+            queue_file.unlink(missing_ok=True)
+            removed_excess += 1
+
+        return {
+            "expired": removed_expired,
+            "excess": removed_excess,
+        }
 
     @staticmethod
     def _parse_integer(

@@ -31,9 +31,19 @@ const EMPTY_SUMMARY: DashboardSummary = {
   unknown: 0,
   alerts: 0,
   total_pages: 0,
+  page_count_known: 0,
+  page_count_unknown: 0,
   health_average: 100,
   manufacturers: {},
   generated_at: "",
+  agent: {
+    online: false,
+    status: null,
+    name: null,
+    version: null,
+    last_seen: null,
+    last_error: null,
+  },
 };
 
 function formatNumber(value: number): string {
@@ -107,6 +117,8 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
+    // Carregamento inicial e assinatura do intervalo do Dashboard.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadDashboard();
 
     const intervalId = window.setInterval(
@@ -150,7 +162,9 @@ export default function Dashboard() {
         <div className="dashboard-header-actions">
           <span className="dashboard-live">
             <i />
-            API conectada
+            {summary.agent.online
+              ? `Agent online${summary.agent.version ? ` • v${summary.agent.version}` : ""}`
+              : "Agent sem comunicação"}
           </span>
 
           <button

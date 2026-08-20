@@ -7,6 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.app.database.session import get_db
+from backend.modules.auth.dependencies import get_current_user
+from backend.modules.auth.model import User
+from backend.modules.companies.model import Company
 from ..printers.model import Printer
 
 
@@ -41,11 +44,13 @@ def normalize_status(value: Any) -> str:
     return normalized or "unknown"
 
 
-def integer_value(value: Any) -> int:
+def integer_value(value: Any) -> int | None:
+    if value is None:
+        return None
     try:
-        return int(value or 0)
+        return int(value)
     except (TypeError, ValueError):
-        return 0
+        return None
 
 
 def serialize_printer(printer: Printer) -> dict[str, Any]:
@@ -88,7 +93,7 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
             "Status da impressora não identificado."
         )
 
-    if page_count >= 500000:
+    if page_count is not None and page_count >= 500000:
         health_score -= 10
         health_reasons.append(
             "Contador elevado; avaliar manutenção preventiva."
@@ -159,6 +164,18 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
         "status": status,
         "source": getattr(printer, "source", None),
         "page_count": page_count,
+        "page_count_source": getattr(printer, "page_count_source", None),
+        "page_count_confidence": getattr(printer, "page_count_confidence", None),
+        "page_count_confirmed": bool(
+            getattr(printer, "page_count_confirmed", False)
+        ),
+        "serial": getattr(printer, "serial", None),
+        "serial_source": getattr(printer, "serial_source", None),
+        "serial_confidence": getattr(printer, "serial_confidence", None),
+        "serial_confirmed": bool(
+            getattr(printer, "serial_confirmed", False)
+        ),
+        "toner_percent": getattr(printer, "toner_percent", None),
         "active": active,
         "last_seen": (
             last_seen.isoformat()
@@ -179,8 +196,18 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
 @router.get("/summary")
 def dashboard_summary(
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
-    printers = db.query(Printer).all()
+    printers = (
+        db.query(Printer)
+        .filter(Printer.company_id == current_user.company_id)
+        .all()
+    )
+    company = (
+        db.query(Company)
+        .filter(Company.id == current_user.company_id)
+        .first()
+    )
 
     serialized = [
         serialize_printer(printer)
@@ -212,6 +239,11 @@ def dashboard_summary(
     total_pages = sum(
         printer["page_count"]
         for printer in serialized
+        if printer["page_count"] is not None
+    )
+    page_count_known = sum(
+        1 for printer in serialized
+        if printer["page_count"] is not None
     )
 
     alerts = sum(
@@ -250,6 +282,16 @@ def dashboard_summary(
             + 1
         )
 
+    agent_last_seen = getattr(company, "agent_last_seen", None)
+    agent_online = False
+    if agent_last_seen is not None:
+        normalized_seen = agent_last_seen
+        if normalized_seen.tzinfo is None:
+            normalized_seen = normalized_seen.replace(tzinfo=timezone.utc)
+        agent_online = (
+            datetime.now(timezone.utc) - normalized_seen
+        ).total_seconds() <= 1800
+
     return {
         "total_printers": total,
         "active_printers": active,
@@ -258,8 +300,22 @@ def dashboard_summary(
         "unknown": unknown,
         "alerts": alerts,
         "total_pages": total_pages,
+        "page_count_known": page_count_known,
+        "page_count_unknown": total - page_count_known,
         "health_average": health_average,
         "manufacturers": manufacturers,
+        "agent": {
+            "online": agent_online,
+            "status": getattr(company, "agent_status", None),
+            "name": getattr(company, "agent_name", None),
+            "version": getattr(company, "agent_version", None),
+            "last_seen": (
+                agent_last_seen.isoformat()
+                if agent_last_seen is not None
+                else None
+            ),
+            "last_error": getattr(company, "agent_last_error", None),
+        },
         "generated_at": datetime.now(
             timezone.utc
         ).isoformat(),
@@ -269,9 +325,11 @@ def dashboard_summary(
 @router.get("/printers")
 def dashboard_printers(
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> list[dict[str, Any]]:
     printers = (
         db.query(Printer)
+        .filter(Printer.company_id == current_user.company_id)
         .order_by(Printer.id.desc())
         .all()
     )
@@ -286,10 +344,14 @@ def dashboard_printers(
 def dashboard_printer_detail(
     printer_uuid: str,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
     printer = (
         db.query(Printer)
-        .filter(Printer.uuid == printer_uuid)
+        .filter(
+            Printer.uuid == printer_uuid,
+            Printer.company_id == current_user.company_id,
+        )
         .first()
     )
 

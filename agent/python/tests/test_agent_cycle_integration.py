@@ -71,19 +71,9 @@ def test_inventory_is_preserved(
         encoding="utf-8",
     )
 
-    async def fake_collect(**kwargs):
-        return [_report(kwargs["ip_addresses"][0])]
-
-    monkeypatch.setattr(
-        integration,
-        "_collect_reports",
-        fake_collect,
-    )
-
     result = integration.generate_from_inventory(
         inventory_path=inventory,
         destination=destination,
-        total_timeout=1.0,
     )
 
     assert result == destination.resolve()
@@ -216,3 +206,57 @@ def test_discovery_ip_wins_without_duplication():
     assert integration._extract_ips(payload) == [
         "10.2.0.122"
     ]
+
+
+def test_reports_use_existing_snmp_inventory():
+    payload = {
+        "printers": [
+            {
+                "discovery": {"ip_address": "10.2.0.122"},
+                "snmp": {
+                    "ip_address": "10.2.0.122",
+                    "dados": {
+                        "fabricante": "Canon",
+                        "modelo": "Canon GX6000 series 1.070",
+                        "serial": "KNDK09992",
+                        "contador_paginas": 27377,
+                        "toner_percentual": 14,
+                    },
+                },
+            },
+            {
+                "discovery": {"ip_address": "10.2.128.27"},
+                "snmp": {
+                    "ip_address": "10.2.128.27",
+                    "dados": {
+                        "fabricante": "Zebra",
+                        "modelo": "Zebra Technologies ZT230",
+                        "serial": "ZTC ZT230-203dpi ZPL",
+                        "contador_paginas": None,
+                        "learning_diagnostic": {
+                            "serial_candidates": [
+                                {
+                                    "oid": "1.3.6.1.4.1.10642.1.4.0",
+                                    "value": "52N212401393",
+                                    "confidence": 90,
+                                }
+                            ],
+                            "counter_candidates": [],
+                        },
+                    },
+                },
+            },
+        ]
+    }
+
+    reports = integration.build_reports_from_inventory(payload)
+
+    assert len(reports) == 2
+    assert reports[0].serial
+    assert reports[0].serial.value == "KNDK09992"
+    assert reports[0].counter
+    assert reports[0].counter.value == 27377
+    assert reports[1].serial
+    assert reports[1].serial.value == "52N212401393"
+    assert reports[1].serial.confirmed is True
+    assert reports[1].counter is None

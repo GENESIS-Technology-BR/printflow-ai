@@ -156,6 +156,29 @@ def test_learned_serial():
     )
 
 
+def test_zebra_enterprise_serial_is_confirmed():
+    result = best_serial_candidate(
+        [
+            {
+                "oid": "1.3.6.1.4.1.10642.1.2.0",
+                "value": "V72.20.22Z",
+                "confidence": 90,
+            },
+            {
+                "oid": "1.3.6.1.4.1.10642.1.4.0",
+                "value": "52N212401393",
+                "confidence": 90,
+            },
+        ],
+        manufacturer="Zebra",
+    )
+
+    assert result
+    assert result.value == "52N212401393"
+    assert result.source == "zebra-enterprise-oid"
+    assert result.confirmed is True
+
+
 def main():
 
     tests = (

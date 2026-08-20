@@ -6,7 +6,10 @@ type PrinterTableProps = {
   printers: DashboardPrinter[];
 };
 
-function formatPages(value: number): string {
+function formatPages(value: number | null): string {
+  if (value === null) {
+    return "Não disponível";
+  }
   return new Intl.NumberFormat(
     "pt-BR",
   ).format(value);
@@ -75,7 +78,9 @@ export default function PrinterTable({
             <th>IP</th>
             <th>Status</th>
             <th>Health</th>
+            <th>Serial</th>
             <th>Páginas</th>
+            <th>Toner</th>
             <th>Última comunicação</th>
           </tr>
         </thead>
@@ -106,6 +111,9 @@ export default function PrinterTable({
                         ? ` • ${printer.model}`
                         : ""}
                     </span>
+                    <small>
+                      Origem: {printer.source || "Não informada"}
+                    </small>
                   </div>
                 </div>
               </td>
@@ -143,7 +151,28 @@ export default function PrinterTable({
               </td>
 
               <td>
+                <div>
+                  <strong>{printer.serial || "Não disponível"}</strong>
+                  {printer.serial_confidence !== null && (
+                    <small>
+                      {` ${printer.serial_confidence}%`}
+                      {printer.serial_confirmed ? " • confirmado" : ""}
+                    </small>
+                  )}
+                </div>
+              </td>
+
+              <td>
                 {formatPages(printer.page_count)}
+                {printer.page_count_confidence !== null && (
+                  <small>{` ${printer.page_count_confidence}%`}</small>
+                )}
+              </td>
+
+              <td>
+                {printer.toner_percent === null
+                  ? "Não disponível"
+                  : `${printer.toner_percent}%`}
               </td>
 
               <td>

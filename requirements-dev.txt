@@ -1,0 +1,4 @@
+-r requirements.txt
+-r agent/python/requirements.txt
+
+pytest>=9.0,<10.0

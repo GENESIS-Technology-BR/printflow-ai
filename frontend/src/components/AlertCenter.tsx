@@ -61,7 +61,10 @@ function createAlerts(
       });
     }
 
-    if (printer.page_count >= 500000) {
+    if (
+      printer.page_count !== null &&
+      printer.page_count >= 500000
+    ) {
       alerts.push({
         id: `${printerId}-page-count`,
         severity: "warning",

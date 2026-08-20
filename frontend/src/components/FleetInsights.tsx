@@ -62,7 +62,10 @@ export default function FleetInsights({
         return first.health_score - second.health_score;
       }
 
-      return second.page_count - first.page_count;
+      return (
+        (second.page_count ?? -1) -
+        (first.page_count ?? -1)
+      );
     })
     .slice(0, 5);
 
