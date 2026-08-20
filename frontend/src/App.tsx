@@ -3,6 +3,7 @@ import type { FormEvent } from "react"
 import "./App.css"
 import Dashboard from "./components/Dashboard"
 import PrinterTable from "./components/PrinterTable"
+import AgentMonitor from "./components/AgentMonitor"
 import { getDashboardPrinters } from "./services/api"
 import type { DashboardPrinter } from "./services/api"
 
@@ -262,90 +263,10 @@ function App() {
           </section>
         </>
       ) : page === "agents" ? (
-        <>
-          <header>
-            <div>
-              <small>COLETA E DESCOBERTA</small>
-              <h1>Agent PRINTFLOW</h1>
-            </div>
-            <span className="online">● API Online</span>
-          </header>
-
-          <section className="hero">
-            <div>
-              <small>PRINTFLOW AI · AGENT</small>
-              <h2>Conectar a rede da empresa</h2>
-              <p>
-                Configure o Agent para localizar impressoras e enviar os
-                dados ao PRINTFLOW.
-              </p>
-            </div>
-          </section>
-
-          <section className="content-grid">
-            <article className="panel">
-              <h3>Token do Agent (43 caracteres)</h3>
-              <p>
-                Copie somente este token. Não use o token de sessão/login do navegador.
-              </p>
-
-              <code>{company?.agent_token || "Token não disponível"}</code>
-
-              <div className="actions">
-                <button
-                  type="button"
-                  onClick={() =>
-                    company?.agent_token &&
-                    navigator.clipboard.writeText(company.agent_token)
-                  }
-                >
-                  Copiar token
-                </button>
-
-                <button
-                  type="button"
-                  className="danger"
-                  onClick={regenerateToken}
-                >
-                  Gerar novo
-                </button>
-              </div>
-            </article>
-
-            <article className="panel">
-              <h3>Procedimento do Agent</h3>
-
-              <div className="status-box">
-                <strong>1. Instalar</strong>
-                <span>
-                  Executar o Agent em um computador Windows da rede do
-                  cliente.
-                </span>
-              </div>
-
-              <div className="status-box">
-                <strong>2. Configurar</strong>
-                <span>
-                  Informar a URL da API e o token desta empresa.
-                </span>
-              </div>
-
-              <div className="status-box">
-                <strong>3. Descobrir</strong>
-                <span>
-                  Localizar a HP 10.2.0.124 e demais impressoras via SNMP.
-                </span>
-              </div>
-
-              <div className="status-box">
-                <strong>4. Enviar</strong>
-                <span>
-                  Publicar modelo, serial, IP, status e contadores na API.
-                </span>
-              </div>
-            </article>
-          </section>
-        </>
+        <AgentMonitor
+          agentToken={company?.agent_token || null}
+          onRegenerateToken={regenerateToken}
+        />
       ) : page === "company" ? (
         <>
         <header>
