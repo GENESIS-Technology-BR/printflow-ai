@@ -122,7 +122,7 @@ def test_unknown_counter_remains_unknown_in_dashboard():
 )
 def test_invalid_ranges_are_rejected(field, value):
     payload = {
-        "agent_token": "0123456789",
+        "agent_token": "A" * 43,
         "ip": "10.2.0.122",
         field: value,
     }
@@ -134,8 +134,29 @@ def test_invalid_ranges_are_rejected(field, value):
 def test_heartbeat_status_is_restricted():
     with pytest.raises(ValidationError):
         AgentHeartbeat(
-            agent_token="0123456789",
+            agent_token="A" * 43,
             agent_name="Agent",
             agent_version="0.1.0",
             status="invented",
         )
+
+
+@pytest.mark.parametrize("length", [10, 42, 44, 100, 199])
+def test_agent_token_wrong_length_is_rejected(length):
+    with pytest.raises(ValidationError):
+        AgentHeartbeat(
+            agent_token="A" * length,
+            agent_name="Agent",
+            agent_version="0.2.4",
+            status="starting",
+        )
+
+
+def test_canonical_agent_token_is_accepted():
+    payload = AgentHeartbeat(
+        agent_token="A" * 43,
+        agent_name="Agent",
+        agent_version="0.2.4",
+        status="starting",
+    )
+    assert len(payload.agent_token) == 43

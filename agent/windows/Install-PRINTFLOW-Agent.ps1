@@ -11,14 +11,14 @@ Write-Host "Copie o Token do Agent para a area de transferencia."
 Read-Host "Depois pressione ENTER para continuar"
 $plainToken = [string](Get-Clipboard -Raw)
 $plainToken = $plainToken.Trim()
-if ($plainToken -notmatch '^[A-Za-z0-9_-]{40,100}$') {
-    throw "Token invalido. Copie o token completo do Dashboard e execute novamente."
+if ($plainToken -notmatch '^[A-Za-z0-9_-]{43}$') {
+    throw "Token incorreto ($($plainToken.Length) caracteres). Copie o Token do Agent de 43 caracteres; nao copie o token de sessao do painel."
 }
 
 $validationBody = @{
     agent_token = $plainToken
     agent_name = "PRINTFLOW Agent Windows Installer"
-    agent_version = "0.2.3"
+    agent_version = "0.2.4"
     status = "starting"
 } | ConvertTo-Json
 try {

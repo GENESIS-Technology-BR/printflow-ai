@@ -23,7 +23,7 @@ class PrinterBase(BaseModel):
 
 
 class PrinterUpsert(PrinterBase):
-    agent_token: str = Field(min_length=10)
+    agent_token: str = Field(pattern=r"^[A-Za-z0-9_-]{43}$")
 
 
 class PrinterResponse(PrinterBase):
@@ -37,7 +37,7 @@ class PrinterResponse(PrinterBase):
 
 
 class AgentHeartbeat(BaseModel):
-    agent_token: str = Field(min_length=10)
+    agent_token: str = Field(pattern=r"^[A-Za-z0-9_-]{43}$")
     agent_name: str = Field(min_length=1, max_length=120)
     agent_version: str = Field(min_length=1, max_length=30)
     status: str = Field(pattern="^(starting|running|healthy|error)$")

@@ -2,10 +2,10 @@ PRINTFLOW AGENT WINDOWS - TESTE
 
 1. Extraia todo o arquivo ZIP.
 2. Não mova somente o EXE; mantenha todos os arquivos juntos.
-3. Execute "Executar-PRINTFLOW-Agent.bat".
-4. Informe o Token do Agent exibido no Dashboard.
-5. Aguarde o escaneamento da rede.
-6. Verifique o Dashboard após a conclusão.
+3. No Dashboard, copie somente o "Token do Agent" de 43 caracteres.
+4. Execute "INSTALAR-PRINTFLOW-Agent.bat" para instalar e iniciar o Agent.
+5. Nao copie o token de sessao/login do navegador.
+6. Aguarde o escaneamento da rede e verifique o Dashboard.
 
 Arquivos gerados durante o teste:
 - output\agent_inventory.json

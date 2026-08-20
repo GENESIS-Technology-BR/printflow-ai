@@ -284,9 +284,9 @@ function App() {
 
           <section className="content-grid">
             <article className="panel">
-              <h3>Token do Agent</h3>
+              <h3>Token do Agent (43 caracteres)</h3>
               <p>
-                Copie este token e informe na configuração do Agent.
+                Copie somente este token. Não use o token de sessão/login do navegador.
               </p>
 
               <code>{company?.agent_token || "Token não disponível"}</code>
@@ -378,8 +378,8 @@ function App() {
             </article>
 
             <article className="panel">
-              <h3>Token do Agent</h3>
-              <p>Use este token para vincular o Agent à empresa.</p>
+              <h3>Token do Agent (43 caracteres)</h3>
+              <p>Use somente este token para vincular o Agent à empresa. Não copie o token de sessão/login.</p>
               <code>{company.agent_token}</code>
               <div className="actions">
                 <button onClick={() => navigator.clipboard.writeText(company.agent_token)}>Copiar</button>

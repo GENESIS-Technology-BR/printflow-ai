@@ -47,6 +47,8 @@ def regenerate_agent_token(
     db: Session = Depends(get_db),
 ):
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa não encontrada")
     company.agent_token = secrets.token_urlsafe(32)
     db.commit()
     db.refresh(company)

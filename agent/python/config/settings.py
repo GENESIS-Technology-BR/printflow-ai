@@ -81,7 +81,7 @@ class AgentSettings:
             ),
             agent_version=os.getenv(
                 "PRINTFLOW_AGENT_VERSION",
-                "0.2.3",
+                "0.2.4",
             ),
             scan_interval_seconds=env_int(
                 "PRINTFLOW_SCAN_INTERVAL",

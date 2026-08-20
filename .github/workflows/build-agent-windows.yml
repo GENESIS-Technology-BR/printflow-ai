@@ -1,8 +1,8 @@
 name: Build PRINTFLOW Agent Windows
 
 env:
-  PRINTFLOW_BUILD_NUMBER: "32"
-  PRINTFLOW_AGENT_VERSION: "0.2.3"
+  PRINTFLOW_BUILD_NUMBER: "33"
+  PRINTFLOW_AGENT_VERSION: "0.2.4"
 
 on:
   workflow_dispatch:
@@ -92,6 +92,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path package
           Copy-Item dist/PRINTFLOW-Agent.exe package/
           Copy-Item agent/windows/Executar-PRINTFLOW-Agent.bat package/
+          Copy-Item agent/windows/INSTALAR-PRINTFLOW-Agent.bat package/
           Copy-Item agent/windows/Start-PRINTFLOW-Agent.ps1 package/
           Copy-Item agent/windows/Install-PRINTFLOW-Agent.ps1 package/
           Copy-Item agent/windows/Uninstall-PRINTFLOW-Agent.ps1 package/
@@ -99,6 +100,20 @@ jobs:
           Compress-Archive `
             -Path package/* `
             -DestinationPath PRINTFLOW-Agent-Windows-Teste.zip
+          $required = @(
+            "PRINTFLOW-Agent.exe",
+            "Executar-PRINTFLOW-Agent.bat",
+            "INSTALAR-PRINTFLOW-Agent.bat",
+            "Start-PRINTFLOW-Agent.ps1",
+            "Install-PRINTFLOW-Agent.ps1",
+            "Uninstall-PRINTFLOW-Agent.ps1",
+            "README-TESTE.txt"
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path "package/$file")) {
+              throw "Arquivo ausente no pacote: $file"
+            }
+          }
 
       - name: Publicar pacote
         uses: actions/upload-artifact@v4

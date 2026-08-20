@@ -88,7 +88,10 @@ def receive_agent_heartbeat(
 ):
     company = (
         db.query(Company)
-        .filter(Company.agent_token == payload.agent_token)
+        .filter(
+            Company.agent_token == payload.agent_token,
+            Company.active.is_(True),
+        )
         .first()
     )
     if company is None:
@@ -118,7 +121,10 @@ def receive_agent_data(
 ):
     company = (
         db.query(Company)
-        .filter(Company.agent_token == payload.agent_token)
+        .filter(
+            Company.agent_token == payload.agent_token,
+            Company.active.is_(True),
+        )
         .first()
     )
 
