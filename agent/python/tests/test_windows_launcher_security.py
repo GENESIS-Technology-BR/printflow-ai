@@ -60,3 +60,21 @@ def test_two_click_installer_keeps_window_open():
     assert "-Verb RunAs" in installer
     assert "Install-PRINTFLOW-Agent.ps1" in batch
     assert "set /p" not in batch.lower()
+
+
+def test_build_validation_is_available_in_two_click_mode():
+    batch = (
+        ROOT / "agent" / "windows" / "VALIDAR-PRINTFLOW-Build.bat"
+    ).read_text(encoding="utf-8")
+    validator = (
+        ROOT / "agent" / "windows" / "Validar-PRINTFLOW-Build.ps1"
+    ).read_text(encoding="utf-8")
+
+    assert "%~dp0" in batch
+    assert "-NoExit" in batch
+    assert "Validar-PRINTFLOW-Build.ps1" in batch
+    assert "RESULTADO-VALIDACAO.txt" in validator
+    assert "Get-FileHash" in validator
+    assert "PRINTFLOW-Agent.exe" in validator
+    assert "--help" in validator
+    assert 'Get-ScheduledTask -TaskName "PRINTFLOW Agent"' in validator

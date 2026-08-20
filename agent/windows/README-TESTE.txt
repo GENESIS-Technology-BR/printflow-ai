@@ -6,11 +6,13 @@ PRINTFLOW AGENT WINDOWS - TESTE
 4. Execute "INSTALAR-PRINTFLOW-Agent.bat" para instalar e iniciar o Agent.
 5. Nao copie o token de sessao/login do navegador.
 6. Aguarde o escaneamento da rede e verifique o Dashboard.
+7. Para uma verificacao automatica, execute "VALIDAR-PRINTFLOW-Build.bat".
 
 Arquivos gerados durante o teste:
 - output\agent_inventory.json
 - logs\printflow-agent.log
 - output\api_queue\ (somente se houver falha de comunicação)
+- RESULTADO-VALIDACAO.txt (quando a verificacao automatica for executada)
 
 Observações:
 - O computador precisa estar conectado à rede das impressoras.

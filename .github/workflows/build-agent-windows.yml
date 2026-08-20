@@ -1,8 +1,8 @@
 name: Build PRINTFLOW Agent Windows
 
 env:
-  PRINTFLOW_BUILD_NUMBER: "34"
-  PRINTFLOW_AGENT_VERSION: "0.2.5"
+  PRINTFLOW_BUILD_NUMBER: "35"
+  PRINTFLOW_AGENT_VERSION: "0.2.6"
 
 on:
   workflow_dispatch:
@@ -12,6 +12,7 @@ on:
     paths:
       - "agent/python/**"
       - "agent/windows/**"
+      - "frontend/**"
       - ".github/workflows/build-agent-windows.yml"
       - "requirements.txt"
       - "requirements-dev.txt"
@@ -30,6 +31,13 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
       - name: Instalar dependências
         shell: powershell
         run: |
@@ -42,6 +50,33 @@ jobs:
         run: |
           $env:PYTHONPATH = "${{ github.workspace }};${{ github.workspace }}/agent/python"
           python -m pytest -q agent/python/tests backend/tests
+
+      - name: Validar frontend
+        shell: powershell
+        run: |
+          Push-Location frontend
+          npm ci
+          npm run build
+          Pop-Location
+
+      - name: Validar scripts Windows
+        shell: powershell
+        run: |
+          $errors = @()
+          Get-ChildItem agent/windows -Filter *.ps1 | ForEach-Object {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $_.FullName,
+              [ref]$tokens,
+              [ref]$parseErrors
+            ) | Out-Null
+            $errors += $parseErrors
+          }
+          if ($errors.Count -gt 0) {
+            $errors | Format-List | Out-String | Write-Error
+            throw "Foram encontrados erros nos scripts PowerShell."
+          }
 
       - name: Validar compilacao do Agent
         shell: powershell
@@ -86,6 +121,18 @@ jobs:
           --hidden-import intelligence.printer_v3 `
             agent/python/main.py
 
+      - name: Testar executável
+        shell: powershell
+        run: |
+          & dist/PRINTFLOW-Agent.exe --help | Tee-Object -FilePath EXE-SMOKE-TEST.txt
+          if ($LASTEXITCODE -ne 0) {
+            throw "O executavel falhou no teste --help. Codigo: $LASTEXITCODE"
+          }
+          $help = Get-Content EXE-SMOKE-TEST.txt -Raw
+          if ($help -notmatch "--network" -or $help -notmatch "--daemon") {
+            throw "O executavel nao apresentou as opcoes obrigatorias."
+          }
+
       - name: Montar pacote de teste
         shell: powershell
         run: |
@@ -96,7 +143,21 @@ jobs:
           Copy-Item agent/windows/Start-PRINTFLOW-Agent.ps1 package/
           Copy-Item agent/windows/Install-PRINTFLOW-Agent.ps1 package/
           Copy-Item agent/windows/Uninstall-PRINTFLOW-Agent.ps1 package/
+          Copy-Item agent/windows/VALIDAR-PRINTFLOW-Build.bat package/
+          Copy-Item agent/windows/Validar-PRINTFLOW-Build.ps1 package/
           Copy-Item agent/windows/README-TESTE.txt package/
+          $exeHash = (Get-FileHash package/PRINTFLOW-Agent.exe -Algorithm SHA256).Hash
+          @"
+          PRINTFLOW BUILD VALIDATION
+          Build: $env:PRINTFLOW_BUILD_NUMBER
+          Version: $env:PRINTFLOW_AGENT_VERSION
+          Commit: $env:GITHUB_SHA
+          Automated tests: APPROVED
+          Frontend build: APPROVED
+          PowerShell syntax: APPROVED
+          EXE smoke test: APPROVED
+          EXE SHA256: $exeHash
+          "@ | Set-Content package/BUILD-VALIDATION.txt -Encoding UTF8
           Compress-Archive `
             -Path package/* `
             -DestinationPath PRINTFLOW-Agent-Windows-Teste.zip
@@ -107,6 +168,9 @@ jobs:
             "Start-PRINTFLOW-Agent.ps1",
             "Install-PRINTFLOW-Agent.ps1",
             "Uninstall-PRINTFLOW-Agent.ps1",
+            "VALIDAR-PRINTFLOW-Build.bat",
+            "Validar-PRINTFLOW-Build.ps1",
+            "BUILD-VALIDATION.txt",
             "README-TESTE.txt"
           )
           foreach ($file in $required) {
@@ -114,10 +178,17 @@ jobs:
               throw "Arquivo ausente no pacote: $file"
             }
           }
+          New-Item -ItemType Directory -Force -Path package-check | Out-Null
+          Expand-Archive PRINTFLOW-Agent-Windows-Teste.zip package-check -Force
+          foreach ($file in $required) {
+            if (-not (Test-Path "package-check/$file")) {
+              throw "Arquivo ausente no ZIP final: $file"
+            }
+          }
 
       - name: Publicar pacote
         uses: actions/upload-artifact@v4
         with:
-          name: PRINTFLOW-Agent-Windows-Teste
+          name: PRINTFLOW-Agent-Windows-Build-${{ env.PRINTFLOW_BUILD_NUMBER }}
           path: PRINTFLOW-Agent-Windows-Teste.zip
           retention-days: 15
