@@ -7,6 +7,7 @@ from backend.app.config.settings import settings
 from backend.app.database.connection import Base, engine
 from backend.app.database import models as database_models
 from backend.app.database.migrations import (
+    clean_descriptive_printer_serials,
     ensure_printer_columns,
     ensure_printer_company_ip_constraint,
     ensure_company_agent_columns,
@@ -31,6 +32,7 @@ async def lifespan(app: FastAPI):
     ensure_printer_columns(engine)
     ensure_printer_company_ip_constraint(engine)
     ensure_company_agent_columns(engine)
+    clean_descriptive_printer_serials(engine)
     yield
 
 

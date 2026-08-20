@@ -28,5 +28,17 @@ def test_installer_reads_clipboard_and_validates_token():
     ).read_text(encoding="utf-8")
 
     assert "Get-Clipboard -Raw" in installer
-    assert "$plainToken.Length -lt 10" in installer
-    assert "Set-Clipboard -Value \"\"" in installer
+    assert "^[A-Za-z0-9_-]{40,100}$" in installer
+    assert "printers/agent/heartbeat" in installer
+    assert "Set-Clipboard -Value \"[PRINTFLOW token protegido]\"" in installer
+    assert "-MultipleInstances IgnoreNew" in installer
+    assert "Unregister-ScheduledTask" in installer
+
+
+def test_launcher_rejects_clipboard_marker_as_token():
+    launcher = (
+        ROOT / "agent" / "windows" / "Start-PRINTFLOW-Agent.ps1"
+    ).read_text(encoding="utf-8")
+
+    assert "^[A-Za-z0-9_-]{40,100}$" in launcher
+    assert "encrypted_token_machine" not in launcher

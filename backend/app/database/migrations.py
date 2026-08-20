@@ -157,3 +157,45 @@ def ensure_company_agent_columns(engine: Engine) -> None:
             connection.execute(text(
                 f"ALTER TABLE companies_v2 ADD COLUMN {name} {sql_type}"
             ))
+
+
+def clean_descriptive_printer_serials(engine: Engine) -> None:
+    """Remove descrições de modelo historicamente gravadas como serial."""
+    inspector = inspect(engine)
+    if "printers" not in inspector.get_table_names():
+        return
+
+    columns = {
+        column["name"] for column in inspector.get_columns("printers")
+    }
+    required = {
+        "serial",
+        "serial_source",
+        "serial_confidence",
+        "serial_confirmed",
+    }
+    if not required.issubset(columns):
+        return
+
+    with engine.begin() as connection:
+        result = connection.execute(text("""
+            UPDATE printers
+               SET serial = NULL,
+                   serial_source = NULL,
+                   serial_confidence = NULL,
+                   serial_confirmed = FALSE
+             WHERE serial IS NOT NULL
+               AND (
+                    LOWER(serial) LIKE '% zpl%'
+                 OR LOWER(serial) LIKE '% technologies%'
+                 OR LOWER(serial) LIKE '%203dpi%'
+                 OR LOWER(serial) LIKE '%300dpi%'
+                 OR LOWER(serial) LIKE '%600dpi%'
+               )
+        """))
+
+    if result.rowcount:
+        print(
+            "[PRINTFLOW DB] Seriais descritivos removidos: "
+            f"{result.rowcount}."
+        )

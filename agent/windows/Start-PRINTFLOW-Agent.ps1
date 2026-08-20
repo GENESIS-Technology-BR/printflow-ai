@@ -34,8 +34,7 @@ try {
     $plainToken = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($tokenPointer)
     if (
         [string]::IsNullOrWhiteSpace($plainToken) -or
-        $plainToken.Length -lt 10 -or
-        $plainToken -match '[\x00-\x1F\x7F]'
+        $plainToken -notmatch '^[A-Za-z0-9_-]{40,100}$'
     ) {
         throw "Token local invalido. Execute Install-PRINTFLOW-Agent.ps1 novamente."
     }

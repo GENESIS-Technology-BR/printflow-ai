@@ -227,6 +227,7 @@ __pycache__/
 .backups/
 .pytest-local-temp/
 .pytest-run-*/
+.test-tmp-*/
 .pnpm-store/
 agent/python/output/
 agent/python/logs/
