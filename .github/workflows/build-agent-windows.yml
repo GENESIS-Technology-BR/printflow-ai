@@ -1,8 +1,8 @@
 name: Build PRINTFLOW Agent Windows
 
 env:
-  PRINTFLOW_BUILD_NUMBER: "31"
-  PRINTFLOW_AGENT_VERSION: "0.2.2"
+  PRINTFLOW_BUILD_NUMBER: "32"
+  PRINTFLOW_AGENT_VERSION: "0.2.3"
 
 on:
   workflow_dispatch:

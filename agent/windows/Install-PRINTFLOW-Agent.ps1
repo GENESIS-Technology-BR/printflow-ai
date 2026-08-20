@@ -3,7 +3,9 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $configDirectory = Join-Path $root "config"
 $configPath = Join-Path $configDirectory "agent-config.json"
 $launcher = Join-Path $root "Start-PRINTFLOW-Agent.ps1"
+$diagnosticPath = Join-Path $root "INSTALL-DIAGNOSTICO.txt"
 
+try {
 Write-Host "Configuracao segura do PRINTFLOW Agent"
 Write-Host "Copie o Token do Agent para a area de transferencia."
 Read-Host "Depois pressione ENTER para continuar"
@@ -16,7 +18,7 @@ if ($plainToken -notmatch '^[A-Za-z0-9_-]{40,100}$') {
 $validationBody = @{
     agent_token = $plainToken
     agent_name = "PRINTFLOW Agent Windows Installer"
-    agent_version = "0.2.2"
+    agent_version = "0.2.3"
     status = "starting"
 } | ConvertTo-Json
 try {
@@ -61,3 +63,26 @@ $settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-T
 Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description "Monitoramento PRINTFLOW" -Force | Out-Null
 Start-ScheduledTask -TaskName $taskName
 Write-Host "PRINTFLOW Agent instalado e iniciado com sucesso." -ForegroundColor Green
+@(
+    "PRINTFLOW Agent - instalacao concluida"
+    "Data: $((Get-Date).ToString('o'))"
+    "Tarefa: $taskName"
+    "Configuracao: $configPath"
+) | Set-Content -LiteralPath $diagnosticPath -Encoding UTF8
+Read-Host "Pressione ENTER para fechar"
+}
+catch {
+    $message = $_.Exception.Message
+    Write-Host ""
+    Write-Host "NAO FOI POSSIVEL INSTALAR O PRINTFLOW AGENT" -ForegroundColor Red
+    Write-Host $message -ForegroundColor Red
+    @(
+        "PRINTFLOW Agent - falha na instalacao"
+        "Data: $((Get-Date).ToString('o'))"
+        "Erro: $message"
+        "Detalhes: $($_ | Out-String)"
+    ) | Set-Content -LiteralPath $diagnosticPath -Encoding UTF8
+    Write-Host "Diagnostico salvo em: $diagnosticPath" -ForegroundColor Yellow
+    Read-Host "Pressione ENTER para fechar"
+    exit 1
+}
