@@ -70,24 +70,10 @@ export default function PrinterTable({
   }
 
   return (
-    <div className="printer-table-wrapper">
-      <table className="printer-table">
-        <thead>
-          <tr>
-            <th>Impressora</th>
-            <th>IP</th>
-            <th>Status</th>
-            <th>Health</th>
-            <th>Serial</th>
-            <th>Páginas</th>
-            <th>Toner</th>
-            <th>Última comunicação</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {printers.map((printer) => (
-            <tr
+    <div className="printer-cards">
+      {printers.map((printer) => (
+            <article
+              className="printer-card"
               key={
                 printer.uuid ||
                 printer.id ||
@@ -95,7 +81,7 @@ export default function PrinterTable({
                 printer.name
               }
             >
-              <td>
+              <div className="printer-card-main">
                 <div className="printer-identity">
                   <span className="printer-icon">
                     🖨️
@@ -111,29 +97,18 @@ export default function PrinterTable({
                         ? ` • ${printer.model}`
                         : ""}
                     </span>
-                    <small>
-                      Origem: {printer.source || "Não informada"}
-                    </small>
+                    <small>Origem: {printer.source || "Não informada"}</small>
                   </div>
                 </div>
-              </td>
-
-              <td>
-                <code>
-                  {printer.ip || "Não informado"}
-                </code>
-              </td>
-
-              <td>
+                <div className="printer-connection">
+                  <code>{printer.ip || "Não informado"}</code>
                 <span
                   className={`status-pill status-${printer.status}`}
                 >
                   <i />
                   {getStatusLabel(printer.status)}
                 </span>
-              </td>
-
-              <td>
+                </div>
                 <div className="health-cell">
                   <strong>
                     {printer.health_score}%
@@ -148,10 +123,11 @@ export default function PrinterTable({
                     />
                   </div>
                 </div>
-              </td>
+              </div>
 
-              <td>
-                <div>
+              <div className="printer-card-details">
+                <div className="printer-detail">
+                  <span>Serial</span>
                   <strong>{printer.serial || "Não disponível"}</strong>
                   {printer.serial_confidence !== null && (
                     <small>
@@ -160,28 +136,26 @@ export default function PrinterTable({
                     </small>
                   )}
                 </div>
-              </td>
-
-              <td>
-                {formatPages(printer.page_count)}
+                <div className="printer-detail">
+                  <span>Páginas</span>
+                  <strong>{formatPages(printer.page_count)}</strong>
                 {printer.page_count_confidence !== null && (
-                  <small>{` ${printer.page_count_confidence}%`}</small>
+                  <small>{`${printer.page_count_confidence}% de confiança`}</small>
                 )}
-              </td>
-
-              <td>
-                {printer.toner_percent === null
+                </div>
+                <div className="printer-detail">
+                  <span>Toner</span>
+                  <strong>{printer.toner_percent === null
                   ? "Não disponível"
-                  : `${printer.toner_percent}%`}
-              </td>
-
-              <td>
-                {formatLastSeen(printer.last_seen)}
-              </td>
-            </tr>
+                  : `${printer.toner_percent}%`}</strong>
+                </div>
+                <div className="printer-detail">
+                  <span>Última comunicação</span>
+                  <strong>{formatLastSeen(printer.last_seen)}</strong>
+                </div>
+              </div>
+            </article>
           ))}
-        </tbody>
-      </table>
     </div>
   );
 }

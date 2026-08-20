@@ -28,6 +28,7 @@ def test_installer_reads_clipboard_and_validates_token():
     ).read_text(encoding="utf-8")
 
     assert "Get-Clipboard -Raw" in installer
+    assert 'Read-Host "Depois pressione ENTER para continuar"' not in installer
     assert "^[A-Za-z0-9_-]{43}$" in installer
     assert "nao copie o token de sessao" in installer
     assert "printers/agent/heartbeat" in installer
@@ -49,8 +50,13 @@ def test_two_click_installer_keeps_window_open():
     batch = (
         ROOT / "agent" / "windows" / "INSTALAR-PRINTFLOW-Agent.bat"
     ).read_text(encoding="utf-8")
+    installer = (
+        ROOT / "agent" / "windows" / "Install-PRINTFLOW-Agent.ps1"
+    ).read_text(encoding="utf-8")
 
     assert "%~dp0" in batch
     assert "-NoExit" in batch
+    assert "-Verb RunAs" in batch
+    assert "-Verb RunAs" in installer
     assert "Install-PRINTFLOW-Agent.ps1" in batch
     assert "set /p" not in batch.lower()

@@ -1,3 +1,12 @@
+$currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$currentPrincipal = [Security.Principal.WindowsPrincipal]::new($currentIdentity)
+$isAdministrator = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdministrator) {
+    $scriptPath = $MyInvocation.MyCommand.Path
+    Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoLogo -NoProfile -NoExit -ExecutionPolicy Bypass -File `"$scriptPath`""
+    exit
+}
+
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $configDirectory = Join-Path $root "config"
@@ -7,8 +16,7 @@ $diagnosticPath = Join-Path $root "INSTALL-DIAGNOSTICO.txt"
 
 try {
 Write-Host "Configuracao segura do PRINTFLOW Agent"
-Write-Host "Copie o Token do Agent para a area de transferencia."
-Read-Host "Depois pressione ENTER para continuar"
+Write-Host "Lendo o Token do Agent diretamente da area de transferencia."
 $plainToken = [string](Get-Clipboard -Raw)
 $plainToken = $plainToken.Trim()
 if ($plainToken -notmatch '^[A-Za-z0-9_-]{43}$') {
@@ -18,7 +26,7 @@ if ($plainToken -notmatch '^[A-Za-z0-9_-]{43}$') {
 $validationBody = @{
     agent_token = $plainToken
     agent_name = "PRINTFLOW Agent Windows Installer"
-    agent_version = "0.2.4"
+    agent_version = "0.2.5"
     status = "starting"
 } | ConvertTo-Json
 try {
