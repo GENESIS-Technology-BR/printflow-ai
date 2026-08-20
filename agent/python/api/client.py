@@ -380,9 +380,19 @@ class PrintflowApiClient:
                     )
 
                 if response.status_code == 422:
+                    validation_detail = json.dumps(
+                        response_data,
+                        ensure_ascii=False,
+                    )[:800]
                     last_error = (
                         "A API recusou os dados da "
-                        "impressora. Verifique o payload."
+                        "impressora. Detalhe: "
+                        f"{validation_detail}"
+                    )
+                    self.logger.error(
+                        "API HTTP 422 | IP=%s | Detalhe=%s",
+                        payload.get("ip", "desconhecido"),
+                        validation_detail,
                     )
                     break
 

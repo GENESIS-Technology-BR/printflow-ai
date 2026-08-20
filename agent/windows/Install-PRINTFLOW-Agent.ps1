@@ -5,8 +5,17 @@ $configPath = Join-Path $configDirectory "agent-config.json"
 $launcher = Join-Path $root "Start-PRINTFLOW-Agent.ps1"
 
 Write-Host "Configuracao segura do PRINTFLOW Agent"
-$token = Read-Host "Digite ou cole o Token do Agent" -AsSecureString
+Write-Host "Copie o Token do Agent para a area de transferencia."
+Read-Host "Depois pressione ENTER para continuar"
+$plainToken = [string](Get-Clipboard -Raw)
+$plainToken = $plainToken.Trim()
+if ($plainToken.Length -lt 10 -or $plainToken -match '[\x00-\x1F\x7F]') {
+    throw "Token invalido. Copie o token completo do Dashboard e execute novamente."
+}
+$token = ConvertTo-SecureString $plainToken -AsPlainText -Force
 $encryptedToken = $token | ConvertFrom-SecureString
+$plainToken = $null
+Set-Clipboard -Value ""
 $network = Read-Host "Rede adicional em CIDR ou ENTER para descoberta automatica"
 
 New-Item -ItemType Directory -Force -Path $configDirectory | Out-Null

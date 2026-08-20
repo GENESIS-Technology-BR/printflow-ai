@@ -32,8 +32,12 @@ $tokenPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureTok
 
 try {
     $plainToken = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($tokenPointer)
-    if ([string]::IsNullOrWhiteSpace($plainToken)) {
-        throw "O Token do Agent e obrigatorio."
+    if (
+        [string]::IsNullOrWhiteSpace($plainToken) -or
+        $plainToken.Length -lt 10 -or
+        $plainToken -match '[\x00-\x1F\x7F]'
+    ) {
+        throw "Token local invalido. Execute Install-PRINTFLOW-Agent.ps1 novamente."
     }
 
     $env:PRINTFLOW_AGENT_TOKEN = $plainToken

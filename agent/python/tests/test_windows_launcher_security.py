@@ -20,3 +20,13 @@ def test_batch_file_does_not_echo_or_read_token():
 
     assert "set /p PRINTFLOW_AGENT_TOKEN" not in batch
     assert "Start-PRINTFLOW-Agent.ps1" in batch
+
+
+def test_installer_reads_clipboard_and_validates_token():
+    installer = (
+        ROOT / "agent" / "windows" / "Install-PRINTFLOW-Agent.ps1"
+    ).read_text(encoding="utf-8")
+
+    assert "Get-Clipboard -Raw" in installer
+    assert "$plainToken.Length -lt 10" in installer
+    assert "Set-Clipboard -Value \"\"" in installer
