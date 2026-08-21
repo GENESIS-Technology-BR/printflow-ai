@@ -14,11 +14,13 @@ import PrinterTable from "./PrinterTable";
 import {
   getDashboardPrinters,
   getDashboardSummary,
+  getOperationalAlerts,
 } from "../services/api";
 
 import type {
   DashboardPrinter,
   DashboardSummary,
+  OperationalAlert,
 } from "../services/api";
 
 import "./Dashboard.css";
@@ -75,6 +77,9 @@ export default function Dashboard() {
   const [printers, setPrinters] =
     useState<DashboardPrinter[]>([]);
 
+  const [alerts, setAlerts] =
+    useState<OperationalAlert[]>([]);
+
   const [loading, setLoading] =
     useState(true);
 
@@ -94,13 +99,16 @@ export default function Dashboard() {
         const [
           summaryResponse,
           printersResponse,
+          alertsResponse,
         ] = await Promise.all([
           getDashboardSummary(),
           getDashboardPrinters(),
+          getOperationalAlerts(),
         ]);
 
         setSummary(summaryResponse);
         setPrinters(printersResponse);
+        setAlerts(alertsResponse);
         setError(null);
       } catch (requestError) {
         const message =
@@ -256,7 +264,7 @@ export default function Dashboard() {
         printers={printers}
       />
 
-      <AlertCenter printers={printers} />
+      <AlertCenter alerts={alerts} />
 
       <section className="dashboard-list-panel">
         <div className="dashboard-section-title">

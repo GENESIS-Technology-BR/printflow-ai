@@ -53,6 +53,20 @@ export type DashboardPrinter = {
   health_reasons: string[];
 };
 
+export type OperationalAlert = {
+  id: number;
+  printer_id: number | null;
+  event_key: string;
+  category: string;
+  severity: "critical" | "warning" | "info";
+  title: string;
+  description: string;
+  status: "open" | "resolved";
+  opened_at: string;
+  last_seen_at: string;
+  resolved_at: string | null;
+};
+
 async function request<T>(
   endpoint: string,
 ): Promise<T> {
@@ -87,6 +101,14 @@ export async function getDashboardPrinters():
 Promise<DashboardPrinter[]> {
   return request<DashboardPrinter[]>(
     "/api/v1/dashboard/printers",
+  );
+}
+
+export async function getOperationalAlerts(
+  status: "open" | "resolved" | "all" = "open",
+): Promise<OperationalAlert[]> {
+  return request<OperationalAlert[]>(
+    `/api/v1/alerts?status=${status}&limit=50`,
   );
 }
 
