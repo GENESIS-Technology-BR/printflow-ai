@@ -1,0 +1,799 @@
+
+====================================================================================================
+ARQUIVO: agent/python/snmp/oids.py
+====================================================================================================
+from __future__ import annotations
+
+
+SYSTEM_OIDS = {
+    "descricao": "1.3.6.1.2.1.1.1.0",
+    "uptime": "1.3.6.1.2.1.1.3.0",
+    "nome": "1.3.6.1.2.1.1.5.0",
+    "localizacao": "1.3.6.1.2.1.1.6.0",
+}
+
+
+PRINTER_OIDS = {
+    "contador_paginas": "1.3.6.1.2.1.43.10.2.1.4.1.1",
+    "status_impressora": "1.3.6.1.2.1.25.3.5.1.1.1",
+    "serial_printer_mib": "1.3.6.1.2.1.43.5.1.1.17.1",
+    "nome_dispositivo": "1.3.6.1.2.1.25.3.2.1.3.1",
+}
+
+
+VENDOR_SERIAL_OIDS = {
+    "hp": (
+        "1.3.6.1.2.1.43.5.1.1.17.1",
+        "1.3.6.1.4.1.11.2.3.9.1.1.7.0",
+    ),
+    "ricoh": (
+        "1.3.6.1.2.1.43.5.1.1.17.1",
+    ),
+    "kyocera": (
+        "1.3.6.1.2.1.43.5.1.1.17.1",
+    ),
+    "canon": (
+        "1.3.6.1.2.1.43.5.1.1.17.1",
+    ),
+    "brother": (
+        "1.3.6.1.2.1.43.5.1.1.17.1",
+    ),
+    "zebra": (
+        "1.3.6.1.2.1.43.5.1.1.17.1",
+    ),
+    "generic": (
+        "1.3.6.1.2.1.43.5.1.1.17.1",
+    ),
+}
+
+
+SUPPLY_DESCRIPTION_BASE = "1.3.6.1.2.1.43.11.1.1.6"
+SUPPLY_MAX_CAPACITY_BASE = "1.3.6.1.2.1.43.11.1.1.8"
+SUPPLY_CURRENT_LEVEL_BASE = "1.3.6.1.2.1.43.11.1.1.9"
+
+
+PRINTER_STATUS_MAP = {
+    "1": "other",
+    "2": "unknown",
+    "3": "idle",
+    "4": "printing",
+    "5": "warmup",
+}
+
+
+====================================================================================================
+ARQUIVO: agent/python/snmp/engine.py
+====================================================================================================
+
+### FUNCAO: collect_printer_intelligence | LINHAS 659-700
+----------------------------------------------------------------------------------------------------
+async def collect_printer_intelligence(
+    ip_address: str,
+    community: str = "public",
+    timeout: float = 1.0,
+    retries: int = 1,
+) -> dict[str, Any]:
+    engine = PrinterIntelligenceEngine(
+        community=community,
+        timeout=timeout,
+        retries=retries,
+    )
+
+    description_test = await engine.get_value(
+        ip_address=ip_address,
+        oid=SYSTEM_OIDS["descricao"],
+    )
+
+    if not description_test.success:
+        return {
+            "ip_address": ip_address,
+            "community": community,
+            "snmp_online": False,
+            "dados": {
+                "descricao": None,
+                "fabricante": None,
+                "modelo": None,
+                "serial": None,
+                "contador_paginas": None,
+                "toner_percentual": None,
+                "suprimentos": [],
+                "health_score": 40,
+                "health_status": "critical",
+                "health_reasons": [
+                    "Impressora sem resposta SNMP."
+                ],
+            },
+            "erro": description_test.error,
+        }
+
+    return await engine.collect(
+        ip_address=ip_address
+    )
+
+### FUNCAO: collect | LINHAS 187-330
+----------------------------------------------------------------------------------------------------
+async def collect(
+        self,
+        ip_address: str,
+    ) -> dict[str, Any]:
+        raw_data: dict[str, str | None] = {}
+        errors: dict[str, str] = {}
+
+        all_oids = {
+            **SYSTEM_OIDS,
+            **PRINTER_OIDS,
+        }
+
+        tasks = {
+            field: asyncio.create_task(
+                self.get_value(
+                    ip_address=ip_address,
+                    oid=oid,
+                )
+            )
+            for field, oid in all_oids.items()
+        }
+
+        for field, task in tasks.items():
+            result = await task
+
+            raw_data[field] = result.value
+
+            if result.error:
+                errors[field] = result.error
+
+        description = raw_data.get("descricao") or ""
+        device_name = (
+            raw_data.get("nome_dispositivo")
+            or raw_data.get("nome")
+            or ""
+        )
+
+        vendor = self.detect_vendor(
+            f"{description} {device_name}"
+        )
+
+        serial = raw_data.get(
+            "serial_printer_mib"
+        )
+
+        if not self.is_valid_serial(serial):
+            serial = await self.find_vendor_serial(
+                ip_address=ip_address,
+                vendor=vendor,
+            )
+
+        supplies = await self.collect_supplies(
+            ip_address=ip_address
+        )
+
+        page_count = self.parse_integer(
+            raw_data.get("contador_paginas")
+        )
+
+        uptime_ticks = self.parse_integer(
+            raw_data.get("uptime")
+        )
+
+        status_code = str(
+            raw_data.get("status_impressora")
+            or ""
+        ).strip()
+
+        printer_status = PRINTER_STATUS_MAP.get(
+            status_code,
+            "online",
+        )
+
+        model = self.detect_model(
+            description=description,
+            device_name=device_name,
+            vendor=vendor,
+        )
+
+        toner_percentages = [
+            supply["percentage"]
+            for supply in supplies
+            if (
+                supply.get("percentage") is not None
+                and self.is_toner_supply(
+                    supply.get("description", "")
+                )
+            )
+        ]
+
+        lowest_toner = (
+            min(toner_percentages)
+            if toner_percentages
+            else None
+        )
+
+        health_score, health_reasons = (
+            self.calculate_health_score(
+                snmp_online=True,
+                toner_percentage=lowest_toner,
+                printer_status=printer_status,
+                page_count=page_count,
+            )
+        )
+
+        return {
+            "ip_address": ip_address,
+            "community": self.community,
+            "snmp_online": True,
+            "dados": {
+                "descricao": description or None,
+                "nome": raw_data.get("nome"),
+                "nome_dispositivo": (
+                    device_name or None
+                ),
+                "fabricante": vendor,
+                "modelo": model,
+                "serial": serial,
+                "localizacao": raw_data.get(
+                    "localizacao"
+                ),
+                "uptime": raw_data.get("uptime"),
+                "uptime_seconds": (
+                    int(uptime_ticks / 100)
+                    if uptime_ticks is not None
+                    else None
+                ),
+                "contador_paginas": page_count,
+                "status_impressora": printer_status,
+                "status_codigo": (
+                    status_code or None
+                ),
+                "toner_percentual": lowest_toner,
+                "suprimentos": supplies,
+                "health_score": health_score,
+                "health_status": (
+                    self.health_status(
+                        health_score
+                    )
+                ),
+                "health_reasons": health_reasons,
+            },
+            "erros_oids": errors,
+        }
+
+### FUNCAO: collect_supplies | LINHAS 332-400
+----------------------------------------------------------------------------------------------------
+async def collect_supplies(
+        self,
+        ip_address: str,
+    ) -> list[dict[str, Any]]:
+        descriptions, maximums, levels = (
+            await asyncio.gather(
+                self.walk_values(
+                    ip_address,
+                    SUPPLY_DESCRIPTION_BASE,
+                ),
+                self.walk_values(
+                    ip_address,
+                    SUPPLY_MAX_CAPACITY_BASE,
+                ),
+                self.walk_values(
+                    ip_address,
+                    SUPPLY_CURRENT_LEVEL_BASE,
+                ),
+            )
+        )
+
+        indexed_descriptions = (
+            self.index_walk_values(descriptions)
+        )
+        indexed_maximums = (
+            self.index_walk_values(maximums)
+        )
+        indexed_levels = (
+            self.index_walk_values(levels)
+        )
+
+        all_indexes = sorted(
+            set(indexed_descriptions)
+            | set(indexed_maximums)
+            | set(indexed_levels)
+        )
+
+        supplies: list[dict[str, Any]] = []
+
+        for index in all_indexes:
+            description = indexed_descriptions.get(
+                index,
+                f"Suprimento {index}",
+            )
+
+            maximum = self.parse_integer(
+                indexed_maximums.get(index)
+            )
+
+            current = self.parse_integer(
+                indexed_levels.get(index)
+            )
+
+            percentage = self.calculate_percentage(
+                current=current,
+                maximum=maximum,
+            )
+
+            supplies.append(
+                {
+                    "index": index,
+                    "description": description,
+                    "current_level": current,
+                    "maximum_capacity": maximum,
+                    "percentage": percentage,
+                }
+            )
+
+        return supplies
+
+### FUNCAO: find_vendor_serial | LINHAS 402-428
+----------------------------------------------------------------------------------------------------
+async def find_vendor_serial(
+        self,
+        ip_address: str,
+        vendor: str,
+    ) -> str | None:
+        vendor_key = vendor.lower()
+
+        oids = VENDOR_SERIAL_OIDS.get(
+            vendor_key,
+            VENDOR_SERIAL_OIDS["generic"],
+        )
+
+        for oid in oids:
+            result = await self.get_value(
+                ip_address=ip_address,
+                oid=oid,
+            )
+
+            if (
+                result.success
+                and self.is_valid_serial(
+                    result.value
+                )
+            ):
+                return result.value
+
+        return None
+
+### FUNCAO: detect_vendor | LINHAS 485-512
+----------------------------------------------------------------------------------------------------
+def detect_vendor(
+        content: str,
+    ) -> str:
+        normalized = content.lower()
+
+        vendor_terms = (
+            (("hewlett-packard", "hewlett packard", " hp "), "HP"),
+            (("ricoh",), "Ricoh"),
+            (("kyocera",), "Kyocera"),
+            (("canon",), "Canon"),
+            (("brother",), "Brother"),
+            (("zebra",), "Zebra"),
+            (("lexmark",), "Lexmark"),
+            (("xerox",), "Xerox"),
+            (("epson",), "Epson"),
+            (("samsung",), "Samsung"),
+        )
+
+        padded = f" {normalized} "
+
+        for terms, vendor in vendor_terms:
+            if any(
+                term in padded
+                for term in terms
+            ):
+                return vendor
+
+        return "Desconhecido"
+
+### FUNCAO: detect_model | LINHAS 515-538
+----------------------------------------------------------------------------------------------------
+def detect_model(
+        description: str,
+        device_name: str,
+        vendor: str,
+    ) -> str | None:
+        candidates = (
+            device_name.strip(),
+            description.strip(),
+        )
+
+        for candidate in candidates:
+            if not candidate:
+                continue
+
+            if candidate.lower() in {
+                vendor.lower(),
+                "printer",
+                "impressora",
+            }:
+                continue
+
+            return candidate[:150]
+
+        return None
+
+### FUNCAO: is_valid_serial | LINHAS 541-561
+----------------------------------------------------------------------------------------------------
+def is_valid_serial(
+        value: Any,
+    ) -> bool:
+        if value is None:
+            return False
+
+        normalized = str(value).strip()
+
+        if len(normalized) < 3:
+            return False
+
+        invalid_values = {
+            "unknown",
+            "none",
+            "n/a",
+            "na",
+            "0",
+            "-1",
+        }
+
+        return normalized.lower() not in invalid_values
+
+### FUNCAO: is_toner_supply | LINHAS 564-583
+----------------------------------------------------------------------------------------------------
+def is_toner_supply(
+        description: str,
+    ) -> bool:
+        normalized = description.lower()
+
+        terms = (
+            "toner",
+            "black",
+            "cyan",
+            "magenta",
+            "yellow",
+            "preto",
+            "ciano",
+            "amarelo",
+        )
+
+        return any(
+            term in normalized
+            for term in terms
+        )
+
+### FUNCAO: calculate_health_score | LINHAS 586-641
+----------------------------------------------------------------------------------------------------
+def calculate_health_score(
+        snmp_online: bool,
+        toner_percentage: int | None,
+        printer_status: str,
+        page_count: int | None,
+    ) -> tuple[int, list[str]]:
+        score = 100
+        reasons: list[str] = []
+
+        if not snmp_online:
+            score -= 50
+            reasons.append(
+                "Impressora sem resposta SNMP."
+            )
+
+        if toner_percentage is not None:
+            if toner_percentage <= 5:
+                score -= 30
+                reasons.append(
+                    "Toner em nível crítico."
+                )
+            elif toner_percentage <= 15:
+                score -= 20
+                reasons.append(
+                    "Toner em nível baixo."
+                )
+            elif toner_percentage <= 30:
+                score -= 10
+                reasons.append(
+                    "Toner requer acompanhamento."
+                )
+
+        if printer_status in {
+            "unknown",
+            "other",
+        }:
+            score -= 10
+            reasons.append(
+                "Status da impressora indefinido."
+            )
+
+        if (
+            page_count is not None
+            and page_count >= 500_000
+        ):
+            score -= 10
+            reasons.append(
+                "Contador elevado; avaliar manutenção."
+            )
+
+        if not reasons:
+            reasons.append(
+                "Nenhum risco crítico identificado."
+            )
+
+        return max(score, 0), reasons
+
+====================================================================================================
+ARQUIVO: agent/python/api/client.py
+====================================================================================================
+
+### FUNCAO: build_payload | LINHAS 66-145
+----------------------------------------------------------------------------------------------------
+def build_payload(
+        self,
+        printer: dict[str, Any],
+    ) -> dict[str, Any]:
+        discovery = printer.get(
+            "discovery",
+            {},
+        )
+
+        snmp = printer.get(
+            "snmp",
+            {},
+        )
+
+        snmp_data = snmp.get(
+            "dados",
+            {},
+        )
+
+        ip_address = (
+            discovery.get("ip_address")
+            or printer.get("ip")
+            or ""
+        )
+
+        description = (
+            snmp_data.get("descricao")
+            or ""
+        )
+
+        hostname = (
+            discovery.get("hostname")
+            or snmp_data.get("nome")
+            or ""
+        )
+
+        model = self._detect_model(
+            description=description,
+            fallback=printer.get("model"),
+        )
+
+        manufacturer = self._detect_manufacturer(
+            description=description,
+            model=model,
+        )
+
+        page_count = self._parse_integer(
+            snmp_data.get("contador_paginas")
+        )
+
+        name = (
+            hostname
+            or model
+            or f"Impressora {ip_address}"
+        )
+
+        status = (
+            "online"
+            if snmp.get("snmp_online")
+            else "online"
+        )
+
+        return {
+            "ip": ip_address,
+            "name": str(name)[:150],
+            "manufacturer": (
+                str(manufacturer)[:100]
+                if manufacturer
+                else None
+            ),
+            "model": (
+                str(model)[:150]
+                if model
+                else None
+            ),
+            "status": status,
+            "source": "agent",
+            "page_count": page_count,
+            "agent_token": self.agent_token,
+        }
+
+### FUNCAO: send_printer | LINHAS 147-286
+----------------------------------------------------------------------------------------------------
+def send_printer(
+        self,
+        printer: dict[str, Any],
+        save_on_failure: bool = True,
+    ) -> ApiSyncResult:
+        if not self.is_configured:
+            return ApiSyncResult(
+                success=False,
+                status_code=None,
+                message=(
+                    "Agent Token não configurado. "
+                    "Sincronização ignorada."
+                ),
+            )
+
+        payload = self.build_payload(
+            printer=printer
+        )
+
+        if not payload["ip"]:
+            return ApiSyncResult(
+                success=False,
+                status_code=None,
+                message=(
+                    "Impressora sem endereço IP. "
+                    "Registro ignorado."
+                ),
+            )
+
+        last_error = "Falha desconhecida."
+
+        for attempt in range(
+            self.retries + 1
+        ):
+            try:
+                self.logger.info(
+                    "Enviando impressora %s para a API. "
+                    "Tentativa %s/%s.",
+                    payload["ip"],
+                    attempt + 1,
+                    self.retries + 1,
+                )
+
+                response = requests.post(
+                    self.printers_endpoint,
+                    json=payload,
+                    timeout=self.timeout_seconds,
+                )
+
+                response_data = self._read_response(
+                    response
+                )
+
+                if response.status_code in {
+                    200,
+                    201,
+                }:
+                    return ApiSyncResult(
+                        success=True,
+                        status_code=response.status_code,
+                        message=(
+                            "Impressora sincronizada "
+                            "com sucesso."
+                        ),
+                        response_data=response_data,
+                    )
+
+                if response.status_code == 401:
+                    return ApiSyncResult(
+                        success=False,
+                        status_code=401,
+                        message=(
+                            "Agent Token inválido. "
+                            "Copie novamente o token "
+                            "exibido no Dashboard."
+                        ),
+                        response_data=response_data,
+                    )
+
+                if response.status_code == 422:
+                    last_error = (
+                        "A API recusou os dados da "
+                        "impressora. Verifique o payload."
+                    )
+                    break
+
+                # BUILD11_HTTP_DETAIL
+                try:
+                    response_preview = response.text[:600]
+                except Exception:
+                    response_preview = "<resposta indisponivel>"
+                self.logger.error(
+                    "Falha API | IP=%s | HTTP=%s | URL=%s | Resposta=%s",
+                    payload.get("ip", "desconhecido"),
+                    response.status_code,
+                    self.printers_endpoint,
+                    response_preview,
+                )
+
+                last_error = (
+                    f"API respondeu com HTTP "
+                    f"{response.status_code}."
+                )
+
+            except requests.Timeout:
+                last_error = (
+                    "Tempo de resposta da API excedido."
+                )
+
+            except requests.ConnectionError:
+                last_error = (
+                    "Não foi possível conectar à API."
+                )
+
+            except requests.RequestException as error:
+                last_error = (
+                    f"Falha HTTP: {error}"
+                )
+
+            if attempt < self.retries:
+                time.sleep(
+                    2 * (attempt + 1)
+                )
+
+        if save_on_failure:
+            queue_file = self.save_to_queue(
+                payload=payload,
+                reason=last_error,
+            )
+
+            last_error = (
+                f"{last_error} Registro salvo na fila "
+                f"local: {queue_file.name}"
+            )
+
+        return ApiSyncResult(
+            success=False,
+            status_code=None,
+            message=last_error,
+        )
+
+### FUNCAO: _detect_model | LINHAS 485-495
+----------------------------------------------------------------------------------------------------
+def _detect_model(
+        description: str,
+        fallback: Any = None,
+    ) -> str | None:
+        if fallback:
+            return str(fallback).strip()
+
+        if description:
+            return description.strip()
+
+        return None
+
+====================================================================================================
+ARQUIVO: agent/python/discovery/snmp.py
+====================================================================================================
+
+====================================================================================================
+ARQUIVO: agent/python/discovery/fingerprint.py
+====================================================================================================
+
+### FUNCAO: is_printer | LINHAS 13-28
+----------------------------------------------------------------------------------------------------
+def is_printer(ip: str) -> bool:
+
+    for port in PRINTER_PORTS:
+
+        try:
+
+            with socket.create_connection(
+                (ip, port),
+                timeout=0.5,
+            ):
+                return True
+
+        except Exception:
+            pass
+
+    return False
+
+====================================================================================================
+FIM DO DIAGNOSTICO
+====================================================================================================

@@ -1,0 +1,140 @@
+diff --git a/agent/python/core/service.py b/agent/python/core/service.py
+index f1a0f7a..93d787c 100644
+--- a/agent/python/core/service.py
++++ b/agent/python/core/service.py
+@@ -101,6 +101,7 @@ class PrintflowAgentService:
+         )
+ 
+         networks = get_authorized_networks(
++            manual_networks=self.manual_networks,
+             maximum_hosts=self.settings.maximum_hosts,
+         )
+ 
+diff --git a/agent/python/intelligence/agent_cycle_integration.py b/agent/python/intelligence/agent_cycle_integration.py
+index 8188b77..74430fd 100644
+--- a/agent/python/intelligence/agent_cycle_integration.py
++++ b/agent/python/intelligence/agent_cycle_integration.py
+@@ -96,18 +96,36 @@ def _extract_ips(payload: Any) -> list[str]:
+     result: list[str] = []
+ 
+     for row in _inventory_rows(payload):
+-        raw = (
+-            row.get("ip_address")
+-            or row.get("ip")
+-            or row.get("endereco_ip")
+-            or row.get("host")
+-            or row.get("address")
++        discovery = row.get("discovery")
++        snmp = row.get("snmp")
++
++        if not isinstance(discovery, dict):
++            discovery = {}
++
++        if not isinstance(snmp, dict):
++            snmp = {}
++
++        raw_candidates = (
++            row.get("ip_address"),
++            row.get("ip"),
++            row.get("endereco_ip"),
++            row.get("host"),
++            row.get("address"),
++            discovery.get("ip_address"),
++            discovery.get("ip"),
++            snmp.get("ip_address"),
++            snmp.get("ip"),
+         )
+ 
+-        ip_address = _valid_ip(raw)
++        for raw in raw_candidates:
++            ip_address = _valid_ip(raw)
+ 
+-        if ip_address and ip_address not in result:
+-            result.append(ip_address)
++            if (
++                ip_address
++                and ip_address not in result
++            ):
++                result.append(ip_address)
++                break
+ 
+     return result
+ 
+diff --git a/agent/python/tests/test_agent_cycle_integration.py b/agent/python/tests/test_agent_cycle_integration.py
+index 08e973c..cd0f242 100644
+--- a/agent/python/tests/test_agent_cycle_integration.py
++++ b/agent/python/tests/test_agent_cycle_integration.py
+@@ -146,3 +146,73 @@ def test_hook_is_idempotent(
+     assert integration.install_agent_cycle_hook() is True
+     assert integration.install_agent_cycle_hook() is False
+     assert len(registered) == 1
++
++
++def test_extract_ips_from_real_agent_inventory():
++    payload = {
++        "summary": {
++            "devices_found": 1,
++            "possible_printers": 1,
++        },
++        "printers": [
++            {
++                "discovery": {
++                    "ip_address": "10.2.0.122",
++                    "possible_printer": True,
++                },
++                "snmp": {
++                    "ip_address": "10.2.0.122",
++                    "snmp_online": True,
++                    "dados": {
++                        "fabricante": "Canon",
++                        "serial": "KNDK09992",
++                    },
++                },
++            },
++            {
++                "discovery": {
++                    "ip_address": "10.2.128.27",
++                    "possible_printer": True,
++                },
++                "snmp": {
++                    "ip_address": "10.2.128.27",
++                    "snmp_online": True,
++                },
++            },
++            {
++                "discovery": {
++                    "ip_address": "10.2.128.197",
++                    "possible_printer": True,
++                },
++                "snmp": {
++                    "ip_address": "10.2.128.197",
++                    "snmp_online": True,
++                },
++            },
++        ],
++    }
++
++    assert integration._extract_ips(payload) == [
++        "10.2.0.122",
++        "10.2.128.27",
++        "10.2.128.197",
++    ]
++
++
++def test_discovery_ip_wins_without_duplication():
++    payload = {
++        "printers": [
++            {
++                "discovery": {
++                    "ip_address": "10.2.0.122",
++                },
++                "snmp": {
++                    "ip_address": "10.2.0.122",
++                },
++            }
++        ]
++    }
++
++    assert integration._extract_ips(payload) == [
++        "10.2.0.122"
++    ]

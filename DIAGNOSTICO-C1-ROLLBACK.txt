@@ -1,0 +1,227 @@
+============================================================
+ PRINTFLOW - DIAGNOSTICO CONSOLIDADO C.1.3/C.1.4
+ SOMENTE LEITURA
+============================================================
+Wed Aug 19 18:59:12 UTC 2026
+
+===== 1. REFERENCIA SEGURA =====
+fb872d4 (HEAD -> main, origin/main, origin/HEAD) feat(agent): add safe SNMP walk learning fallback build 26
+?? .downloads/
+?? .printflow-backups/
+?? DIAGNOSTICO-BACKEND-IMPRESSORAS.txt
+?? DIAGNOSTICO-C1-ROLLBACK.txt
+?? DIAGNOSTICO-MOTOR-PRINTFLOW.txt
+?? PRINTFLOW-Agent-Windows-BUILD-10.zip
+?? PRINTFLOW-Agent-Windows-BUILD-11.zip
+?? PRINTFLOW-Agent-Windows-BUILD-13.zip
+?? PRINTFLOW-Agent-Windows-BUILD-3.zip
+?? PRINTFLOW-Agent-Windows-BUILD-7.zip
+?? PRINTFLOW-Agent-Windows-BUILD-9.zip
+?? PRINTFLOW-Agent-Windows-TESTE-VALIDADO.zip
+?? agent/python/api/client.py.backup_endpoint
+?? agent/python/api/client.py.backup_motor_v2
+?? agent/python/core/service.py.backup_build14
+?? agent/python/core/service.py.backup_counter_intelligence_20260818_023903
+?? agent/python/core/service.py.backup_safe17
+?? agent/python/core/service.py.backup_snmp_diagnostic
+?? agent/python/diagnostic_robot.py.backup_b12i
+?? agent/python/discovery/discover.py
+?? agent/python/discovery/fingerprint.py
+?? agent/python/discovery/scanner.py
+?? agent/python/intelligence/printer_intelligence_collector.py
+?? agent/python/network_manager.py.backup_routes_v2
+?? agent/python/printer_intelligence_diagnostic.py
+?? agent/python/snmp/engine.py.backup_before_v1_test
+?? agent/python/snmp/engine.py.backup_counter_intelligence_20260818_023903
+?? agent/python/snmp/engine.py.backup_snmp_v1_fallback
+?? agent/python/tests/probe_safe_walk_real.py
+?? agent/python/tests/test_printer_intelligence_collector.py
+?? backend/main.py.backup_motor_v2
+?? backend/modules/printers/model.py.backup_motor_v2
+?? backend/modules/printers/router.py.backup_build12
+?? backend/modules/printers/router.py.backup_motor_v2
+?? backend/modules/printers/schema.py.backup_motor_v2
+?? frontend/src/App.tsx.backup_page_count
+?? teste_motor_hp.py
+
+===== 2. VERSOES =====
+Python 3.12.1
+/workspaces/printflow-ai/.venv/bin/python: No module named pytest
+/usr/bin/timeout
+
+===== 3. ARQUIVOS C.1.2 =====
+-rw-rw-rw- 1 codespace codespace 14075 Aug 19 15:24 agent/python/intelligence/printer_intelligence_collector.py
+-rw-rw-rw- 1 codespace codespace  2949 Aug 19 15:24 agent/python/printer_intelligence_diagnostic.py
+-rw-rw-rw- 1 codespace codespace  3424 Aug 19 15:24 agent/python/tests/test_printer_intelligence_collector.py
+
+===== 4. IMPORTS DO COLLECTOR =====
+IMPORT COLLECTOR: OK
+KNDK09992 => (True, 95, 'Serial alfanumerico forte.')
+ZTC ZT230-203dpi ZPL => (False, 10, 'Parece descricao ou modelo.')
+ZTC ZD230-203dpi ZPL => (False, 10, 'Parece descricao ou modelo.')
+RESULTADO IMPORT: 0
+
+===== 5. COMPILACAO C.1.2 =====
+RESULTADO COMPILACAO: 0
+
+===== 6. TESTES C.1.2 =====
+/workspaces/printflow-ai/.venv/bin/python: No module named pytest
+RESULTADO TESTES C.1.2: 1
+
+===== 7. COLETA DOS TESTES ANTIGOS =====
+/workspaces/printflow-ai/.venv/bin/python: No module named pytest
+RESULTADO COLETA: 1
+
+===== 8. TESTES ANTIGOS =====
+/workspaces/printflow-ai/.venv/bin/python: No module named pytest
+RESULTADO TESTES ANTIGOS: 1
+
+===== 9. DISCOVERY V3.6B =====
+agent/python/discovery/__init__.py:4:    limited_discovery_network,
+agent/python/discovery/__init__.py:10:    "limited_discovery_network",
+agent/python/discovery/discover.py:10:    print("PRINTFLOW Discovery Engine")
+agent/python/discovery/network.py:209:def limited_discovery_network(info: NetworkInfo) -> ipaddress.IPv4Network:
+agent/python/core/service.py:13:from discovery_runner import scan_network
+agent/python/core/service.py:41:        PRINTFLOW SAFE DISCOVERY #17
+agent/python/core/service.py:46:        3 - Discovery de rede atual somente como fallback.
+agent/python/core/service.py:49:        from discovery.safe_windows import (
+agent/python/core/service.py:59:                "SAFE DISCOVERY: %s candidato(s) encontrado(s) no Windows.",
+agent/python/core/service.py:65:                    "SAFE DISCOVERY: verificando %s - porta %s.",
+agent/python/core/service.py:93:                "SAFE DISCOVERY: %s candidato(s) responderam.",
+agent/python/core/service.py:99:            "SAFE DISCOVERY V3.4: complementando candidatos Windows com "
+agent/python/core/service.py:100:            "discovery automatico das redes autorizadas."
+agent/python/core/service.py:201:                    "discovery": asdict(device),
+RESULTADO DISCOVERY: 0
+
+===== 10. PONTO DE ENTRADA =====
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+
+CURRENT_DIR = Path(__file__).resolve().parent
+
+if str(CURRENT_DIR) not in sys.path:
+    sys.path.insert(
+        0,
+        str(CURRENT_DIR),
+    )
+
+
+from config.settings import AgentSettings
+from core.logger import configure_logger
+from core.scheduler import AgentScheduler
+from core.service import PrintflowAgentService
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "PRINTFLOW Agent Core — "
+            "Discovery, SNMP e Inventário"
+        )
+    )
+
+    parser.add_argument(
+        "--network",
+        action="append",
+        default=[],
+        help=(
+            "Rede adicional autorizada. "
+            "Exemplo: --network 10.2.0.0/24"
+        ),
+    )
+
+    parser.add_argument(
+        "--daemon",
+        action="store_true",
+        help=(
+            "Mantém o Agent ativo e executa "
+            "novos ciclos automaticamente."
+        ),
+    )
+
+    return parser.parse_args()
+
+
+def print_banner(
+    settings: AgentSettings,
+) -> None:
+    print()
+    print("=" * 72)
+    print(
+        f"{settings.agent_name.upper()} "
+        f"v{settings.agent_version}"
+    )
+    print("=" * 72)
+    print("Discovery automático")
+    print("Consulta SNMP")
+    print("Inventário local")
+    print("=" * 72)
+    print()
+
+
+def main() -> int:
+    arguments = parse_arguments()
+    settings = AgentSettings.load()
+
+    print_banner(settings)
+
+    logger = configure_logger(
+        settings.logs_directory
+    )
+
+    service = PrintflowAgentService(
+        settings=settings,
+        logger=logger,
+        manual_networks=arguments.network,
+    )
+
+    if not arguments.daemon:
+        return service.run_cycle()
+
+    logger.info(
+        "Modo serviço ativado."
+    )
+
+    scheduler = AgentScheduler(
+        interval_seconds=(
+            settings.scan_interval_seconds
+        ),
+        logger=logger,
+    )
+
+    return scheduler.run(
+
+===== 11. FUNCOES DO SERVICE =====
+19:    def __init__(
+39:    def discover_devices(self) -> list[Any]:
+143:    async def collect_snmp_data(
+208:    def save_inventory(
+274:    def synchronize_api(
+338:    def run_cycle(self) -> int:
+
+===== 12. INVENTARIO =====
+agent/python/core/service.py.backup_build14:143:            / "agent_inventory.json"
+agent/python/core/service.py:221:            / "agent_inventory.json"
+agent/python/core/service.py.backup_snmp_diagnostic:196:            / "agent_inventory.json"
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:219:            / "agent_inventory.json"
+agent/python/core/service.py.backup_safe17:143:            / "agent_inventory.json"
+agent/python/logs/printflow-agent.log:8:2026-08-06 14:31:54 | INFO | Inventário salvo em /workspaces/printflow-ai/agent/python/output/agent_inventory.json.
+agent/python/logs/printflow-agent.log:17:2026-08-06 14:39:56 | INFO | Inventário salvo em /workspaces/printflow-ai/agent/python/output/agent_inventory.json.
+agent/python/logs/printflow-agent.log:26:2026-08-06 14:50:12 | INFO | Inventário salvo em /workspaces/printflow-ai/agent/python/output/agent_inventory.json.
+
+===== RESULTADO CONSOLIDADO =====
+IMPORT=0
+COMPILACAO=0
+TESTES_C12=1
+COLETA_TESTES=1
+TESTES_ANTIGOS=1
+DISCOVERY=0
+DIAGNOSTICO GERAL: FALHA IDENTIFICADA
+============================================================
+ NENHUM ARQUIVO DO PROJETO FOI ALTERADO
+ LOG GERADO: DIAGNOSTICO-C1-ROLLBACK.txt
+============================================================

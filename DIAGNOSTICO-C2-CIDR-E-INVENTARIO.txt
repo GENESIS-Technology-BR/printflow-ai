@@ -1,0 +1,1830 @@
+===== REFERENCIA =====
+1adee6c (HEAD -> main, origin/main, origin/HEAD) feat(agent): integrate printer intelligence diagnostic build 27
+?? .downloads/
+?? .printflow-backups/
+?? DIAGNOSTICO-BACKEND-IMPRESSORAS.txt
+?? DIAGNOSTICO-C1-ROLLBACK.txt
+?? DIAGNOSTICO-C2-CIDR-E-INVENTARIO.txt
+?? DIAGNOSTICO-MOTOR-PRINTFLOW.txt
+?? PRINTFLOW-Agent-Windows-BUILD-10.zip
+?? PRINTFLOW-Agent-Windows-BUILD-11.zip
+?? PRINTFLOW-Agent-Windows-BUILD-13.zip
+?? PRINTFLOW-Agent-Windows-BUILD-3.zip
+?? PRINTFLOW-Agent-Windows-BUILD-7.zip
+?? PRINTFLOW-Agent-Windows-BUILD-9.zip
+?? PRINTFLOW-Agent-Windows-TESTE-VALIDADO.zip
+?? agent/python/api/client.py.backup_endpoint
+?? agent/python/api/client.py.backup_motor_v2
+?? agent/python/core/service.py.backup_build14
+?? agent/python/core/service.py.backup_counter_intelligence_20260818_023903
+?? agent/python/core/service.py.backup_safe17
+?? agent/python/core/service.py.backup_snmp_diagnostic
+?? agent/python/diagnostic_robot.py.backup_b12i
+?? agent/python/discovery/discover.py
+?? agent/python/discovery/fingerprint.py
+?? agent/python/discovery/scanner.py
+?? agent/python/network_manager.py.backup_routes_v2
+?? agent/python/snmp/engine.py.backup_before_v1_test
+?? agent/python/snmp/engine.py.backup_counter_intelligence_20260818_023903
+?? agent/python/snmp/engine.py.backup_snmp_v1_fallback
+?? agent/python/tests/probe_safe_walk_real.py
+?? backend/main.py.backup_motor_v2
+?? backend/modules/printers/model.py.backup_motor_v2
+?? backend/modules/printers/router.py.backup_build12
+?? backend/modules/printers/router.py.backup_motor_v2
+?? backend/modules/printers/schema.py.backup_motor_v2
+?? frontend/src/App.tsx.backup_page_count
+?? teste_motor_hp.py
+
+===== AGENT CYCLE INTEGRATION =====
+from __future__ import annotations
+
+import asyncio
+import atexit
+import json
+import os
+import sys
+import threading
+from pathlib import Path
+from typing import Any
+
+from intelligence.printer_intelligence_collector import (
+    PrinterIntelligenceReport,
+    collect_one,
+    save_reports,
+)
+
+
+OUTPUT_NAME = "PRINTFLOW-Printer-Intelligence.json"
+PER_PRINTER_TIMEOUT = 15.0
+TOTAL_TIMEOUT = 90.0
+
+_LOCK = threading.Lock()
+_INSTALLED = False
+_RUNNING = False
+
+
+def _valid_ip(value: Any) -> str | None:
+    if value is None:
+        return None
+
+    text = str(value).strip()
+    parts = text.split(".")
+
+    if len(parts) != 4:
+        return None
+
+    try:
+        numbers = [int(part) for part in parts]
+    except ValueError:
+        return None
+
+    if not all(0 <= number <= 255 for number in numbers):
+        return None
+
+    return ".".join(str(number) for number in numbers)
+
+
+def _inventory_rows(payload: Any) -> list[dict[str, Any]]:
+    if isinstance(payload, list):
+        return [
+            item
+            for item in payload
+            if isinstance(item, dict)
+        ]
+
+    if not isinstance(payload, dict):
+        return []
+
+    for key in (
+        "printers",
+        "impressoras",
+        "devices",
+        "equipamentos",
+        "inventory",
+        "inventario",
+        "items",
+        "results",
+        "dados",
+    ):
+        value = payload.get(key)
+
+        if isinstance(value, list):
+            return [
+                item
+                for item in value
+                if isinstance(item, dict)
+            ]
+
+    if any(
+        key in payload
+        for key in (
+            "ip",
+            "ip_address",
+            "endereco_ip",
+            "host",
+            "address",
+        )
+    ):
+        return [payload]
+
+    return []
+
+
+def _extract_ips(payload: Any) -> list[str]:
+    result: list[str] = []
+
+    for row in _inventory_rows(payload):
+        raw = (
+            row.get("ip_address")
+            or row.get("ip")
+            or row.get("endereco_ip")
+            or row.get("host")
+            or row.get("address")
+        )
+
+        ip_address = _valid_ip(raw)
+
+        if ip_address and ip_address not in result:
+            result.append(ip_address)
+
+    return result
+
+
+def _find_inventory() -> Path | None:
+    configured = os.getenv("PRINTFLOW_INVENTORY_PATH")
+    candidates: list[Path] = []
+
+    if configured:
+        candidates.append(Path(configured))
+
+    executable_dir = Path(sys.executable).resolve().parent
+    module_root = Path(__file__).resolve().parents[1]
+
+    candidates.extend(
+        [
+            module_root / "output" / "agent_inventory.json",
+            module_root / "agent_inventory.json",
+            Path.cwd() / "agent_inventory.json",
+            Path.cwd() / "output" / "agent_inventory.json",
+            Path.cwd() / "agent" / "python"
+            / "output" / "agent_inventory.json",
+            executable_dir / "agent_inventory.json",
+            executable_dir / "output" / "agent_inventory.json",
+        ]
+    )
+
+    visited: set[str] = set()
+
+    for candidate in candidates:
+        try:
+            resolved = candidate.resolve()
+        except OSError:
+            continue
+
+        key = str(resolved).lower()
+
+        if key in visited:
+            continue
+
+        visited.add(key)
+
+        if resolved.is_file():
+            return resolved
+
+    return None
+
+
+def _error_report(
+    ip_address: str,
+    error: BaseException,
+) -> PrinterIntelligenceReport:
+    from intelligence.printer_intelligence_collector import (
+        utc_now,
+    )
+
+    return PrinterIntelligenceReport(
+        ip_address=ip_address,
+        manufacturer=None,
+        model=None,
+        serial=None,
+        counter=None,
+        toner=None,
+        sys_object_id=None,
+        serial_candidates=[],
+        counter_candidates=[],
+        learning_error=(
+            f"{type(error).__name__}: {error}"
+        ),
+        generated_at=utc_now(),
+    )
+
+
+async def _collect_reports(
+    *,
+    ip_addresses: list[str],
+    community: str,
+    per_printer_timeout: float,
+    total_timeout: float,
+) -> list[PrinterIntelligenceReport]:
+    reports: list[PrinterIntelligenceReport] = []
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + total_timeout
+
+    for ip_address in ip_addresses:
+        remaining = deadline - loop.time()
+
+        if remaining <= 0:
+            reports.append(
+                _error_report(
+                    ip_address,
+                    TimeoutError(
+                        "Tempo total do diagnostico esgotado."
+                    ),
+                )
+            )
+            continue
+
+        timeout = min(
+            per_printer_timeout,
+            remaining,
+        )
+
+        try:
+            report = await asyncio.wait_for(
+                collect_one(
+                    ip_address=ip_address,
+                    community=community,
+                    timeout=2.0,
+                    retries=1,
+                ),
+                timeout=timeout,
+            )
+        except BaseException as exc:
+            report = _error_report(
+                ip_address,
+                exc,
+            )
+
+        reports.append(report)
+
+    return reports
+
+
+def generate_from_inventory(
+    *,
+    inventory_path: str | Path | None = None,
+    destination: str | Path | None = None,
+    community: str | None = None,
+    per_printer_timeout: float = PER_PRINTER_TIMEOUT,
+    total_timeout: float = TOTAL_TIMEOUT,
+) -> Path | None:
+    inventory = (
+        Path(inventory_path).resolve()
+        if inventory_path
+        else _find_inventory()
+    )
+
+    if inventory is None or not inventory.is_file():
+        print(
+            "[Printer Intelligence] "
+            "agent_inventory.json nao encontrado. "
+            "Diagnostico ignorado sem afetar o Agent."
+        )
+        return None
+
+    try:
+        original_content = inventory.read_text(
+            encoding="utf-8"
+        )
+        payload = json.loads(original_content)
+    except Exception as exc:
+        print(
+            "[Printer Intelligence] "
+            "inventario invalido: "
+            f"{type(exc).__name__}: {exc}"
+        )
+        return None
+
+    ip_addresses = _extract_ips(payload)
+
+    output_path = (
+        Path(destination).resolve()
+        if destination
+        else inventory.parent / OUTPUT_NAME
+    )
+
+    if not ip_addresses:
+        output_path.write_text(
+            json.dumps(
+                {
+                    "schema": (
+                        "printflow-printer-intelligence-v1"
+                    ),
+                    "total": 0,
+                    "source_inventory": str(inventory),
+                    "inventory_preserved": True,
+                    "warning": (
+                        "Nenhum IPv4 foi encontrado "
+                        "no inventario."
+                    ),
+                    "printers": [],
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        print(
+            "[Printer Intelligence] "
+            f"JSON gerado: {output_path}"
+        )
+        return output_path
+
+    snmp_community = (
+        community
+        or os.getenv("PRINTFLOW_SNMP_COMMUNITY")
+        or "public"
+    )
+
+    print(
+        "[Printer Intelligence] "
+        f"coletando {len(ip_addresses)} impressora(s)."
+    )
+
+    try:
+        reports = asyncio.run(
+            _collect_reports(
+                ip_addresses=ip_addresses,
+                community=snmp_community,
+                per_printer_timeout=per_printer_timeout,
+                total_timeout=total_timeout,
+            )
+        )
+
+        saved_path = save_reports(
+            reports=reports,
+            destination=output_path,
+        )
+
+        diagnostic = json.loads(
+            saved_path.read_text(encoding="utf-8")
+        )
+
+        diagnostic["source_inventory"] = str(inventory)
+        diagnostic["inventory_preserved"] = True
+        diagnostic["per_printer_timeout_seconds"] = (
+            per_printer_timeout
+        )
+        diagnostic["total_timeout_seconds"] = (
+            total_timeout
+        )
+
+        saved_path.write_text(
+            json.dumps(
+                diagnostic,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        if inventory.read_text(encoding="utf-8") != original_content:
+            raise RuntimeError(
+                "O inventario original foi alterado."
+            )
+
+        print(
+            "[Printer Intelligence] "
+            f"diagnostico gerado: {saved_path}"
+        )
+
+        return saved_path
+
+    except BaseException as exc:
+        print(
+            "[Printer Intelligence] "
+            "falha isolada: "
+            f"{type(exc).__name__}: {exc}"
+        )
+        return None
+
+
+def _run_at_exit() -> None:
+    global _RUNNING
+
+    if _RUNNING:
+        return
+
+    _RUNNING = True
+
+    try:
+        generate_from_inventory()
+    except BaseException as exc:
+        print(
+            "[Printer Intelligence] "
+            "erro isolado no encerramento: "
+            f"{type(exc).__name__}: {exc}"
+        )
+    finally:
+        _RUNNING = False
+
+
+def install_agent_cycle_hook() -> bool:
+    global _INSTALLED
+
+    with _LOCK:
+        if _INSTALLED:
+            return False
+
+        disabled = os.getenv(
+            "PRINTFLOW_DISABLE_PRINTER_INTELLIGENCE",
+            "",
+        ).strip().lower()
+
+        if disabled in {
+            "1",
+            "true",
+            "yes",
+            "sim",
+        }:
+            print(
+                "[Printer Intelligence] "
+                "integracao desativada."
+            )
+            return False
+
+        atexit.register(_run_at_exit)
+        _INSTALLED = True
+
+===== DISCOVER.PY =====
+from __future__ import annotations
+
+from .scanner import scan_network
+from .fingerprint import is_printer
+
+
+def discover_network():
+
+    print("=" * 50)
+    print("PRINTFLOW Discovery Engine")
+    print("=" * 50)
+
+    hosts = scan_network()
+
+    print(f"Hosts encontrados: {len(hosts)}")
+
+    printers = []
+
+    for host in hosts:
+
+        if is_printer(host):
+
+            printers.append(host)
+
+            print(f"[PRINTER] {host}")
+
+    print()
+
+    print(f"Impressoras encontradas: {len(printers)}")
+
+    return printers
+===== SCANNER.PY =====
+from __future__ import annotations
+
+import ipaddress
+import socket
+from concurrent.futures import ThreadPoolExecutor
+
+
+def discover_local_network() -> ipaddress.IPv4Network:
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+
+    network = ipaddress.ip_network(f"{local_ip}/24", strict=False)
+
+    return network
+
+
+def ping_host(ip: str, timeout: float = 0.2) -> bool:
+    COMMON_PORTS = (80, 443, 9100, 161)
+
+    for port in COMMON_PORTS:
+        try:
+            with socket.create_connection((ip, port), timeout):
+                return True
+        except Exception:
+            pass
+
+    return False
+
+
+def scan_network(max_workers: int = 100) -> list[str]:
+    network = discover_local_network()
+
+    hosts = [str(ip) for ip in network.hosts()]
+
+    alive = []
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+
+        results = executor.map(
+            ping_host,
+            hosts,
+        )
+
+        for host, status in zip(hosts, results):
+
+            if status:
+                alive.append(host)
+
+    return alive
+===== FINGERPRINT.PY =====
+from __future__ import annotations
+
+import socket
+
+PRINTER_PORTS = (
+    9100,
+    515,
+    631,
+    161,
+)
+
+
+def is_printer(ip: str) -> bool:
+
+    for port in PRINTER_PORTS:
+
+        try:
+
+            with socket.create_connection(
+                (ip, port),
+                timeout=0.5,
+            ):
+                return True
+
+        except Exception:
+            pass
+
+    return False
+===== SERVICE - DISCOVERY E INVENTARIO =====
+from __future__ import annotations
+
+import asyncio
+import json
+import logging
+from dataclasses import asdict
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from api.client import PrintflowApiClient
+from config.settings import AgentSettings
+from discovery_runner import scan_network
+from network_manager import get_authorized_networks
+from snmp.engine import collect_printer_intelligence
+
+
+class PrintflowAgentService:
+    def __init__(
+        self,
+        settings: AgentSettings,
+        logger: logging.Logger,
+        manual_networks: list[str] | None = None,
+    ) -> None:
+        self.settings = settings
+        self.logger = logger
+        self.manual_networks = manual_networks or []
+
+        self.api_client = PrintflowApiClient(
+            api_url=settings.api_url,
+            agent_token=settings.agent_token,
+            logger=logger,
+            queue_directory=(
+                settings.output_directory
+                / "api_queue"
+            ),
+        )
+
+    def discover_devices(self) -> list[Any]:
+        """
+        PRINTFLOW SAFE DISCOVERY #17
+
+        Prioridade:
+        1 - Impressoras/portas TCP-IP conhecidas pelo Windows.
+        2 - Validacao somente dos IPs candidatos.
+        3 - Discovery de rede atual somente como fallback.
+        """
+
+        from discovery.safe_windows import (
+            discover_windows_printer_candidates,
+        )
+
+        discovered_devices: dict[str, Any] = {}
+
+        candidates = discover_windows_printer_candidates()
+
+        if candidates:
+            self.logger.info(
+                "SAFE DISCOVERY: %s candidato(s) encontrado(s) no Windows.",
+                len(candidates),
+            )
+
+            for candidate in candidates:
+                self.logger.info(
+                    "SAFE DISCOVERY: verificando %s - porta %s.",
+                    candidate.ip_address,
+                    candidate.port_name,
+                )
+
+                devices = scan_network(
+                    cidr=f"{candidate.ip_address}/32",
+                    timeout=self.settings.network_timeout,
+                    workers=1,
+                    maximum_hosts=1,
+                    resolve_names=False,
+                )
+
+                for device in devices:
+                    current = discovered_devices.get(
+                        device.ip_address
+                    )
+
+                    if (
+                        current is None
+                        or device.confidence_score
+                        > current.confidence_score
+                    ):
+                        discovered_devices[
+                            device.ip_address
+                        ] = device
+
+            self.logger.info(
+                "SAFE DISCOVERY: %s candidato(s) responderam.",
+                len(discovered_devices),
+            )
+
+
+        self.logger.info(
+            "SAFE DISCOVERY V3.4: complementando candidatos Windows com "
+            "discovery automatico das redes autorizadas."
+        )
+
+        networks = get_authorized_networks(
+            maximum_hosts=self.settings.maximum_hosts,
+        )
+
+        self.logger.info(
+            "%s rede(s) autorizada(s).",
+            len(networks),
+        )
+
+        for network in networks:
+            self.logger.info(
+                "Escaneando rede %s pela interface %s.",
+                network.cidr,
+                network.interface,
+            )
+
+            devices = scan_network(
+                cidr=network.cidr,
+                timeout=self.settings.network_timeout,
+                workers=self.settings.network_workers,
+                maximum_hosts=self.settings.maximum_hosts,
+                resolve_names=self.settings.resolve_names,
+            )
+
+            for device in devices:
+                current = discovered_devices.get(
+                    device.ip_address
+                )
+
+                if (
+                    current is None
+                    or device.confidence_score
+                    > current.confidence_score
+                ):
+                    discovered_devices[
+                        device.ip_address
+                    ] = device
+
+        return list(discovered_devices.values())
+
+    async def collect_snmp_data(
+        self,
+        devices: list[Any],
+    ) -> list[dict[str, Any]]:
+        inventory: list[dict[str, Any]] = []
+
+        possible_printers = [
+            device
+            for device in devices
+            if device.possible_printer
+        ]
+
+        self.logger.info(
+            "%s possível(is) impressora(s) encontrada(s).",
+            len(possible_printers),
+        )
+
+        for device in possible_printers:
+            self.logger.info(
+                "Consultando SNMP em %s.",
+                device.ip_address,
+            )
+
+            snmp_result = await collect_printer_intelligence(
+                ip_address=device.ip_address,
+                community=self.settings.snmp_community,
+                timeout=self.settings.snmp_timeout,
+                retries=self.settings.snmp_retries,
+            )
+
+            # ==================================================
+            # DIAGNOSTICO SNMP
+            # ==================================================
+            if snmp_result.get("snmp_online"):
+                dados = snmp_result.get("dados") or {}
+
+                self.logger.info(
+                    "SNMP %s: OK | Fabricante=%s | Modelo=%s | "
+                    "Serial=%s | Contador=%s | Origem=%s | Toner=%s%%",
+                    device.ip_address,
+                    dados.get("fabricante"),
+                    dados.get("modelo"),
+                    dados.get("serial"),
+                    dados.get("contador_paginas"),
+
+                    dados.get("contador_origem"),
+
+                    dados.get("toner_percentual"),
+                )
+            else:
+                self.logger.warning(
+                    "SNMP %s: SEM RESPOSTA | Erro=%s",
+                    device.ip_address,
+                    snmp_result.get("erro"),
+                )
+
+            inventory.append(
+                {
+                    "discovery": asdict(device),
+                    "snmp": snmp_result,
+                }
+            )
+
+        return inventory
+
+    def save_inventory(
+        self,
+        devices: list[Any],
+        printers: list[dict[str, Any]],
+        api_result: dict[str, Any],
+    ) -> Path:
+        self.settings.output_directory.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        output_file = (
+            self.settings.output_directory
+            / "agent_inventory.json"
+        )
+
+        content = {
+            "agent": {
+                "name": self.settings.agent_name,
+                "version": self.settings.agent_version,
+            },
+            "generated_at": datetime.now(
+                timezone.utc
+            ).isoformat(),
+            "summary": {
+                "devices_found": len(devices),
+                "possible_printers": len(printers),
+                "snmp_online": sum(
+                    1
+                    for printer in printers
+                    if printer["snmp"].get(
+                        "snmp_online"
+                    )
+                ),
+                "api_success": api_result.get(
+                    "success",
+                    0,
+                ),
+                "api_failed": api_result.get(
+                    "failed",
+                    0,
+                ),
+                "api_skipped": api_result.get(
+                    "skipped",
+                    0,
+                ),
+            },
+            "devices": [
+                asdict(device)
+                for device in devices
+            ],
+            "printers": printers,
+            "api_sync": api_result,
+        }
+
+        output_file.write_text(
+            json.dumps(
+                content,
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        return output_file
+
+    def synchronize_api(
+        self,
+        printers: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        if not self.api_client.is_configured:
+            self.logger.warning(
+                "PRINTFLOW_AGENT_TOKEN não configurado. "
+                "Inventário será mantido apenas localmente."
+            )
+
+            return self.api_client.send_inventory(
+                printers=printers
+            )
+
+        queue_result = (
+            self.api_client.retry_queue()
+        )
+
+        if queue_result["processed"]:
+            self.logger.info(
+                "Fila anterior: %s processado(s), "
+                "%s enviado(s), %s falha(s).",
+                queue_result["processed"],
+                queue_result["success"],
+                queue_result["failed"],
+            )
+
+        result = self.api_client.send_inventory(
+            printers=printers
+        )
+
+        self.logger.info(
+            "Sincronização API: %s sucesso(s), "
+            "%s falha(s), %s ignorado(s).",
+            result["success"],
+            result["failed"],
+            result["skipped"],
+        )
+
+        # BUILD 14 - diagnóstico detalhado da sincronização.
+        # Exibe no log o IP, código HTTP e mensagem retornada pela API
+        # para cada equipamento que não conseguiu sincronizar.
+        for detail in result.get("details", []):
+            if detail.get("success"):
+                continue
+
+            ip_address = (
+                detail.get("ip")
+                or detail.get("ip_address")
+                or detail.get("host")
+                or "IP desconhecido"
+            )
+            status_code = detail.get("status_code")
+            message = detail.get("message") or "Sem mensagem da API"
+
+            self.logger.error(
+                "FALHA API | IP: %s | HTTP: %s | Motivo: %s",
+                ip_address,
+                status_code if status_code is not None else "SEM RESPOSTA",
+                message,
+            )
+
+        return result
+
+    def run_cycle(self) -> int:
+        self.logger.info(
+            "Iniciando ciclo do PRINTFLOW Agent."
+        )
+
+        devices = self.discover_devices()
+
+        printers = asyncio.run(
+            self.collect_snmp_data(devices)
+        )
+
+        api_result = self.synchronize_api(
+            printers=printers
+        )
+
+        output_file = self.save_inventory(
+            devices=devices,
+            printers=printers,
+            api_result=api_result,
+        )
+
+        self.logger.info(
+            "Ciclo finalizado."
+        )
+
+        self.logger.info(
+            "Dispositivos encontrados: %s.",
+            len(devices),
+        )
+
+        self.logger.info(
+            "Possíveis impressoras: %s.",
+            len(printers),
+        )
+
+        self.logger.info(
+            "Inventário salvo em %s.",
+            output_file,
+        )
+
+        return 0
+
+===== MAIN.PY =====
+from __future__ import annotations
+
+
+# PRINTFLOW_C1_PRINTER_INTELLIGENCE_HOOK
+from intelligence.agent_cycle_integration import install_agent_cycle_hook
+install_agent_cycle_hook()
+
+import argparse
+import sys
+from pathlib import Path
+
+
+CURRENT_DIR = Path(__file__).resolve().parent
+
+if str(CURRENT_DIR) not in sys.path:
+    sys.path.insert(
+        0,
+        str(CURRENT_DIR),
+    )
+
+
+from config.settings import AgentSettings
+from core.logger import configure_logger
+from core.scheduler import AgentScheduler
+from core.service import PrintflowAgentService
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "PRINTFLOW Agent Core — "
+            "Discovery, SNMP e Inventário"
+        )
+    )
+
+    parser.add_argument(
+        "--network",
+        action="append",
+        default=[],
+        help=(
+            "Rede adicional autorizada. "
+            "Exemplo: --network 10.2.0.0/24"
+        ),
+    )
+
+    parser.add_argument(
+        "--daemon",
+        action="store_true",
+        help=(
+            "Mantém o Agent ativo e executa "
+            "novos ciclos automaticamente."
+        ),
+    )
+
+    return parser.parse_args()
+
+
+def print_banner(
+    settings: AgentSettings,
+) -> None:
+    print()
+    print("=" * 72)
+    print(
+        f"{settings.agent_name.upper()} "
+        f"v{settings.agent_version}"
+    )
+    print("=" * 72)
+    print("Discovery automático")
+    print("Consulta SNMP")
+    print("Inventário local")
+    print("=" * 72)
+    print()
+
+
+def main() -> int:
+    arguments = parse_arguments()
+    settings = AgentSettings.load()
+
+    print_banner(settings)
+
+    logger = configure_logger(
+        settings.logs_directory
+    )
+
+    service = PrintflowAgentService(
+        settings=settings,
+        logger=logger,
+        manual_networks=arguments.network,
+    )
+
+    if not arguments.daemon:
+        return service.run_cycle()
+
+    logger.info(
+        "Modo serviço ativado."
+    )
+
+    scheduler = AgentScheduler(
+        interval_seconds=(
+            settings.scan_interval_seconds
+        ),
+        logger=logger,
+    )
+
+    return scheduler.run(
+        service.run_cycle
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+===== REFERENCIAS DE CIDR =====
+agent/python/main.py:37:        "--network",
+agent/python/main.py:41:            "Rede adicional autorizada. "
+agent/python/main.py:42:            "Exemplo: --network 10.2.0.0/24"
+agent/python/main.py:88:        manual_networks=arguments.network,
+agent/python/discovery/safe_windows.py:47:    # Esta funcao NAO realiza varredura da rede.
+agent/python/discovery/__init__.py:1:from .network import (
+agent/python/discovery/__init__.py:2:    NetworkInfo,
+agent/python/discovery/__init__.py:3:    detect_active_network,
+agent/python/discovery/__init__.py:4:    limited_discovery_network,
+agent/python/discovery/__init__.py:8:    "NetworkInfo",
+agent/python/discovery/__init__.py:9:    "detect_active_network",
+agent/python/discovery/__init__.py:10:    "limited_discovery_network",
+agent/python/discovery/discover.py:3:from .scanner import scan_network
+agent/python/discovery/discover.py:7:def discover_network():
+agent/python/discovery/discover.py:13:    hosts = scan_network()
+agent/python/discovery/network.py:10:class NetworkInfo:
+agent/python/discovery/network.py:15:    network: str
+agent/python/discovery/network.py:35:def _detect_windows() -> NetworkInfo | None:
+agent/python/discovery/network.py:73:    network = str(
+agent/python/discovery/network.py:74:        ipaddress.ip_network(f"{ip_address}/{prefix}", strict=False)
+agent/python/discovery/network.py:77:    return NetworkInfo(
+agent/python/discovery/network.py:82:        network=network,
+agent/python/discovery/network.py:87:def _detect_linux() -> NetworkInfo | None:
+agent/python/discovery/network.py:108:                network = str(
+agent/python/discovery/network.py:109:                    ipaddress.ip_network(
+agent/python/discovery/network.py:115:                return NetworkInfo(
+agent/python/discovery/network.py:120:                    network=network,
+agent/python/discovery/network.py:126:def _detect_macos() -> NetworkInfo | None:
+agent/python/discovery/network.py:151:    network = str(
+agent/python/discovery/network.py:152:        ipaddress.ip_network(f"{ip_address}/{prefix}", strict=False)
+agent/python/discovery/network.py:155:    return NetworkInfo(
+agent/python/discovery/network.py:160:        network=network,
+agent/python/discovery/network.py:165:def _detect_fallback() -> NetworkInfo:
+agent/python/discovery/network.py:177:    network = str(
+agent/python/discovery/network.py:178:        ipaddress.ip_network(f"{ip_address}/{prefix}", strict=False)
+agent/python/discovery/network.py:181:    return NetworkInfo(
+agent/python/discovery/network.py:186:        network=network,
+agent/python/discovery/network.py:190:def detect_active_network() -> NetworkInfo:
+agent/python/discovery/network.py:209:def limited_discovery_network(info: NetworkInfo) -> ipaddress.IPv4Network:
+agent/python/discovery/network.py:211:    Evita uma varredura agressiva em redes muito grandes.
+agent/python/discovery/network.py:214:    Rede real: 10.2.0.0/16
+agent/python/discovery/network.py:217:    full_network = ipaddress.ip_network(info.network, strict=False)
+agent/python/discovery/network.py:219:    if full_network.prefixlen < 24:
+agent/python/discovery/network.py:220:        return ipaddress.ip_network(
+agent/python/discovery/network.py:225:    return full_network
+agent/python/discovery/scanner.py:8:def discover_local_network() -> ipaddress.IPv4Network:
+agent/python/discovery/scanner.py:12:    network = ipaddress.ip_network(f"{local_ip}/24", strict=False)
+agent/python/discovery/scanner.py:14:    return network
+agent/python/discovery/scanner.py:30:def scan_network(max_workers: int = 100) -> list[str]:
+agent/python/discovery/scanner.py:31:    network = discover_local_network()
+agent/python/discovery/scanner.py:33:    hosts = [str(ip) for ip in network.hosts()]
+agent/python/discovery/scanners/ping.py:53:def scan(network: str, max_workers: int = 64) -> list[str]:
+agent/python/discovery/scanners/ping.py:54:    subnet = ipaddress.ip_network(network, strict=False)
+agent/python/discovery/scanners/ping.py:77:    test_network = "10.0.13.0/24"
+agent/python/discovery/scanners/ping.py:79:    print(f"Analisando rede: {test_network}")
+agent/python/discovery/scanners/ping.py:80:    hosts = scan(test_network)
+agent/python/core/service.py.backup_build14:13:from discovery_runner import scan_network
+agent/python/core/service.py.backup_build14:14:from network_manager import get_authorized_networks
+agent/python/core/service.py.backup_build14:23:        manual_networks: list[str] | None = None,
+agent/python/core/service.py.backup_build14:27:        self.manual_networks = manual_networks or []
+agent/python/core/service.py.backup_build14:40:        networks = get_authorized_networks(
+agent/python/core/service.py.backup_build14:41:            manual_networks=self.manual_networks,
+agent/python/core/service.py.backup_build14:45:        if not networks:
+agent/python/core/service.py.backup_build14:47:                "Nenhuma rede autorizada foi encontrada."
+agent/python/core/service.py.backup_build14:52:            "%s rede(s) autorizada(s).",
+agent/python/core/service.py.backup_build14:53:            len(networks),
+agent/python/core/service.py.backup_build14:58:        for network in networks:
+agent/python/core/service.py.backup_build14:60:                "Escaneando rede %s pela interface %s.",
+agent/python/core/service.py.backup_build14:61:                network.cidr,
+agent/python/core/service.py.backup_build14:62:                network.interface,
+agent/python/core/service.py.backup_build14:65:            devices = scan_network(
+agent/python/core/service.py.backup_build14:66:                cidr=network.cidr,
+agent/python/core/service.py.backup_build14:67:                timeout=self.settings.network_timeout,
+agent/python/core/service.py.backup_build14:68:                workers=self.settings.network_workers,
+agent/python/core/service.py:13:from discovery_runner import scan_network
+agent/python/core/service.py:14:from network_manager import get_authorized_networks
+agent/python/core/service.py:23:        manual_networks: list[str] | None = None,
+agent/python/core/service.py:27:        self.manual_networks = manual_networks or []
+agent/python/core/service.py:46:        3 - Discovery de rede atual somente como fallback.
+agent/python/core/service.py:70:                devices = scan_network(
+agent/python/core/service.py:71:                    cidr=f"{candidate.ip_address}/32",
+agent/python/core/service.py:72:                    timeout=self.settings.network_timeout,
+agent/python/core/service.py:100:            "discovery automatico das redes autorizadas."
+agent/python/core/service.py:103:        networks = get_authorized_networks(
+agent/python/core/service.py:108:            "%s rede(s) autorizada(s).",
+agent/python/core/service.py:109:            len(networks),
+agent/python/core/service.py:112:        for network in networks:
+agent/python/core/service.py:114:                "Escaneando rede %s pela interface %s.",
+agent/python/core/service.py:115:                network.cidr,
+agent/python/core/service.py:116:                network.interface,
+agent/python/core/service.py:119:            devices = scan_network(
+agent/python/core/service.py:120:                cidr=network.cidr,
+agent/python/core/service.py:121:                timeout=self.settings.network_timeout,
+agent/python/core/service.py:122:                workers=self.settings.network_workers,
+agent/python/core/service.py.backup_snmp_diagnostic:13:from discovery_runner import scan_network
+agent/python/core/service.py.backup_snmp_diagnostic:14:from network_manager import get_authorized_networks
+agent/python/core/service.py.backup_snmp_diagnostic:23:        manual_networks: list[str] | None = None,
+agent/python/core/service.py.backup_snmp_diagnostic:27:        self.manual_networks = manual_networks or []
+agent/python/core/service.py.backup_snmp_diagnostic:46:        3 - Discovery de rede atual somente como fallback.
+agent/python/core/service.py.backup_snmp_diagnostic:70:                devices = scan_network(
+agent/python/core/service.py.backup_snmp_diagnostic:71:                    cidr=f"{candidate.ip_address}/32",
+agent/python/core/service.py.backup_snmp_diagnostic:72:                    timeout=self.settings.network_timeout,
+agent/python/core/service.py.backup_snmp_diagnostic:104:        networks = get_authorized_networks(
+agent/python/core/service.py.backup_snmp_diagnostic:109:            "%s rede(s) autorizada(s).",
+agent/python/core/service.py.backup_snmp_diagnostic:110:            len(networks),
+agent/python/core/service.py.backup_snmp_diagnostic:113:        for network in networks:
+agent/python/core/service.py.backup_snmp_diagnostic:115:                "Escaneando rede %s pela interface %s.",
+agent/python/core/service.py.backup_snmp_diagnostic:116:                network.cidr,
+agent/python/core/service.py.backup_snmp_diagnostic:117:                network.interface,
+agent/python/core/service.py.backup_snmp_diagnostic:120:            devices = scan_network(
+agent/python/core/service.py.backup_snmp_diagnostic:121:                cidr=network.cidr,
+agent/python/core/service.py.backup_snmp_diagnostic:122:                timeout=self.settings.network_timeout,
+agent/python/core/service.py.backup_snmp_diagnostic:123:                workers=self.settings.network_workers,
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:13:from discovery_runner import scan_network
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:14:from network_manager import get_authorized_networks
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:23:        manual_networks: list[str] | None = None,
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:27:        self.manual_networks = manual_networks or []
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:46:        3 - Discovery de rede atual somente como fallback.
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:70:                devices = scan_network(
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:71:                    cidr=f"{candidate.ip_address}/32",
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:72:                    timeout=self.settings.network_timeout,
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:104:        networks = get_authorized_networks(
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:109:            "%s rede(s) autorizada(s).",
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:110:            len(networks),
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:113:        for network in networks:
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:115:                "Escaneando rede %s pela interface %s.",
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:116:                network.cidr,
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:117:                network.interface,
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:120:            devices = scan_network(
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:121:                cidr=network.cidr,
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:122:                timeout=self.settings.network_timeout,
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:123:                workers=self.settings.network_workers,
+agent/python/core/service.py.backup_safe17:13:from discovery_runner import scan_network
+agent/python/core/service.py.backup_safe17:14:from network_manager import get_authorized_networks
+agent/python/core/service.py.backup_safe17:23:        manual_networks: list[str] | None = None,
+agent/python/core/service.py.backup_safe17:27:        self.manual_networks = manual_networks or []
+agent/python/core/service.py.backup_safe17:40:        networks = get_authorized_networks(
+agent/python/core/service.py.backup_safe17:41:            manual_networks=self.manual_networks,
+agent/python/core/service.py.backup_safe17:45:        if not networks:
+agent/python/core/service.py.backup_safe17:47:                "Nenhuma rede autorizada foi encontrada."
+agent/python/core/service.py.backup_safe17:52:            "%s rede(s) autorizada(s).",
+agent/python/core/service.py.backup_safe17:53:            len(networks),
+agent/python/core/service.py.backup_safe17:58:        for network in networks:
+agent/python/core/service.py.backup_safe17:60:                "Escaneando rede %s pela interface %s.",
+agent/python/core/service.py.backup_safe17:61:                network.cidr,
+agent/python/core/service.py.backup_safe17:62:                network.interface,
+agent/python/core/service.py.backup_safe17:65:            devices = scan_network(
+agent/python/core/service.py.backup_safe17:66:                cidr=network.cidr,
+agent/python/core/service.py.backup_safe17:67:                timeout=self.settings.network_timeout,
+agent/python/core/service.py.backup_safe17:68:                workers=self.settings.network_workers,
+agent/python/config/settings.py:60:    network_timeout: float
+agent/python/config/settings.py:61:    network_workers: int
+agent/python/config/settings.py:90:            network_timeout=env_float(
+agent/python/config/settings.py:91:                "PRINTFLOW_NETWORK_TIMEOUT",
+agent/python/config/settings.py:94:            network_workers=env_int(
+agent/python/config/settings.py:95:                "PRINTFLOW_NETWORK_WORKERS",
+agent/python/diagnostic_robot.py:23:# - somente jobs internos previamente autorizados.
+agent/python/diagnostic_robot.py:28:    "DISCOVER_NETWORKS",
+agent/python/diagnostic_robot.py:81:def _serialize_network(
+agent/python/diagnostic_robot.py:82:    network: Any,
+agent/python/diagnostic_robot.py:86:        "cidr",
+agent/python/diagnostic_robot.py:87:        "original_cidr",
+agent/python/diagnostic_robot.py:101:            network,
+agent/python/diagnostic_robot.py:110:        result["value"] = str(network)
+agent/python/diagnostic_robot.py:161:            "DISCOVER_NETWORKS",
+agent/python/diagnostic_robot.py:162:            self._discover_networks,
+agent/python/diagnostic_robot.py:208:                f"Job nao autorizado: {normalized}"
+agent/python/diagnostic_robot.py:363:    # DISCOVER NETWORKS
+agent/python/diagnostic_robot.py:367:    def _discover_networks(
+agent/python/diagnostic_robot.py:371:        from network_manager import (
+agent/python/diagnostic_robot.py:372:            detect_local_networks,
+agent/python/diagnostic_robot.py:375:        networks = detect_local_networks()
+agent/python/diagnostic_robot.py:378:            _serialize_network(
+agent/python/diagnostic_robot.py:379:                network
+agent/python/diagnostic_robot.py:381:            for network in networks
+agent/python/diagnostic_robot.py:386:            "networks": serialized,
+agent/python/diagnostic_robot.py:585:        help="Job PRINTFLOW autorizado.",
+agent/python/network_manager.py:27:class DetectedNetwork:
+agent/python/network_manager.py:31:    cidr: str
+agent/python/network_manager.py:36:    original_cidr: str | None = None
+agent/python/network_manager.py:52:def calculate_network(
+agent/python/network_manager.py:55:) -> ipaddress.IPv4Network:
+agent/python/network_manager.py:56:    network_interface = ipaddress.IPv4Interface(
+agent/python/network_manager.py:60:    return network_interface.network
+agent/python/network_manager.py:64:    network: ipaddress.IPv4Network,
+agent/python/network_manager.py:66:    return max(network.num_addresses - 2, 0)
+agent/python/network_manager.py:71:    original_network: ipaddress.IPv4Network,
+agent/python/network_manager.py:73:) -> ipaddress.IPv4Network:
+agent/python/network_manager.py:75:    Reduz automaticamente redes grandes para uma sub-rede segura
+agent/python/network_manager.py:80:    Rede original: 10.0.0.0/16
+agent/python/network_manager.py:81:    Rede segura: 10.0.1.0/24
+agent/python/network_manager.py:84:    if original_network.prefixlen >= safe_prefix:
+agent/python/network_manager.py:85:        return original_network
+agent/python/network_manager.py:91:    safe_network = local_interface.network
+agent/python/network_manager.py:93:    if not safe_network.subnet_of(original_network):
+agent/python/network_manager.py:94:        return original_network
+agent/python/network_manager.py:96:    return safe_network
+agent/python/network_manager.py:99:def prepare_detected_network(
+agent/python/network_manager.py:106:) -> DetectedNetwork | None:
+agent/python/network_manager.py:128:        original_network = calculate_network(
+agent/python/network_manager.py:136:        return DetectedNetwork(
+agent/python/network_manager.py:140:            cidr=str(original_network),
+agent/python/network_manager.py:142:            is_private=original_network.is_private,
+agent/python/network_manager.py:145:            original_cidr=str(original_network),
+agent/python/network_manager.py:148:    if not original_network.is_private:
+agent/python/network_manager.py:149:        return DetectedNetwork(
+agent/python/network_manager.py:153:            cidr=str(original_network),
+agent/python/network_manager.py:157:            reason="Rede pública bloqueada por segurança.",
+agent/python/network_manager.py:158:            original_cidr=str(original_network),
+agent/python/network_manager.py:161:    original_hosts = usable_hosts(original_network)
+agent/python/network_manager.py:164:        return DetectedNetwork(
+agent/python/network_manager.py:168:            cidr=str(original_network),
+agent/python/network_manager.py:169:            broadcast=str(original_network.broadcast_address),
+agent/python/network_manager.py:172:            reason="Rede liberada para descoberta.",
+agent/python/network_manager.py:173:            original_cidr=str(original_network),
+agent/python/network_manager.py:176:    safe_network = create_safe_local_subnet(
+agent/python/network_manager.py:178:        original_network=original_network,
+agent/python/network_manager.py:182:    safe_hosts = usable_hosts(safe_network)
+agent/python/network_manager.py:185:        return DetectedNetwork(
+agent/python/network_manager.py:189:            cidr=str(original_network),
+agent/python/network_manager.py:190:            broadcast=str(original_network.broadcast_address),
+agent/python/network_manager.py:194:                "Rede muito grande e não foi possível criar "
+agent/python/network_manager.py:197:            original_cidr=str(original_network),
+agent/python/network_manager.py:200:    return DetectedNetwork(
+agent/python/network_manager.py:203:        netmask=str(safe_network.netmask),
+agent/python/network_manager.py:204:        cidr=str(safe_network),
+agent/python/network_manager.py:205:        broadcast=str(safe_network.broadcast_address),
+agent/python/network_manager.py:209:            f"Rede original {original_network} reduzida "
+agent/python/network_manager.py:210:            f"automaticamente para {safe_network}."
+agent/python/network_manager.py:212:        original_cidr=str(original_network),
+agent/python/network_manager.py:217:def detect_local_networks(
+agent/python/network_manager.py:220:) -> list[DetectedNetwork]:
+agent/python/network_manager.py:221:    detected_networks: list[DetectedNetwork] = []
+agent/python/network_manager.py:222:    unique_cidrs: set[str] = set()
+agent/python/network_manager.py:234:            detected = prepare_detected_network(
+agent/python/network_manager.py:248:                f"{detected.cidr}:"
+agent/python/network_manager.py:252:            if unique_key in unique_cidrs:
+agent/python/network_manager.py:255:            unique_cidrs.add(unique_key)
+agent/python/network_manager.py:256:            detected_networks.append(detected)
+agent/python/network_manager.py:259:        detected_networks,
+agent/python/network_manager.py:263:            item.cidr,
+agent/python/network_manager.py:268:def validate_manual_network(
+agent/python/network_manager.py:269:    cidr: str,
+agent/python/network_manager.py:271:) -> DetectedNetwork:
+agent/python/network_manager.py:272:    normalized_cidr = cidr.strip()
+agent/python/network_manager.py:275:        network = ipaddress.ip_network(
+agent/python/network_manager.py:276:            normalized_cidr,
+agent/python/network_manager.py:281:            f"Faixa de rede inválida: {normalized_cidr}"
+agent/python/network_manager.py:284:    if not isinstance(network, ipaddress.IPv4Network):
+agent/python/network_manager.py:286:            "Nesta versão, informe uma rede IPv4."
+agent/python/network_manager.py:289:    if not network.is_private:
+agent/python/network_manager.py:291:            "O PRINTFLOW não permite escanear redes públicas."
+agent/python/network_manager.py:294:    hosts = usable_hosts(network)
+agent/python/network_manager.py:298:            f"A rede manual {network} possui {hosts} hosts. "
+agent/python/network_manager.py:303:    return DetectedNetwork(
+agent/python/network_manager.py:305:        ip_address=str(network.network_address),
+agent/python/network_manager.py:306:        netmask=str(network.netmask),
+agent/python/network_manager.py:307:        cidr=str(network),
+agent/python/network_manager.py:308:        broadcast=str(network.broadcast_address),
+agent/python/network_manager.py:311:        reason="Rede adicionada manualmente.",
+agent/python/network_manager.py:312:        original_cidr=str(network),
+agent/python/network_manager.py:317:def detect_routed_networks(
+agent/python/network_manager.py:321:    Descobre redes IPv4 privadas explicitamente presentes
+agent/python/network_manager.py:326:    - ignora redes públicas;
+agent/python/network_manager.py:328:    - ignora redes acima do limite maximum_hosts;
+agent/python/network_manager.py:329:    - não expande rotas grandes em várias sub-redes;
+agent/python/network_manager.py:350:    redes: set[str] = set()
+agent/python/network_manager.py:372:            rede = ipaddress.ip_network(
+agent/python/network_manager.py:381:        if rede.prefixlen == 0:
+agent/python/network_manager.py:384:        # Somente redes privadas
+agent/python/network_manager.py:385:        if not rede.is_private:
+agent/python/network_manager.py:388:        # Redes especiais
+agent/python/network_manager.py:390:            rede.network_address.is_loopback
+agent/python/network_manager.py:391:            or rede.network_address.is_link_local
+agent/python/network_manager.py:392:            or rede.network_address.is_multicast
+agent/python/network_manager.py:393:            or rede.network_address.is_unspecified
+agent/python/network_manager.py:401:        # Elas nao devem virar redes de discovery automatico.
+agent/python/network_manager.py:405:        if rede.prefixlen == 32:
+agent/python/network_manager.py:408:        # Segurança: não escanear automaticamente redes enormes
+agent/python/network_manager.py:409:        if usable_hosts(rede) > maximum_hosts:
+agent/python/network_manager.py:412:        redes.add(str(rede))
+agent/python/network_manager.py:414:    def chave(cidr: str):
+agent/python/network_manager.py:415:        rede = ipaddress.ip_network(
+agent/python/network_manager.py:416:            cidr,
+agent/python/network_manager.py:420:            int(rede.network_address),
+agent/python/network_manager.py:421:            rede.prefixlen,
+agent/python/network_manager.py:424:    return sorted(redes, key=chave)
+agent/python/network_manager.py:427:def get_authorized_networks(
+agent/python/network_manager.py:428:    manual_networks: list[str] | None = None,
+agent/python/network_manager.py:431:) -> list[DetectedNetwork]:
+agent/python/network_manager.py:432:    networks = detect_local_networks(
+agent/python/network_manager.py:438:    # MOTOR V2 - REDES ROTEADAS
+agent/python/network_manager.py:440:    routed_cidrs = detect_routed_networks(
+agent/python/network_manager.py:444:    local_cidrs = {
+agent/python/network_manager.py:445:        network.cidr
+agent/python/network_manager.py:446:        for network in networks
+agent/python/network_manager.py:449:    for cidr in routed_cidrs:
+agent/python/network_manager.py:450:        if cidr in local_cidrs:
+agent/python/network_manager.py:454:            validated = validate_manual_network(
+agent/python/network_manager.py:455:                cidr=cidr,
+agent/python/network_manager.py:461:        routed_network = DetectedNetwork(
+agent/python/network_manager.py:465:            cidr=validated.cidr,
+agent/python/network_manager.py:470:                "Rede privada roteável detectada "
+agent/python/network_manager.py:473:            original_cidr=validated.original_cidr,
+agent/python/network_manager.py:476:        networks.append(routed_network)
+agent/python/network_manager.py:477:        local_cidrs.add(routed_network.cidr)
+agent/python/network_manager.py:479:    existing_cidrs = {
+agent/python/network_manager.py:480:        network.cidr
+agent/python/network_manager.py:481:        for network in networks
+agent/python/network_manager.py:482:        if network.scan_allowed
+agent/python/network_manager.py:485:    if manual_networks:
+agent/python/network_manager.py:486:        for cidr in manual_networks:
+agent/python/network_manager.py:487:            manual_network = validate_manual_network(
+agent/python/network_manager.py:488:                cidr=cidr,
+agent/python/network_manager.py:492:            if manual_network.cidr in existing_cidrs:
+agent/python/network_manager.py:495:            networks.append(manual_network)
+agent/python/network_manager.py:496:            existing_cidrs.add(manual_network.cidr)
+agent/python/network_manager.py:500:            network
+agent/python/network_manager.py:501:            for network in networks
+agent/python/network_manager.py:502:            if network.scan_allowed
+agent/python/network_manager.py:506:            ipaddress.ip_network(item.cidr).network_address,
+agent/python/network_manager.py:513:    print("PRINTFLOW AGENT — DETECÇÃO INTELIGENTE DE REDES")
+agent/python/network_manager.py:516:    networks = detect_local_networks()
+agent/python/network_manager.py:518:    if not networks:
+agent/python/network_manager.py:520:        print("Nenhuma rede IPv4 válida foi encontrada.")
+agent/python/network_manager.py:523:    for network in networks:
+agent/python/network_manager.py:525:            "AUTORIZADA"
+agent/python/network_manager.py:526:            if network.scan_allowed
+agent/python/network_manager.py:531:        print(f"Interface      : {network.interface}")
+agent/python/network_manager.py:532:        print(f"IP local       : {network.ip_address}")
+agent/python/network_manager.py:533:        print(f"Rede utilizada : {network.cidr}")
+agent/python/network_manager.py:535:        if network.original_cidr != network.cidr:
+agent/python/network_manager.py:536:            print(f"Rede original  : {network.original_cidr}")
+agent/python/network_manager.py:538:        print(f"Máscara        : {network.netmask}")
+agent/python/network_manager.py:539:        print(f"Broadcast      : {network.broadcast}")
+agent/python/network_manager.py:541:        print(f"Motivo         : {network.reason}")
+agent/python/network_manager.py:543:    authorized = [
+agent/python/network_manager.py:544:        network
+agent/python/network_manager.py:545:        for network in networks
+agent/python/network_manager.py:546:        if network.scan_allowed
+agent/python/network_manager.py:551:    print(f"Redes autorizadas: {len(authorized)}")
+agent/python/network_manager.py.backup_routes_v2:26:class DetectedNetwork:
+agent/python/network_manager.py.backup_routes_v2:30:    cidr: str
+agent/python/network_manager.py.backup_routes_v2:35:    original_cidr: str | None = None
+agent/python/network_manager.py.backup_routes_v2:51:def calculate_network(
+agent/python/network_manager.py.backup_routes_v2:54:) -> ipaddress.IPv4Network:
+agent/python/network_manager.py.backup_routes_v2:55:    network_interface = ipaddress.IPv4Interface(
+agent/python/network_manager.py.backup_routes_v2:59:    return network_interface.network
+agent/python/network_manager.py.backup_routes_v2:63:    network: ipaddress.IPv4Network,
+agent/python/network_manager.py.backup_routes_v2:65:    return max(network.num_addresses - 2, 0)
+agent/python/network_manager.py.backup_routes_v2:70:    original_network: ipaddress.IPv4Network,
+agent/python/network_manager.py.backup_routes_v2:72:) -> ipaddress.IPv4Network:
+agent/python/network_manager.py.backup_routes_v2:74:    Reduz automaticamente redes grandes para uma sub-rede segura
+agent/python/network_manager.py.backup_routes_v2:79:    Rede original: 10.0.0.0/16
+agent/python/network_manager.py.backup_routes_v2:80:    Rede segura: 10.0.1.0/24
+agent/python/network_manager.py.backup_routes_v2:83:    if original_network.prefixlen >= safe_prefix:
+agent/python/network_manager.py.backup_routes_v2:84:        return original_network
+agent/python/network_manager.py.backup_routes_v2:90:    safe_network = local_interface.network
+agent/python/network_manager.py.backup_routes_v2:92:    if not safe_network.subnet_of(original_network):
+agent/python/network_manager.py.backup_routes_v2:93:        return original_network
+agent/python/network_manager.py.backup_routes_v2:95:    return safe_network
+agent/python/network_manager.py.backup_routes_v2:98:def prepare_detected_network(
+agent/python/network_manager.py.backup_routes_v2:105:) -> DetectedNetwork | None:
+agent/python/network_manager.py.backup_routes_v2:127:        original_network = calculate_network(
+agent/python/network_manager.py.backup_routes_v2:135:        return DetectedNetwork(
+agent/python/network_manager.py.backup_routes_v2:139:            cidr=str(original_network),
+agent/python/network_manager.py.backup_routes_v2:141:            is_private=original_network.is_private,
+agent/python/network_manager.py.backup_routes_v2:144:            original_cidr=str(original_network),
+agent/python/network_manager.py.backup_routes_v2:147:    if not original_network.is_private:
+agent/python/network_manager.py.backup_routes_v2:148:        return DetectedNetwork(
+agent/python/network_manager.py.backup_routes_v2:152:            cidr=str(original_network),
+agent/python/network_manager.py.backup_routes_v2:156:            reason="Rede pública bloqueada por segurança.",
+agent/python/network_manager.py.backup_routes_v2:157:            original_cidr=str(original_network),
+agent/python/network_manager.py.backup_routes_v2:160:    original_hosts = usable_hosts(original_network)
+agent/python/network_manager.py.backup_routes_v2:163:        return DetectedNetwork(
+agent/python/network_manager.py.backup_routes_v2:167:            cidr=str(original_network),
+agent/python/network_manager.py.backup_routes_v2:168:            broadcast=str(original_network.broadcast_address),
+agent/python/network_manager.py.backup_routes_v2:171:            reason="Rede liberada para descoberta.",
+agent/python/network_manager.py.backup_routes_v2:172:            original_cidr=str(original_network),
+agent/python/network_manager.py.backup_routes_v2:175:    safe_network = create_safe_local_subnet(
+agent/python/network_manager.py.backup_routes_v2:177:        original_network=original_network,
+agent/python/network_manager.py.backup_routes_v2:181:    safe_hosts = usable_hosts(safe_network)
+agent/python/network_manager.py.backup_routes_v2:184:        return DetectedNetwork(
+agent/python/network_manager.py.backup_routes_v2:188:            cidr=str(original_network),
+agent/python/network_manager.py.backup_routes_v2:189:            broadcast=str(original_network.broadcast_address),
+agent/python/network_manager.py.backup_routes_v2:193:                "Rede muito grande e não foi possível criar "
+agent/python/network_manager.py.backup_routes_v2:196:            original_cidr=str(original_network),
+agent/python/network_manager.py.backup_routes_v2:199:    return DetectedNetwork(
+agent/python/network_manager.py.backup_routes_v2:202:        netmask=str(safe_network.netmask),
+agent/python/network_manager.py.backup_routes_v2:203:        cidr=str(safe_network),
+agent/python/network_manager.py.backup_routes_v2:204:        broadcast=str(safe_network.broadcast_address),
+agent/python/network_manager.py.backup_routes_v2:208:            f"Rede original {original_network} reduzida "
+agent/python/network_manager.py.backup_routes_v2:209:            f"automaticamente para {safe_network}."
+agent/python/network_manager.py.backup_routes_v2:211:        original_cidr=str(original_network),
+agent/python/network_manager.py.backup_routes_v2:216:def detect_local_networks(
+agent/python/network_manager.py.backup_routes_v2:219:) -> list[DetectedNetwork]:
+agent/python/network_manager.py.backup_routes_v2:220:    detected_networks: list[DetectedNetwork] = []
+agent/python/network_manager.py.backup_routes_v2:221:    unique_cidrs: set[str] = set()
+agent/python/network_manager.py.backup_routes_v2:233:            detected = prepare_detected_network(
+agent/python/network_manager.py.backup_routes_v2:247:                f"{detected.cidr}:"
+agent/python/network_manager.py.backup_routes_v2:251:            if unique_key in unique_cidrs:
+agent/python/network_manager.py.backup_routes_v2:254:            unique_cidrs.add(unique_key)
+agent/python/network_manager.py.backup_routes_v2:255:            detected_networks.append(detected)
+agent/python/network_manager.py.backup_routes_v2:258:        detected_networks,
+agent/python/network_manager.py.backup_routes_v2:262:            item.cidr,
+agent/python/network_manager.py.backup_routes_v2:267:def validate_manual_network(
+agent/python/network_manager.py.backup_routes_v2:268:    cidr: str,
+agent/python/network_manager.py.backup_routes_v2:270:) -> DetectedNetwork:
+agent/python/network_manager.py.backup_routes_v2:271:    normalized_cidr = cidr.strip()
+agent/python/network_manager.py.backup_routes_v2:274:        network = ipaddress.ip_network(
+agent/python/network_manager.py.backup_routes_v2:275:            normalized_cidr,
+agent/python/network_manager.py.backup_routes_v2:280:            f"Faixa de rede inválida: {normalized_cidr}"
+agent/python/network_manager.py.backup_routes_v2:283:    if not isinstance(network, ipaddress.IPv4Network):
+agent/python/network_manager.py.backup_routes_v2:285:            "Nesta versão, informe uma rede IPv4."
+agent/python/network_manager.py.backup_routes_v2:288:    if not network.is_private:
+agent/python/network_manager.py.backup_routes_v2:290:            "O PRINTFLOW não permite escanear redes públicas."
+agent/python/network_manager.py.backup_routes_v2:293:    hosts = usable_hosts(network)
+agent/python/network_manager.py.backup_routes_v2:297:            f"A rede manual {network} possui {hosts} hosts. "
+agent/python/network_manager.py.backup_routes_v2:302:    return DetectedNetwork(
+agent/python/network_manager.py.backup_routes_v2:304:        ip_address=str(network.network_address),
+agent/python/network_manager.py.backup_routes_v2:305:        netmask=str(network.netmask),
+agent/python/network_manager.py.backup_routes_v2:306:        cidr=str(network),
+agent/python/network_manager.py.backup_routes_v2:307:        broadcast=str(network.broadcast_address),
+agent/python/network_manager.py.backup_routes_v2:310:        reason="Rede adicionada manualmente.",
+agent/python/network_manager.py.backup_routes_v2:311:        original_cidr=str(network),
+agent/python/network_manager.py.backup_routes_v2:315:def get_authorized_networks(
+agent/python/network_manager.py.backup_routes_v2:316:    manual_networks: list[str] | None = None,
+agent/python/network_manager.py.backup_routes_v2:319:) -> list[DetectedNetwork]:
+agent/python/network_manager.py.backup_routes_v2:320:    networks = detect_local_networks(
+agent/python/network_manager.py.backup_routes_v2:325:    existing_cidrs = {
+agent/python/network_manager.py.backup_routes_v2:326:        network.cidr
+agent/python/network_manager.py.backup_routes_v2:327:        for network in networks
+agent/python/network_manager.py.backup_routes_v2:328:        if network.scan_allowed
+agent/python/network_manager.py.backup_routes_v2:331:    if manual_networks:
+agent/python/network_manager.py.backup_routes_v2:332:        for cidr in manual_networks:
+agent/python/network_manager.py.backup_routes_v2:333:            manual_network = validate_manual_network(
+agent/python/network_manager.py.backup_routes_v2:334:                cidr=cidr,
+agent/python/network_manager.py.backup_routes_v2:338:            if manual_network.cidr in existing_cidrs:
+agent/python/network_manager.py.backup_routes_v2:341:            networks.append(manual_network)
+agent/python/network_manager.py.backup_routes_v2:342:            existing_cidrs.add(manual_network.cidr)
+agent/python/network_manager.py.backup_routes_v2:346:            network
+agent/python/network_manager.py.backup_routes_v2:347:            for network in networks
+agent/python/network_manager.py.backup_routes_v2:348:            if network.scan_allowed
+agent/python/network_manager.py.backup_routes_v2:352:            ipaddress.ip_network(item.cidr).network_address,
+agent/python/network_manager.py.backup_routes_v2:359:    print("PRINTFLOW AGENT — DETECÇÃO INTELIGENTE DE REDES")
+agent/python/network_manager.py.backup_routes_v2:362:    networks = detect_local_networks()
+agent/python/network_manager.py.backup_routes_v2:364:    if not networks:
+agent/python/network_manager.py.backup_routes_v2:366:        print("Nenhuma rede IPv4 válida foi encontrada.")
+agent/python/network_manager.py.backup_routes_v2:369:    for network in networks:
+agent/python/network_manager.py.backup_routes_v2:371:            "AUTORIZADA"
+agent/python/network_manager.py.backup_routes_v2:372:            if network.scan_allowed
+agent/python/network_manager.py.backup_routes_v2:377:        print(f"Interface      : {network.interface}")
+agent/python/network_manager.py.backup_routes_v2:378:        print(f"IP local       : {network.ip_address}")
+agent/python/network_manager.py.backup_routes_v2:379:        print(f"Rede utilizada : {network.cidr}")
+agent/python/network_manager.py.backup_routes_v2:381:        if network.original_cidr != network.cidr:
+agent/python/network_manager.py.backup_routes_v2:382:            print(f"Rede original  : {network.original_cidr}")
+agent/python/network_manager.py.backup_routes_v2:384:        print(f"Máscara        : {network.netmask}")
+agent/python/network_manager.py.backup_routes_v2:385:        print(f"Broadcast      : {network.broadcast}")
+agent/python/network_manager.py.backup_routes_v2:387:        print(f"Motivo         : {network.reason}")
+agent/python/network_manager.py.backup_routes_v2:389:    authorized = [
+agent/python/network_manager.py.backup_routes_v2:390:        network
+agent/python/network_manager.py.backup_routes_v2:391:        for network in networks
+agent/python/network_manager.py.backup_routes_v2:392:        if network.scan_allowed
+agent/python/network_manager.py.backup_routes_v2:397:    print(f"Redes autorizadas: {len(authorized)}")
+agent/python/tests/test_diagnostic_learning.py:53:        assert "nao autorizado" in (
+agent/python/diagnostic_robot.py.backup_b12i:23:# - somente jobs internos previamente autorizados.
+agent/python/diagnostic_robot.py.backup_b12i:28:    "DISCOVER_NETWORKS",
+agent/python/diagnostic_robot.py.backup_b12i:81:def _serialize_network(
+agent/python/diagnostic_robot.py.backup_b12i:82:    network: Any,
+agent/python/diagnostic_robot.py.backup_b12i:86:        "cidr",
+agent/python/diagnostic_robot.py.backup_b12i:87:        "original_cidr",
+agent/python/diagnostic_robot.py.backup_b12i:101:            network,
+agent/python/diagnostic_robot.py.backup_b12i:110:        result["value"] = str(network)
+agent/python/diagnostic_robot.py.backup_b12i:161:            "DISCOVER_NETWORKS",
+agent/python/diagnostic_robot.py.backup_b12i:162:            self._discover_networks,
+agent/python/diagnostic_robot.py.backup_b12i:208:                f"Job nao autorizado: {normalized}"
+agent/python/diagnostic_robot.py.backup_b12i:363:    # DISCOVER NETWORKS
+agent/python/diagnostic_robot.py.backup_b12i:367:    def _discover_networks(
+agent/python/diagnostic_robot.py.backup_b12i:371:        from network_manager import (
+agent/python/diagnostic_robot.py.backup_b12i:372:            detect_local_networks,
+agent/python/diagnostic_robot.py.backup_b12i:375:        networks = detect_local_networks()
+agent/python/diagnostic_robot.py.backup_b12i:378:            _serialize_network(
+agent/python/diagnostic_robot.py.backup_b12i:379:                network
+agent/python/diagnostic_robot.py.backup_b12i:381:            for network in networks
+agent/python/diagnostic_robot.py.backup_b12i:386:            "networks": serialized,
+agent/python/diagnostic_robot.py.backup_b12i:585:        help="Job PRINTFLOW autorizado.",
+agent/python/discovery_runner.py:20:    from network_manager import get_authorized_networks
+agent/python/discovery_runner.py:22:    print("ERRO: não foi possível carregar network_manager.py")
+agent/python/discovery_runner.py:41:    network: str
+agent/python/discovery_runner.py:124:    network: str,
+agent/python/discovery_runner.py:174:        network=network,
+agent/python/discovery_runner.py:185:    cidr: str,
+agent/python/discovery_runner.py:188:    network = ipaddress.ip_network(
+agent/python/discovery_runner.py:189:        cidr,
+agent/python/discovery_runner.py:195:    for index, host in enumerate(network.hosts()):
+agent/python/discovery_runner.py:204:def scan_network(
+agent/python/discovery_runner.py:205:    cidr: str,
+agent/python/discovery_runner.py:212:        cidr=cidr,
+agent/python/discovery_runner.py:219:    print(f"Escaneando rede: {cidr}")
+agent/python/discovery_runner.py:229:                cidr,
+agent/python/discovery_runner.py:320:def print_networks(networks: list[Any]) -> None:
+agent/python/discovery_runner.py:322:    print("REDES AUTORIZADAS")
+agent/python/discovery_runner.py:325:    for network in networks:
+agent/python/discovery_runner.py:327:            f"Interface: {network.interface} | "
+agent/python/discovery_runner.py:328:            f"Rede: {network.cidr} | "
+agent/python/discovery_runner.py:329:            f"IP local: {network.ip_address}"
+agent/python/discovery_runner.py:337:            "de redes e impressoras"
+agent/python/discovery_runner.py:342:        "--network",
+agent/python/discovery_runner.py:346:            "Rede adicional em formato CIDR. "
+agent/python/discovery_runner.py:347:            "Exemplo: --network 192.168.1.0/24"
+agent/python/discovery_runner.py:369:        help="Limite de IPs analisados por rede.",
+agent/python/discovery_runner.py:395:        networks = get_authorized_networks(
+agent/python/discovery_runner.py:396:            manual_networks=arguments.network,
+agent/python/discovery_runner.py:404:    if not networks:
+agent/python/discovery_runner.py:406:        print("Nenhuma rede autorizada foi encontrada.")
+agent/python/discovery_runner.py:408:            "Você pode informar uma rede manualmente:"
+agent/python/discovery_runner.py:412:            "--network 192.168.1.0/24"
+agent/python/discovery_runner.py:416:    print_networks(networks)
+agent/python/discovery_runner.py:419:    scanned_networks: set[str] = set()
+agent/python/discovery_runner.py:421:    for network in networks:
+agent/python/discovery_runner.py:422:        if network.cidr in scanned_networks:
+agent/python/discovery_runner.py:425:        scanned_networks.add(network.cidr)
+agent/python/discovery_runner.py:427:        devices = scan_network(
+agent/python/discovery_runner.py:428:            cidr=network.cidr,
+agent/python/discovery_runner.py:476:        f"Redes escaneadas      : "
+agent/python/discovery_runner.py:477:        f"{len(scanned_networks)}"
+agent/python/intelligence/diagnostic_learning_bridge.py:94:                "Job nao autorizado pelo "
+
+===== REFERENCIAS DO INVENTARIO =====
+agent/python/core/service.py.backup_build14:39:    def discover_devices(self) -> list[Any]:
+agent/python/core/service.py.backup_build14:56:        discovered_devices: dict[str, Any] = {}
+agent/python/core/service.py.backup_build14:65:            devices = scan_network(
+agent/python/core/service.py.backup_build14:73:            for device in devices:
+agent/python/core/service.py.backup_build14:74:                current = discovered_devices.get(
+agent/python/core/service.py.backup_build14:83:                    discovered_devices[
+agent/python/core/service.py.backup_build14:88:            discovered_devices.values()
+agent/python/core/service.py.backup_build14:93:        devices: list[Any],
+agent/python/core/service.py.backup_build14:97:        possible_printers = [
+agent/python/core/service.py.backup_build14:99:            for device in devices
+agent/python/core/service.py.backup_build14:105:            len(possible_printers),
+agent/python/core/service.py.backup_build14:108:        for device in possible_printers:
+agent/python/core/service.py.backup_build14:130:    def save_inventory(
+agent/python/core/service.py.backup_build14:132:        devices: list[Any],
+agent/python/core/service.py.backup_build14:133:        printers: list[dict[str, Any]],
+agent/python/core/service.py.backup_build14:143:            / "agent_inventory.json"
+agent/python/core/service.py.backup_build14:155:                "devices_found": len(devices),
+agent/python/core/service.py.backup_build14:156:                "possible_printers": len(printers),
+agent/python/core/service.py.backup_build14:159:                    for printer in printers
+agent/python/core/service.py.backup_build14:177:            "devices": [
+agent/python/core/service.py.backup_build14:179:                for device in devices
+agent/python/core/service.py.backup_build14:181:            "printers": printers,
+agent/python/core/service.py.backup_build14:198:        printers: list[dict[str, Any]],
+agent/python/core/service.py.backup_build14:207:                printers=printers
+agent/python/core/service.py.backup_build14:224:            printers=printers
+agent/python/core/service.py.backup_build14:242:        devices = self.discover_devices()
+agent/python/core/service.py.backup_build14:244:        printers = asyncio.run(
+agent/python/core/service.py.backup_build14:245:            self.collect_snmp_data(devices)
+agent/python/core/service.py.backup_build14:249:            printers=printers
+agent/python/core/service.py.backup_build14:252:        output_file = self.save_inventory(
+agent/python/core/service.py.backup_build14:253:            devices=devices,
+agent/python/core/service.py.backup_build14:254:            printers=printers,
+agent/python/core/service.py.backup_build14:264:            len(devices),
+agent/python/core/service.py.backup_build14:269:            len(printers),
+agent/python/core/service.py:39:    def discover_devices(self) -> list[Any]:
+agent/python/core/service.py:53:        discovered_devices: dict[str, Any] = {}
+agent/python/core/service.py:70:                devices = scan_network(
+agent/python/core/service.py:78:                for device in devices:
+agent/python/core/service.py:79:                    current = discovered_devices.get(
+agent/python/core/service.py:88:                        discovered_devices[
+agent/python/core/service.py:94:                len(discovered_devices),
+agent/python/core/service.py:119:            devices = scan_network(
+agent/python/core/service.py:127:            for device in devices:
+agent/python/core/service.py:128:                current = discovered_devices.get(
+agent/python/core/service.py:137:                    discovered_devices[
+agent/python/core/service.py:141:        return list(discovered_devices.values())
+agent/python/core/service.py:145:        devices: list[Any],
+agent/python/core/service.py:149:        possible_printers = [
+agent/python/core/service.py:151:            for device in devices
+agent/python/core/service.py:157:            len(possible_printers),
+agent/python/core/service.py:160:        for device in possible_printers:
+agent/python/core/service.py:208:    def save_inventory(
+agent/python/core/service.py:210:        devices: list[Any],
+agent/python/core/service.py:211:        printers: list[dict[str, Any]],
+agent/python/core/service.py:221:            / "agent_inventory.json"
+agent/python/core/service.py:233:                "devices_found": len(devices),
+agent/python/core/service.py:234:                "possible_printers": len(printers),
+agent/python/core/service.py:237:                    for printer in printers
+agent/python/core/service.py:255:            "devices": [
+agent/python/core/service.py:257:                for device in devices
+agent/python/core/service.py:259:            "printers": printers,
+agent/python/core/service.py:276:        printers: list[dict[str, Any]],
+agent/python/core/service.py:285:                printers=printers
+agent/python/core/service.py:302:            printers=printers
+agent/python/core/service.py:343:        devices = self.discover_devices()
+agent/python/core/service.py:345:        printers = asyncio.run(
+agent/python/core/service.py:346:            self.collect_snmp_data(devices)
+agent/python/core/service.py:350:            printers=printers
+agent/python/core/service.py:353:        output_file = self.save_inventory(
+agent/python/core/service.py:354:            devices=devices,
+agent/python/core/service.py:355:            printers=printers,
+agent/python/core/service.py:365:            len(devices),
+agent/python/core/service.py:370:            len(printers),
+agent/python/core/service.py.backup_snmp_diagnostic:39:    def discover_devices(self) -> list[Any]:
+agent/python/core/service.py.backup_snmp_diagnostic:53:        discovered_devices: dict[str, Any] = {}
+agent/python/core/service.py.backup_snmp_diagnostic:70:                devices = scan_network(
+agent/python/core/service.py.backup_snmp_diagnostic:78:                for device in devices:
+agent/python/core/service.py.backup_snmp_diagnostic:79:                    current = discovered_devices.get(
+agent/python/core/service.py.backup_snmp_diagnostic:88:                        discovered_devices[
+agent/python/core/service.py.backup_snmp_diagnostic:94:                len(discovered_devices),
+agent/python/core/service.py.backup_snmp_diagnostic:97:            return list(discovered_devices.values())
+agent/python/core/service.py.backup_snmp_diagnostic:120:            devices = scan_network(
+agent/python/core/service.py.backup_snmp_diagnostic:128:            for device in devices:
+agent/python/core/service.py.backup_snmp_diagnostic:129:                current = discovered_devices.get(
+agent/python/core/service.py.backup_snmp_diagnostic:138:                    discovered_devices[
+agent/python/core/service.py.backup_snmp_diagnostic:142:        return list(discovered_devices.values())
+agent/python/core/service.py.backup_snmp_diagnostic:146:        devices: list[Any],
+agent/python/core/service.py.backup_snmp_diagnostic:150:        possible_printers = [
+agent/python/core/service.py.backup_snmp_diagnostic:152:            for device in devices
+agent/python/core/service.py.backup_snmp_diagnostic:158:            len(possible_printers),
+agent/python/core/service.py.backup_snmp_diagnostic:161:        for device in possible_printers:
+agent/python/core/service.py.backup_snmp_diagnostic:183:    def save_inventory(
+agent/python/core/service.py.backup_snmp_diagnostic:185:        devices: list[Any],
+agent/python/core/service.py.backup_snmp_diagnostic:186:        printers: list[dict[str, Any]],
+agent/python/core/service.py.backup_snmp_diagnostic:196:            / "agent_inventory.json"
+agent/python/core/service.py.backup_snmp_diagnostic:208:                "devices_found": len(devices),
+agent/python/core/service.py.backup_snmp_diagnostic:209:                "possible_printers": len(printers),
+agent/python/core/service.py.backup_snmp_diagnostic:212:                    for printer in printers
+agent/python/core/service.py.backup_snmp_diagnostic:230:            "devices": [
+agent/python/core/service.py.backup_snmp_diagnostic:232:                for device in devices
+agent/python/core/service.py.backup_snmp_diagnostic:234:            "printers": printers,
+agent/python/core/service.py.backup_snmp_diagnostic:251:        printers: list[dict[str, Any]],
+agent/python/core/service.py.backup_snmp_diagnostic:260:                printers=printers
+agent/python/core/service.py.backup_snmp_diagnostic:277:            printers=printers
+agent/python/core/service.py.backup_snmp_diagnostic:318:        devices = self.discover_devices()
+agent/python/core/service.py.backup_snmp_diagnostic:320:        printers = asyncio.run(
+agent/python/core/service.py.backup_snmp_diagnostic:321:            self.collect_snmp_data(devices)
+agent/python/core/service.py.backup_snmp_diagnostic:325:            printers=printers
+agent/python/core/service.py.backup_snmp_diagnostic:328:        output_file = self.save_inventory(
+agent/python/core/service.py.backup_snmp_diagnostic:329:            devices=devices,
+agent/python/core/service.py.backup_snmp_diagnostic:330:            printers=printers,
+agent/python/core/service.py.backup_snmp_diagnostic:340:            len(devices),
+agent/python/core/service.py.backup_snmp_diagnostic:345:            len(printers),
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:39:    def discover_devices(self) -> list[Any]:
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:53:        discovered_devices: dict[str, Any] = {}
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:70:                devices = scan_network(
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:78:                for device in devices:
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:79:                    current = discovered_devices.get(
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:88:                        discovered_devices[
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:94:                len(discovered_devices),
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:97:            return list(discovered_devices.values())
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:120:            devices = scan_network(
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:128:            for device in devices:
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:129:                current = discovered_devices.get(
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:138:                    discovered_devices[
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:142:        return list(discovered_devices.values())
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:146:        devices: list[Any],
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:150:        possible_printers = [
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:152:            for device in devices
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:158:            len(possible_printers),
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:161:        for device in possible_printers:
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:206:    def save_inventory(
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:208:        devices: list[Any],
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:209:        printers: list[dict[str, Any]],
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:219:            / "agent_inventory.json"
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:231:                "devices_found": len(devices),
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:232:                "possible_printers": len(printers),
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:235:                    for printer in printers
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:253:            "devices": [
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:255:                for device in devices
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:257:            "printers": printers,
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:274:        printers: list[dict[str, Any]],
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:283:                printers=printers
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:300:            printers=printers
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:341:        devices = self.discover_devices()
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:343:        printers = asyncio.run(
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:344:            self.collect_snmp_data(devices)
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:348:            printers=printers
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:351:        output_file = self.save_inventory(
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:352:            devices=devices,
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:353:            printers=printers,
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:363:            len(devices),
+agent/python/core/service.py.backup_counter_intelligence_20260818_023903:368:            len(printers),
+agent/python/core/service.py.backup_safe17:39:    def discover_devices(self) -> list[Any]:
+agent/python/core/service.py.backup_safe17:56:        discovered_devices: dict[str, Any] = {}
+agent/python/core/service.py.backup_safe17:65:            devices = scan_network(
+agent/python/core/service.py.backup_safe17:73:            for device in devices:
+agent/python/core/service.py.backup_safe17:74:                current = discovered_devices.get(
+agent/python/core/service.py.backup_safe17:83:                    discovered_devices[
+agent/python/core/service.py.backup_safe17:88:            discovered_devices.values()
+agent/python/core/service.py.backup_safe17:93:        devices: list[Any],
+agent/python/core/service.py.backup_safe17:97:        possible_printers = [
+agent/python/core/service.py.backup_safe17:99:            for device in devices
+agent/python/core/service.py.backup_safe17:105:            len(possible_printers),
+agent/python/core/service.py.backup_safe17:108:        for device in possible_printers:
+agent/python/core/service.py.backup_safe17:130:    def save_inventory(
+agent/python/core/service.py.backup_safe17:132:        devices: list[Any],
+agent/python/core/service.py.backup_safe17:133:        printers: list[dict[str, Any]],
+agent/python/core/service.py.backup_safe17:143:            / "agent_inventory.json"
+agent/python/core/service.py.backup_safe17:155:                "devices_found": len(devices),
+agent/python/core/service.py.backup_safe17:156:                "possible_printers": len(printers),
+agent/python/core/service.py.backup_safe17:159:                    for printer in printers
+agent/python/core/service.py.backup_safe17:177:            "devices": [
+agent/python/core/service.py.backup_safe17:179:                for device in devices
+agent/python/core/service.py.backup_safe17:181:            "printers": printers,
+agent/python/core/service.py.backup_safe17:198:        printers: list[dict[str, Any]],
+agent/python/core/service.py.backup_safe17:207:                printers=printers
+agent/python/core/service.py.backup_safe17:224:            printers=printers
+agent/python/core/service.py.backup_safe17:265:        devices = self.discover_devices()
+agent/python/core/service.py.backup_safe17:267:        printers = asyncio.run(
+agent/python/core/service.py.backup_safe17:268:            self.collect_snmp_data(devices)
+agent/python/core/service.py.backup_safe17:272:            printers=printers
+agent/python/core/service.py.backup_safe17:275:        output_file = self.save_inventory(
+agent/python/core/service.py.backup_safe17:276:            devices=devices,
+agent/python/core/service.py.backup_safe17:277:            printers=printers,
+agent/python/core/service.py.backup_safe17:287:            len(devices),
+agent/python/core/service.py.backup_safe17:292:            len(printers),
+agent/python/intelligence/agent_cycle_integration.py:61:        "printers",
+agent/python/intelligence/agent_cycle_integration.py:63:        "devices",
+agent/python/intelligence/agent_cycle_integration.py:127:            module_root / "output" / "agent_inventory.json",
+agent/python/intelligence/agent_cycle_integration.py:128:            module_root / "agent_inventory.json",
+agent/python/intelligence/agent_cycle_integration.py:129:            Path.cwd() / "agent_inventory.json",
+agent/python/intelligence/agent_cycle_integration.py:130:            Path.cwd() / "output" / "agent_inventory.json",
+agent/python/intelligence/agent_cycle_integration.py:132:            / "output" / "agent_inventory.json",
+agent/python/intelligence/agent_cycle_integration.py:133:            executable_dir / "agent_inventory.json",
+agent/python/intelligence/agent_cycle_integration.py:134:            executable_dir / "output" / "agent_inventory.json",
+agent/python/intelligence/agent_cycle_integration.py:252:            "agent_inventory.json nao encontrado. "
+agent/python/intelligence/agent_cycle_integration.py:292:                    "printers": [],
+agent/python/intelligence/printer_intelligence_collector.py:731:        "printers": [
+
+===== TESTES DE DISCOVERY =====
+agent/python/tests/test_deep_learning.py
+agent/python/tests/probe_safe_walk_real.py
+agent/python/tests/test_walk_executor.py
+agent/python/tests/test_multibrand_v1.py
+agent/python/tests/test_agent_cycle_integration.py
+46:def test_inventory_is_preserved(
+50:    inventory = tmp_path / "agent_inventory.json"
+69:    inventory.write_text(
+83:    result = integration.generate_from_inventory(
+84:        inventory_path=inventory,
+90:    assert inventory.read_text(encoding="utf-8") == original
+97:    assert payload["inventory_preserved"] is True
+100:def test_empty_inventory(
+103:    inventory = tmp_path / "agent_inventory.json"
+109:    inventory.write_text(
+114:    result = integration.generate_from_inventory(
+115:        inventory_path=inventory,
+agent/python/tests/test_diagnostic_learning.py
+agent/python/tests/test_printer_intelligence_collector.py
+agent/python/tests/test_safe_walk.py
+agent/python/tests/test_front_a_v3.py
+
+===== COMPILACAO =====
+COMPILACAO_CODIGO=0
+
+===== TESTES =====
+........................................                                 [100%]
+40 passed in 0.18s
+TESTES_CODIGO=0
+
+============================================================
+ DIAGNOSTICO CONCLUIDO
+ NENHUM ARQUIVO DO PROJETO FOI ALTERADO
+ ARQUIVO: DIAGNOSTICO-C2-CIDR-E-INVENTARIO.txt
+============================================================
