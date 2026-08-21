@@ -36,6 +36,11 @@ try {
 
     $task = Get-ScheduledTask -TaskName "PRINTFLOW Agent" -ErrorAction SilentlyContinue
     Add-Check "Instalacao no Windows" ($null -ne $task) $(if ($task) { "tarefa encontrada: $($task.State)" } else { "execute o instalador" })
+    if ($task) {
+        $taskInfo = Get-ScheduledTaskInfo -TaskName "PRINTFLOW Agent"
+        Add-Check "Fila do Agent" ($task.State -ne "Queued") "estado $($task.State)"
+        Add-Check "Ultima execucao" ($taskInfo.LastTaskResult -eq 0) "codigo $($taskInfo.LastTaskResult)"
+    }
 }
 catch {
     Add-Check "Execucao da validacao" $false $_.Exception.Message

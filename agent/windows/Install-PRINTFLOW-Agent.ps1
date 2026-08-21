@@ -26,7 +26,7 @@ if ($plainToken -notmatch '^[A-Za-z0-9_-]{43}$') {
 $validationBody = @{
     agent_token = $plainToken
     agent_name = "PRINTFLOW Agent Windows Installer"
-    agent_version = "0.2.7"
+    agent_version = "0.2.8"
     status = "starting"
 } | ConvertTo-Json
 try {
@@ -64,12 +64,27 @@ Get-Process -Name "PRINTFLOW-Agent" -ErrorAction SilentlyContinue |
     Stop-Process -Force -ErrorAction SilentlyContinue
 
 $powerShell = (Get-Command powershell.exe).Source
-$arguments = "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$launcher`" -Daemon"
+$arguments = "-NoLogo -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$launcher`""
 $action = New-ScheduledTaskAction -Execute $powerShell -Argument $arguments
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
-$settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit (New-TimeSpan -Days 3650) -MultipleInstances IgnoreNew
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Description "Monitoramento PRINTFLOW" -Force | Out-Null
+$triggerAtLogon = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+$triggerRecurring = New-ScheduledTaskTrigger `
+    -Once `
+    -At (Get-Date).AddMinutes(15) `
+    -RepetitionInterval (New-TimeSpan -Minutes 15) `
+    -RepetitionDuration (New-TimeSpan -Days 3650)
+$settings = New-ScheduledTaskSettingsSet `
+    -RestartCount 3 `
+    -RestartInterval (New-TimeSpan -Minutes 1) `
+    -ExecutionTimeLimit (New-TimeSpan -Minutes 10) `
+    -MultipleInstances IgnoreNew `
+    -StartWhenAvailable
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger @($triggerAtLogon, $triggerRecurring) -Settings $settings -Description "Monitoramento PRINTFLOW a cada 15 minutos" -Force | Out-Null
 Start-ScheduledTask -TaskName $taskName
+Start-Sleep -Seconds 3
+$installedTask = Get-ScheduledTask -TaskName $taskName
+if ($installedTask.State -eq "Queued") {
+    throw "A tarefa do Agent permaneceu em espera. Consulte INSTALL-DIAGNOSTICO.txt."
+}
 Write-Host "PRINTFLOW Agent instalado e iniciado com sucesso." -ForegroundColor Green
 @(
     "PRINTFLOW Agent - instalacao concluida"

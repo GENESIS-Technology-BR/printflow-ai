@@ -35,6 +35,10 @@ def test_installer_reads_clipboard_and_validates_token():
     assert "Set-Clipboard -Value \"[PRINTFLOW token protegido]\"" in installer
     assert "-MultipleInstances IgnoreNew" in installer
     assert "Unregister-ScheduledTask" in installer
+    assert "-RepetitionInterval (New-TimeSpan -Minutes 15)" in installer
+    assert "-ExecutionTimeLimit (New-TimeSpan -Minutes 10)" in installer
+    assert '-WindowStyle Hidden' in installer
+    assert '-Daemon' not in installer
 
 
 def test_launcher_rejects_clipboard_marker_as_token():
@@ -78,3 +82,5 @@ def test_build_validation_is_available_in_two_click_mode():
     assert "PRINTFLOW-Agent.exe" in validator
     assert "--help" in validator
     assert 'Get-ScheduledTask -TaskName "PRINTFLOW Agent"' in validator
+    assert '$task.State -ne "Queued"' in validator
+    assert '$taskInfo.LastTaskResult -eq 0' in validator

@@ -13,6 +13,8 @@ type AlertItem = {
   description: string;
 };
 
+const STALE_PRINTER_HOURS = 24;
+
 function createAlerts(
   printers: DashboardPrinter[],
 ): AlertItem[] {
@@ -72,6 +74,31 @@ function createAlerts(
         description:
           "Avaliar manutenção preventiva e vida útil do equipamento.",
       });
+    }
+
+    if (
+      printer.toner_percent !== null &&
+      printer.toner_percent <= 15
+    ) {
+      alerts.push({
+        id: `${printerId}-toner-low`,
+        severity: printer.toner_percent <= 5 ? "critical" : "warning",
+        title: `Toner baixo: ${printer.name}`,
+        description: `Suprimento em ${printer.toner_percent}%. Planejar reposição.`,
+      });
+    }
+
+    if (printer.active && printer.last_seen) {
+      const lastSeen = new Date(printer.last_seen).getTime();
+      const staleAfter = STALE_PRINTER_HOURS * 60 * 60 * 1000;
+      if (Number.isFinite(lastSeen) && Date.now() - lastSeen > staleAfter) {
+        alerts.push({
+          id: `${printerId}-stale`,
+          severity: "warning",
+          title: `Coleta atrasada: ${printer.name}`,
+          description: "Sem atualização de inventário nas últimas 24 horas.",
+        });
+      }
     }
   }
 
