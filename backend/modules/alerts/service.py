@@ -6,6 +6,7 @@ from typing import Any, Callable
 from sqlalchemy.orm import Session
 
 from backend.modules.alerts.model import OperationalAlert
+from backend.modules.auth.model import User
 from backend.modules.printers.model import Printer
 
 
@@ -52,7 +53,8 @@ def desired_alerts(printer: Printer, item: dict[str, Any]) -> list[dict[str, str
     if toner is not None and toner <= 15:
         add(
             "toner", "critical" if toner <= 5 else "warning",
-            f"Toner baixo: {name}", f"Suprimento em {toner}%. Planejar reposição.",
+            f"Toner baixo: {name}",
+            f"Suprimento em {toner}%. Planejar reposição.",
         )
 
     last_seen = _normalized_seen(getattr(printer, "last_seen", None))
@@ -62,6 +64,7 @@ def desired_alerts(printer: Printer, item: dict[str, Any]) -> list[dict[str, str
                 "stale", "warning", f"Coleta atrasada: {name}",
                 "Sem atualização de inventário nas últimas 24 horas.",
             )
+
     return alerts
 
 
@@ -79,7 +82,7 @@ def reconcile_company_alerts(
 
     open_alerts = db.query(OperationalAlert).filter(
         OperationalAlert.company_id == company_id,
-        OperationalAlert.status == "open",
+        OperationalAlert.status.in_(("open", "acknowledged")),
     ).all()
     open_by_key = {alert.event_key: alert for alert in open_alerts}
 
@@ -128,4 +131,38 @@ def serialize_alert(alert: OperationalAlert) -> dict[str, Any]:
         "opened_at": alert.opened_at.isoformat(),
         "last_seen_at": alert.last_seen_at.isoformat(),
         "resolved_at": alert.resolved_at.isoformat() if alert.resolved_at else None,
+        "acknowledged_at": (
+            alert.acknowledged_at.isoformat() if alert.acknowledged_at else None
+        ),
+        "acknowledged_by": alert.acknowledged_by,
     }
+
+
+def acknowledge_alert(
+    db: Session,
+    company_id: int,
+    alert_id: int,
+    user_id: int,
+) -> OperationalAlert | None:
+    """Reconhece um alerta ativo pertencente à empresa autenticada."""
+    user_exists = db.query(User.id).filter(
+        User.id == user_id,
+        User.company_id == company_id,
+        User.active.is_(True),
+    ).first()
+    if user_exists is None:
+        return None
+    alert = db.query(OperationalAlert).filter(
+        OperationalAlert.id == alert_id,
+        OperationalAlert.company_id == company_id,
+        OperationalAlert.status.in_(("open", "acknowledged")),
+    ).first()
+    if alert is None:
+        return None
+    if alert.status == "open":
+        alert.status = "acknowledged"
+        alert.acknowledged_at = datetime.now(timezone.utc)
+        alert.acknowledged_by = user_id
+        db.commit()
+        db.refresh(alert)
+    return alert

@@ -32,6 +32,7 @@ def test_installer_reads_clipboard_and_validates_token():
     assert "^[A-Za-z0-9_-]{43}$" in installer
     assert "nao copie o token de sessao" in installer
     assert "printers/agent/heartbeat" in installer
+    assert 'agent_version = "0.3.0"' in installer
     assert "Set-Clipboard -Value \"[PRINTFLOW token protegido]\"" in installer
     assert "-MultipleInstances IgnoreNew" in installer
     assert "Unregister-ScheduledTask" in installer
@@ -83,4 +84,9 @@ def test_build_validation_is_available_in_two_click_mode():
     assert "--help" in validator
     assert 'Get-ScheduledTask -TaskName "PRINTFLOW Agent"' in validator
     assert '$task.State -ne "Queued"' in validator
-    assert '$taskInfo.LastTaskResult -eq 0' in validator
+    assert '$lastResult -eq 0 -or $taskIsRunning' in validator
+    assert '$lastResult -eq 267009' in validator
+    assert 'execucao em andamento (codigo 267009)' in validator
+    assert 'falha real (codigo $lastResult)' in validator
+    assert 'Build:\\s+42' in validator
+    assert 'Version:\\s+0\\.3\\.0' in validator

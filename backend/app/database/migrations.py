@@ -25,6 +25,11 @@ COMPANY_AGENT_COLUMNS = {
     "agent_last_error": "VARCHAR(500)",
 }
 
+OPERATIONAL_ALERT_COLUMNS = {
+    "acknowledged_at": "TIMESTAMP",
+    "acknowledged_by": "INTEGER",
+}
+
 
 def ensure_printer_columns(engine: Engine) -> None:
     """
@@ -156,6 +161,27 @@ def ensure_company_agent_columns(engine: Engine) -> None:
         for name, sql_type in missing.items():
             connection.execute(text(
                 f"ALTER TABLE companies_v2 ADD COLUMN {name} {sql_type}"
+            ))
+
+
+def ensure_operational_alert_columns(engine: Engine) -> None:
+    """Adiciona metadados de reconhecimento sem recriar alertas existentes."""
+    inspector = inspect(engine)
+    if "operational_alerts" not in inspector.get_table_names():
+        return
+    existing = {
+        column["name"]
+        for column in inspector.get_columns("operational_alerts")
+    }
+    missing = {
+        name: sql_type
+        for name, sql_type in OPERATIONAL_ALERT_COLUMNS.items()
+        if name not in existing
+    }
+    with engine.begin() as connection:
+        for name, sql_type in missing.items():
+            connection.execute(text(
+                f"ALTER TABLE operational_alerts ADD COLUMN {name} {sql_type}"
             ))
 
 

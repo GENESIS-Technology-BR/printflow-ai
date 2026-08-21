@@ -61,21 +61,26 @@ export type OperationalAlert = {
   severity: "critical" | "warning" | "info";
   title: string;
   description: string;
-  status: "open" | "resolved";
+  status: "open" | "acknowledged" | "resolved";
   opened_at: string;
   last_seen_at: string;
   resolved_at: string | null;
+  acknowledged_at: string | null;
+  acknowledged_by: number | null;
 };
 
 async function request<T>(
   endpoint: string,
+  options: RequestInit = {},
 ): Promise<T> {
   const token = localStorage.getItem("printflow_token");
   const response = await fetch(
     `${API_BASE_URL}${endpoint}`,
     {
+      ...options,
       headers: {
         Accept: "application/json",
+        ...options.headers,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     },
@@ -105,10 +110,19 @@ Promise<DashboardPrinter[]> {
 }
 
 export async function getOperationalAlerts(
-  status: "open" | "resolved" | "all" = "open",
+  status: "open" | "acknowledged" | "resolved" | "all" = "open",
 ): Promise<OperationalAlert[]> {
   return request<OperationalAlert[]>(
     `/api/v1/alerts?status=${status}&limit=50`,
+  );
+}
+
+export async function acknowledgeOperationalAlert(
+  alertId: number,
+): Promise<OperationalAlert> {
+  return request<OperationalAlert>(
+    `/api/v1/alerts/${alertId}/acknowledge`,
+    { method: "POST" },
   );
 }
 

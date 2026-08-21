@@ -12,6 +12,7 @@ import MetricCard from "./MetricCard";
 import PrinterTable from "./PrinterTable";
 
 import {
+  acknowledgeOperationalAlert,
   getDashboardPrinters,
   getDashboardSummary,
   getOperationalAlerts,
@@ -103,7 +104,7 @@ export default function Dashboard() {
         ] = await Promise.all([
           getDashboardSummary(),
           getDashboardPrinters(),
-          getOperationalAlerts(),
+          getOperationalAlerts("all"),
         ]);
 
         setSummary(summaryResponse);
@@ -151,6 +152,13 @@ export default function Dashboard() {
       ).length,
     [printers],
   );
+
+  const acknowledgeAlert = useCallback(async (alertId: number) => {
+    const updatedAlert = await acknowledgeOperationalAlert(alertId);
+    setAlerts((current) =>
+      current.map((alert) => alert.id === alertId ? updatedAlert : alert),
+    );
+  }, []);
 
   return (
     <section className="dashboard-page">
@@ -264,7 +272,7 @@ export default function Dashboard() {
         printers={printers}
       />
 
-      <AlertCenter alerts={alerts} />
+      <AlertCenter alerts={alerts} onAcknowledge={acknowledgeAlert} />
 
       <section className="dashboard-list-panel">
         <div className="dashboard-section-title">

@@ -27,3 +27,7 @@ class OperationalAlert(Base):
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    acknowledged_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users_v2.id"), nullable=True, index=True
+    )

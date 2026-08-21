@@ -26,7 +26,7 @@ if ($plainToken -notmatch '^[A-Za-z0-9_-]{43}$') {
 $validationBody = @{
     agent_token = $plainToken
     agent_name = "PRINTFLOW Agent Windows Installer"
-    agent_version = "0.2.8"
+    agent_version = "0.3.0"
     status = "starting"
 } | ConvertTo-Json
 try {

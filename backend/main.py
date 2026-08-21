@@ -11,6 +11,7 @@ from backend.app.database.migrations import (
     ensure_printer_columns,
     ensure_printer_company_ip_constraint,
     ensure_company_agent_columns,
+    ensure_operational_alert_columns,
 )
 from backend.app.routers.health import router as health_router
 from backend.modules.auth.model import User
@@ -33,6 +34,7 @@ async def lifespan(app: FastAPI):
     ensure_printer_columns(engine)
     ensure_printer_company_ip_constraint(engine)
     ensure_company_agent_columns(engine)
+    ensure_operational_alert_columns(engine)
     clean_descriptive_printer_serials(engine)
     yield
 

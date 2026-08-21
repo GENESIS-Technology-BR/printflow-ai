@@ -25,6 +25,13 @@ try {
         Add-Check "Arquivo $file" (Test-Path (Join-Path $baseDir $file)) "presenca no pacote"
     }
 
+    $buildValidation = Join-Path $baseDir "BUILD-VALIDATION.txt"
+    if (Test-Path $buildValidation) {
+        $buildMetadata = Get-Content $buildValidation -Raw
+        Add-Check "Identificacao do Build" ($buildMetadata -match "Build:\s+42") "Build 42"
+        Add-Check "Versao do Agent" ($buildMetadata -match "Version:\s+0\.3\.0") "versao 0.3.0"
+    }
+
     $exe = Join-Path $baseDir "PRINTFLOW-Agent.exe"
     if (Test-Path $exe) {
         $hash = (Get-FileHash $exe -Algorithm SHA256).Hash
@@ -39,7 +46,19 @@ try {
     if ($task) {
         $taskInfo = Get-ScheduledTaskInfo -TaskName "PRINTFLOW Agent"
         Add-Check "Fila do Agent" ($task.State -ne "Queued") "estado $($task.State)"
-        Add-Check "Ultima execucao" ($taskInfo.LastTaskResult -eq 0) "codigo $($taskInfo.LastTaskResult)"
+        $lastResult = [int]$taskInfo.LastTaskResult
+        $taskIsRunning = $task.State -eq "Running" -and $lastResult -eq 267009
+        $lastRunHealthy = $lastResult -eq 0 -or $taskIsRunning
+        $lastRunDetail = if ($taskIsRunning) {
+            "execucao em andamento (codigo 267009)"
+        }
+        elseif ($lastResult -eq 0) {
+            "concluida com sucesso (codigo 0)"
+        }
+        else {
+            "falha real (codigo $lastResult)"
+        }
+        Add-Check "Ultima execucao" $lastRunHealthy $lastRunDetail
     }
 }
 catch {
