@@ -156,6 +156,50 @@ def test_learned_serial():
     )
 
 
+def test_zero_hex_placeholder_is_blocked():
+    valid, confidence, reason = validate_serial(
+        "0x000000000000"
+    )
+
+    assert not valid
+    assert confidence == 0
+    assert "Placeholder" in reason
+
+
+def test_ricoh_enterprise_serial_is_confirmed():
+    result = best_serial_candidate(
+        [
+            {
+                "oid": "1.3.6.1.2.1.43.16.5.1.2.1.1",
+                "value": "Energy Saver Mode 2",
+                "confidence": 90,
+            },
+            {
+                "oid": "1.3.6.1.4.1.367.3.2.1.1.1.10.0",
+                "value": "1209270000Z",
+                "confidence": 90,
+            },
+            {
+                "oid": "1.3.6.1.4.1.367.3.2.1.2.1.4.0",
+                "value": "5852Z810350",
+                "confidence": 90,
+            },
+            {
+                "oid": "1.3.6.1.4.1.367.3.2.1.2.20.2.4.1.7.2.1",
+                "value": "0x000000000000",
+                "confidence": 90,
+            },
+        ],
+        manufacturer="Ricoh",
+    )
+
+    assert result
+    assert result.value == "5852Z810350"
+    assert result.source == "ricoh-enterprise-oid"
+    assert result.confidence >= 99
+    assert result.confirmed is True
+
+
 def test_zebra_enterprise_serial_is_confirmed():
     result = best_serial_candidate(
         [

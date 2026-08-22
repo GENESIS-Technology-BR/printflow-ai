@@ -249,6 +249,16 @@ def validate_serial(
             "Serial muito longo.",
         )
 
+    # Bloqueia placeholders hexadecimais sem identidade real.
+    # Caso real encontrado nas Ricoh M 320F:
+    # 0x000000000000
+    if re.fullmatch(r"0x0+", text.lower()):
+        return (
+            False,
+            0,
+            "Placeholder hexadecimal sem serial.",
+        )
+
     # Bloqueia o caso real encontrado nas Zebra:
     # ZTC ZT230-203dpi ZPL
     if looks_like_model_description(text):
@@ -350,6 +360,29 @@ def best_serial_candidate(
 ) -> IntelligenceValue | None:
 
     candidate_list = list(candidates)
+
+    if manufacturer == "Ricoh":
+        ricoh_serial_oids = {
+            "1.3.6.1.4.1.367.3.2.1.2.1.4.0",
+        }
+
+        for candidate in candidate_list:
+            oid = str(candidate.get("oid") or "")
+            value = candidate.get("value")
+
+            if oid not in ricoh_serial_oids:
+                continue
+
+            valid, score, _ = validate_serial(value)
+
+            if valid:
+                return IntelligenceValue(
+                    value=str(value).strip(),
+                    source="ricoh-enterprise-oid",
+                    confidence=max(score, 99),
+                    value_type="serial",
+                    confirmed=True,
+                )
 
     if manufacturer == "Zebra":
         for candidate in candidate_list:
