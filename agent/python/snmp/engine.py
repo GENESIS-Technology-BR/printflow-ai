@@ -18,6 +18,8 @@ from pysnmp.hlapi.v3arch.asyncio import (
 
 from intelligence.printer_v3 import build_identity, normalize_snmp_text
 
+from snmp.zebra_legacy import collect_zebra_legacy
+
 from snmp.oids import (
     PRINTER_OIDS,
     PRINTER_STATUS_MAP,
@@ -53,6 +55,9 @@ VENDOR_PAGE_COUNT_OIDS = {
         "1.3.6.1.4.1.1602.1.11.2.1.1.3.1",
         "1.3.6.1.4.1.1602.1.11.2.1.1.3.2",
         "1.3.6.1.4.1.1602.1.11.2.1.1.3.4",
+    ),
+    "zebra": (
+        "1.3.6.1.4.1.10642.1.20.1",
     ),
 }
 
@@ -248,9 +253,38 @@ class PrinterIntelligenceEngine:
             f"{description} {device_name}"
         )
 
+        zebra_legacy = None
+
+        if str(vendor or "").strip().lower() == "zebra":
+            zebra_legacy = await collect_zebra_legacy(
+                ip_address=ip_address,
+                timeout=max(
+                    min(self.timeout, 2.0),
+                    1.0,
+                ),
+            )
+
+        vendor_key = str(
+            vendor or ""
+        ).strip().lower()
+
         serial = raw_data.get(
             "serial_printer_mib"
         )
+
+        # ZebraNet legado:
+        # o sysName frequentemente e o serial fisico,
+        # como ZBR2964338.
+        if (
+            vendor_key == "zebra"
+            and not self.is_valid_serial(serial)
+        ):
+            zebra_sys_name = raw_data.get("nome")
+
+            if self.is_valid_serial(
+                zebra_sys_name
+            ):
+                serial = zebra_sys_name
 
         if not self.is_valid_serial(serial):
             serial = await self.find_vendor_serial(
@@ -291,6 +325,19 @@ class PrinterIntelligenceEngine:
             device_name=device_name,
             vendor=vendor,
         )
+
+        if (
+            zebra_legacy is not None
+            and zebra_legacy.success
+        ):
+            if zebra_legacy.model:
+                model = zebra_legacy.model
+
+            if (
+                not self.is_valid_serial(serial)
+                and zebra_legacy.unique_id
+            ):
+                serial = zebra_legacy.unique_id
 
         toner_percentages = [
             supply["percentage"]
@@ -370,8 +417,11 @@ class PrinterIntelligenceEngine:
         learning_diagnostic = None
 
         if (
-            not self.is_valid_serial(serial)
-            or page_count is None
+            vendor_key != "zebra"
+            and (
+                not self.is_valid_serial(serial)
+                or page_count is None
+            )
         ):
             try:
                 from intelligence.snmp_walk_executor import (
@@ -585,7 +635,7 @@ class PrinterIntelligenceEngine:
                 selected_value = value
                 selected_frequency = frequency
 
-        # No minimo dois OIDs precisam concordar.
+        # Fabricantes com multiplos OIDs exigem consenso.
         if (
             selected_value is not None
             and selected_frequency >= 2
@@ -593,6 +643,21 @@ class PrinterIntelligenceEngine:
             return (
                 selected_value,
                 f"{vendor_key}-vendor-consensus",
+                candidates,
+            )
+
+        # Zebra legado possui contador enterprise direto.
+        if (
+            vendor_key == "zebra"
+            and len(candidates) == 1
+        ):
+            zebra_value = next(
+                iter(candidates.values())
+            )
+
+            return (
+                zebra_value,
+                "zebra-enterprise-oid",
                 candidates,
             )
 
