@@ -333,9 +333,12 @@ class PrinterIntelligenceEngine:
             if zebra_legacy.model:
                 model = zebra_legacy.model
 
-            if (
-                not self.is_valid_serial(serial)
-                and zebra_legacy.unique_id
+            # Zebra Legacy:
+            # device.unique_id identifica a impressora.
+            # O sysName (ex.: ZBR2964338) pertence ao
+            # ZebraNet PrintServer e permanece em nome/hostname.
+            if self.is_valid_serial(
+                zebra_legacy.unique_id
             ):
                 serial = zebra_legacy.unique_id
 

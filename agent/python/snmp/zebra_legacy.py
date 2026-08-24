@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import re
 import socket
+import time
 from dataclasses import dataclass
 
 
@@ -28,6 +29,10 @@ def _tcp_query(
 
         sock.settimeout(timeout)
         sock.sendall(command)
+
+        # Equipamentos Zebra Legacy como S4M podem precisar
+        # de um pequeno intervalo antes de devolver comandos SGD.
+        time.sleep(0.30)
 
         chunks: list[bytes] = []
 
@@ -101,28 +106,36 @@ def _collect_sync(
             else None
         )
 
-        unique_raw = _tcp_query(
-            ip_address,
-            b'! U1 getvar "device.unique_id"\r\n',
-            timeout,
-        )
-
-        unique_text = _clean_response(
-            unique_raw
-        )
-
         unique_id = None
 
-        match = re.search(
-            r'"([^"]+)"',
-            unique_text,
-        )
+        # Algumas Zebra S4M antigas podem ignorar a primeira
+        # consulta SGD logo apos o ~HI. Fazemos ate 3 tentativas
+        # curtas, sem afetar impressoras modernas.
+        for _attempt in range(3):
 
-        if match:
-            candidate = match.group(1).strip()
+            unique_raw = _tcp_query(
+                ip_address,
+                b'! U1 getvar "device.unique_id"\r\n',
+                timeout,
+            )
 
-            if candidate and candidate != "?":
-                unique_id = candidate
+            unique_text = _clean_response(
+                unique_raw
+            )
+
+            match = re.search(
+                r'"([^"]+)"',
+                unique_text,
+            )
+
+            if match:
+                candidate = match.group(1).strip()
+
+                if candidate and candidate != "?":
+                    unique_id = candidate
+                    break
+
+            time.sleep(0.20)
 
         return ZebraLegacyResult(
             success=True,
