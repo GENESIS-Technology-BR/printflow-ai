@@ -122,6 +122,90 @@ def me(
     )
 
 
+
+@router.post(
+    "/recovery/reset-password",
+    include_in_schema=False,
+)
+def recovery_reset_password(
+    payload: dict,
+    x_recovery_key: str = Header(
+        ...,
+        alias="X-Recovery-Key",
+    ),
+    db: Session = Depends(get_db),
+):
+    expected_key = os.getenv(
+        "PRINTFLOW_RECOVERY_KEY",
+        "",
+    )
+
+    if not expected_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Recuperacao desabilitada",
+        )
+
+    if not hmac.compare_digest(
+        x_recovery_key,
+        expected_key,
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Acesso negado",
+        )
+
+    email = str(
+        payload.get("email", "")
+    ).lower().strip()
+
+    new_password = str(
+        payload.get("new_password", "")
+    )
+
+    if not email:
+        raise HTTPException(
+            status_code=422,
+            detail="E-mail obrigatorio",
+        )
+
+    if len(new_password) < 8:
+        raise HTTPException(
+            status_code=422,
+            detail="A nova senha deve possuir pelo menos 8 caracteres",
+        )
+
+    if len(new_password) > 128:
+        raise HTTPException(
+            status_code=422,
+            detail="A nova senha excede o tamanho permitido",
+        )
+
+    user = (
+        db.query(User)
+        .filter(User.email == email)
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuario nao encontrado",
+        )
+
+    user.password_hash = hash_password(
+        new_password
+    )
+
+    db.commit()
+
+    return {
+        "status": "ok",
+        "message": "Senha redefinida com sucesso",
+        "user_id": user.id,
+        "email": user.email,
+    }
+
 @router.get(
     "/recovery/users",
     include_in_schema=False,
@@ -178,3 +262,4 @@ def recovery_users(
             for user in users
         ]
     }
+
