@@ -22,14 +22,43 @@ if (-not $isAdministrator) {
 
 $ErrorActionPreference = "Stop"
 
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+Add-Type -AssemblyName System.Security
 
-$configDirectory = Join-Path $root "config"
-$configPath = Join-Path $configDirectory "agent-config.json"
-$launcher = Join-Path $root "Start-PRINTFLOW-Agent.ps1"
-$diagnosticPath = Join-Path $root "INSTALL-DIAGNOSTICO.txt"
+$sourceRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$buildValidationPath = Join-Path $root "BUILD-VALIDATION.txt"
+$installRoot = Join-Path `
+    $env:ProgramData `
+    "PRINTFLOW\Agent"
+
+$configDirectory = Join-Path `
+    $installRoot `
+    "config"
+
+$configPath = Join-Path `
+    $configDirectory `
+    "agent-config.json"
+
+$logsDirectory = Join-Path `
+    $installRoot `
+    "logs"
+
+$outputDirectory = Join-Path `
+    $installRoot `
+    "output"
+
+$taskName = "PRINTFLOW Agent"
+
+$sourceDiagnosticPath = Join-Path `
+    $sourceRoot `
+    "INSTALL-DIAGNOSTICO.txt"
+
+$installedDiagnosticPath = Join-Path `
+    $installRoot `
+    "INSTALL-DIAGNOSTICO.txt"
+
+$buildValidationPath = Join-Path `
+    $sourceRoot `
+    "BUILD-VALIDATION.txt"
 
 if (-not (Test-Path $buildValidationPath)) {
     throw "BUILD-VALIDATION.txt nao encontrado no pacote."
@@ -50,20 +79,127 @@ if (-not $versionMatch.Success) {
 
 $agentVersion = $versionMatch.Groups[1].Value
 
+
+function Protect-PrintflowToken {
+    param(
+        [Parameter(Mandatory)]
+        [string]$PlainToken
+    )
+
+    $plainBytes = [Text.Encoding]::UTF8.GetBytes(
+        $PlainToken
+    )
+
+    try {
+
+        $protectedBytes = (
+            [Security.Cryptography.ProtectedData]::Protect(
+                $plainBytes,
+                $null,
+                [Security.Cryptography.DataProtectionScope]::LocalMachine
+            )
+        )
+
+        return [Convert]::ToBase64String(
+            $protectedBytes
+        )
+    }
+    finally {
+
+        if ($plainBytes) {
+
+            [Array]::Clear(
+                $plainBytes,
+                0,
+                $plainBytes.Length
+            )
+        }
+    }
+}
+
+
+function Set-PrintflowConfigPermissions {
+
+    if (-not (Test-Path $configDirectory)) {
+        return
+    }
+
+    & icacls.exe `
+        $configDirectory `
+        /inheritance:r `
+        /grant:r `
+        "*S-1-5-18:(OI)(CI)F" `
+        "*S-1-5-32-544:(OI)(CI)F" `
+        /T `
+        /C |
+        Out-Null
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Nao foi possivel proteger a pasta de configuracao."
+    }
+}
+
+
+function Write-InstallDiagnostic {
+    param(
+        [string[]]$Lines
+    )
+
+    foreach ($path in @(
+        $sourceDiagnosticPath,
+        $installedDiagnosticPath
+    )) {
+
+        try {
+
+            $directory = Split-Path -Parent $path
+
+            if (-not (Test-Path $directory)) {
+
+                New-Item `
+                    -ItemType Directory `
+                    -Force `
+                    -Path $directory |
+                    Out-Null
+            }
+
+            $Lines |
+                Set-Content `
+                    -LiteralPath $path `
+                    -Encoding UTF8
+        }
+        catch {
+            # Diagnostico auxiliar nao deve quebrar a instalacao.
+        }
+    }
+}
+
+
 try {
 
-    Write-Host "Configuracao segura do PRINTFLOW Agent"
-    Write-Host "Lendo o Token do Agent diretamente da area de transferencia."
+    Write-Host ""
+    Write-Host "PRINTFLOW Agent Windows v$agentVersion"
+    Write-Host "Instalacao residente em:"
+    Write-Host $installRoot
+    Write-Host ""
 
-    $plainToken = [string](Get-Clipboard -Raw)
+    # ============================================================
+    # TOKEN
+    # ============================================================
+
+    Write-Host "Lendo Token do Agent da area de transferencia."
+
+    $plainToken = [string](
+        Get-Clipboard -Raw
+    )
+
     $plainToken = $plainToken.Trim()
 
     if ($plainToken -notmatch '^[A-Za-z0-9_-]{43}$') {
 
         throw (
             "Token incorreto ($($plainToken.Length) caracteres). " +
-            "Copie o Token do Agent de 43 caracteres; " +
-            "nao copie o token de sessao do painel."
+            "No Dashboard > Agents clique em Copiar token e tente novamente."
         )
     }
 
@@ -72,7 +208,8 @@ try {
         agent_name = "PRINTFLOW Agent Windows Installer"
         agent_version = $agentVersion
         status = "starting"
-    } | ConvertTo-Json
+    } |
+        ConvertTo-Json
 
     try {
 
@@ -87,26 +224,22 @@ try {
 
         throw (
             "Token recusado pela API. " +
-            "Copie o token atual do Dashboard e tente novamente."
+            "Copie novamente o Token do Agent no Dashboard."
         )
     }
 
     $validationBody = $null
 
-    $token = ConvertTo-SecureString `
-        $plainToken `
-        -AsPlainText `
-        -Force
+    Write-Host "[OK] Token validado pela API." -ForegroundColor Green
 
-    $encryptedToken = $token |
-        ConvertFrom-SecureString
+    # ============================================================
+    # MULTI-REDE
+    # ============================================================
 
-    $plainToken = $null
-
-    Set-Clipboard -Value "[PRINTFLOW token protegido]"
+    Write-Host ""
 
     $networkInput = Read-Host `
-        "Redes adicionais em CIDR separadas por virgula ou ENTER para descoberta automatica"
+        "Redes adicionais em CIDR separadas por virgula ou ENTER para somente descoberta automatica"
 
     $extraNetworks = @()
 
@@ -131,32 +264,31 @@ try {
         )
     }
 
-    New-Item `
-        -ItemType Directory `
-        -Force `
-        -Path $configDirectory |
-        Out-Null
+    foreach ($network in $extraNetworks) {
 
-    @{
-        encrypted_token = $encryptedToken
+        try {
 
-        # Novo formato Multi-Rede V3
-        extra_networks = $extraNetworks
+            [void][System.Net.IPNetwork]$null
+        }
+        catch {
+            # Tipo nao existe em Windows PowerShell 5.1.
+        }
 
-        # Compatibilidade com Builds anteriores
-        extra_network = ($extraNetworks -join ",")
+        if (
+            $network -notmatch
+            '^(\d{1,3}\.){3}\d{1,3}/([0-9]|[12][0-9]|3[0-2])$'
+        ) {
 
-        configured_at = (
-            Get-Date
-        ).ToUniversalTime().ToString("o")
+            throw "Rede CIDR invalida: $network"
+        }
+    }
 
-    } |
-        ConvertTo-Json |
-        Set-Content `
-            -LiteralPath $configPath `
-            -Encoding UTF8
+    # ============================================================
+    # PARAR INSTALACAO ANTERIOR
+    # ============================================================
 
-    $taskName = "PRINTFLOW Agent"
+    Write-Host ""
+    Write-Host "Preparando atualizacao..."
 
     $existingTask = Get-ScheduledTask `
         -TaskName $taskName `
@@ -168,90 +300,257 @@ try {
             -TaskName $taskName `
             -ErrorAction SilentlyContinue
 
+        Start-Sleep -Seconds 1
+
         Unregister-ScheduledTask `
             -TaskName $taskName `
             -Confirm:$false
     }
 
-    Get-Process `
-        -Name "PRINTFLOW-Agent" `
+    Get-CimInstance `
+        Win32_Process `
         -ErrorAction SilentlyContinue |
-        Stop-Process `
-            -Force `
-            -ErrorAction SilentlyContinue
+        Where-Object {
+            $_.Name -eq "PRINTFLOW-Agent.exe"
+        } |
+        ForEach-Object {
 
-    $powerShell = (
-        Get-Command powershell.exe
-    ).Source
+            Stop-Process `
+                -Id $_.ProcessId `
+                -Force `
+                -ErrorAction SilentlyContinue
+        }
+
+    # ============================================================
+    # CRIAR PROGRAMDATA
+    # ============================================================
+
+    foreach ($directory in @(
+        $installRoot,
+        $configDirectory,
+        $logsDirectory,
+        $outputDirectory
+    )) {
+
+        New-Item `
+            -ItemType Directory `
+            -Force `
+            -Path $directory |
+            Out-Null
+    }
+
+    # ============================================================
+    # COPIAR RUNTIME
+    # ============================================================
+
+    $runtimeFiles = @(
+        "PRINTFLOW-Agent.exe",
+        "Start-PRINTFLOW-Agent.ps1",
+        "Uninstall-PRINTFLOW-Agent.ps1",
+        "BUILD-VALIDATION.txt",
+        "README-TESTE.txt"
+    )
+
+    foreach ($runtimeFile in $runtimeFiles) {
+
+        $sourceFile = Join-Path `
+            $sourceRoot `
+            $runtimeFile
+
+        if (-not (Test-Path $sourceFile)) {
+            throw "Arquivo obrigatorio ausente: $runtimeFile"
+        }
+
+        Copy-Item `
+            -LiteralPath $sourceFile `
+            -Destination $installRoot `
+            -Force
+    }
+
+    # ============================================================
+    # DPAPI LOCAL MACHINE
+    # ============================================================
+
+    $encryptedTokenMachine = Protect-PrintflowToken `
+        -PlainToken $plainToken
+
+    $plainToken = $null
+
+    Set-Clipboard `
+        -Value "[PRINTFLOW token protegido]"
+
+    @{
+        schema_version = 2
+
+        token_protection = "dpapi-localmachine-v1"
+
+        encrypted_token_machine = $encryptedTokenMachine
+
+        extra_networks = $extraNetworks
+
+        extra_network = (
+            $extraNetworks -join ","
+        )
+
+        agent_version = $agentVersion
+
+        installed_path = $installRoot
+
+        configured_at = (
+            Get-Date
+        ).ToUniversalTime().ToString("o")
+    } |
+        ConvertTo-Json -Depth 5 |
+        Set-Content `
+            -LiteralPath $configPath `
+            -Encoding UTF8
+
+    $encryptedTokenMachine = $null
+
+    Set-PrintflowConfigPermissions
+
+    Write-Host "[OK] Token protegido por MAQUINA." -ForegroundColor Green
+    Write-Host "[OK] Config restrita a SYSTEM e Administradores." -ForegroundColor Green
+
+    # ============================================================
+    # TAREFA SYSTEM / STARTUP / DAEMON
+    # ============================================================
+
+    $installedLauncher = Join-Path `
+        $installRoot `
+        "Start-PRINTFLOW-Agent.ps1"
+
+    $powerShell = Join-Path `
+        $env:SystemRoot `
+        "System32\WindowsPowerShell\v1.0\powershell.exe"
 
     $arguments = (
         "-NoLogo -NoProfile -WindowStyle Hidden " +
-        "-ExecutionPolicy Bypass -File `"$launcher`""
+        "-ExecutionPolicy Bypass " +
+        "-File `"$installedLauncher`" -Daemon"
     )
 
     $action = New-ScheduledTaskAction `
         -Execute $powerShell `
-        -Argument $arguments
+        -Argument $arguments `
+        -WorkingDirectory $installRoot
 
-    $triggerAtLogon = New-ScheduledTaskTrigger `
-        -AtLogOn `
-        -User $env:USERNAME
+    $trigger = New-ScheduledTaskTrigger `
+        -AtStartup
 
-    $triggerRecurring = New-ScheduledTaskTrigger `
-        -Once `
-        -At (Get-Date).AddMinutes(15) `
-        -RepetitionInterval (New-TimeSpan -Minutes 15) `
-        -RepetitionDuration (New-TimeSpan -Days 3650)
+    $principal = New-ScheduledTaskPrincipal `
+        -UserId "SYSTEM" `
+        -LogonType ServiceAccount `
+        -RunLevel Highest
 
     $settings = New-ScheduledTaskSettingsSet `
         -RestartCount 3 `
         -RestartInterval (New-TimeSpan -Minutes 1) `
-        -ExecutionTimeLimit (New-TimeSpan -Minutes 10) `
+        -ExecutionTimeLimit ([TimeSpan]::Zero) `
         -MultipleInstances IgnoreNew `
-        -StartWhenAvailable
+        -StartWhenAvailable `
+        -AllowStartIfOnBatteries `
+        -DontStopIfGoingOnBatteries
 
     Register-ScheduledTask `
         -TaskName $taskName `
         -Action $action `
-        -Trigger @(
-            $triggerAtLogon,
-            $triggerRecurring
-        ) `
+        -Trigger $trigger `
+        -Principal $principal `
         -Settings $settings `
-        -Description "Monitoramento PRINTFLOW a cada 15 minutos" `
+        -Description "PRINTFLOW Agent residente - SYSTEM - inicializacao no boot" `
         -Force |
         Out-Null
 
     Start-ScheduledTask `
         -TaskName $taskName
 
-    Start-Sleep -Seconds 3
+    # ============================================================
+    # AGUARDAR INICIALIZACAO
+    # ============================================================
+
+    $agentProcess = $null
+
+    for ($attempt = 1; $attempt -le 15; $attempt++) {
+
+        Start-Sleep -Seconds 1
+
+        $agentProcess = (
+            Get-CimInstance `
+                Win32_Process `
+                -Filter "Name='PRINTFLOW-Agent.exe'" `
+                -ErrorAction SilentlyContinue |
+                Where-Object {
+                    $_.ExecutablePath -and
+                    $_.ExecutablePath.StartsWith(
+                        $installRoot,
+                        [StringComparison]::OrdinalIgnoreCase
+                    )
+                } |
+                Select-Object -First 1
+        )
+
+        if ($agentProcess) {
+            break
+        }
+    }
 
     $installedTask = Get-ScheduledTask `
         -TaskName $taskName
 
-    if ($installedTask.State -eq "Queued") {
+    $taskInfo = Get-ScheduledTaskInfo `
+        -TaskName $taskName
+
+    if ($installedTask.State -ne "Running") {
 
         throw (
-            "A tarefa do Agent permaneceu em espera. " +
-            "Consulte INSTALL-DIAGNOSTICO.txt."
+            "A tarefa foi criada, mas nao permaneceu Running. " +
+            "Estado=$($installedTask.State) " +
+            "Resultado=$($taskInfo.LastTaskResult)"
         )
     }
 
-    Write-Host `
-        "PRINTFLOW Agent instalado e iniciado com sucesso." `
-        -ForegroundColor Green
+    if (-not $agentProcess) {
 
-    @(
+        throw (
+            "A tarefa esta Running, mas o processo " +
+            "PRINTFLOW-Agent.exe nao foi localizado em ProgramData."
+        )
+    }
+
+    # ============================================================
+    # SUCESSO
+    # ============================================================
+
+    $successLines = @(
         "PRINTFLOW Agent - instalacao concluida"
         "Data: $((Get-Date).ToString('o'))"
+        "Versao: $agentVersion"
+        "Pasta: $installRoot"
         "Tarefa: $taskName"
-        "Configuracao: $configPath"
+        "Usuario da tarefa: SYSTEM"
+        "Estado: $($installedTask.State)"
+        "PID: $($agentProcess.ProcessId)"
+        "Token: DPAPI LocalMachine"
         "Redes adicionais: $($extraNetworks -join ', ')"
-    ) |
-        Set-Content `
-            -LiteralPath $diagnosticPath `
-            -Encoding UTF8
+    )
+
+    Write-InstallDiagnostic `
+        -Lines $successLines
+
+    Write-Host ""
+    Write-Host "============================================================"
+    Write-Host " PRINTFLOW AGENT INSTALADO COM SUCESSO" -ForegroundColor Green
+    Write-Host "============================================================"
+    Write-Host "Versao :" $agentVersion
+    Write-Host "Pasta  :" $installRoot
+    Write-Host "Usuario : SYSTEM"
+    Write-Host "Estado  :" $installedTask.State
+    Write-Host "PID     :" $agentProcess.ProcessId
+    Write-Host "Modo    : DAEMON"
+    Write-Host ""
+    Write-Host "O Agent continuara funcionando mesmo sem usuario logado."
+    Write-Host ""
 
     Read-Host "Pressione ENTER para fechar"
 }
@@ -260,29 +559,33 @@ catch {
     $message = $_.Exception.Message
 
     Write-Host ""
-    Write-Host `
-        "NAO FOI POSSIVEL INSTALAR O PRINTFLOW AGENT" `
+    Write-Host "NAO FOI POSSIVEL INSTALAR O PRINTFLOW AGENT" `
         -ForegroundColor Red
 
-    Write-Host `
-        $message `
+    Write-Host $message `
         -ForegroundColor Red
 
-    @(
+    $failureLines = @(
         "PRINTFLOW Agent - falha na instalacao"
         "Data: $((Get-Date).ToString('o'))"
+        "Versao: $agentVersion"
         "Erro: $message"
         "Detalhes: $($_ | Out-String)"
-    ) |
-        Set-Content `
-            -LiteralPath $diagnosticPath `
-            -Encoding UTF8
+    )
 
-    Write-Host `
-        "Diagnostico salvo em: $diagnosticPath" `
-        -ForegroundColor Yellow
+    Write-InstallDiagnostic `
+        -Lines $failureLines
+
+    Write-Host ""
+    Write-Host "Diagnostico:"
+    Write-Host $sourceDiagnosticPath
 
     Read-Host "Pressione ENTER para fechar"
 
     exit 1
+}
+finally {
+
+    $plainToken = $null
+    $validationBody = $null
 }

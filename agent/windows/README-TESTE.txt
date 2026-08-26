@@ -1,22 +1,38 @@
-PRINTFLOW AGENT WINDOWS - TESTE
+PRINTFLOW AGENT WINDOWS v0.3.2
 
-1. Extraia todo o arquivo ZIP.
-2. Não mova somente o EXE; mantenha todos os arquivos juntos.
-3. No Dashboard, copie somente o "Token do Agent" de 43 caracteres.
-4. Execute "INSTALAR-PRINTFLOW-Agent.bat" para instalar e iniciar o Agent.
-5. Nao copie o token de sessao/login do navegador.
-6. Aguarde o escaneamento da rede e verifique o Dashboard.
-7. Para uma verificacao automatica, execute "VALIDAR-PRINTFLOW-Build.bat".
+ARQUITETURA
+- Instalacao residente em C:\ProgramData\PRINTFLOW\Agent
+- Execucao automatica como SYSTEM
+- Inicializacao no boot do Windows
+- Agent executado em modo --daemon
+- Token protegido com DPAPI LocalMachine
+- Configuracao restrita a SYSTEM e Administradores
+- Discovery automatico + redes adicionais
+- Heartbeat e sincronizacao com a API
 
-Arquivos gerados durante o teste:
-- output\agent_inventory.json
-- logs\printflow-agent.log
-- output\api_queue\ (somente se houver falha de comunicação)
-- RESULTADO-VALIDACAO.txt (quando a verificacao automatica for executada)
+INSTALACAO
+1. Extraia todo o ZIP.
+2. No Dashboard PRINTFLOW abra Agents.
+3. Clique em "Copiar token".
+4. Execute INSTALAR-PRINTFLOW-Agent.bat.
+5. Informe redes adicionais separadas por virgula.
+   Exemplo:
+   10.2.0.0/24,10.2.128.0/24
+6. Aguarde a mensagem de instalacao concluida.
+7. Confira o Dashboard.
 
-Observações:
-- O computador precisa estar conectado à rede das impressoras.
-- O Agent detecta automaticamente a rede local.
-- Redes grandes são reduzidas inicialmente para a sub-rede /24 local.
-- O SNMP deve estar habilitado nas impressoras.
-- Comunidade padrão utilizada: public.
+IMPORTANTE
+- Nao mova somente o EXE.
+- Nao copie o token de sessao/login do navegador.
+- O Agent continua rodando mesmo sem usuario logado.
+- A reinicializacao do Windows inicia o Agent automaticamente.
+
+PASTAS INSTALADAS
+C:\ProgramData\PRINTFLOW\Agent
+C:\ProgramData\PRINTFLOW\Agent\config
+C:\ProgramData\PRINTFLOW\Agent\logs
+C:\ProgramData\PRINTFLOW\Agent\output
+
+ARQUIVOS DE DIAGNOSTICO
+INSTALL-DIAGNOSTICO.txt
+RESULTADO-VALIDACAO.txt

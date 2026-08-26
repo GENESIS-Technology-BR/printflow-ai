@@ -39,7 +39,10 @@ def test_installer_saves_multiple_networks():
     ).read_text(encoding="utf-8")
 
     assert "extra_networks = $extraNetworks" in installer
-    assert 'extra_network = ($extraNetworks -join ",")' in installer
+    # A v0.3.2 pode formatar a atribuicao em multiplas linhas.
+    # Validamos a semantica, nao a formatacao visual do PowerShell.
+    assert "extra_network =" in installer
+    assert "$extraNetworks -join" in installer
     assert (
         "Redes adicionais em CIDR separadas por virgula"
         in installer

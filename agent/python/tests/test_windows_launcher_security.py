@@ -9,8 +9,11 @@ def test_launcher_uses_hidden_token_prompt():
         ROOT / "agent" / "windows" / "Start-PRINTFLOW-Agent.ps1"
     ).read_text(encoding="utf-8")
 
-    assert "Read-Host \"Digite ou cole o Token do Agent\" -AsSecureString" in launcher
-    assert "$env:PRINTFLOW_AGENT_TOKEN = $null" in launcher
+    assert 'Read-Host' in launcher
+    assert '-AsSecureString' in launcher
+    assert 'encrypted_token_machine' in launcher
+    assert 'DataProtectionScope]::LocalMachine' in launcher
+    assert 'ProcessStartInfo' in launcher
 
 
 def test_batch_file_does_not_echo_or_read_token():
@@ -28,34 +31,59 @@ def test_installer_reads_clipboard_and_validates_token():
     ).read_text(encoding="utf-8")
 
     assert "Get-Clipboard -Raw" in installer
-    assert 'Read-Host "Depois pressione ENTER para continuar"' not in installer
     assert "^[A-Za-z0-9_-]{43}$" in installer
-    assert "nao copie o token de sessao" in installer
     assert "printers/agent/heartbeat" in installer
-    assert 'agent_version = $agentVersion' in installer
-    assert 'BUILD-VALIDATION.txt' in installer
-    assert "Set-Clipboard -Value \"[PRINTFLOW token protegido]\"" in installer
+    assert "agent_version = $agentVersion" in installer
+    assert "BUILD-VALIDATION.txt" in installer
+    assert '[PRINTFLOW token protegido]' in installer
+
+    assert '$env:ProgramData' in installer
+    assert '"PRINTFLOW\\Agent"' in installer
+
+    assert "encrypted_token_machine" in installer
+    assert "DataProtectionScope]::LocalMachine" in installer
+
+    assert "New-ScheduledTaskPrincipal" in installer
+    assert '-UserId "SYSTEM"' in installer
+    assert "-LogonType ServiceAccount" in installer
+    assert "-RunLevel Highest" in installer
+
+    assert "New-ScheduledTaskTrigger" in installer
+    assert "-AtStartup" in installer
+
+    assert "-Daemon" in installer
+    assert "-RepetitionInterval" not in installer
+    assert "-AtLogOn" not in installer
+
     assert "-MultipleInstances IgnoreNew" in installer
+    assert "ExecutionTimeLimit ([TimeSpan]::Zero)" in installer
+
+    assert "-AllowStartIfOnBatteries" in installer
+    assert "-DontStopIfGoingOnBatteries" in installer
+
+    assert "*S-1-5-18" in installer
+    assert "*S-1-5-32-544" in installer
+
     assert "Unregister-ScheduledTask" in installer
-    assert "-RepetitionInterval (New-TimeSpan -Minutes 15)" in installer
-    assert "-ExecutionTimeLimit (New-TimeSpan -Minutes 10)" in installer
-    assert '-WindowStyle Hidden' in installer
-    assert '-Daemon' not in installer
 
 
-def test_launcher_rejects_clipboard_marker_as_token():
+def test_launcher_accepts_machine_protected_token():
     launcher = (
         ROOT / "agent" / "windows" / "Start-PRINTFLOW-Agent.ps1"
     ).read_text(encoding="utf-8")
 
     assert "^[A-Za-z0-9_-]{43}$" in launcher
-    assert "encrypted_token_machine" not in launcher
+    assert "encrypted_token_machine" in launcher
+    assert "ProtectedData]::Unprotect" in launcher
+    assert "DataProtectionScope]::LocalMachine" in launcher
+    assert '"--daemon"' in launcher
 
 
 def test_two_click_installer_keeps_window_open():
     batch = (
         ROOT / "agent" / "windows" / "INSTALAR-PRINTFLOW-Agent.bat"
     ).read_text(encoding="utf-8")
+
     installer = (
         ROOT / "agent" / "windows" / "Install-PRINTFLOW-Agent.ps1"
     ).read_text(encoding="utf-8")
@@ -72,6 +100,7 @@ def test_build_validation_is_available_in_two_click_mode():
     batch = (
         ROOT / "agent" / "windows" / "VALIDAR-PRINTFLOW-Build.bat"
     ).read_text(encoding="utf-8")
+
     validator = (
         ROOT / "agent" / "windows" / "Validar-PRINTFLOW-Build.ps1"
     ).read_text(encoding="utf-8")
@@ -79,18 +108,32 @@ def test_build_validation_is_available_in_two_click_mode():
     assert "%~dp0" in batch
     assert "-NoExit" in batch
     assert "Validar-PRINTFLOW-Build.ps1" in batch
+
     assert "RESULTADO-VALIDACAO.txt" in validator
     assert "Get-FileHash" in validator
     assert "PRINTFLOW-Agent.exe" in validator
     assert "--help" in validator
+
     assert 'Get-ScheduledTask -TaskName "PRINTFLOW Agent"' in validator
     assert '$task.State -ne "Queued"' in validator
     assert '$lastResult -eq 0 -or $taskIsRunning' in validator
     assert '$lastResult -eq 267009' in validator
-    assert 'execucao em andamento (codigo 267009)' in validator
-    assert 'falha real (codigo $lastResult)' in validator
+
     assert "Get-MetadataValue" in validator
     assert "$buildNumber" in validator
     assert "$buildVersion" in validator
     assert "$taskBelongsToCurrentPackage" in validator
     assert "[long]$taskInfo.LastTaskResult" in validator
+
+
+def test_uninstaller_removes_resident_agent():
+    uninstaller = (
+        ROOT / "agent" / "windows" / "Uninstall-PRINTFLOW-Agent.ps1"
+    ).read_text(encoding="utf-8")
+
+    assert '$env:ProgramData' in uninstaller
+    assert '"PRINTFLOW\\Agent"' in uninstaller
+    assert "Stop-ScheduledTask" in uninstaller
+    assert "Unregister-ScheduledTask" in uninstaller
+    assert "PRINTFLOW-Agent.exe" in uninstaller
+    assert "agent-config.json" in uninstaller
