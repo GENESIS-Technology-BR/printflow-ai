@@ -57,3 +57,16 @@ def test_validator_is_dynamic():
     assert "$buildNumber" in validator
     assert "$buildVersion" in validator
     assert "[long]$taskInfo.LastTaskResult" in validator
+
+
+def test_validator_accepts_dynamic_installer_version():
+    validator = (
+        ROOT / "agent" / "windows" / "Validar-PRINTFLOW-Build.ps1"
+    ).read_text(encoding="utf-8")
+
+    assert "$usesDynamicVersion" in validator
+    assert "BUILD-VALIDATION.txt" in validator
+    assert "agent_version" in validator
+    assert "$agentVersion" in validator
+    assert "$installerVersionAligned" in validator
+    assert "dinamica via BUILD-VALIDATION.txt" in validator

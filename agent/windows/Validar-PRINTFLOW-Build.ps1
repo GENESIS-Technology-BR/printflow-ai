@@ -142,24 +142,46 @@ try {
             $installerPath `
             -Raw
 
+        # Release Unificada:
+        # o instalador pode consumir a versao dinamicamente
+        # diretamente do BUILD-VALIDATION.txt.
+
+        $usesDynamicVersion = (
+            $installerText -match 'BUILD-VALIDATION\.txt' -and
+            $installerText -match '\$agentVersion\s*=\s*\$versionMatch\.Groups\[1\]\.Value' -and
+            $installerText -match 'agent_version\s*=\s*\$agentVersion'
+        )
+
         $installerVersionMatch = [regex]::Match(
             $installerText,
             'agent_version\s*=\s*"([^"]+)"'
         )
 
-        $installerVersion = if (
-            $installerVersionMatch.Success
-        ) {
+        $installerVersion = if ($usesDynamicVersion) {
+            $buildVersion
+        }
+        elseif ($installerVersionMatch.Success) {
             $installerVersionMatch.Groups[1].Value
         }
         else {
             ""
         }
 
+        $installerVersionAligned = (
+            $installerVersion -eq $buildVersion
+        )
+
+        $versionDetail = if ($usesDynamicVersion) {
+            "dinamica via BUILD-VALIDATION.txt | build $buildVersion"
+        }
+        else {
+            "instalador $installerVersion | build $buildVersion"
+        }
+
         Add-Check `
             "Versao alinhada no instalador" `
-            ($installerVersion -eq $buildVersion) `
-            "instalador $installerVersion | build $buildVersion"
+            $installerVersionAligned `
+            $versionDetail
     }
 
     # ========================================================
