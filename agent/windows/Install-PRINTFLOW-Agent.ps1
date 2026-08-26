@@ -29,6 +29,27 @@ $configPath = Join-Path $configDirectory "agent-config.json"
 $launcher = Join-Path $root "Start-PRINTFLOW-Agent.ps1"
 $diagnosticPath = Join-Path $root "INSTALL-DIAGNOSTICO.txt"
 
+$buildValidationPath = Join-Path $root "BUILD-VALIDATION.txt"
+
+if (-not (Test-Path $buildValidationPath)) {
+    throw "BUILD-VALIDATION.txt nao encontrado no pacote."
+}
+
+$buildValidationText = Get-Content `
+    $buildValidationPath `
+    -Raw
+
+$versionMatch = [regex]::Match(
+    $buildValidationText,
+    '(?m)^Version:\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$'
+)
+
+if (-not $versionMatch.Success) {
+    throw "Nao foi possivel identificar a versao do Agent."
+}
+
+$agentVersion = $versionMatch.Groups[1].Value
+
 try {
 
     Write-Host "Configuracao segura do PRINTFLOW Agent"
@@ -49,7 +70,7 @@ try {
     $validationBody = @{
         agent_token = $plainToken
         agent_name = "PRINTFLOW Agent Windows Installer"
-        agent_version = "0.3.0"
+        agent_version = $agentVersion
         status = "starting"
     } | ConvertTo-Json
 

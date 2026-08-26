@@ -5,6 +5,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from version import AGENT_VERSION
+
 
 if getattr(sys, "frozen", False):
     BASE_DIR = Path(sys.executable).resolve().parent
@@ -81,7 +83,7 @@ class AgentSettings:
             ),
             agent_version=os.getenv(
                 "PRINTFLOW_AGENT_VERSION",
-                "0.3.0",
+                AGENT_VERSION,
             ),
             scan_interval_seconds=env_int(
                 "PRINTFLOW_SCAN_INTERVAL",
