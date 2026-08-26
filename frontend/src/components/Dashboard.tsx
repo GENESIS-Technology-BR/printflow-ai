@@ -24,6 +24,8 @@ import type {
   OperationalAlert,
 } from "../services/api";
 
+import { parseApiDate } from "../utils/dateTime";
+
 import "./Dashboard.css";
 
 const EMPTY_SUMMARY: DashboardSummary = {
@@ -59,7 +61,7 @@ function formatUpdateDate(value: string): string {
     return "Aguardando primeira atualização";
   }
 
-  const date = new Date(value);
+  const date = parseApiDate(value);
 
   if (Number.isNaN(date.getTime())) {
     return "Atualização não informada";

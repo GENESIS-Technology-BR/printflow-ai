@@ -63,6 +63,13 @@ def test_installer_reads_clipboard_and_validates_token():
 
     assert "*S-1-5-18" in installer
     assert "*S-1-5-32-544" in installer
+    assert "takeown.exe" in installer
+    assert "$configPath" in installer
+    assert "/inheritance:r" in installer
+    assert "Get-Content" in installer
+    assert "-ErrorAction Stop" in installer
+    assert "ConvertFrom-Json" in installer
+    assert "encrypted_token_machine" in installer
 
     assert "Unregister-ScheduledTask" in installer
 

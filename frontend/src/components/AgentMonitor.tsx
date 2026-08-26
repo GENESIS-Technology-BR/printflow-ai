@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { getDashboardSummary } from "../services/api";
 import type { DashboardSummary } from "../services/api";
 
+import { parseApiDate } from "../utils/dateTime";
+
 import "./AgentMonitor.css";
 
 type AgentMonitorProps = {
@@ -12,7 +14,7 @@ type AgentMonitorProps = {
 
 function formatDate(value: string | null): string {
   if (!value) return "Ainda não comunicado";
-  const date = new Date(value);
+  const date = parseApiDate(value);
   if (Number.isNaN(date.getTime())) return "Data indisponível";
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
@@ -22,7 +24,7 @@ function formatDate(value: string | null): string {
 
 function formatElapsed(value: string | null): string {
   if (!value) return "Sem histórico";
-  const elapsed = Math.max(0, Date.now() - new Date(value).getTime());
+  const elapsed = Math.max(0, Date.now() - parseApiDate(value).getTime());
   const minutes = Math.floor(elapsed / 60_000);
   if (minutes < 1) return "Agora";
   if (minutes < 60) return `Há ${minutes} min`;

@@ -124,6 +124,11 @@ function Set-PrintflowConfigPermissions {
         return
     }
 
+    # ============================================================
+    # PASTA CONFIG
+    # SYSTEM + ADMINISTRADORES
+    # ============================================================
+
     & icacls.exe `
         $configDirectory `
         /inheritance:r `
@@ -137,6 +142,72 @@ function Set-PrintflowConfigPermissions {
     if ($LASTEXITCODE -ne 0) {
         throw "Nao foi possivel proteger a pasta de configuracao."
     }
+
+    if (-not (Test-Path -LiteralPath $configPath)) {
+        throw "agent-config.json nao foi criado."
+    }
+
+    # ============================================================
+    # ARQUIVO CONFIG
+    # ACL EXPLICITA PARA EVITAR ACL VAZIA/INVALIDA
+    # ============================================================
+
+    & takeown.exe `
+        /F $configPath `
+        /A |
+        Out-Null
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Nao foi possivel assumir propriedade do agent-config.json."
+    }
+
+    & icacls.exe `
+        $configPath `
+        /inheritance:r `
+        /grant:r `
+        "*S-1-5-18:F" `
+        "*S-1-5-32-544:F" |
+        Out-Null
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Nao foi possivel proteger agent-config.json."
+    }
+
+    # ============================================================
+    # TESTE REAL DE LEITURA
+    # NAO ACEITAMOS FALSO POSITIVO
+    # ============================================================
+
+    try {
+
+        $configValidation = (
+            Get-Content `
+                -LiteralPath $configPath `
+                -Raw `
+                -ErrorAction Stop |
+            ConvertFrom-Json `
+                -ErrorAction Stop
+        )
+
+        if (-not $configValidation.agent_version) {
+            throw "agent_version ausente na configuracao."
+        }
+
+        if (
+            -not $configValidation.encrypted_token_machine
+        ) {
+            throw "Token protegido por maquina ausente."
+        }
+    }
+    catch {
+
+        throw (
+            "Falha ao validar leitura segura de agent-config.json: " +
+            $_.Exception.Message
+        )
+    }
+
+    $configValidation = $null
 }
 
 

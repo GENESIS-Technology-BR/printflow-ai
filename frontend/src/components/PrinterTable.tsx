@@ -2,6 +2,8 @@ import type {
   DashboardPrinter,
 } from "../services/api";
 
+import { parseApiDate } from "../utils/dateTime";
+
 type PrinterTableProps = {
   printers: DashboardPrinter[];
 };
@@ -22,7 +24,7 @@ function formatLastSeen(
     return "Sem comunicação";
   }
 
-  const date = new Date(value);
+  const date = parseApiDate(value);
 
   if (Number.isNaN(date.getTime())) {
     return "Não informado";

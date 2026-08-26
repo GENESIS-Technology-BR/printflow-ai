@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 
 import type { OperationalAlert } from "../services/api";
 
+import { parseApiDate } from "../utils/dateTime";
+
 type AlertCenterProps = {
   alerts: OperationalAlert[];
   onAcknowledge: (alertId: number) => Promise<void>;
@@ -17,7 +19,7 @@ function severityLabel(severity: OperationalAlert["severity"]): string {
 
 function formatDate(value: string | null): string {
   if (!value) return "Horário indisponível";
-  const date = new Date(value);
+  const date = parseApiDate(value);
   return Number.isNaN(date.getTime())
     ? "Horário indisponível"
     : new Intl.DateTimeFormat("pt-BR", {
@@ -60,8 +62,8 @@ export default function AlertCenter({ alerts, onAcknowledge }: AlertCenterProps)
       })
       .sort(
         (first, second) =>
-          new Date(second.last_seen_at).getTime() -
-          new Date(first.last_seen_at).getTime(),
+          parseApiDate(second.last_seen_at).getTime() -
+          parseApiDate(first.last_seen_at).getTime(),
       );
   }, [alerts, query, severityFilter, statusFilter]);
 
