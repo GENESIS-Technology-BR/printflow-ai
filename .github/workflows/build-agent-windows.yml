@@ -137,8 +137,10 @@ jobs:
           Copy-Item dist/PRINTFLOW-Agent.exe package/
           Copy-Item agent/windows/Executar-PRINTFLOW-Agent.bat package/
           Copy-Item agent/windows/INSTALAR-PRINTFLOW-Agent.bat package/
+          Copy-Item agent/windows/ATUALIZAR-PRINTFLOW-Agent.bat package/
           Copy-Item agent/windows/Start-PRINTFLOW-Agent.ps1 package/
           Copy-Item agent/windows/Install-PRINTFLOW-Agent.ps1 package/
+          Copy-Item agent/windows/Update-PRINTFLOW-Agent.ps1 package/
           Copy-Item agent/windows/Uninstall-PRINTFLOW-Agent.ps1 package/
           Copy-Item agent/windows/VALIDAR-PRINTFLOW-Build.bat package/
           Copy-Item agent/windows/Validar-PRINTFLOW-Build.ps1 package/
@@ -166,8 +168,10 @@ jobs:
             "PRINTFLOW-Agent.exe",
             "Executar-PRINTFLOW-Agent.bat",
             "INSTALAR-PRINTFLOW-Agent.bat",
+            "ATUALIZAR-PRINTFLOW-Agent.bat",
             "Start-PRINTFLOW-Agent.ps1",
             "Install-PRINTFLOW-Agent.ps1",
+            "Update-PRINTFLOW-Agent.ps1",
             "Uninstall-PRINTFLOW-Agent.ps1",
             "VALIDAR-PRINTFLOW-Build.bat",
             "Validar-PRINTFLOW-Build.ps1",

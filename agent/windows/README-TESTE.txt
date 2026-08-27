@@ -1,4 +1,4 @@
-PRINTFLOW AGENT WINDOWS v0.3.4
+PRINTFLOW AGENT WINDOWS v0.3.5
 
 ARQUITETURA
 - Instalacao residente em C:\ProgramData\PRINTFLOW\Agent
@@ -20,6 +20,17 @@ INSTALACAO
    10.2.0.0/24,10.2.128.0/24
 6. Aguarde a mensagem de instalacao concluida.
 7. Confira o Dashboard.
+
+
+ATUALIZACAO DE CLIENTE EXISTENTE
+1. Extraia a nova Build.
+2. Execute ATUALIZAR-PRINTFLOW-Agent.bat como administrador.
+3. O atualizador detecta a instalacao residente.
+4. Token protegido por maquina e redes sao preservados.
+5. Um backup da versao anterior e criado automaticamente.
+6. A nova versao e iniciada como SYSTEM.
+7. Se a atualizacao falhar, o rollback automatico tenta restaurar
+   a versao anterior.
 
 IMPORTANTE
 - Nao mova somente o EXE.

@@ -1,4 +1,4 @@
 from __future__ import annotations
 
 
-AGENT_VERSION = "0.3.4"
+AGENT_VERSION = "0.3.5"
