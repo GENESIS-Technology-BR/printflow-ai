@@ -218,6 +218,11 @@ class PrintflowApiClient:
         return {
             "ip": ip_address,
             "name": str(name)[:150],
+            "hostname": (
+                str(hostname)[:255]
+                if hostname
+                else None
+            ),
             "manufacturer": (
                 str(manufacturer)[:100]
                 if manufacturer

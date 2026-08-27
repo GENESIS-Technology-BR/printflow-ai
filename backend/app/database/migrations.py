@@ -5,6 +5,8 @@ from sqlalchemy.engine import Engine
 
 
 PRINTER_COLUMNS = {
+    "hostname": "VARCHAR(255)",
+    "custom_name": "VARCHAR(150)",
     "serial": "VARCHAR(180)",
     "toner_percent": "INTEGER",
     "health_score": "INTEGER",

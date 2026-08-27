@@ -13,7 +13,7 @@ def test_version_has_single_source():
         ROOT / "agent" / "python" / "config" / "settings.py"
     ).read_text(encoding="utf-8")
 
-    assert 'AGENT_VERSION = "0.3.5"' in version_file
+    assert 'AGENT_VERSION = "0.3.6"' in version_file
     assert "from version import AGENT_VERSION" in settings
     assert '"0.3.5"' not in settings
 

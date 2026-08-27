@@ -1,4 +1,4 @@
-PRINTFLOW AGENT WINDOWS v0.3.5
+PRINTFLOW AGENT WINDOWS v0.3.6
 
 ARQUITETURA
 - Instalacao residente em C:\ProgramData\PRINTFLOW\Agent
@@ -8,6 +8,7 @@ ARQUITETURA
 - Token protegido com DPAPI LocalMachine
 - Configuracao restrita a SYSTEM e Administradores
 - Discovery automatico + redes adicionais
+- Descoberta automatica de hostname
 - Heartbeat e sincronizacao com a API
 
 INSTALACAO

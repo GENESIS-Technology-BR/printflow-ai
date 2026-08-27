@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class PrinterBase(BaseModel):
     ip: str = Field(min_length=7, max_length=45)
     name: str = Field(default="Impressora", min_length=1, max_length=150)
+    hostname: str | None = Field(default=None, max_length=255)
     manufacturer: str | None = None
     model: str | None = None
     status: str = "online"
@@ -29,11 +30,20 @@ class PrinterUpsert(PrinterBase):
 class PrinterResponse(PrinterBase):
     model_config = ConfigDict(from_attributes=True)
 
+    custom_name: str | None = None
+
     id: int
     uuid: str
     active: bool
     last_seen: datetime
     created_at: datetime
+
+
+class PrinterCustomNameUpdate(BaseModel):
+    custom_name: str | None = Field(
+        default=None,
+        max_length=150,
+    )
 
 
 class AgentHeartbeat(BaseModel):

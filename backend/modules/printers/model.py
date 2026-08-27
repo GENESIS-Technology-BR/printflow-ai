@@ -29,6 +29,8 @@ class Printer(Base):
     )
     ip: Mapped[str] = mapped_column(String(45), index=True)
     name: Mapped[str] = mapped_column(String(150), default="Impressora")
+    hostname: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    custom_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
     manufacturer: Mapped[str | None] = mapped_column(String(100), nullable=True)
     model: Mapped[str | None] = mapped_column(String(180), nullable=True)
     status: Mapped[str] = mapped_column(String(30), default="online")

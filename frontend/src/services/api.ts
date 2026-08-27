@@ -32,6 +32,8 @@ export type DashboardPrinter = {
   uuid: string | null;
   ip: string | null;
   name: string;
+  hostname: string | null;
+  custom_name: string | null;
   manufacturer: string | null;
   model: string | null;
   status: string;
@@ -106,6 +108,24 @@ export async function getDashboardPrinters():
 Promise<DashboardPrinter[]> {
   return request<DashboardPrinter[]>(
     "/api/v1/dashboard/printers",
+  );
+}
+
+export async function updatePrinterCustomName(
+  printerUuid: string,
+  customName: string | null,
+): Promise<{ custom_name: string | null }> {
+  return request<{ custom_name: string | null }>(
+    `/api/v1/printers/${printerUuid}/custom-name`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        custom_name: customName,
+      }),
+    },
   );
 }
 

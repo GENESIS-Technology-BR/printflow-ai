@@ -797,3 +797,84 @@
   cursor: wait;
   opacity: 0.6;
 }
+
+
+/* PRINTFLOW_V036_PRINTER_IDENTITY */
+
+.printer-identity-content {
+  min-width: 0;
+  width: 100%;
+}
+
+.printer-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.printer-title-row > strong {
+  min-width: 180px;
+}
+
+.printer-alias-editor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 260px;
+}
+
+.printer-alias-editor input {
+  min-width: 180px;
+  max-width: 280px;
+  padding: 7px 9px;
+  border: 1px solid #30425d;
+  border-radius: 8px;
+  outline: none;
+  color: #edf4ff;
+  background: #0b1627;
+}
+
+.printer-alias-editor input:focus {
+  border-color: #5ba8ff;
+}
+
+.printer-alias-editor button {
+  padding: 7px 10px;
+  border: 1px solid #315071;
+  border-radius: 8px;
+  color: #cfe2ff;
+  background: #14253c;
+}
+
+.printer-alias-editor button:disabled {
+  cursor: default;
+  opacity: .55;
+}
+
+.printer-hostname {
+  display: block;
+  margin-top: 5px;
+  color: #91a0b5;
+  font-size: 11px;
+}
+
+.printer-alias-error {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 100, 124, .3);
+  border-radius: 9px;
+  color: #ff8294;
+  background: rgba(255, 100, 124, .08);
+}
+
+@media (max-width: 900px) {
+  .printer-alias-editor {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .printer-alias-editor input {
+    max-width: none;
+  }
+}

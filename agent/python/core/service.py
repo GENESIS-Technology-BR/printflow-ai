@@ -72,7 +72,7 @@ class PrintflowAgentService:
                     timeout=self.settings.network_timeout,
                     workers=1,
                     maximum_hosts=1,
-                    resolve_names=False,
+                    resolve_names=True,
                 )
 
                 for device in devices:

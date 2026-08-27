@@ -103,7 +103,7 @@ class AgentSettings:
             ),
             resolve_names=env_bool(
                 "PRINTFLOW_RESOLVE_NAMES",
-                False,
+                True,
             ),
             snmp_community=os.getenv(
                 "PRINTFLOW_SNMP_COMMUNITY",
