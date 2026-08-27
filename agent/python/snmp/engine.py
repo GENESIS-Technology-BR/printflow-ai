@@ -50,6 +50,14 @@ class SnmpRequestResult:
 # Canon GX6000 validada em equipamento real.
 # ============================================================
 
+KYOCERA_PAGE_COUNT_OIDS = {
+    "print_total":
+        "1.3.6.1.4.1.1347.42.3.1.1.1.1.1",
+    "copy_total":
+        "1.3.6.1.4.1.1347.42.3.1.1.1.1.2",
+}
+
+
 VENDOR_PAGE_COUNT_OIDS = {
     "canon": (
         "1.3.6.1.4.1.1602.1.11.2.1.1.3.1",
@@ -267,6 +275,8 @@ class PrinterIntelligenceEngine:
         vendor_key = str(
             vendor or ""
         ).strip().lower()
+
+        candidates: dict[str, int] = {}
 
         serial = raw_data.get(
             "serial_printer_mib"
@@ -551,6 +561,7 @@ class PrinterIntelligenceEngine:
         Seleciona o contador principal da impressora.
 
         Prioridade:
+        - Kyocera: Print Total + Copy Total;
         - contador privado confiavel do fabricante;
         - Printer-MIB como fallback universal.
         """
@@ -573,12 +584,119 @@ class PrinterIntelligenceEngine:
             vendor or ""
         ).strip().lower()
 
+        # Criado ANTES de qualquer regra de fabricante.
+        candidates: dict[str, int] = {}
+
+        # ====================================================
+        # KYOCERA
+        #
+        # Validado em equipamento real ECOSYS M3145idn:
+        #
+        # PRINT TOTAL + COPY TOTAL = contador fisico
+        #
+        # Printer-MIB permanece como fallback.
+        # ====================================================
+
+        if vendor_key == "kyocera":
+
+            fields = tuple(
+                KYOCERA_PAGE_COUNT_OIDS.keys()
+            )
+
+            oids = tuple(
+                KYOCERA_PAGE_COUNT_OIDS.values()
+            )
+
+            results = await asyncio.gather(
+                *[
+                    self.get_value(
+                        ip_address=ip_address,
+                        oid=oid,
+                    )
+                    for oid in oids
+                ],
+                return_exceptions=True,
+            )
+
+            kyocera_values: dict[str, int] = {}
+
+            for field, oid, result in zip(
+                fields,
+                oids,
+                results,
+            ):
+
+                if isinstance(
+                    result,
+                    Exception,
+                ):
+                    continue
+
+                if not getattr(
+                    result,
+                    "success",
+                    False,
+                ):
+                    continue
+
+                value = parser(
+                    getattr(
+                        result,
+                        "value",
+                        None,
+                    )
+                )
+
+                if value is None or value < 0:
+                    continue
+
+                kyocera_values[field] = value
+                candidates[oid] = value
+
+            print_total = kyocera_values.get(
+                "print_total"
+            )
+
+            copy_total = kyocera_values.get(
+                "copy_total"
+            )
+
+            if (
+                print_total is not None
+                and copy_total is not None
+            ):
+
+                physical_total = (
+                    print_total
+                    + copy_total
+                )
+
+                # N?o aceita dois placeholders zero se
+                # o Printer-MIB ja possui contador real.
+                if (
+                    physical_total > 0
+                    or generic_count in (None, 0)
+                ):
+                    return (
+                        physical_total,
+                        "kyocera-print-copy-total",
+                        candidates,
+                    )
+
+            return (
+                generic_count,
+                "printer-mib-fallback",
+                candidates,
+            )
+
+        # ====================================================
+        # OUTROS FABRICANTES
+        # ====================================================
+
         vendor_oids = VENDOR_PAGE_COUNT_OIDS.get(
             vendor_key,
             (),
         )
-
-        candidates: dict[str, int] = {}
 
         if not vendor_oids:
             return (
@@ -598,16 +716,30 @@ class PrinterIntelligenceEngine:
             return_exceptions=True,
         )
 
-        for oid, result in zip(vendor_oids, results):
+        for oid, result in zip(
+            vendor_oids,
+            results,
+        ):
 
-            if isinstance(result, Exception):
+            if isinstance(
+                result,
+                Exception,
+            ):
                 continue
 
-            if not getattr(result, "success", False):
+            if not getattr(
+                result,
+                "success",
+                False,
+            ):
                 continue
 
             value = parser(
-                getattr(result, "value", None)
+                getattr(
+                    result,
+                    "value",
+                    None,
+                )
             )
 
             if value is None or value < 0:
@@ -625,8 +757,13 @@ class PrinterIntelligenceEngine:
         frequencies: dict[int, int] = {}
 
         for value in candidates.values():
+
             frequencies[value] = (
-                frequencies.get(value, 0) + 1
+                frequencies.get(
+                    value,
+                    0,
+                )
+                + 1
             )
 
         selected_value = None
@@ -635,6 +772,7 @@ class PrinterIntelligenceEngine:
         for value, frequency in frequencies.items():
 
             if frequency > selected_frequency:
+
                 selected_value = value
                 selected_frequency = frequency
 
@@ -654,8 +792,11 @@ class PrinterIntelligenceEngine:
             vendor_key == "zebra"
             and len(candidates) == 1
         ):
+
             zebra_value = next(
-                iter(candidates.values())
+                iter(
+                    candidates.values()
+                )
             )
 
             return (
@@ -669,6 +810,7 @@ class PrinterIntelligenceEngine:
             "printer-mib-fallback",
             candidates,
         )
+
 
     async def collect_supplies(
         self,

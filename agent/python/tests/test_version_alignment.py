@@ -13,9 +13,9 @@ def test_version_has_single_source():
         ROOT / "agent" / "python" / "config" / "settings.py"
     ).read_text(encoding="utf-8")
 
-    assert 'AGENT_VERSION = "0.3.3"' in version_file
+    assert 'AGENT_VERSION = "0.3.4"' in version_file
     assert "from version import AGENT_VERSION" in settings
-    assert '"0.3.3"' not in settings
+    assert '"0.3.4"' not in settings
 
 
 def test_installer_reads_version_from_build_metadata():
@@ -26,7 +26,7 @@ def test_installer_reads_version_from_build_metadata():
     assert 'BUILD-VALIDATION.txt' in installer
     assert '$agentVersion' in installer
     assert 'agent_version = $agentVersion' in installer
-    assert 'agent_version = "0.3.3"' not in installer
+    assert 'agent_version = "0.3.4"' not in installer
 
 
 def test_workflow_does_not_have_manual_build_number():
