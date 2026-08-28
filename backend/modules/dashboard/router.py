@@ -160,6 +160,8 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
         "name": getattr(printer, "name", "Impressora"),
         "hostname": getattr(printer, "hostname", None),
         "custom_name": getattr(printer, "custom_name", None),
+        "unit_name": getattr(printer, "unit_name", None),
+        "sector_name": getattr(printer, "sector_name", None),
         "manufacturer": getattr(
             printer,
             "manufacturer",

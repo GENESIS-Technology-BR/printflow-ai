@@ -31,6 +31,8 @@ class PrinterResponse(PrinterBase):
     model_config = ConfigDict(from_attributes=True)
 
     custom_name: str | None = None
+    unit_name: str | None = None
+    sector_name: str | None = None
 
     id: int
     uuid: str
@@ -43,6 +45,18 @@ class PrinterCustomNameUpdate(BaseModel):
     custom_name: str | None = Field(
         default=None,
         max_length=150,
+    )
+
+
+class PrinterOrganizationUpdate(BaseModel):
+    unit_name: str | None = Field(
+        default=None,
+        max_length=120,
+    )
+
+    sector_name: str | None = Field(
+        default=None,
+        max_length=120,
     )
 
 

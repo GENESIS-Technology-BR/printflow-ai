@@ -34,6 +34,8 @@ export type DashboardPrinter = {
   name: string;
   hostname: string | null;
   custom_name: string | null;
+  unit_name: string | null;
+  sector_name: string | null;
   manufacturer: string | null;
   model: string | null;
   status: string;
@@ -128,6 +130,33 @@ export async function updatePrinterCustomName(
     },
   );
 }
+
+export async function updatePrinterOrganization(
+  printerUuid: string,
+  unitName: string | null,
+  sectorName: string | null,
+): Promise<{
+  unit_name: string | null;
+  sector_name: string | null;
+}> {
+  return request<{
+    unit_name: string | null;
+    sector_name: string | null;
+  }>(
+    `/api/v1/printers/${printerUuid}/organization`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        unit_name: unitName,
+        sector_name: sectorName,
+      }),
+    },
+  );
+}
+
 
 export async function getOperationalAlerts(
   status: "open" | "acknowledged" | "resolved" | "all" = "open",

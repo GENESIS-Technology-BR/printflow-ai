@@ -5,14 +5,10 @@ import {
   useState,
 } from "react";
 
-import AlertCenter from "./AlertCenter";
-import FleetInsights from "./FleetInsights";
 import HealthGauge from "./HealthGauge";
 import MetricCard from "./MetricCard";
-import PrinterTable from "./PrinterTable";
 
 import {
-  acknowledgeOperationalAlert,
   getDashboardPrinters,
   getDashboardSummary,
   getOperationalAlerts,
@@ -52,30 +48,55 @@ const EMPTY_SUMMARY: DashboardSummary = {
   },
 };
 
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("pt-BR").format(value);
+function formatNumber(
+  value: number,
+): string {
+  return new Intl.NumberFormat(
+    "pt-BR",
+  ).format(value);
 }
 
-function formatUpdateDate(value: string): string {
+function formatUpdateDate(
+  value: string,
+): string {
   if (!value) {
-    return "Aguardando primeira atualização";
+    return "Aguardando atualização";
   }
 
   const date = parseApiDate(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Atualização não informada";
+    return "Não informado";
   }
 
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "medium",
-  }).format(date);
+  return new Intl.DateTimeFormat(
+    "pt-BR",
+    {
+      dateStyle: "short",
+      timeStyle: "short",
+    },
+  ).format(date);
+}
+
+function severityLabel(
+  severity: OperationalAlert["severity"],
+): string {
+  if (severity === "critical") {
+    return "Crítico";
+  }
+
+  if (severity === "warning") {
+    return "Atenção";
+  }
+
+  return "Informativo";
 }
 
 export default function Dashboard() {
   const [summary, setSummary] =
-    useState<DashboardSummary>(EMPTY_SUMMARY);
+    useState<DashboardSummary>(
+      EMPTY_SUMMARY,
+    );
 
   const [printers, setPrinters] =
     useState<DashboardPrinter[]>([]);
@@ -93,8 +114,8 @@ export default function Dashboard() {
     useState<string | null>(null);
 
   const loadDashboard = useCallback(
-    async (manualRefresh = false) => {
-      if (manualRefresh) {
+    async (manual = false) => {
+      if (manual) {
         setRefreshing(true);
       }
 
@@ -114,12 +135,11 @@ export default function Dashboard() {
         setAlerts(alertsResponse);
         setError(null);
       } catch (requestError) {
-        const message =
+        setError(
           requestError instanceof Error
             ? requestError.message
-            : "Falha ao carregar o Dashboard.";
-
-        setError(message);
+            : "Falha ao carregar a Visão Geral.",
+        );
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -129,60 +149,93 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
-    // Carregamento inicial e assinatura do intervalo do Dashboard.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadDashboard();
 
-    const intervalId = window.setInterval(
-      () => {
-        void loadDashboard();
-      },
-      30_000,
-    );
+    const intervalId =
+      window.setInterval(
+        () => {
+          void loadDashboard();
+        },
+        30_000,
+      );
 
     return () => {
-      window.clearInterval(intervalId);
+      window.clearInterval(
+        intervalId,
+      );
     };
   }, [loadDashboard]);
 
-  const criticalPrinters = useMemo(
+  const priorityAlerts = useMemo(() => {
+    const severityWeight = {
+      critical: 3,
+      warning: 2,
+      info: 1,
+    };
+
+    return alerts
+      .filter(
+        (alert) =>
+          alert.status === "open",
+      )
+      .sort(
+        (a, b) =>
+          severityWeight[b.severity] -
+          severityWeight[a.severity],
+      )
+      .slice(0, 3);
+  }, [alerts]);
+
+  const unitCount = useMemo(
     () =>
-      printers.filter(
-        (printer) =>
-          printer.status === "offline" ||
-          printer.health_score < 70,
-      ).length,
+      new Set(
+        printers
+          .filter(
+            (printer) =>
+              printer.active &&
+              printer.unit_name,
+          )
+          .map(
+            (printer) =>
+              printer.unit_name,
+          ),
+      ).size,
     [printers],
   );
 
-  const acknowledgeAlert = useCallback(async (alertId: number) => {
-    const updatedAlert = await acknowledgeOperationalAlert(alertId);
-    setAlerts((current) =>
-      current.map((alert) => alert.id === alertId ? updatedAlert : alert),
-    );
-  }, []);
+  const manufacturerCount =
+    Object.keys(
+      summary.manufacturers,
+    ).length;
 
   return (
-    <section className="dashboard-page">
-      <header className="dashboard-header">
+    <section className="dashboard-page executive-clean-page">
+      <header className="dashboard-header executive-clean-header">
         <div>
           <span className="dashboard-eyebrow">
-            PRINTFLOW EXECUTIVE CONTROL CENTER
+            PRINTFLOW · VISÃO GERAL
           </span>
 
-          <h1>Gestão inteligente do parque</h1>
+          <h1>
+            Situação atual do ambiente
+          </h1>
 
           <p>
-            Operação, disponibilidade, riscos e
-            desempenho das impressoras em uma única visão.
+            Os indicadores essenciais para
+            entender o parque em poucos segundos.
           </p>
         </div>
 
         <div className="dashboard-header-actions">
           <span className="dashboard-live">
             <i />
+
             {summary.agent.online
-              ? `Agent online${summary.agent.version ? ` • v${summary.agent.version}` : ""}`
+              ? `Agent online${
+                  summary.agent.version
+                    ? ` • v${summary.agent.version}`
+                    : ""
+                }`
               : "Agent sem comunicação"}
           </span>
 
@@ -190,26 +243,27 @@ export default function Dashboard() {
             type="button"
             className="dashboard-refresh"
             disabled={refreshing}
-            onClick={() => {
-              void loadDashboard(true);
-            }}
+            onClick={() =>
+              void loadDashboard(true)
+            }
           >
             {refreshing
               ? "Atualizando..."
-              : "Atualizar dados"}
+              : "Atualizar"}
           </button>
         </div>
       </header>
 
-      <div className="dashboard-update-row">
+      <div className="dashboard-update-row executive-clean-update">
         <span>
-          Última atualização:
-          {" "}
-          {formatUpdateDate(summary.generated_at)}
+          Última atualização:{" "}
+          {formatUpdateDate(
+            summary.generated_at,
+          )}
         </span>
 
         <span>
-          Atualização automática a cada 30 segundos
+          Atualização automática • 30s
         </span>
       </div>
 
@@ -223,13 +277,21 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="metrics-grid">
+      {loading && (
+        <div className="executive-clean-loading">
+          Atualizando indicadores...
+        </div>
+      )}
+
+      <div className="metrics-grid executive-clean-metrics">
         <MetricCard
-          title="Frota registrada"
-          value={summary.total_printers}
+          title="Impressoras"
+          value={
+            summary.active_printers
+          }
           icon="🖨️"
           color="#5ba8ff"
-          subtitle={`${summary.active_printers} monitoradas • ${summary.inactive_printers} históricas`}
+          subtitle="Parque monitorado"
         />
 
         <MetricCard
@@ -237,7 +299,7 @@ export default function Dashboard() {
           value={summary.online}
           icon="●"
           color="#49d6a5"
-          subtitle="Equipamentos disponíveis"
+          subtitle="Disponíveis agora"
         />
 
         <MetricCard
@@ -249,58 +311,156 @@ export default function Dashboard() {
         />
 
         <MetricCard
-          title="Riscos"
-          value={criticalPrinters}
+          title="Alertas"
+          value={summary.alerts}
           icon="⚠️"
           color="#ffbe55"
-          subtitle="Equipamentos prioritários"
-        />
-
-        <MetricCard
-          title="Páginas"
-          value={formatNumber(summary.total_pages)}
-          icon="📄"
-          color="#ab8cff"
-          subtitle="Contador acumulado"
+          subtitle="Precisam de atenção"
         />
       </div>
 
-      <HealthGauge
-        value={summary.health_average}
-      />
+      <div className="executive-clean-main">
+        <HealthGauge
+          value={
+            summary.health_average
+          }
+        />
 
-      <FleetInsights
-        summary={summary}
-        printers={printers}
-      />
+        <section className="executive-attention-panel">
+          <div className="executive-clean-panel-title">
+            <span>ATENÇÃO AGORA</span>
 
-      <AlertCenter alerts={alerts} onAcknowledge={acknowledgeAlert} />
-
-      <section className="dashboard-list-panel">
-        <div className="dashboard-section-title">
-          <div>
-            <span>INVENTÁRIO</span>
-            <h2>Impressoras monitoradas</h2>
+            <h2>
+              O que precisa ser verificado
+            </h2>
           </div>
 
-          <span className="dashboard-count">
-            {printers.length} equipamento(s)
-          </span>
+          {priorityAlerts.length ? (
+            <div className="executive-alert-list">
+              {priorityAlerts.map(
+                (alert) => (
+                  <div
+                    className={
+                      `executive-alert-item executive-alert-${alert.severity}`
+                    }
+                    key={alert.id}
+                  >
+                    <div>
+                      <strong>
+                        {alert.title}
+                      </strong>
+
+                      <span>
+                        {alert.description}
+                      </span>
+                    </div>
+
+                    <small>
+                      {severityLabel(
+                        alert.severity,
+                      )}
+                    </small>
+                  </div>
+                ),
+              )}
+            </div>
+          ) : summary.offline > 0 ? (
+            <div className="executive-clean-state attention">
+              <strong>
+                {summary.offline} equipamento(s)
+                offline.
+              </strong>
+
+              <span>
+                Acesse Impressoras para
+                investigar os equipamentos.
+              </span>
+            </div>
+          ) : summary.alerts > 0 ? (
+            <div className="executive-clean-state attention">
+              <strong>
+                Existem itens que precisam de
+                atenção.
+              </strong>
+
+              <span>
+                Consulte o monitoramento das
+                impressoras.
+              </span>
+            </div>
+          ) : (
+            <div className="executive-clean-state success">
+              <strong>
+                Nenhuma ação imediata.
+              </strong>
+
+              <span>
+                O ambiente está operando
+                normalmente.
+              </span>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <section className="executive-operational-summary">
+        <div className="executive-clean-panel-title">
+          <span>RESUMO OPERACIONAL</span>
+          <h2>
+            Indicadores complementares
+          </h2>
         </div>
 
-        {loading ? (
-          <div className="dashboard-loading">
-            <div className="dashboard-spinner" />
-            <span>Carregando equipamentos...</span>
+        <div className="executive-summary-values">
+          <div>
+            <strong>
+              {formatNumber(
+                summary.total_pages,
+              )}
+            </strong>
+            <span>
+              Páginas acumuladas
+            </span>
           </div>
-        ) : (
-          <PrinterTable printers={printers} />
-        )}
+
+          <div>
+            <strong>
+              {unitCount}
+            </strong>
+            <span>
+              Unidades cadastradas
+            </span>
+          </div>
+
+          <div>
+            <strong>
+              {manufacturerCount}
+            </strong>
+            <span>
+              Fabricantes
+            </span>
+          </div>
+
+          <div>
+            <strong>
+              {summary.page_count_known}
+            </strong>
+            <span>
+              Contadores conhecidos
+            </span>
+          </div>
+        </div>
       </section>
 
+      <div className="executive-clean-hint">
+        Detalhes técnicos, busca, filtros,
+        unidade, setor e edição ficam disponíveis
+        no menu <strong>Impressoras</strong>.
+      </div>
+
       <footer className="dashboard-footer">
-        PRINTFLOW AI — Inteligência operacional
-        para gestão de impressão.
+        PRINTFLOW AI — Gestão inteligente
+        de impressão.
       </footer>
     </section>
   );

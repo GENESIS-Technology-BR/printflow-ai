@@ -11,6 +11,7 @@ from backend.modules.printers.model import Printer
 from backend.modules.printers.schema import (
     AgentHeartbeat,
     PrinterCustomNameUpdate,
+    PrinterOrganizationUpdate,
     PrinterResponse,
     PrinterUpsert,
 )
@@ -265,6 +266,47 @@ def update_printer_custom_name(
 
     printer.custom_name = _clean_text(
         payload.custom_name
+    )
+
+    db.commit()
+    db.refresh(printer)
+
+    return printer
+
+
+
+# PRINTFLOW_V037_ORGANIZATION
+@router.patch(
+    "/{printer_uuid}/organization",
+    response_model=PrinterResponse,
+)
+def update_printer_organization(
+    printer_uuid: str,
+    payload: PrinterOrganizationUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    printer = (
+        db.query(Printer)
+        .filter(
+            Printer.uuid == printer_uuid,
+            Printer.company_id == current_user.company_id,
+        )
+        .first()
+    )
+
+    if printer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Impressora nao encontrada.",
+        )
+
+    printer.unit_name = _clean_text(
+        payload.unit_name
+    )
+
+    printer.sector_name = _clean_text(
+        payload.sector_name
     )
 
     db.commit()
