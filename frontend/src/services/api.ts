@@ -175,4 +175,79 @@ export async function acknowledgeOperationalAlert(
   );
 }
 
+
+export type OrganizationUnit = {
+  id: number;
+  uuid: string;
+  name: string;
+  active: boolean;
+  created_at: string;
+};
+
+export type OrganizationSector = {
+  id: number;
+  uuid: string;
+  unit_id: number;
+  name: string;
+  active: boolean;
+  created_at: string;
+};
+
+export async function getOrganizationUnits():
+Promise<OrganizationUnit[]> {
+  return request<OrganizationUnit[]>(
+    "/api/v1/organization/units",
+  );
+}
+
+export async function createOrganizationUnit(
+  name: string,
+): Promise<OrganizationUnit> {
+  return request<OrganizationUnit>(
+    "/api/v1/organization/units",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+      }),
+    },
+  );
+}
+
+export async function getOrganizationSectors(
+  unitId?: number,
+): Promise<OrganizationSector[]> {
+  const query =
+    unitId === undefined
+      ? ""
+      : `?unit_id=${unitId}`;
+
+  return request<OrganizationSector[]>(
+    `/api/v1/organization/sectors${query}`,
+  );
+}
+
+export async function createOrganizationSector(
+  unitId: number,
+  name: string,
+): Promise<OrganizationSector> {
+  return request<OrganizationSector>(
+    "/api/v1/organization/sectors",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        unit_id: unitId,
+        name,
+      }),
+    },
+  );
+}
+
+
 export { API_BASE_URL };

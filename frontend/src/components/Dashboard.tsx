@@ -1,4 +1,4 @@
-import {
+﻿import {
   useCallback,
   useEffect,
   useMemo,
@@ -11,12 +11,14 @@ import {
   getDashboardPrinters,
   getDashboardSummary,
   getOperationalAlerts,
+  getOrganizationUnits,
 } from "../services/api";
 
 import type {
   DashboardPrinter,
   DashboardSummary,
   OperationalAlert,
+  OrganizationUnit,
 } from "../services/api";
 
 import { parseApiDate } from "../utils/dateTime";
@@ -143,11 +145,14 @@ export default function Dashboard({
       EMPTY_SUMMARY,
     );
 
-  const [printers, setPrinters] =
+  const [, setPrinters] =
     useState<DashboardPrinter[]>([]);
 
   const [alerts, setAlerts] =
     useState<OperationalAlert[]>([]);
+
+  const [organizationUnits, setOrganizationUnits] =
+    useState<OrganizationUnit[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -169,15 +174,18 @@ export default function Dashboard({
           summaryResponse,
           printersResponse,
           alertsResponse,
+          unitsResponse,
         ] = await Promise.all([
           getDashboardSummary(),
           getDashboardPrinters(),
           getOperationalAlerts("all"),
+          getOrganizationUnits(),
         ]);
 
         setSummary(summaryResponse);
         setPrinters(printersResponse);
         setAlerts(alertsResponse);
+        setOrganizationUnits(unitsResponse);
         setError(null);
       } catch (requestError) {
         setError(
@@ -236,22 +244,8 @@ export default function Dashboard({
       .slice(0, 3);
   }, [openAlerts]);
 
-  const unitCount = useMemo(
-    () =>
-      new Set(
-        printers
-          .filter(
-            (printer) =>
-              printer.active &&
-              printer.unit_name,
-          )
-          .map(
-            (printer) =>
-              printer.unit_name,
-          ),
-      ).size,
-    [printers],
-  );
+  const unitCount =
+    organizationUnits.length;
 
   const manufacturerCount =
     Object.keys(

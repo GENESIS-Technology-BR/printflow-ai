@@ -18,6 +18,7 @@ from backend.modules.auth.model import User
 from backend.modules.auth.router import router as auth_router
 from backend.modules.companies.model import Company
 from backend.modules.companies.router import router as companies_router
+from backend.modules.organization.router import router as organization_router
 from backend.modules.dashboard.router import router as dashboard_router
 from backend.modules.alerts.router import router as alerts_router
 
@@ -61,6 +62,7 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(companies_router, prefix="/api/v1")
+app.include_router(organization_router, prefix="/api/v1")
 
 if printers_router:
     app.include_router(printers_router, prefix="/api/v1")
