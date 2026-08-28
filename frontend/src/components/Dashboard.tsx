@@ -5,7 +5,6 @@ import {
   useState,
 } from "react";
 
-import HealthGauge from "./HealthGauge";
 import MetricCard from "./MetricCard";
 
 import {
@@ -23,6 +22,12 @@ import type {
 import { parseApiDate } from "../utils/dateTime";
 
 import "./Dashboard.css";
+
+type DashboardProps = {
+  companyName: string;
+  onManageCompany: () => void;
+  onOpenPrinters: () => void;
+};
 
 const EMPTY_SUMMARY: DashboardSummary = {
   total_printers: 0,
@@ -57,10 +62,10 @@ function formatNumber(
 }
 
 function formatUpdateDate(
-  value: string,
+  value: string | null,
 ): string {
   if (!value) {
-    return "Aguardando atualização";
+    return "Aguardando dados";
   }
 
   const date = parseApiDate(value);
@@ -73,7 +78,7 @@ function formatUpdateDate(
     "pt-BR",
     {
       dateStyle: "short",
-      timeStyle: "short",
+      timeStyle: "medium",
     },
   ).format(date);
 }
@@ -92,7 +97,47 @@ function severityLabel(
   return "Informativo";
 }
 
-export default function Dashboard() {
+function healthLabel(
+  value: number,
+): string {
+  if (value >= 85) {
+    return "Excelente";
+  }
+
+  if (value >= 70) {
+    return "Boa";
+  }
+
+  if (value >= 50) {
+    return "Atenção";
+  }
+
+  return "Crítica";
+}
+
+function healthColor(
+  value: number,
+): string {
+  if (value >= 85) {
+    return "#35dfad";
+  }
+
+  if (value >= 70) {
+    return "#4b9dff";
+  }
+
+  if (value >= 50) {
+    return "#ffb73f";
+  }
+
+  return "#ff5265";
+}
+
+export default function Dashboard({
+  companyName,
+  onManageCompany,
+  onOpenPrinters,
+}: DashboardProps) {
   const [summary, setSummary] =
     useState<DashboardSummary>(
       EMPTY_SUMMARY,
@@ -166,6 +211,15 @@ export default function Dashboard() {
     };
   }, [loadDashboard]);
 
+  const openAlerts = useMemo(
+    () =>
+      alerts.filter(
+        (alert) =>
+          alert.status === "open",
+      ),
+    [alerts],
+  );
+
   const priorityAlerts = useMemo(() => {
     const severityWeight = {
       critical: 3,
@@ -173,18 +227,14 @@ export default function Dashboard() {
       info: 1,
     };
 
-    return alerts
-      .filter(
-        (alert) =>
-          alert.status === "open",
-      )
+    return [...openAlerts]
       .sort(
         (a, b) =>
           severityWeight[b.severity] -
           severityWeight[a.severity],
       )
       .slice(0, 3);
-  }, [alerts]);
+  }, [openAlerts]);
 
   const unitCount = useMemo(
     () =>
@@ -208,26 +258,67 @@ export default function Dashboard() {
       summary.manufacturers,
     ).length;
 
+  const onlinePercent =
+    summary.active_printers > 0
+      ? Math.round(
+          (
+            summary.online /
+            summary.active_printers
+          ) * 100,
+        )
+      : 0;
+
+  const offlinePercent =
+    summary.active_printers > 0
+      ? Math.round(
+          (
+            summary.offline /
+            summary.active_printers
+          ) * 100,
+        )
+      : 0;
+
+  const health = Math.max(
+    0,
+    Math.min(
+      Math.round(
+        summary.health_average,
+      ),
+      100,
+    ),
+  );
+
+  const currentHealthColor =
+    healthColor(health);
+
+  const lastUpdate =
+    summary.generated_at ||
+    summary.agent.last_seen;
+
   return (
-    <section className="dashboard-page executive-clean-page">
-      <header className="dashboard-header executive-clean-header">
+    <section className="dashboard-page executive-clean-page modern-dashboard">
+      <header className="modern-dashboard-header">
         <div>
-          <span className="dashboard-eyebrow">
-            PRINTFLOW · VISÃO GERAL
+          <span className="modern-dashboard-kicker">
+            PRINTFLOW AI · OPERAÇÕES
           </span>
 
-          <h1>
-            Situação atual do ambiente
-          </h1>
+          <h1>Visão geral</h1>
 
           <p>
-            Os indicadores essenciais para
-            entender o parque em poucos segundos.
+            Acompanhe o desempenho e a saúde do
+            parque de impressoras em tempo real.
           </p>
         </div>
 
-        <div className="dashboard-header-actions">
-          <span className="dashboard-live">
+        <div className="modern-dashboard-actions">
+          <span
+            className={
+              summary.agent.online
+                ? "modern-agent-badge online"
+                : "modern-agent-badge offline"
+            }
+          >
             <i />
 
             {summary.agent.online
@@ -241,12 +332,14 @@ export default function Dashboard() {
 
           <button
             type="button"
-            className="dashboard-refresh"
+            className="modern-refresh-button"
             disabled={refreshing}
             onClick={() =>
               void loadDashboard(true)
             }
           >
+            <span>↻</span>
+
             {refreshing
               ? "Atualizando..."
               : "Atualizar"}
@@ -254,18 +347,49 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="dashboard-update-row executive-clean-update">
+      <div className="modern-update-row">
         <span>
           Última atualização:{" "}
           {formatUpdateDate(
-            summary.generated_at,
+            lastUpdate,
           )}
         </span>
 
         <span>
-          Atualização automática • 30s
+          ↻ 30s
         </span>
       </div>
+
+      <section className="modern-company-bar">
+        <div className="modern-company-icon">
+          ▦
+        </div>
+
+        <button
+          type="button"
+          className="modern-company-selector"
+          onClick={onManageCompany}
+          title="Gerenciar empresa monitorada"
+        >
+          <span>
+            Empresa monitorada
+          </span>
+
+          <strong>
+            {companyName}
+          </strong>
+
+          <i>⌄</i>
+        </button>
+
+        <button
+          type="button"
+          className="modern-company-manage"
+          onClick={onManageCompany}
+        >
+          Gerenciar
+        </button>
+      </section>
 
       {error && (
         <div className="dashboard-error">
@@ -278,73 +402,191 @@ export default function Dashboard() {
       )}
 
       {loading && (
-        <div className="executive-clean-loading">
+        <div className="modern-loading">
           Atualizando indicadores...
         </div>
       )}
 
-      <div className="metrics-grid executive-clean-metrics">
+      <div className="metrics-grid executive-clean-metrics modern-kpi-grid">
         <MetricCard
           title="Impressoras"
           value={
             summary.active_printers
           }
-          icon="🖨️"
-          color="#5ba8ff"
-          subtitle="Parque monitorado"
+          icon="▣"
+          color="#4b8dff"
+          subtitle="Total monitoradas"
         />
 
         <MetricCard
           title="Online"
           value={summary.online}
-          icon="●"
-          color="#49d6a5"
-          subtitle="Disponíveis agora"
+          icon="◉"
+          color="#35dfad"
+          subtitle={`${onlinePercent}% do total`}
         />
 
         <MetricCard
           title="Offline"
           value={summary.offline}
-          icon="●"
-          color="#ff647c"
-          subtitle="Requerem verificação"
+          icon="⏻"
+          color="#ff5265"
+          subtitle={`${offlinePercent}% do total`}
         />
 
         <MetricCard
           title="Alertas"
-          value={summary.alerts}
-          icon="⚠️"
-          color="#ffbe55"
-          subtitle="Precisam de atenção"
+          value={openAlerts.length}
+          icon="△"
+          color="#ffb23d"
+          subtitle="Requerem atenção"
         />
       </div>
 
-      <div className="executive-clean-main">
-        <HealthGauge
-          value={
-            summary.health_average
-          }
-        />
+      <div className="modern-dashboard-main">
+        <section className="modern-panel modern-health-panel">
+          <div className="modern-panel-heading">
+            <span className="modern-panel-icon health">
+              ♢
+            </span>
 
-        <section className="executive-attention-panel">
-          <div className="executive-clean-panel-title">
-            <span>ATENÇÃO AGORA</span>
+            <div>
+              <h2>
+                Situação atual do ambiente
+              </h2>
 
-            <h2>
-              O que precisa ser verificado
-            </h2>
+              <p>
+                Resumo da saúde e qualidade do
+                parque de impressoras.
+              </p>
+            </div>
+          </div>
+
+          <div className="modern-health-content">
+            <div
+              className="modern-health-gauge"
+              style={{
+                background: `conic-gradient(
+                  ${currentHealthColor} ${health * 3.6}deg,
+                  #17273b 0deg
+                )`,
+              }}
+            >
+              <div className="modern-health-gauge-center">
+                <strong>{health}%</strong>
+                <span>
+                  Saúde geral
+                  <br />
+                  do parque
+                </span>
+              </div>
+            </div>
+
+            <div className="modern-health-information">
+              <strong
+                className="modern-health-label"
+                style={{
+                  color:
+                    currentHealthColor,
+                }}
+              >
+                {healthLabel(health)}
+              </strong>
+
+              <p>
+                {health >= 85
+                  ? "Ambiente estável e saudável. Continue assim!"
+                  : "Existem pontos que precisam de acompanhamento."}
+              </p>
+
+              <div className="modern-health-stats">
+                <div>
+                  <span>
+                    <i className="green" />
+                    Disponibilidade
+                  </span>
+
+                  <strong>
+                    {onlinePercent}%
+                  </strong>
+                </div>
+
+                <div>
+                  <span>
+                    <i className="blue" />
+                    Comunicação
+                  </span>
+
+                  <strong>
+                    {summary.agent.online
+                      ? "Online"
+                      : "Offline"}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>
+                    <i className="green" />
+                    Condição média
+                  </span>
+
+                  <strong>
+                    {healthLabel(
+                      health,
+                    )}
+                  </strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="modern-panel modern-alert-panel">
+          <div className="modern-alert-heading">
+            <div className="modern-panel-heading">
+              <span className="modern-panel-icon alert">
+                ♧
+              </span>
+
+              <div>
+                <span className="modern-alert-kicker">
+                  ATENÇÃO AGORA
+                </span>
+
+                <h2>
+                  Alertas prioritários
+                </h2>
+
+                <p>
+                  Itens que requerem atenção
+                  imediata.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="modern-view-all"
+              onClick={onOpenPrinters}
+            >
+              Ver impressoras →
+            </button>
           </div>
 
           {priorityAlerts.length ? (
-            <div className="executive-alert-list">
+            <div className="modern-alert-list">
               {priorityAlerts.map(
                 (alert) => (
-                  <div
+                  <button
+                    type="button"
                     className={
-                      `executive-alert-item executive-alert-${alert.severity}`
+                      `modern-alert-item severity-${alert.severity}`
                     }
                     key={alert.id}
+                    onClick={onOpenPrinters}
                   >
+                    <i />
+
                     <div>
                       <strong>
                         {alert.title}
@@ -360,107 +602,137 @@ export default function Dashboard() {
                         alert.severity,
                       )}
                     </small>
-                  </div>
+
+                    <b>›</b>
+                  </button>
                 ),
               )}
             </div>
-          ) : summary.offline > 0 ? (
-            <div className="executive-clean-state attention">
-              <strong>
-                {summary.offline} equipamento(s)
-                offline.
-              </strong>
-
-              <span>
-                Acesse Impressoras para
-                investigar os equipamentos.
-              </span>
-            </div>
-          ) : summary.alerts > 0 ? (
-            <div className="executive-clean-state attention">
-              <strong>
-                Existem itens que precisam de
-                atenção.
-              </strong>
-
-              <span>
-                Consulte o monitoramento das
-                impressoras.
-              </span>
-            </div>
           ) : (
-            <div className="executive-clean-state success">
+            <div className="modern-no-alerts">
               <strong>
-                Nenhuma ação imediata.
+                Ambiente sem alertas críticos.
               </strong>
 
               <span>
-                O ambiente está operando
-                normalmente.
+                Nenhuma ação imediata é
+                necessária.
               </span>
             </div>
           )}
         </section>
       </div>
 
-      <section className="executive-operational-summary">
-        <div className="executive-clean-panel-title">
-          <span>RESUMO OPERACIONAL</span>
-          <h2>
-            Indicadores complementares
-          </h2>
+      <section className="modern-panel modern-summary-panel">
+        <div className="modern-panel-heading">
+          <span className="modern-panel-icon summary">
+            ▤
+          </span>
+
+          <div>
+            <span className="modern-summary-kicker">
+              RESUMO OPERACIONAL
+            </span>
+
+            <h2>
+              Resumo operacional
+            </h2>
+
+            <p>
+              Principais indicadores de utilização
+              e gestão do parque.
+            </p>
+          </div>
         </div>
 
-        <div className="executive-summary-values">
-          <div>
-            <strong>
-              {formatNumber(
-                summary.total_pages,
-              )}
-            </strong>
-            <span>
-              Páginas acumuladas
+        <div className="modern-summary-grid">
+          <div className="modern-summary-item">
+            <span className="summary-icon blue">
+              ▤
             </span>
+
+            <div>
+              <strong>
+                {formatNumber(
+                  summary.total_pages,
+                )}
+              </strong>
+
+              <span>
+                Páginas acumuladas
+              </span>
+
+              <small>
+                Total de páginas impressas
+              </small>
+            </div>
           </div>
 
-          <div>
-            <strong>
-              {unitCount}
-            </strong>
-            <span>
-              Unidades cadastradas
+          <div className="modern-summary-item">
+            <span className="summary-icon cyan">
+              ◇
             </span>
+
+            <div>
+              <strong>
+                {unitCount}
+              </strong>
+
+              <span>
+                Unidades cadastradas
+              </span>
+
+              <small>
+                Equipamentos organizados
+              </small>
+            </div>
           </div>
 
-          <div>
-            <strong>
-              {manufacturerCount}
-            </strong>
-            <span>
-              Fabricantes
+          <div className="modern-summary-item">
+            <span className="summary-icon purple">
+              ▦
             </span>
+
+            <div>
+              <strong>
+                {manufacturerCount}
+              </strong>
+
+              <span>
+                Fabricantes
+              </span>
+
+              <small>
+                Marcas diferentes no parque
+              </small>
+            </div>
           </div>
 
-          <div>
-            <strong>
-              {summary.page_count_known}
-            </strong>
-            <span>
-              Contadores conhecidos
+          <div className="modern-summary-item">
+            <span className="summary-icon amber">
+              ▣
             </span>
+
+            <div>
+              <strong>
+                {summary.page_count_known}
+              </strong>
+
+              <span>
+                Contadores conhecidos
+              </span>
+
+              <small>
+                Equipamentos com contadores
+              </small>
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="executive-clean-hint">
-        Detalhes técnicos, busca, filtros,
-        unidade, setor e edição ficam disponíveis
-        no menu <strong>Impressoras</strong>.
-      </div>
-
-      <footer className="dashboard-footer">
-        PRINTFLOW AI — Gestão inteligente
-        de impressão.
+      <footer className="modern-dashboard-footer">
+        PRINTFLOW AI — Gestão inteligente de
+        impressão.
       </footer>
     </section>
   );

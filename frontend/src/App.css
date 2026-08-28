@@ -118,3 +118,147 @@ form{display:grid;gap:14px}label{display:grid;gap:6px;font-size:13px;font-weight
     grid-template-columns: 1fr;
   }
 }
+
+
+/* PRINTFLOW_V0371_PROVIDER_SHELL */
+
+.shell {
+  grid-template-columns:
+    250px minmax(0, 1fr);
+}
+
+.shell aside {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  min-height: 100vh;
+  height: 100vh;
+  padding: 26px 16px;
+  border-right: 1px solid #1b2b40;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(52, 221, 175, .07),
+      transparent 34%
+    ),
+    #071322;
+}
+
+.brand {
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.brand span {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      135deg,
+      #35dfad,
+      #3d8dff
+    );
+  box-shadow:
+    0 10px 24px
+    rgba(53, 223, 173, .16);
+}
+
+.brand strong {
+  font-size: 17px;
+  letter-spacing: -.02em;
+}
+
+.shell nav {
+  gap: 9px;
+  margin-top: 38px;
+}
+
+.shell nav button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 48px;
+  padding: 0 15px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: #c5d1df;
+  font-size: 14px;
+  transition:
+    .18s ease;
+}
+
+.shell nav button::before {
+  display: inline-grid;
+  width: 22px;
+  place-items: center;
+  color: #98abc1;
+  font-size: 18px;
+}
+
+.shell nav button:nth-child(1)::before {
+  content: "▦";
+}
+
+.shell nav button:nth-child(2)::before {
+  content: "◇";
+}
+
+.shell nav button:nth-child(3)::before {
+  content: "▣";
+}
+
+.shell nav button:nth-child(4)::before {
+  content: "◉";
+}
+
+.shell nav button:hover {
+  color: #eef7ff;
+  background:
+    rgba(255, 255, 255, .035);
+}
+
+.shell nav button.active {
+  border-color:
+    rgba(53, 223, 173, .20);
+  color: #49e2b8;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(53, 223, 173, .13),
+      rgba(53, 223, 173, .06)
+    );
+}
+
+.shell nav button.active::before {
+  color: #49e2b8;
+}
+
+.logout {
+  min-height: 46px;
+  border: 1px solid #1d3048;
+  border-radius: 11px;
+  color: #d7e1ee;
+}
+
+.logout::before {
+  content: "↪";
+  margin-right: 10px;
+}
+
+.dashboard-modern-shell {
+  min-width: 0;
+  padding: 0 !important;
+  background: #050d1a;
+}
+
+@media (max-width: 800px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .shell aside {
+    display: none;
+  }
+}

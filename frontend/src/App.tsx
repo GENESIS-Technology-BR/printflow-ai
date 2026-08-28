@@ -220,7 +220,13 @@ function App() {
         <button className="logout" onClick={logout}>Sair</button>
       </aside>
 
-      <main className="dashboard">
+      <main
+        className={`dashboard ${
+          page === "dashboard"
+            ? "dashboard-modern-shell"
+            : ""
+        }`}
+      >
       {page === "printers" ? (
         <>
           <header>
@@ -316,7 +322,19 @@ function App() {
         {message && <div className="message success">{message}</div>}
               </>
                 ) : (
-            <Dashboard />
+            <Dashboard
+              companyName={
+                company?.name ||
+                "Empresa monitorada"
+              }
+              onManageCompany={() =>
+                setPage("company")
+              }
+              onOpenPrinters={() => {
+                setPage("printers")
+                void loadPrinters()
+              }}
+            />
           )}
     </main>
     </div>
