@@ -87,7 +87,7 @@ class AgentSettings:
             ),
             scan_interval_seconds=env_int(
                 "PRINTFLOW_SCAN_INTERVAL",
-                900,
+                300,
             ),
             network_timeout=env_float(
                 "PRINTFLOW_NETWORK_TIMEOUT",
