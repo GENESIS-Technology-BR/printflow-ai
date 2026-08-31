@@ -1,16 +1,23 @@
+import secrets
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from backend.app.database.session import get_db
 from backend.modules.alerts.model import OperationalAlert
 from backend.modules.auth.dependencies import get_platform_admin
 from backend.modules.auth.model import User
+from backend.modules.auth.security import hash_password
 from backend.modules.companies.model import Company
 from backend.modules.printers.model import Printer
 
-from .schema import ControlCenterCompany, ControlCenterOverview
+from .schema import (
+    ControlCenterClientCreate,
+    ControlCenterClientCreated,
+    ControlCenterCompany,
+    ControlCenterOverview,
+)
 
 
 router = APIRouter(
@@ -36,6 +43,104 @@ def _agent_online(company: Company) -> bool:
     )
 
     return elapsed <= timedelta(minutes=30)
+
+
+
+@router.post(
+    "/clients",
+    response_model=ControlCenterClientCreated,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_control_center_client(
+    payload: ControlCenterClientCreate,
+    current_user: User = Depends(
+        get_platform_admin
+    ),
+    db: Session = Depends(get_db),
+):
+    email = str(
+        payload.email
+    ).lower().strip()
+
+    company_name = (
+        payload.company_name.strip()
+    )
+
+    responsible_name = (
+        payload.responsible_name.strip()
+    )
+
+    if len(company_name) < 2:
+        raise HTTPException(
+            status_code=422,
+            detail="Nome da empresa inválido",
+        )
+
+    if len(responsible_name) < 3:
+        raise HTTPException(
+            status_code=422,
+            detail="Nome do responsável inválido",
+        )
+
+    existing_user = (
+        db.query(User)
+        .filter(User.email == email)
+        .first()
+    )
+
+    if existing_user:
+        raise HTTPException(
+            status_code=409,
+            detail="E-mail já cadastrado",
+        )
+
+    temporary_password = (
+        secrets.token_urlsafe(12)
+    )
+
+    company = Company(
+        name=company_name,
+        plan="pilot",
+    )
+
+    try:
+        db.add(company)
+        db.flush()
+
+        user = User(
+            company_id=company.id,
+            name=responsible_name,
+            email=email,
+            password_hash=hash_password(
+                temporary_password
+            ),
+            role="admin",
+            active=True,
+        )
+
+        db.add(user)
+        db.commit()
+
+        db.refresh(company)
+        db.refresh(user)
+
+    except Exception:
+        db.rollback()
+        raise
+
+    return ControlCenterClientCreated(
+        company_id=company.id,
+        company_uuid=company.uuid,
+        company_name=company.name,
+        plan=company.plan,
+        user_id=user.id,
+        responsible_name=user.name,
+        email=user.email,
+        temporary_password=(
+            temporary_password
+        ),
+        agent_token=company.agent_token,
+    )
 
 
 @router.get(

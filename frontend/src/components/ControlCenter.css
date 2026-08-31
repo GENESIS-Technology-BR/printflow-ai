@@ -157,3 +157,187 @@
       repeat(2, minmax(0, 1fr));
   }
 }
+
+
+.control-center-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.control-center-header .cc-primary {
+  border-color: #167a67;
+  background: #0b463e;
+  color: #46e8b6;
+}
+
+.control-center-onboarding,
+.control-center-created {
+  margin-bottom: 16px;
+  padding: 20px;
+  border: 1px solid #203f58;
+  border-radius: 14px;
+  background: #0d1d30;
+}
+
+.cc-onboarding-intro span,
+.cc-created-header span {
+  color: #3be3b0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.cc-onboarding-intro h2,
+.cc-created-header h2 {
+  margin: 5px 0;
+}
+
+.cc-onboarding-intro p {
+  margin: 0 0 18px;
+  color: #8da6c1;
+}
+
+.cc-onboarding-form {
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1fr)
+    minmax(180px, 1fr)
+    minmax(220px, 1.2fr)
+    auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.cc-onboarding-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #a8bdd2;
+  font-size: 12px;
+}
+
+.cc-onboarding-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #29435d;
+  border-radius: 9px;
+  outline: none;
+  background: #071425;
+  color: #ffffff;
+}
+
+.cc-onboarding-form input:focus {
+  border-color: #35d9aa;
+}
+
+.cc-create-button {
+  min-height: 41px;
+  padding: 0 18px;
+  border: 1px solid #1f9d7c;
+  border-radius: 9px;
+  background: #0d6d5b;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cc-create-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.control-center-created {
+  border-color: #1c725f;
+  background: #0b2728;
+}
+
+.cc-created-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.cc-created-header button {
+  padding: 8px 13px;
+  border: 1px solid #31506b;
+  border-radius: 8px;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.cc-created-warning {
+  margin: 12px 0 16px;
+  color: #b9c9d8;
+}
+
+.cc-created-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cc-created-grid > div > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #85a0ba;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.cc-token-field {
+  grid-column: 1 / -1;
+}
+
+.cc-secret-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cc-secret-row code {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid #27485a;
+  border-radius: 8px;
+  background: #061522;
+  color: #d9fff5;
+}
+
+.cc-secret-row button {
+  padding: 10px 14px;
+  border: 1px solid #32644f;
+  border-radius: 8px;
+  background: #102e29;
+  color: #48e3b2;
+  cursor: pointer;
+}
+
+@media (max-width: 1050px) {
+  .cc-onboarding-form {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .control-center-actions {
+    flex-direction: column;
+  }
+
+  .cc-onboarding-form,
+  .cc-created-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cc-token-field {
+    grid-column: auto;
+  }
+}

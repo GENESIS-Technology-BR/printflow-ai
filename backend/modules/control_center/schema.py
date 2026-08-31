@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 
 
 class ControlCenterCompany(BaseModel):
@@ -27,3 +27,28 @@ class ControlCenterOverview(BaseModel):
     active_printers: int
     open_alerts: int
     companies: list[ControlCenterCompany]
+
+
+
+class ControlCenterClientCreate(BaseModel):
+    company_name: str = Field(
+        min_length=2,
+        max_length=180,
+    )
+    responsible_name: str = Field(
+        min_length=3,
+        max_length=120,
+    )
+    email: EmailStr
+
+
+class ControlCenterClientCreated(BaseModel):
+    company_id: int
+    company_uuid: str
+    company_name: str
+    plan: str
+    user_id: int
+    responsible_name: str
+    email: str
+    temporary_password: str
+    agent_token: str

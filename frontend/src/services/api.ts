@@ -302,3 +302,36 @@ Promise<ControlCenterOverview> {
     "/api/v1/control-center/overview",
   );
 }
+
+
+
+export type ControlCenterClientCreated = {
+  company_id: number;
+  company_uuid: string;
+  company_name: string;
+  plan: string;
+  user_id: number;
+  responsible_name: string;
+  email: string;
+  temporary_password: string;
+  agent_token: string;
+};
+
+export async function createControlCenterClient(
+  payload: {
+    company_name: string;
+    responsible_name: string;
+    email: string;
+  },
+): Promise<ControlCenterClientCreated> {
+  return request<ControlCenterClientCreated>(
+    "/api/v1/control-center/clients",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+}
