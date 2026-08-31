@@ -1,6 +1,17 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+)
+
+
+class OrganizationNameUpdate(BaseModel):
+    name: str = Field(
+        min_length=2,
+        max_length=120,
+    )
 
 
 class OrganizationUnitCreate(BaseModel):
