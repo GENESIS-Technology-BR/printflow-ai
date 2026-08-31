@@ -7,6 +7,7 @@ from backend.app.database.session import get_db
 from backend.modules.auth.dependencies import get_current_user
 from backend.modules.auth.model import User
 from backend.modules.companies.model import Company
+from backend.modules.organization.model import CompanySector, CompanyUnit
 from backend.modules.printers.model import Printer
 from backend.modules.printers.schema import (
     AgentHeartbeat,
@@ -301,13 +302,64 @@ def update_printer_organization(
             detail="Impressora nao encontrada.",
         )
 
-    printer.unit_name = _clean_text(
-        payload.unit_name
-    )
+    unit_name = _clean_text(payload.unit_name)
+    sector_name = _clean_text(payload.sector_name)
 
-    printer.sector_name = _clean_text(
-        payload.sector_name
-    )
+    if unit_name is None:
+        if sector_name is not None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Selecione uma unidade antes do setor.",
+            )
+
+        printer.unit_id = None
+        printer.sector_id = None
+        printer.unit_name = None
+        printer.sector_name = None
+
+    else:
+        unit = (
+            db.query(CompanyUnit)
+            .filter(
+                CompanyUnit.company_id == current_user.company_id,
+                CompanyUnit.name == unit_name,
+                CompanyUnit.active.is_(True),
+            )
+            .first()
+        )
+
+        if unit is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Unidade inválida ou inativa.",
+            )
+
+        printer.unit_id = unit.id
+        printer.unit_name = unit.name
+
+        if sector_name is None:
+            printer.sector_id = None
+            printer.sector_name = None
+        else:
+            sector = (
+                db.query(CompanySector)
+                .filter(
+                    CompanySector.company_id == current_user.company_id,
+                    CompanySector.unit_id == unit.id,
+                    CompanySector.name == sector_name,
+                    CompanySector.active.is_(True),
+                )
+                .first()
+            )
+
+            if sector is None:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Setor inválido para a unidade selecionada.",
+                )
+
+            printer.sector_id = sector.id
+            printer.sector_name = sector.name
 
     db.commit()
     db.refresh(printer)

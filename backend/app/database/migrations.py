@@ -9,6 +9,8 @@ PRINTER_COLUMNS = {
     "custom_name": "VARCHAR(150)",
     "unit_name": "VARCHAR(120)",
     "sector_name": "VARCHAR(120)",
+    "unit_id": "INTEGER",
+    "sector_id": "INTEGER",
     "serial": "VARCHAR(180)",
     "toner_percent": "INTEGER",
     "health_score": "INTEGER",

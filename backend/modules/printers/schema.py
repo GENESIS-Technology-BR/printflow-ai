@@ -33,6 +33,8 @@ class PrinterResponse(PrinterBase):
     custom_name: str | None = None
     unit_name: str | None = None
     sector_name: str | None = None
+    unit_id: int | None = None
+    sector_id: int | None = None
 
     id: int
     uuid: str

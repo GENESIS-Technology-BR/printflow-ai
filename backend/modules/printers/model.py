@@ -33,6 +33,18 @@ class Printer(Base):
     custom_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
     unit_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
     sector_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+
+    unit_id: Mapped[int | None] = mapped_column(
+        ForeignKey("company_units.id"),
+        nullable=True,
+        index=True,
+    )
+    sector_id: Mapped[int | None] = mapped_column(
+        ForeignKey("company_sectors.id"),
+        nullable=True,
+        index=True,
+    )
+
     manufacturer: Mapped[str | None] = mapped_column(String(100), nullable=True)
     model: Mapped[str | None] = mapped_column(String(180), nullable=True)
     status: Mapped[str] = mapped_column(String(30), default="online")
