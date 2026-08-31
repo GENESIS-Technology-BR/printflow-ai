@@ -79,6 +79,10 @@ function App() {
       .then(([companyData, profileData]) => {
         setCompany(companyData)
         setProfile(profileData)
+
+        if (profileData.role !== "platform_admin") {
+          setPage("dashboard")
+        }
       })
       .catch(() => logout())
   // A função api usa o token atual e é recriada junto com este efeito.
@@ -168,6 +172,7 @@ function App() {
     setToken("")
     setCompany(null)
     setProfile(null)
+    setPage("dashboard")
   }
 
   if (!token) {
