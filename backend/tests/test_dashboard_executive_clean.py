@@ -44,3 +44,12 @@ def test_dashboard_final_polish():
     assert 'subtitle="Ativas monitoradas"' in source
     assert "Última coleta:" in source
     assert "summary.agent.last_seen ||" in source
+
+
+def test_dashboard_has_honest_empty_state():
+    source = dashboard_source()
+
+    assert "hasMonitoringData" in source
+    assert "Aguardando dados" in source
+    assert "Monitoramento ainda não iniciado." in source
+    assert "Instale e conecte o Agent para começar." in source

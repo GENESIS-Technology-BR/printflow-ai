@@ -272,18 +272,26 @@ export default function Dashboard({
         )
       : 0;
 
-  const health = Math.max(
-    0,
-    Math.min(
-      Math.round(
-        summary.health_average,
-      ),
-      100,
-    ),
-  );
+  const hasMonitoringData =
+    summary.active_printers > 0 ||
+    summary.agent.last_seen !== null;
+
+  const health = hasMonitoringData
+    ? Math.max(
+        0,
+        Math.min(
+          Math.round(
+            summary.health_average,
+          ),
+          100,
+        ),
+      )
+    : 0;
 
   const currentHealthColor =
-    healthColor(health);
+    hasMonitoringData
+      ? healthColor(health)
+      : "#8ba2bd";
 
   const lastUpdate =
     summary.agent.last_seen ||
@@ -453,14 +461,24 @@ export default function Dashboard({
               className="clean-health-status"
               style={{ color: currentHealthColor }}
             >
-              {healthLabel(health)}
+              {hasMonitoringData
+                ? healthLabel(health)
+                : "Aguardando dados"}
             </strong>
           </div>
 
           <div className="clean-health-score-row">
             <div>
-              <strong>{health}%</strong>
-              <span>saúde geral</span>
+              <strong>
+                {hasMonitoringData
+                  ? `${health}%`
+                  : "—"}
+              </strong>
+              <span>
+                {hasMonitoringData
+                  ? "saúde geral"
+                  : "monitoramento não iniciado"}
+              </span>
             </div>
 
             <div className="clean-health-progress">
@@ -559,11 +577,15 @@ export default function Dashboard({
           ) : (
             <div className="modern-no-alerts">
               <strong>
-                Tudo certo por aqui.
+                {hasMonitoringData
+                  ? "Tudo certo por aqui."
+                  : "Monitoramento ainda não iniciado."}
               </strong>
 
               <span>
-                Nenhuma ação imediata necessária.
+                {hasMonitoringData
+                  ? "Nenhuma ação imediata necessária."
+                  : "Instale e conecte o Agent para começar."}
               </span>
             </div>
           )}
