@@ -286,8 +286,8 @@ export default function Dashboard({
     healthColor(health);
 
   const lastUpdate =
-    summary.generated_at ||
-    summary.agent.last_seen;
+    summary.agent.last_seen ||
+    summary.generated_at;
 
   return (
     <section className="dashboard-page executive-clean-page modern-dashboard clean-dashboard-v2">
@@ -343,7 +343,7 @@ export default function Dashboard({
 
       <div className="modern-update-row">
         <span>
-          Última atualização:{" "}
+          Última coleta:{" "}
           {formatUpdateDate(
             lastUpdate,
           )}
@@ -406,7 +406,7 @@ export default function Dashboard({
           }
           icon="▣"
           color="#4b8dff"
-          subtitle="Total monitoradas"
+          subtitle="Ativas monitoradas"
         />
 
         <MetricCard

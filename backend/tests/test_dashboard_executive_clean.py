@@ -36,3 +36,11 @@ def test_dashboard_has_four_primary_metrics():
     source = dashboard_source()
 
     assert source.count("<MetricCard") == 4
+
+
+def test_dashboard_final_polish():
+    source = dashboard_source()
+
+    assert 'subtitle="Ativas monitoradas"' in source
+    assert "Última coleta:" in source
+    assert "summary.agent.last_seen ||" in source
