@@ -51,6 +51,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://printflow-web.onrender.com",
+        "https://printflow-m84u.onrender.com",
         "http://localhost:5173",
     ],
     allow_origin_regex=r"https://.*\.app\.github\.dev",
