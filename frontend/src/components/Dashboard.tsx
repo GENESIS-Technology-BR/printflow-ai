@@ -1,4 +1,4 @@
-﻿import {
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -290,7 +290,7 @@ export default function Dashboard({
     summary.agent.last_seen;
 
   return (
-    <section className="dashboard-page executive-clean-page modern-dashboard">
+    <section className="dashboard-page executive-clean-page modern-dashboard clean-dashboard-v2">
       <header className="modern-dashboard-header">
         <div>
           <span className="modern-dashboard-kicker">
@@ -349,9 +349,6 @@ export default function Dashboard({
           )}
         </span>
 
-        <span>
-          ↻ 30s
-        </span>
       </div>
 
       <section className="modern-company-bar">
@@ -437,105 +434,63 @@ export default function Dashboard({
         />
       </div>
 
-      <div className="modern-dashboard-main">
-        <section className="modern-panel modern-health-panel">
-          <div className="modern-panel-heading">
-            <span className="modern-panel-icon health">
-              ♢
-            </span>
-
+      <div className="clean-dashboard-main">
+        <section className="modern-panel clean-health-card">
+          <div className="clean-card-heading">
             <div>
-              <h2>
-                Situação atual do ambiente
-              </h2>
+              <span className="clean-card-kicker">
+                SAÚDE DO PARQUE
+              </span>
+
+              <h2>Saúde do parque</h2>
 
               <p>
-                Resumo da saúde e qualidade do
-                parque de impressoras.
+                Visão rápida da disponibilidade do ambiente.
               </p>
+            </div>
+
+            <strong
+              className="clean-health-status"
+              style={{ color: currentHealthColor }}
+            >
+              {healthLabel(health)}
+            </strong>
+          </div>
+
+          <div className="clean-health-score-row">
+            <div>
+              <strong>{health}%</strong>
+              <span>saúde geral</span>
+            </div>
+
+            <div className="clean-health-progress">
+              <i
+                style={{
+                  width: `${health}%`,
+                  background: currentHealthColor,
+                }}
+              />
             </div>
           </div>
 
-          <div className="modern-health-content">
-            <div
-              className="modern-health-gauge"
-              style={{
-                background: `conic-gradient(
-                  ${currentHealthColor} ${health * 3.6}deg,
-                  #17273b 0deg
-                )`,
-              }}
-            >
-              <div className="modern-health-gauge-center">
-                <strong>{health}%</strong>
-                <span>
-                  Saúde geral
-                  <br />
-                  do parque
-                </span>
-              </div>
-            </div>
+          <div className="clean-health-meta">
+            <span>
+              Disponibilidade
+              <strong>{onlinePercent}%</strong>
+            </span>
 
-            <div className="modern-health-information">
-              <strong
-                className="modern-health-label"
-                style={{
-                  color:
-                    currentHealthColor,
-                }}
-              >
-                {healthLabel(health)}
+            <span>
+              Agent
+              <strong>
+                {summary.agent.online
+                  ? "Online"
+                  : "Offline"}
               </strong>
-
-              <p>
-                {health >= 85
-                  ? "Ambiente estável e saudável. Continue assim!"
-                  : "Existem pontos que precisam de acompanhamento."}
-              </p>
-
-              <div className="modern-health-stats">
-                <div>
-                  <span>
-                    <i className="green" />
-                    Disponibilidade
-                  </span>
-
-                  <strong>
-                    {onlinePercent}%
-                  </strong>
-                </div>
-
-                <div>
-                  <span>
-                    <i className="blue" />
-                    Comunicação
-                  </span>
-
-                  <strong>
-                    {summary.agent.online
-                      ? "Online"
-                      : "Offline"}
-                  </strong>
-                </div>
-
-                <div>
-                  <span>
-                    <i className="green" />
-                    Condição média
-                  </span>
-
-                  <strong>
-                    {healthLabel(
-                      health,
-                    )}
-                  </strong>
-                </div>
-              </div>
-            </div>
+            </span>
           </div>
         </section>
 
-        <section className="modern-panel modern-alert-panel">
+        <section className="modern-panel modern-alert-panel clean-alert-panel">
           <div className="modern-alert-heading">
             <div className="modern-panel-heading">
               <span className="modern-panel-icon alert">
@@ -544,7 +499,7 @@ export default function Dashboard({
 
               <div>
                 <span className="modern-alert-kicker">
-                  ATENÇÃO AGORA
+                  ATENÇÃO
                 </span>
 
                 <h2>
@@ -552,8 +507,7 @@ export default function Dashboard({
                 </h2>
 
                 <p>
-                  Itens que requerem atenção
-                  imediata.
+                  Somente o que precisa de ação.
                 </p>
               </div>
             </div>
@@ -605,122 +559,40 @@ export default function Dashboard({
           ) : (
             <div className="modern-no-alerts">
               <strong>
-                Ambiente sem alertas críticos.
+                Tudo certo por aqui.
               </strong>
 
               <span>
-                Nenhuma ação imediata é
-                necessária.
+                Nenhuma ação imediata necessária.
               </span>
             </div>
           )}
         </section>
       </div>
 
-      <section className="modern-panel modern-summary-panel">
-        <div className="modern-panel-heading">
-          <span className="modern-panel-icon summary">
-            ▤
-          </span>
-
-          <div>
-            <span className="modern-summary-kicker">
-              RESUMO OPERACIONAL
-            </span>
-
-            <h2>
-              Resumo operacional
-            </h2>
-
-            <p>
-              Principais indicadores de utilização
-              e gestão do parque.
-            </p>
-          </div>
+      <section className="clean-summary-strip">
+        <div className="clean-summary-item">
+          <span>Páginas</span>
+          <strong>
+            {formatNumber(summary.total_pages)}
+          </strong>
         </div>
 
-        <div className="modern-summary-grid">
-          <div className="modern-summary-item">
-            <span className="summary-icon blue">
-              ▤
-            </span>
+        <div className="clean-summary-item">
+          <span>Unidades</span>
+          <strong>{unitCount}</strong>
+        </div>
 
-            <div>
-              <strong>
-                {formatNumber(
-                  summary.total_pages,
-                )}
-              </strong>
+        <div className="clean-summary-item">
+          <span>Fabricantes</span>
+          <strong>{manufacturerCount}</strong>
+        </div>
 
-              <span>
-                Páginas acumuladas
-              </span>
-
-              <small>
-                Total de páginas impressas
-              </small>
-            </div>
-          </div>
-
-          <div className="modern-summary-item">
-            <span className="summary-icon cyan">
-              ◇
-            </span>
-
-            <div>
-              <strong>
-                {unitCount}
-              </strong>
-
-              <span>
-                Unidades cadastradas
-              </span>
-
-              <small>
-                Equipamentos organizados
-              </small>
-            </div>
-          </div>
-
-          <div className="modern-summary-item">
-            <span className="summary-icon purple">
-              ▦
-            </span>
-
-            <div>
-              <strong>
-                {manufacturerCount}
-              </strong>
-
-              <span>
-                Fabricantes
-              </span>
-
-              <small>
-                Marcas diferentes no parque
-              </small>
-            </div>
-          </div>
-
-          <div className="modern-summary-item">
-            <span className="summary-icon amber">
-              ▣
-            </span>
-
-            <div>
-              <strong>
-                {summary.page_count_known}
-              </strong>
-
-              <span>
-                Contadores conhecidos
-              </span>
-
-              <small>
-                Equipamentos com contadores
-              </small>
-            </div>
-          </div>
+        <div className="clean-summary-item">
+          <span>Contadores</span>
+          <strong>
+            {summary.page_count_known}
+          </strong>
         </div>
       </section>
 

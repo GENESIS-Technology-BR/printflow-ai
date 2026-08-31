@@ -6,6 +6,7 @@ from backend.modules.alerts.model import OperationalAlert
 from backend.modules.alerts.service import acknowledge_alert, reconcile_company_alerts
 from backend.modules.auth.model import User
 from backend.modules.companies.model import Company
+from backend.modules.organization.model import CompanySector, CompanyUnit
 from backend.modules.dashboard.router import serialize_printer
 from backend.modules.printers.model import Printer
 
@@ -172,3 +173,35 @@ def test_acknowledge_is_idempotent_and_isolated_by_company(tmp_path):
 
     assert second.id == first.id
     assert second.acknowledged_at == acknowledged_at
+
+
+def test_inactive_printer_does_not_generate_operational_alert(tmp_path):
+    db = _database(tmp_path)
+    db.add(_company(1, "a" * 43))
+
+    printer = Printer(
+        company_id=1,
+        uuid="printer-inactive",
+        ip="10.0.0.99",
+        name="Printer desativada",
+        status="offline",
+        active=False,
+        toner_percent=2,
+    )
+
+    db.add(printer)
+    db.commit()
+
+    alerts = reconcile_company_alerts(
+        db,
+        1,
+        serialize_printer,
+    )
+
+    active_alerts = [
+        item
+        for item in alerts
+        if item.status in ("open", "acknowledged")
+    ]
+
+    assert active_alerts == []

@@ -17,9 +17,10 @@ def dashboard_source() -> str:
 def test_dashboard_is_executive_clean():
     source = dashboard_source()
 
-    assert "Situação atual do ambiente" in source
-    assert "ATENÇÃO AGORA" in source
-    assert "RESUMO OPERACIONAL" in source
+    assert "Saúde do parque" in source
+    assert "Alertas prioritários" in source
+    assert "clean-summary-strip" in source
+    assert "modern-health-gauge" not in source
 
 
 def test_dashboard_no_longer_duplicates_inventory():

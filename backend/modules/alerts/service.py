@@ -21,6 +21,11 @@ def desired_alerts(printer: Printer, item: dict[str, Any]) -> list[dict[str, str
     printer_key = str(printer.uuid or printer.id)
     name = item["name"]
 
+    # Impressoras desativadas intencionalmente não devem
+    # gerar incidentes operacionais no dashboard.
+    if not item["active"]:
+        return alerts
+
     def add(category: str, severity: str, title: str, description: str) -> None:
         alerts.append({
             "event_key": f"printer:{printer_key}:{category}",
@@ -30,7 +35,7 @@ def desired_alerts(printer: Printer, item: dict[str, Any]) -> list[dict[str, str
             "description": description,
         })
 
-    if not item["active"] or item["status"] == "offline":
+    if item["status"] == "offline":
         description = (
             f"Sem comunicação no endereço {item['ip']}."
             if item["ip"] else "Equipamento sem comunicação."

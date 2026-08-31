@@ -2161,3 +2161,193 @@
     flex-direction: column;
   }
 }
+
+
+/* PRINTFLOW DASHBOARD CLEAN V0.3.8 */
+
+.clean-dashboard-v2 .modern-dashboard-header {
+  margin-bottom: 4px;
+}
+
+.clean-dashboard-v2 .modern-update-row {
+  min-height: 20px;
+  opacity: 0.72;
+}
+
+.clean-dashboard-v2 .modern-company-bar {
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+
+.clean-dashboard-v2 .modern-kpi-grid {
+  gap: 14px;
+}
+
+.clean-dashboard-main {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 0.9fr)
+    minmax(0, 1.35fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.clean-health-card,
+.clean-alert-panel {
+  min-height: 0;
+}
+
+.clean-health-card {
+  padding: 20px 22px;
+}
+
+.clean-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.clean-card-heading h2 {
+  margin: 3px 0 4px;
+  font-size: 20px;
+}
+
+.clean-card-heading p {
+  margin: 0;
+  color: #91a8c2;
+  font-size: 13px;
+}
+
+.clean-card-kicker {
+  color: #35dfad;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.clean-health-status {
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.clean-health-score-row {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  align-items: center;
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.clean-health-score-row > div:first-child {
+  display: flex;
+  flex-direction: column;
+}
+
+.clean-health-score-row > div:first-child strong {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.clean-health-score-row > div:first-child span {
+  margin-top: 5px;
+  color: #839ab4;
+  font-size: 12px;
+}
+
+.clean-health-progress {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #17283c;
+}
+
+.clean-health-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.25s ease;
+}
+
+.clean-health-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 15px;
+  border-top: 1px solid #20334a;
+}
+
+.clean-health-meta span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #8ea5bf;
+  font-size: 12px;
+}
+
+.clean-health-meta strong {
+  color: #eef6ff;
+  font-size: 13px;
+}
+
+.clean-alert-panel {
+  padding: 18px 20px;
+}
+
+.clean-alert-panel .modern-alert-list {
+  margin-top: 12px;
+}
+
+.clean-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin-top: 14px;
+  border: 1px solid #20334a;
+  border-radius: 14px;
+  background: #20334a;
+}
+
+.clean-summary-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 66px;
+  padding: 14px 18px;
+  background: #0f1d30;
+}
+
+.clean-summary-item span {
+  color: #8199b5;
+  font-size: 12px;
+}
+
+.clean-summary-item strong {
+  color: #f4f8ff;
+  font-size: 18px;
+}
+
+.clean-dashboard-v2 .modern-dashboard-footer {
+  margin-top: 12px;
+  opacity: 0.55;
+}
+
+@media (max-width: 1050px) {
+  .clean-dashboard-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .clean-summary-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .clean-health-meta {
+    grid-template-columns: 1fr;
+  }
+}
