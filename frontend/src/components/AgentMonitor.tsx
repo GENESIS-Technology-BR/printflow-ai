@@ -148,7 +148,7 @@ export default function AgentMonitor({
         <article>
           <span>Último ciclo</span>
           <strong>{formatDate(agent?.last_seen || null)}</strong>
-          <small>Atualização automática a cada 30 s</small>
+          <small>Coleta do Agent a cada 5 min • tela atualizada a cada 30 s</small>
         </article>
         <article>
           <span>Status técnico</span>

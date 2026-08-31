@@ -1,3 +1,4 @@
+import os
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
@@ -26,3 +27,32 @@ def get_current_user(
     if not user:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")
     return user
+
+
+
+def is_platform_admin(user: User) -> bool:
+    configured = {
+        item.strip().lower()
+        for item in os.getenv(
+            "PRINTFLOW_PLATFORM_ADMIN_EMAILS",
+            "",
+        ).split(",")
+        if item.strip()
+    }
+
+    return (
+        user.role == "platform_admin"
+        or user.email.strip().lower() in configured
+    )
+
+
+def get_platform_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if not is_platform_admin(current_user):
+        raise HTTPException(
+            status_code=403,
+            detail="Acesso restrito ao administrador da plataforma",
+        )
+
+    return current_user

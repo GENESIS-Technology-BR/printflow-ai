@@ -4,8 +4,9 @@ import "./App.css"
 import Dashboard from "./components/Dashboard"
 import PrinterTable from "./components/PrinterTable"
 import AgentMonitor from "./components/AgentMonitor"
-import { getDashboardPrinters } from "./services/api"
-import type { DashboardPrinter } from "./services/api"
+import ControlCenter from "./components/ControlCenter"
+import { getDashboardPrinters, getMe } from "./services/api"
+import type { DashboardPrinter, MeProfile } from "./services/api"
 
 const API_URL = (
   import.meta.env.VITE_API_URL ||
@@ -33,10 +34,11 @@ type AuthResponse = {
 function App() {
   const [token, setToken] = useState(localStorage.getItem("printflow_token") || "")
   const [company, setCompany] = useState<Company | null>(null)
+  const [profile, setProfile] = useState<MeProfile | null>(null)
   const [mode, setMode] = useState<"login" | "register">("login")
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(false)
-  const [page, setPage] = useState<"dashboard" | "printers" | "company" | "agents">("dashboard")
+  const [page, setPage] = useState<"dashboard" | "printers" | "company" | "agents" | "control">("dashboard")
   const [printers, setPrinters] = useState<DashboardPrinter[]>([])
   const [printersLoading, setPrintersLoading] = useState(false)
 
@@ -70,8 +72,14 @@ function App() {
 
   useEffect(() => {
     if (!token) return
-    api("/api/v1/companies/current")
-      .then(setCompany)
+    Promise.all([
+      api("/api/v1/companies/current"),
+      getMe(),
+    ])
+      .then(([companyData, profileData]) => {
+        setCompany(companyData)
+        setProfile(profileData)
+      })
       .catch(() => logout())
   // A função api usa o token atual e é recriada junto com este efeito.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -159,6 +167,7 @@ function App() {
     localStorage.removeItem("printflow_token")
     setToken("")
     setCompany(null)
+    setProfile(null)
   }
 
   if (!token) {
@@ -208,6 +217,15 @@ function App() {
         >
           Visão Geral
         </button>
+
+        {profile?.role === "platform_admin" && (
+          <button
+            className={page === "control" ? "active" : ""}
+            onClick={() => setPage("control")}
+          >
+            Control Center
+          </button>
+        )}
           <button
           className={page === "company" ? "active" : ""}
           onClick={() => setPage("company")}
@@ -227,7 +245,9 @@ function App() {
             : ""
         }`}
       >
-      {page === "printers" ? (
+      {page === "control" ? (
+        <ControlCenter />
+      ) : page === "printers" ? (
         <>
           <header>
             <div>

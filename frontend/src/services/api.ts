@@ -251,3 +251,54 @@ export async function createOrganizationSector(
 
 
 export { API_BASE_URL };
+
+
+
+export type MeProfile = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  company_id: number;
+  company_name: string;
+};
+
+export type ControlCenterCompany = {
+  id: number;
+  uuid: string;
+  name: string;
+  plan: string;
+  active: boolean;
+  agent_online: boolean;
+  agent_status: string | null;
+  agent_version: string | null;
+  agent_last_seen: string | null;
+  active_printers: number;
+  online_printers: number;
+  offline_printers: number;
+  alerts: number;
+};
+
+export type ControlCenterOverview = {
+  generated_at: string;
+  companies_total: number;
+  companies_active: number;
+  agents_online: number;
+  active_printers: number;
+  open_alerts: number;
+  companies: ControlCenterCompany[];
+};
+
+export async function getMe():
+Promise<MeProfile> {
+  return request<MeProfile>(
+    "/api/v1/auth/me",
+  );
+}
+
+export async function getControlCenterOverview():
+Promise<ControlCenterOverview> {
+  return request<ControlCenterOverview>(
+    "/api/v1/control-center/overview",
+  );
+}

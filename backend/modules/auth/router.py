@@ -1,11 +1,11 @@
-﻿import hmac
+import hmac
 import os
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 
 from backend.app.database.session import get_db
-from backend.modules.auth.dependencies import get_current_user
+from backend.modules.auth.dependencies import get_current_user, is_platform_admin
 from backend.modules.auth.model import User
 from backend.modules.auth.schema import (
     LoginRequest,
@@ -116,7 +116,11 @@ def me(
         id=current_user.id,
         name=current_user.name,
         email=current_user.email,
-        role=current_user.role,
+        role=(
+            "platform_admin"
+            if is_platform_admin(current_user)
+            else current_user.role
+        ),
         company_id=current_user.company_id,
         company_name=current_user.company.name,
     )
