@@ -1,25 +1,12 @@
-# printflow-ai
-AI Operations Platform for intelligent print management
+# PRINTFLOW AI
 
-## Ambiente local no Windows
+Monitoramento inteligente de impressoras com Agent local, API em nuvem, dashboard web, multiempresa, unidades/setores e relatórios de consumo.
 
-Pre-requisitos gratuitos:
+## Estado atual
 
-- Git;
-- Python 3.12;
-- Node.js (necessario apenas para trabalhar no frontend).
-
-Preparacao reproduzivel:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/setup-local.ps1
-```
-
-Validacao:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/test-local.ps1
-```
-
-O ambiente virtual `.venv`, arquivos `.env`, logs e saidas do Agent nao sao
-versionados. Tokens e senhas nunca devem ser adicionados ao repositorio.
+- Dashboard e autenticação
+- Multiempresa e Control Center
+- Agent Windows com coleta recorrente
+- Histórico diário de impressão
+- Relatórios por período, unidade, setor e impressora
+- Exportação em Excel e PDF
