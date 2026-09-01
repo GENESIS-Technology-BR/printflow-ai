@@ -16,6 +16,7 @@ from backend.modules.printers.schema import (
     PrinterResponse,
     PrinterUpsert,
 )
+from backend.modules.usage.service import record_daily_printer_usage
 
 
 router = APIRouter(prefix="/printers", tags=["Printers"])
@@ -232,6 +233,14 @@ def receive_agent_data(
     )
     printer.active = True
     printer.last_seen = datetime.now(timezone.utc)
+
+    if page_updated and printer.page_count is not None:
+        db.flush()
+        record_daily_printer_usage(
+            db,
+            printer,
+            observed_at=printer.last_seen,
+        )
 
     db.commit()
     db.refresh(printer)

@@ -12,6 +12,7 @@ from backend.modules.organization.model import (
     CompanySector,
     CompanyUnit,
 )
+from backend.modules.usage.model import PrinterUsageDaily
 
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "OperationalAlert",
     "CompanyUnit",
     "CompanySector",
+    "PrinterUsageDaily",
 ]

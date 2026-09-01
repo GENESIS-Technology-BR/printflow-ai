@@ -22,6 +22,7 @@ from backend.modules.organization.router import router as organization_router
 from backend.modules.dashboard.router import router as dashboard_router
 from backend.modules.alerts.router import router as alerts_router
 from backend.modules.control_center.router import router as control_center_router
+from backend.modules.usage.router import router as usage_router
 
 try:
     from backend.modules.printers.model import Printer
@@ -68,6 +69,7 @@ app.include_router(organization_router, prefix="/api/v1")
 
 if printers_router:
     app.include_router(printers_router, prefix="/api/v1")
+app.include_router(usage_router, prefix="/api/v1")
 app.include_router(dashboard_router)
 app.include_router(alerts_router)
 app.include_router(control_center_router, prefix="/api/v1")
