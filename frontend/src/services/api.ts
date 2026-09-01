@@ -99,18 +99,12 @@ async function request<T>(
   return response.json() as Promise<T>;
 }
 
-export async function getDashboardSummary():
-Promise<DashboardSummary> {
-  return request<DashboardSummary>(
-    "/api/v1/dashboard/summary",
-  );
+export async function getDashboardSummary(): Promise<DashboardSummary> {
+  return request<DashboardSummary>("/api/v1/dashboard/summary");
 }
 
-export async function getDashboardPrinters():
-Promise<DashboardPrinter[]> {
-  return request<DashboardPrinter[]>(
-    "/api/v1/dashboard/printers",
-  );
+export async function getDashboardPrinters(): Promise<DashboardPrinter[]> {
+  return request<DashboardPrinter[]>("/api/v1/dashboard/printers");
 }
 
 export async function updatePrinterCustomName(
@@ -121,12 +115,8 @@ export async function updatePrinterCustomName(
     `/api/v1/printers/${printerUuid}/custom-name`,
     {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        custom_name: customName,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ custom_name: customName }),
     },
   );
 }
@@ -135,46 +125,28 @@ export async function updatePrinterOrganization(
   printerUuid: string,
   unitName: string | null,
   sectorName: string | null,
-): Promise<{
-  unit_name: string | null;
-  sector_name: string | null;
-}> {
-  return request<{
-    unit_name: string | null;
-    sector_name: string | null;
-  }>(
+): Promise<{ unit_name: string | null; sector_name: string | null }> {
+  return request<{ unit_name: string | null; sector_name: string | null }>(
     `/api/v1/printers/${printerUuid}/organization`,
     {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        unit_name: unitName,
-        sector_name: sectorName,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ unit_name: unitName, sector_name: sectorName }),
     },
   );
 }
 
-
 export async function getOperationalAlerts(
   status: "open" | "acknowledged" | "resolved" | "all" = "open",
 ): Promise<OperationalAlert[]> {
-  return request<OperationalAlert[]>(
-    `/api/v1/alerts?status=${status}&limit=50`,
-  );
+  return request<OperationalAlert[]>(`/api/v1/alerts?status=${status}&limit=50`);
 }
 
 export async function acknowledgeOperationalAlert(
   alertId: number,
 ): Promise<OperationalAlert> {
-  return request<OperationalAlert>(
-    `/api/v1/alerts/${alertId}/acknowledge`,
-    { method: "POST" },
-  );
+  return request<OperationalAlert>(`/api/v1/alerts/${alertId}/acknowledge`, { method: "POST" });
 }
-
 
 export type OrganizationUnit = {
   id: number;
@@ -193,41 +165,24 @@ export type OrganizationSector = {
   created_at: string;
 };
 
-export async function getOrganizationUnits():
-Promise<OrganizationUnit[]> {
-  return request<OrganizationUnit[]>(
-    "/api/v1/organization/units",
-  );
+export async function getOrganizationUnits(): Promise<OrganizationUnit[]> {
+  return request<OrganizationUnit[]>("/api/v1/organization/units");
 }
 
-export async function createOrganizationUnit(
-  name: string,
-): Promise<OrganizationUnit> {
+export async function createOrganizationUnit(name: string): Promise<OrganizationUnit> {
   return request<OrganizationUnit>(
     "/api/v1/organization/units",
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
     },
   );
 }
 
-export async function getOrganizationSectors(
-  unitId?: number,
-): Promise<OrganizationSector[]> {
-  const query =
-    unitId === undefined
-      ? ""
-      : `?unit_id=${unitId}`;
-
-  return request<OrganizationSector[]>(
-    `/api/v1/organization/sectors${query}`,
-  );
+export async function getOrganizationSectors(unitId?: number): Promise<OrganizationSector[]> {
+  const query = unitId === undefined ? "" : `?unit_id=${unitId}`;
+  return request<OrganizationSector[]>(`/api/v1/organization/sectors${query}`);
 }
 
 export async function createOrganizationSector(
@@ -238,21 +193,13 @@ export async function createOrganizationSector(
     "/api/v1/organization/sectors",
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        unit_id: unitId,
-        name,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ unit_id: unitId, name }),
     },
   );
 }
 
-
 export { API_BASE_URL };
-
-
 
 export type MeProfile = {
   id: number;
@@ -289,21 +236,13 @@ export type ControlCenterOverview = {
   companies: ControlCenterCompany[];
 };
 
-export async function getMe():
-Promise<MeProfile> {
-  return request<MeProfile>(
-    "/api/v1/auth/me",
-  );
+export async function getMe(): Promise<MeProfile> {
+  return request<MeProfile>("/api/v1/auth/me");
 }
 
-export async function getControlCenterOverview():
-Promise<ControlCenterOverview> {
-  return request<ControlCenterOverview>(
-    "/api/v1/control-center/overview",
-  );
+export async function getControlCenterOverview(): Promise<ControlCenterOverview> {
+  return request<ControlCenterOverview>("/api/v1/control-center/overview");
 }
-
-
 
 export type ControlCenterClientCreated = {
   company_id: number;
@@ -318,20 +257,77 @@ export type ControlCenterClientCreated = {
 };
 
 export async function createControlCenterClient(
-  payload: {
-    company_name: string;
-    responsible_name: string;
-    email: string;
-  },
+  payload: { company_name: string; responsible_name: string; email: string },
 ): Promise<ControlCenterClientCreated> {
   return request<ControlCenterClientCreated>(
     "/api/v1/control-center/clients",
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     },
   );
+}
+
+export type UsageReportRow = {
+  printer_uuid: string;
+  display_name: string;
+  ip: string | null;
+  hostname: string | null;
+  manufacturer: string | null;
+  model: string | null;
+  serial: string | null;
+  unit_name: string | null;
+  sector_name: string | null;
+  first_usage_date: string | null;
+  last_usage_date: string | null;
+  opening_page_count: number | null;
+  closing_page_count: number | null;
+  pages_printed: number;
+  anomaly_count: number;
+  last_anomaly_type: string | null;
+};
+
+export type UsageReportFilters = {
+  startDate: string;
+  endDate: string;
+  printerUuid?: string;
+  unitName?: string;
+  sectorName?: string;
+};
+
+function usageReportQuery(filters: UsageReportFilters): string {
+  const params = new URLSearchParams();
+  params.set("start_date", filters.startDate);
+  params.set("end_date", filters.endDate);
+  if (filters.printerUuid) params.set("printer_uuid", filters.printerUuid);
+  if (filters.unitName) params.set("unit_name", filters.unitName);
+  if (filters.sectorName) params.set("sector_name", filters.sectorName);
+  return params.toString();
+}
+
+export async function getUsageReport(
+  filters: UsageReportFilters,
+): Promise<UsageReportRow[]> {
+  return request<UsageReportRow[]>(`/api/v1/usage/report?${usageReportQuery(filters)}`);
+}
+
+export async function downloadUsageReport(
+  format: "xlsx" | "pdf",
+  filters: UsageReportFilters,
+): Promise<Blob> {
+  const token = localStorage.getItem("printflow_token");
+  const response = await fetch(
+    `${API_BASE_URL}/api/v1/usage/export.${format}?${usageReportQuery(filters)}`,
+    {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Não foi possível gerar o relatório (${response.status}).`);
+  }
+  return response.blob();
 }
