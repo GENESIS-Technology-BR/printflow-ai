@@ -22,3 +22,22 @@ class DailyUsageResponse(BaseModel):
     last_anomaly_type: str | None = None
     first_seen_at: datetime
     last_seen_at: datetime
+
+
+class UsageReportRow(BaseModel):
+    printer_uuid: str
+    display_name: str
+    ip: str | None = None
+    hostname: str | None = None
+    manufacturer: str | None = None
+    model: str | None = None
+    serial: str | None = None
+    unit_name: str | None = None
+    sector_name: str | None = None
+    first_usage_date: date | None = None
+    last_usage_date: date | None = None
+    opening_page_count: int | None = None
+    closing_page_count: int | None = None
+    pages_printed: int = 0
+    anomaly_count: int = 0
+    last_anomaly_type: str | None = None
