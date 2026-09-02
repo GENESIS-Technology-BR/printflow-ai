@@ -1,0 +1,330 @@
+/* Printflow v0.5.3 — Dark Visibility */
+html[data-theme="dark"] {
+  --pf-bg: #0b1220;
+  --pf-surface: #111c2d;
+  --pf-surface-soft: #162235;
+  --pf-border: #2a3a50;
+  --pf-border-strong: #3f5470;
+  --pf-text: #f4f7fb;
+  --pf-muted: #c2cdda;
+  --pf-blue: #69adff;
+  --pf-blue-hover: #91c4ff;
+  --pf-blue-soft: #183554;
+  --pf-green: #4dd6a4;
+  --pf-green-soft: #123a31;
+  --pf-red: #ff7f8c;
+  --pf-red-soft: #43232a;
+  --pf-orange: #ffc56f;
+  --pf-orange-soft: #43301d;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] #root,
+html[data-theme="dark"] .shell,
+html[data-theme="dark"] .dashboard,
+html[data-theme="dark"] .dashboard-modern-shell,
+html[data-theme="dark"] .executive-clean-page.clean-dashboard-v2 {
+  background: var(--pf-bg) !important;
+  color: var(--pf-text) !important;
+}
+
+/* Sidebar e marca */
+html[data-theme="dark"] .shell aside,
+html[data-theme="dark"] .brand {
+  background: #0d1726 !important;
+  border-color: var(--pf-border) !important;
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .brand strong {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .shell nav button,
+html[data-theme="dark"] .logout {
+  color: #c8d4e2 !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .shell nav button.active {
+  color: #82bbff !important;
+  background: #17283d !important;
+  box-shadow: inset 3px 0 0 #69adff !important;
+}
+
+html[data-theme="dark"] .shell nav button:hover,
+html[data-theme="dark"] .logout:hover {
+  color: #ffffff !important;
+  background: #142237 !important;
+}
+
+/* Header */
+html[data-theme="dark"] .modern-dashboard-header,
+html[data-theme="dark"] .dashboard > header,
+html[data-theme="dark"] .control-center-header,
+html[data-theme="dark"] .agent-monitor-header,
+html[data-theme="dark"] .reports-header {
+  background: #0e1828 !important;
+  border-color: var(--pf-border) !important;
+}
+
+html[data-theme="dark"] .modern-dashboard-header h1,
+html[data-theme="dark"] .dashboard > header h1,
+html[data-theme="dark"] .control-center-header h1,
+html[data-theme="dark"] .agent-monitor-header h1,
+html[data-theme="dark"] .reports-header h1 {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .modern-dashboard-kicker,
+html[data-theme="dark"] .modern-dashboard-header p,
+html[data-theme="dark"] .modern-update-row,
+html[data-theme="dark"] .dashboard > header small,
+html[data-theme="dark"] .control-center-header p,
+html[data-theme="dark"] .agent-monitor-header p,
+html[data-theme="dark"] .reports-header p {
+  color: #bcc9d8 !important;
+  opacity: 1 !important;
+}
+
+/* Empresa e cartões principais */
+html[data-theme="dark"] .modern-company-bar,
+html[data-theme="dark"] .modern-dashboard .metric-card,
+html[data-theme="dark"] .modern-panel,
+html[data-theme="dark"] .clean-health-card,
+html[data-theme="dark"] .clean-alert-panel,
+html[data-theme="dark"] .clean-summary-item,
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .reports-intro,
+html[data-theme="dark"] .reports-filters,
+html[data-theme="dark"] .reports-metrics article,
+html[data-theme="dark"] .reports-table-card,
+html[data-theme="dark"] .agent-overview,
+html[data-theme="dark"] .agent-metrics article,
+html[data-theme="dark"] .agent-panel,
+html[data-theme="dark"] .control-center-kpis article,
+html[data-theme="dark"] .control-center-panel,
+html[data-theme="dark"] .printer-card,
+html[data-theme="dark"] .printer-organization-catalog {
+  background: var(--pf-surface) !important;
+  border-color: var(--pf-border) !important;
+  color: var(--pf-text) !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .18) !important;
+}
+
+html[data-theme="dark"] .modern-company-selector,
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] code {
+  background: #0d1726 !important;
+  border-color: #405470 !important;
+  color: #eef4fb !important;
+}
+
+html[data-theme="dark"] .modern-company-selector strong,
+html[data-theme="dark"] .modern-dashboard .metric-card-value,
+html[data-theme="dark"] .clean-card-heading h2,
+html[data-theme="dark"] .modern-alert-heading h2,
+html[data-theme="dark"] .clean-health-score-row > div:first-child strong,
+html[data-theme="dark"] .clean-health-meta strong,
+html[data-theme="dark"] .clean-summary-item strong,
+html[data-theme="dark"] .panel h2,
+html[data-theme="dark"] .panel h3,
+html[data-theme="dark"] .agent-state-copy h2,
+html[data-theme="dark"] .agent-panel-title h3,
+html[data-theme="dark"] .agent-metrics strong,
+html[data-theme="dark"] .control-center-kpis strong,
+html[data-theme="dark"] .control-center-title h2,
+html[data-theme="dark"] .printer-card strong,
+html[data-theme="dark"] .reports-page h2,
+html[data-theme="dark"] .reports-page h3 {
+  color: #f7f9fc !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .modern-company-selector span,
+html[data-theme="dark"] .modern-dashboard .metric-card-title,
+html[data-theme="dark"] .modern-dashboard .metric-card-subtitle,
+html[data-theme="dark"] .clean-card-kicker,
+html[data-theme="dark"] .clean-card-heading p,
+html[data-theme="dark"] .modern-alert-heading p,
+html[data-theme="dark"] .clean-health-score-row > div:first-child span,
+html[data-theme="dark"] .clean-health-meta span,
+html[data-theme="dark"] .clean-summary-item span,
+html[data-theme="dark"] .agent-state-copy p,
+html[data-theme="dark"] .agent-state-time span,
+html[data-theme="dark"] .agent-metrics span,
+html[data-theme="dark"] .agent-metrics small,
+html[data-theme="dark"] .printer-detail span,
+html[data-theme="dark"] .printer-detail small,
+html[data-theme="dark"] .reports-page p,
+html[data-theme="dark"] .reports-page small {
+  color: #b9c7d7 !important;
+  opacity: 1 !important;
+}
+
+/* KPIs */
+html[data-theme="dark"] .modern-dashboard .metric-card {
+  background: linear-gradient(145deg, #132033 0%, #111c2d 100%) !important;
+}
+
+html[data-theme="dark"] .modern-dashboard .metric-card-value {
+  color: #ffffff !important;
+  text-shadow: 0 0 1px rgba(255, 255, 255, .25);
+}
+
+html[data-theme="dark"] .modern-dashboard .metric-card-title {
+  color: #d0dbea !important;
+}
+
+html[data-theme="dark"] .modern-dashboard .metric-card-subtitle {
+  color: #aebed1 !important;
+}
+
+/* Intelligence */
+html[data-theme="dark"] .pf-intelligence-panel {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(45, 193, 151, .13), transparent 34%),
+    radial-gradient(circle at 82% 0%, rgba(83, 155, 235, .14), transparent 42%),
+    #111d2e !important;
+  border-color: #344960 !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-heading h2,
+html[data-theme="dark"] .pf-intelligence-score strong,
+html[data-theme="dark"] .pf-intelligence-item h3,
+html[data-theme="dark"] .pf-intelligence-item p,
+html[data-theme="dark"] .pf-intelligence-item p b,
+html[data-theme="dark"] .pf-intelligence-action span {
+  color: #f6f9fc !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-heading > div > span,
+html[data-theme="dark"] .pf-intelligence-action strong {
+  color: #79b9ff !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-heading p,
+html[data-theme="dark"] .pf-intelligence-score span,
+html[data-theme="dark"] .pf-intelligence-score small,
+html[data-theme="dark"] .pf-intelligence-item-top > span,
+html[data-theme="dark"] .pf-intelligence-item-top > small,
+html[data-theme="dark"] .pf-intelligence-location,
+html[data-theme="dark"] .pf-intelligence-summary > small {
+  color: #bac9d9 !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-score,
+html[data-theme="dark"] .pf-intelligence-item,
+html[data-theme="dark"] .pf-intelligence-action {
+  background: #18263a !important;
+  border-color: #40546d !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-clear {
+  background: #10382e !important;
+  border-color: #2e6c59 !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-clear strong {
+  color: #76e2b8 !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-clear span {
+  color: #c7d6e3 !important;
+}
+
+/* Saúde */
+html[data-theme="dark"] .clean-health-progress {
+  background: #2d4057 !important;
+}
+
+html[data-theme="dark"] .clean-health-status {
+  filter: brightness(1.18) saturate(.92);
+}
+
+/* Alertas */
+html[data-theme="dark"] .modern-alert-item {
+  background: #162336 !important;
+  border-color: #354a62 !important;
+}
+
+html[data-theme="dark"] .modern-alert-item strong {
+  color: #f4f7fb !important;
+}
+
+html[data-theme="dark"] .modern-alert-item span,
+html[data-theme="dark"] .modern-alert-item small {
+  color: #bdcad9 !important;
+}
+
+html[data-theme="dark"] .modern-no-alerts {
+  background: #12392f !important;
+  border-color: #2f6a58 !important;
+}
+
+html[data-theme="dark"] .modern-no-alerts strong {
+  color: #7ce1b9 !important;
+}
+
+html[data-theme="dark"] .modern-no-alerts span {
+  color: #d0dbe7 !important;
+}
+
+/* Botões */
+html[data-theme="dark"] .pf-theme-toggle,
+html[data-theme="dark"] .modern-refresh-button,
+html[data-theme="dark"] .modern-company-manage,
+html[data-theme="dark"] .modern-view-all,
+html[data-theme="dark"] button:not(.primary) {
+  background: #152338 !important;
+  border-color: #415772 !important;
+  color: #8fc4ff !important;
+}
+
+html[data-theme="dark"] .pf-theme-toggle:hover,
+html[data-theme="dark"] .modern-refresh-button:hover,
+html[data-theme="dark"] .modern-company-manage:hover,
+html[data-theme="dark"] .modern-view-all:hover,
+html[data-theme="dark"] button:hover:not(:disabled):not(.primary) {
+  background: #1b3350 !important;
+  border-color: #69adff !important;
+  color: #b9d9ff !important;
+}
+
+html[data-theme="dark"] .modern-agent-badge.online {
+  background: #12382f !important;
+  border-color: #34715d !important;
+  color: #7ee2bc !important;
+}
+
+/* Tabelas */
+html[data-theme="dark"] th {
+  background: #17263a !important;
+  color: #d5dfeb !important;
+}
+
+html[data-theme="dark"] td {
+  background: #111c2d !important;
+  color: #eef4fa !important;
+}
+
+html[data-theme="dark"] tr:hover td {
+  background: #17273c !important;
+}
+
+/* Garantia contra textos antigos com baixa opacidade */
+html[data-theme="dark"] .modern-dashboard-header *,
+html[data-theme="dark"] .metric-card *,
+html[data-theme="dark"] .pf-intelligence-panel *,
+html[data-theme="dark"] .clean-health-card *,
+html[data-theme="dark"] .clean-alert-panel *,
+html[data-theme="dark"] .clean-summary-strip * {
+  opacity: 1;
+}
