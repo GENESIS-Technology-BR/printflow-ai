@@ -5,7 +5,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class Settings:
     app_name: str = os.getenv("APP_NAME", "PRINTFLOW AI")
-    version: str = os.getenv("APP_VERSION", "0.4.2")
+    version: str = os.getenv("APP_VERSION", "0.4.3")
     environment: str = os.getenv("ENVIRONMENT", "development")
     database_url: str = os.getenv(
         "DATABASE_URL",
