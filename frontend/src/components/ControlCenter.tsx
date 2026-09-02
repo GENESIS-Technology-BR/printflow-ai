@@ -21,7 +21,6 @@ import {
 
 import "./ControlCenter.css";
 
-
 function formatDate(
   value: string | null,
 ): string {
@@ -41,7 +40,6 @@ function formatDate(
     },
   ).format(date);
 }
-
 
 export default function ControlCenter() {
   const [data, setData] =
@@ -137,7 +135,6 @@ export default function ControlCenter() {
       setShowCreate(false);
 
       await load();
-
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -168,14 +165,14 @@ export default function ControlCenter() {
       <header className="control-center-header">
         <div>
           <span>
-            PRINTFLOW · OPERAÇÕES
+            Printflow · OPERAÇÕES
           </span>
 
           <h1>Control Center</h1>
 
           <p>
             Visão central dos clientes,
-            Agents e parques monitorados.
+            Agentes e parques monitorados.
           </p>
         </div>
 
@@ -405,7 +402,7 @@ export default function ControlCenter() {
         </article>
 
         <article>
-          <span>Agents online</span>
+          <span>Agentes online</span>
           <strong>
             {data?.agents_online ?? "—"}
           </strong>
@@ -443,7 +440,7 @@ export default function ControlCenter() {
             </span>
 
             <h2>
-              Ambientes PRINTFLOW
+              Ambientes Printflow
             </h2>
           </div>
 
