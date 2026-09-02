@@ -46,7 +46,7 @@ def test_excel_report_generates_valid_workbook():
     assert workbook.sheetnames == ["Resumo", "Historico diario"]
 
     summary = workbook["Resumo"]
-    assert summary["A1"].value == "PRINTFLOW AI - Relatorio de Impressao"
+    assert summary["A1"].value == "Printflow - Relatorio de Impressao"
     assert summary["A2"].value == "Empresa: Empresa Teste"
     assert summary["A6"].value == "Impressora Financeiro"
     assert summary["M6"].value == 125

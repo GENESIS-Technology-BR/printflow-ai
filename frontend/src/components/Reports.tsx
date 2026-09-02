@@ -167,7 +167,7 @@ export default function Reports({ companyName }: ReportsProps) {
 
       <section className="reports-intro">
         <div>
-          <small>PRINTFLOW AI · CONSUMO FINANCEIRO POR IMPRESSORA</small>
+          <small>Printflow · CONSUMO FINANCEIRO POR IMPRESSORA</small>
           <h2>Fechamento de impressão por período</h2>
           <p>Consulte páginas, tarifa e custo estimado por equipamento e exporte em Excel ou PDF.</p>
         </div>

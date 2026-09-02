@@ -161,7 +161,7 @@ function App() {
       <main className="auth-page">
         <section className="auth-card">
           <div className="logo">P</div>
-          <h1>PRINTFLOW AI</h1>
+          <h1>Printflow</h1>
           <p>Gestão inteligente de impressão</p>
           <div className="tabs">
             <button className={mode === "login" ? "active" : ""} onClick={() => setMode("login")}>Entrar</button>
@@ -189,7 +189,7 @@ function App() {
   return (
     <div className="shell">
       <aside>
-        <div className="brand"><span>P</span><strong>PRINTFLOW AI</strong></div>
+        <div className="brand"><span>P</span><strong>Printflow</strong></div>
         <nav>
           <button className={page === "dashboard" ? "active" : ""} onClick={() => setPage("dashboard")}>Visão Geral</button>
           {profile?.role === "platform_admin" && (
@@ -216,7 +216,7 @@ function App() {
             </header>
             <section className="hero">
               <div>
-                <small>PRINTFLOW AI · PARQUE MONITORADO</small>
+                <small>Printflow · PARQUE MONITORADO</small>
                 <h2>Impressoras da empresa</h2>
                 <p>{printersLoading ? "Carregando equipamentos..." : `${printers.length} equipamento(s) encontrado(s).`}</p>
               </div>
@@ -245,7 +245,7 @@ function App() {
             </header>
             <section className="hero">
               <div>
-                <small>PRINTFLOW AI · AMBIENTE DO CLIENTE</small>
+                <small>Printflow · AMBIENTE DO CLIENTE</small>
                 <h2>{company?.name || "Carregando empresa..."}</h2>
                 <p>Dados corporativos, tarifa padrão e vínculo seguro do Agent.</p>
               </div>
