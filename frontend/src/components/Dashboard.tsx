@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import MetricCard from "./MetricCard";
+import IntelligencePanel from "./IntelligencePanel";
 
 import {
   getDashboardPrinters,
@@ -441,6 +442,8 @@ export default function Dashboard({
           subtitle="Requerem atenção"
         />
       </div>
+
+      <IntelligencePanel onOpenPrinters={onOpenPrinters} />
 
       <div className="clean-dashboard-main">
         <section className="modern-panel clean-health-card">
