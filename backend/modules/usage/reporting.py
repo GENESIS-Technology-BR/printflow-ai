@@ -9,13 +9,39 @@ from backend.modules.printers.model import Printer
 from .model import PrinterUsageDaily
 
 
+def _looks_like_opaque_hex(value: str | None) -> bool:
+    if not value:
+        return False
+    text = value.strip().lower()
+    if text.startswith("0x"):
+        text = text[2:]
+    return len(text) >= 48 and all(char in "0123456789abcdef" for char in text)
+
+
+def _clean_identity(value: str | None) -> str | None:
+    if not value:
+        return None
+    text = value.strip()
+    if not text or _looks_like_opaque_hex(text):
+        return None
+    return text
+
+
 def _display_name(
     custom_name: str | None,
     hostname: str | None,
     name: str | None,
     ip: str | None,
 ) -> str:
-    return custom_name or hostname or name or ip or "Impressora sem nome"
+    if custom_name and custom_name.strip():
+        return custom_name.strip()
+
+    for candidate in (hostname, name):
+        cleaned = _clean_identity(candidate)
+        if cleaned:
+            return cleaned
+
+    return ip or "Impressora sem nome"
 
 
 def consolidate_usage(
@@ -44,10 +70,10 @@ def consolidate_usage(
                     usage.ip,
                 ),
                 "ip": usage.ip,
-                "hostname": usage.hostname,
+                "hostname": _clean_identity(usage.hostname),
                 "manufacturer": usage.manufacturer,
                 "model": usage.model,
-                "serial": usage.serial,
+                "serial": _clean_identity(usage.serial),
                 "unit_name": usage.unit_name,
                 "sector_name": usage.sector_name,
                 "first_usage_date": usage.usage_date,
@@ -71,10 +97,10 @@ def consolidate_usage(
             usage.ip,
         )
         item["ip"] = usage.ip
-        item["hostname"] = usage.hostname
+        item["hostname"] = _clean_identity(usage.hostname)
         item["manufacturer"] = usage.manufacturer
         item["model"] = usage.model
-        item["serial"] = usage.serial
+        item["serial"] = _clean_identity(usage.serial)
         item["unit_name"] = usage.unit_name
         item["sector_name"] = usage.sector_name
 
@@ -99,10 +125,10 @@ def consolidate_usage(
                 printer.ip,
             ),
             "ip": printer.ip,
-            "hostname": printer.hostname,
+            "hostname": _clean_identity(printer.hostname),
             "manufacturer": printer.manufacturer,
             "model": printer.model,
-            "serial": printer.serial,
+            "serial": _clean_identity(printer.serial),
             "unit_name": printer.unit_name,
             "sector_name": printer.sector_name,
             "first_usage_date": None,
