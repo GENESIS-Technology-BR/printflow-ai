@@ -11,6 +11,7 @@ import './printflow-design-system.css'
 import './login-enterprise.css'
 import './brand-system.css'
 import './theme-system.css'
+import './theme-header-alignment.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

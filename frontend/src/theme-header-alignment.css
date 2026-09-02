@@ -1,0 +1,61 @@
+/* Printflow v0.5.1 — alinhamento do seletor de tema no header */
+.pf-theme-toggle-inline {
+  position: static !important;
+  inset: auto !important;
+  z-index: auto !important;
+  flex: 0 0 auto;
+  min-width: 78px;
+  min-height: 34px !important;
+  margin: 0 !important;
+  align-self: center;
+  box-shadow: none !important;
+}
+
+.modern-dashboard-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+
+.modern-dashboard-actions .pf-theme-toggle-inline {
+  order: 1;
+}
+
+.modern-dashboard-actions .modern-agent-badge {
+  order: 2;
+  align-self: center;
+}
+
+.modern-dashboard-actions .modern-refresh-button {
+  order: 3;
+  align-self: center;
+}
+
+.pf-theme-toggle-floating {
+  position: fixed !important;
+  top: 14px !important;
+  right: 18px !important;
+}
+
+.auth-page > .pf-theme-toggle-floating {
+  top: 18px !important;
+  right: 18px !important;
+}
+
+@media (max-width: 760px) {
+  .modern-dashboard-actions {
+    flex-wrap: wrap !important;
+    gap: 7px !important;
+  }
+
+  .pf-theme-toggle-inline {
+    min-width: 38px;
+    width: 38px;
+    padding: 5px !important;
+  }
+
+  .pf-theme-toggle-inline .pf-theme-toggle-label {
+    display: none;
+  }
+}

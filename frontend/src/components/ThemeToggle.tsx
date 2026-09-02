@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 type Theme = "light" | "dark";
 
@@ -22,19 +23,33 @@ function applyTheme(theme: Theme): void {
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>(readInitialTheme);
+  const [headerTarget, setHeaderTarget] = useState<Element | null>(null);
 
   useEffect(() => {
     applyTheme(theme);
     localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
 
+  useEffect(() => {
+    const resolveTarget = () => {
+      setHeaderTarget(document.querySelector(".modern-dashboard-actions"));
+    };
+
+    resolveTarget();
+
+    const observer = new MutationObserver(resolveTarget);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
+
   const nextTheme = theme === "light" ? "dark" : "light";
   const label = theme === "light" ? "Ativar modo escuro" : "Ativar modo claro";
 
-  return (
+  const button = (
     <button
       type="button"
-      className="pf-theme-toggle"
+      className={`pf-theme-toggle ${headerTarget ? "pf-theme-toggle-inline" : "pf-theme-toggle-floating"}`}
       aria-label={label}
       title={label}
       onClick={() => setTheme(nextTheme)}
@@ -47,4 +62,6 @@ export default function ThemeToggle() {
       </span>
     </button>
   );
+
+  return headerTarget ? createPortal(button, headerTarget) : button;
 }
