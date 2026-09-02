@@ -9,6 +9,7 @@ import './fiori-polish-v2.css'
 import './fiori-premium.css'
 import './printflow-design-system.css'
 import './login-enterprise.css'
+import './brand-system.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
