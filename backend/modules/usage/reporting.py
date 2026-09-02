@@ -44,6 +44,24 @@ def _display_name(
     return ip or "Impressora sem nome"
 
 
+def _format_number(value: int | None) -> str:
+    if value is None:
+        return "-"
+    return f"{int(value):,}".replace(",", ".")
+
+
+def _model_label(manufacturer: str | None, model: str | None) -> str:
+    brand = (manufacturer or "").strip()
+    model_text = (model or "").strip()
+
+    if model_text:
+        if brand and model_text.lower().startswith(brand.lower()):
+            return model_text
+        return " ".join(part for part in (brand, model_text) if part)
+
+    return brand or "-"
+
+
 def consolidate_usage(
     history: Iterable[PrinterUsageDaily],
     printers: Iterable[Printer] = (),
@@ -252,13 +270,14 @@ def build_pdf_report(
     from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
     output = BytesIO()
+    page_size = landscape(A4)
     document = SimpleDocTemplate(
         output,
-        pagesize=landscape(A4),
+        pagesize=page_size,
         leftMargin=10 * mm,
         rightMargin=10 * mm,
         topMargin=10 * mm,
-        bottomMargin=10 * mm,
+        bottomMargin=15 * mm,
         title="PRINTFLOW AI - Relatorio de Impressao",
     )
     styles = getSampleStyleSheet()
@@ -280,14 +299,15 @@ def build_pdf_report(
         organization = " / ".join(
             part for part in (item["unit_name"], item["sector_name"]) if part
         ) or "-"
-        model = " ".join(
-            part for part in (item["manufacturer"], item["model"]) if part
-        ) or "-"
+        model = _model_label(item["manufacturer"], item["model"])
         table_data.append([
-            item["display_name"], item["ip"] or "-", organization, model,
-            str(item["opening_page_count"]) if item["opening_page_count"] is not None else "-",
-            str(item["closing_page_count"]) if item["closing_page_count"] is not None else "-",
-            f'{item["pages_printed"]:,}'.replace(",", "."),
+            item["display_name"],
+            item["ip"] or "-",
+            organization,
+            model,
+            _format_number(item["opening_page_count"]),
+            _format_number(item["closing_page_count"]),
+            _format_number(item["pages_printed"]),
         ])
 
     table = Table(
@@ -316,10 +336,31 @@ def build_pdf_report(
         Paragraph(
             (
                 f"<b>Total de impressoras:</b> {len(rows)} &nbsp;&nbsp; "
-                f"<b>Total de impressoes:</b> {total_pages:,}".replace(",", ".")
+                f"<b>Total de impressoes:</b> {_format_number(total_pages)}"
             ),
             styles["Normal"],
         ),
     ])
-    document.build(story)
+
+    def draw_footer(canvas, _document) -> None:
+        canvas.saveState()
+        width, _height = page_size
+        canvas.setStrokeColor(colors.HexColor("#D7E1EA"))
+        canvas.setLineWidth(0.4)
+        canvas.line(10 * mm, 9 * mm, width - 10 * mm, 9 * mm)
+        canvas.setFillColor(colors.HexColor("#5D7185"))
+        canvas.setFont("Helvetica", 7)
+        canvas.drawString(10 * mm, 5 * mm, f"PRINTFLOW AI - {company_name}")
+        canvas.drawRightString(
+            width - 10 * mm,
+            5 * mm,
+            f"Pagina {canvas.getPageNumber()}",
+        )
+        canvas.restoreState()
+
+    document.build(
+        story,
+        onFirstPage=draw_footer,
+        onLaterPages=draw_footer,
+    )
     return output.getvalue()
