@@ -1,0 +1,504 @@
+:root {
+  --pf-shell-bg: #ffffff;
+  --pf-page-bg: #f5f6f7;
+  --pf-surface: #ffffff;
+  --pf-surface-subtle: #f7f8f9;
+  --pf-border: #d9d9d9;
+  --pf-border-soft: #e5e5e5;
+  --pf-text: #1d2d3e;
+  --pf-text-muted: #556b82;
+  --pf-blue: #0a6ed1;
+  --pf-blue-hover: #085caf;
+  --pf-blue-soft: #eaf3fc;
+  --pf-green: #188918;
+  --pf-red: #bb0000;
+  --pf-warning: #e9730c;
+  --pf-shadow: 0 1px 3px rgba(34, 54, 73, .12);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: var(--pf-page-bg);
+}
+
+body {
+  color: var(--pf-text);
+  background: var(--pf-page-bg) !important;
+  font-family: "72", "Segoe UI", Arial, sans-serif !important;
+}
+
+/* Estrutura principal inspirada no SAP Fiori / Horizon */
+.shell {
+  grid-template-columns: 224px minmax(0, 1fr) !important;
+  background: var(--pf-page-bg) !important;
+}
+
+.shell aside {
+  position: sticky !important;
+  top: 0;
+  z-index: 20 !important;
+  min-height: 100vh !important;
+  height: 100vh !important;
+  padding: 0 !important;
+  border-right: 1px solid var(--pf-border) !important;
+  color: var(--pf-text) !important;
+  background: var(--pf-shell-bg) !important;
+  box-shadow: 1px 0 3px rgba(34, 54, 73, .08) !important;
+}
+
+.brand {
+  min-height: 64px;
+  padding: 0 16px !important;
+  gap: 10px !important;
+  border-bottom: 1px solid var(--pf-border-soft);
+  background: #fff;
+}
+
+.brand span {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  color: #fff !important;
+  background: var(--pf-blue) !important;
+  box-shadow: none !important;
+  font-size: 16px;
+}
+
+.brand strong {
+  color: var(--pf-text) !important;
+  font-size: 16px !important;
+  font-weight: 700;
+  letter-spacing: 0 !important;
+}
+
+.shell nav {
+  gap: 2px !important;
+  margin: 12px 0 0 !important;
+  padding: 0 8px;
+}
+
+.shell nav button {
+  min-height: 42px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-left: 3px solid transparent !important;
+  border-radius: 3px !important;
+  color: #30475e !important;
+  background: transparent !important;
+  font-size: 14px !important;
+  font-weight: 500;
+  gap: 10px !important;
+}
+
+.shell nav button::before {
+  width: 20px !important;
+  color: #5b738b !important;
+  font-size: 15px !important;
+}
+
+.shell nav button:hover {
+  color: var(--pf-blue) !important;
+  background: #f2f7fc !important;
+}
+
+.shell nav button.active {
+  border-left-color: var(--pf-blue) !important;
+  color: var(--pf-blue) !important;
+  background: var(--pf-blue-soft) !important;
+  font-weight: 700 !important;
+}
+
+.shell nav button.active::before {
+  color: var(--pf-blue) !important;
+}
+
+.logout {
+  min-height: 44px !important;
+  margin: auto 8px 12px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-top: 1px solid var(--pf-border-soft) !important;
+  border-radius: 0 !important;
+  color: #445b70 !important;
+  background: transparent !important;
+}
+
+.logout:hover {
+  color: var(--pf-red) !important;
+  background: #fff4f4 !important;
+}
+
+.dashboard,
+.dashboard-modern-shell {
+  min-width: 0;
+  padding: 24px 28px !important;
+  color: var(--pf-text) !important;
+  background: var(--pf-page-bg) !important;
+}
+
+/* Cabeçalhos de página no padrão Dynamic Page */
+.dashboard > header,
+.modern-dashboard-header,
+.reports-header {
+  min-height: 68px;
+  margin: -24px -28px 20px !important;
+  padding: 14px 28px !important;
+  border-bottom: 1px solid var(--pf-border) !important;
+  color: var(--pf-text) !important;
+  background: #fff !important;
+  box-shadow: 0 1px 2px rgba(34, 54, 73, .06) !important;
+}
+
+.dashboard header h1,
+.modern-dashboard-header h1,
+.reports-header h1 {
+  margin: 2px 0 0 !important;
+  color: var(--pf-text) !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+.dashboard header small,
+.modern-dashboard-kicker,
+.reports-header small {
+  color: var(--pf-text-muted) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: .04em !important;
+}
+
+.online,
+.modern-agent-badge {
+  border: 1px solid #b7d9b7 !important;
+  border-radius: 14px !important;
+  color: var(--pf-green) !important;
+  background: #f1f8f1 !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+/* Hero deixa de ser banner promocional e passa a ser cabeçalho de objeto */
+.hero,
+.modern-company-bar {
+  margin-top: 0 !important;
+  padding: 18px 20px !important;
+  border: 1px solid var(--pf-border) !important;
+  border-left: 4px solid var(--pf-blue) !important;
+  border-radius: 4px !important;
+  color: var(--pf-text) !important;
+  background: #fff !important;
+  box-shadow: var(--pf-shadow) !important;
+}
+
+.hero h2,
+.modern-company-bar strong {
+  color: var(--pf-text) !important;
+}
+
+.hero h2 {
+  margin: 4px 0 !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+}
+
+.hero p,
+.hero small,
+.modern-company-selector span,
+.modern-update-row {
+  color: var(--pf-text-muted) !important;
+}
+
+.plan {
+  border: 1px solid #b7cfe7 !important;
+  border-radius: 14px !important;
+  color: var(--pf-blue) !important;
+  background: #edf6ff !important;
+}
+
+/* Cards e painéis */
+.grid,
+.content-grid,
+.clean-dashboard-main {
+  gap: 16px !important;
+}
+
+.panel,
+.modern-panel,
+.clean-summary-strip,
+.reports-table-card,
+.reports-filters,
+.reports-metrics article,
+.reports-intro {
+  border: 1px solid var(--pf-border) !important;
+  border-radius: 4px !important;
+  background: #fff !important;
+  box-shadow: var(--pf-shadow) !important;
+}
+
+.panel {
+  padding: 20px !important;
+}
+
+.panel h3,
+.modern-panel h2,
+.reports-table-title h3,
+.reports-intro h2 {
+  color: var(--pf-text) !important;
+  font-weight: 600 !important;
+}
+
+/* KPIs mais compactos, próximos do Overview Page */
+.metrics-grid,
+.modern-kpi-grid,
+.reports-metrics {
+  gap: 12px !important;
+}
+
+.metrics-grid > *,
+.modern-kpi-grid > *,
+.reports-metrics article {
+  min-height: 96px;
+  border: 1px solid var(--pf-border) !important;
+  border-radius: 4px !important;
+  background: #fff !important;
+  box-shadow: var(--pf-shadow) !important;
+}
+
+.reports-metrics article span {
+  color: var(--pf-text-muted) !important;
+}
+
+.reports-metrics article strong {
+  color: var(--pf-text) !important;
+}
+
+/* Formulários no padrão enterprise */
+input,
+select,
+textarea {
+  min-height: 36px;
+  border: 1px solid #8996a5 !important;
+  border-radius: 3px !important;
+  color: var(--pf-text) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--pf-blue) !important;
+  outline: 2px solid rgba(10, 110, 209, .18) !important;
+  outline-offset: 0;
+}
+
+label {
+  color: #334a5f !important;
+  font-weight: 600 !important;
+}
+
+.primary,
+button.primary,
+.reports-downloads button {
+  min-height: 36px;
+  border: 1px solid var(--pf-blue) !important;
+  border-radius: 3px !important;
+  color: #fff !important;
+  background: var(--pf-blue) !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+.primary:hover,
+button.primary:hover,
+.reports-downloads button:hover {
+  background: var(--pf-blue-hover) !important;
+}
+
+.actions button,
+.modern-refresh-button,
+.modern-company-manage,
+.modern-view-all {
+  min-height: 36px;
+  border: 1px solid #8996a5 !important;
+  border-radius: 3px !important;
+  color: var(--pf-blue) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.actions button:hover,
+.modern-refresh-button:hover,
+.modern-company-manage:hover,
+.modern-view-all:hover {
+  border-color: var(--pf-blue) !important;
+  background: var(--pf-blue-soft) !important;
+}
+
+.status-box,
+.dashboard-error,
+.reports-error {
+  border-radius: 3px !important;
+  box-shadow: none !important;
+}
+
+.status-box {
+  border-left: 3px solid var(--pf-blue) !important;
+  background: #f5faff !important;
+}
+
+/* Relatórios e tabelas no padrão List Report */
+.reports-page {
+  color: var(--pf-text) !important;
+}
+
+.reports-intro {
+  padding: 16px 18px !important;
+}
+
+.reports-intro small,
+.reports-table-title small {
+  color: var(--pf-text-muted) !important;
+}
+
+.reports-filters {
+  padding: 14px !important;
+}
+
+.reports-table-card {
+  overflow: hidden;
+}
+
+.reports-table,
+table {
+  border-collapse: collapse !important;
+  background: #fff !important;
+}
+
+.reports-table thead th,
+table thead th {
+  border-bottom: 1px solid #a8b3bd !important;
+  color: #23384d !important;
+  background: #f2f3f4 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+}
+
+.reports-table tbody td,
+table tbody td {
+  border-bottom: 1px solid #e3e6e8 !important;
+  color: #263b4f !important;
+  background: #fff !important;
+}
+
+.reports-table tbody tr:hover td,
+table tbody tr:hover td {
+  background: #eef6fc !important;
+}
+
+.reports-table .pages,
+.reports-table .cost,
+.reports-table .rate {
+  color: #0a5f9e !important;
+}
+
+/* Dashboard escuro antigo neutralizado */
+.dashboard-page,
+.executive-clean-page,
+.modern-dashboard,
+.clean-dashboard-v2 {
+  color: var(--pf-text) !important;
+  background: transparent !important;
+}
+
+.modern-dashboard-header p,
+.clean-card-heading p,
+.modern-alert-heading p,
+.modern-no-alerts span,
+.clean-summary-item span {
+  color: var(--pf-text-muted) !important;
+}
+
+.clean-card-kicker,
+.modern-alert-kicker {
+  color: var(--pf-text-muted) !important;
+}
+
+.clean-health-status {
+  font-weight: 700 !important;
+}
+
+.modern-alert-item {
+  border: 1px solid var(--pf-border-soft) !important;
+  border-radius: 3px !important;
+  color: var(--pf-text) !important;
+  background: #fff !important;
+}
+
+.modern-alert-item:hover {
+  border-color: #b7cfe7 !important;
+  background: #f5faff !important;
+}
+
+.modern-dashboard-footer {
+  color: #6a7e90 !important;
+  border-top-color: var(--pf-border-soft) !important;
+}
+
+/* Login também segue identidade corporativa */
+.auth-page {
+  background: #eef1f4 !important;
+}
+
+.auth-card {
+  border: 1px solid var(--pf-border) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 8px 24px rgba(34, 54, 73, .16) !important;
+}
+
+.auth-card .logo {
+  border-radius: 6px !important;
+  background: var(--pf-blue) !important;
+}
+
+.tabs {
+  border-radius: 3px !important;
+  background: #eef1f4 !important;
+}
+
+.tabs button,
+.tabs .active {
+  border-radius: 3px !important;
+}
+
+.tabs .active {
+  color: var(--pf-blue) !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr !important;
+  }
+
+  .shell aside {
+    display: none !important;
+  }
+
+  .dashboard,
+  .dashboard-modern-shell {
+    padding: 16px !important;
+  }
+
+  .dashboard > header,
+  .modern-dashboard-header,
+  .reports-header {
+    margin: -16px -16px 16px !important;
+    padding: 12px 16px !important;
+  }
+}
