@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import './fiori-theme.css'
+import './fiori-typography-fix.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
