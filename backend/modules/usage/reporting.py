@@ -9,6 +9,13 @@ from backend.modules.printers.model import Printer
 from .model import PrinterUsageDaily
 
 
+BRAND_NAVY = "0B2A52"
+BRAND_BLUE = "0A6ED1"
+BRAND_TEAL = "25C6B7"
+BRAND_GREEN = "21D89B"
+BRAND_MUTED = "6B7C93"
+
+
 def _looks_like_opaque_hex(value: str | None) -> bool:
     if not value:
         return False
@@ -79,6 +86,29 @@ def _model_label(manufacturer: str | None, model: str | None) -> str:
         return " ".join(part for part in (brand, model_text) if part)
 
     return brand or "-"
+
+
+def _build_brand_icon_png() -> BytesIO:
+    from PIL import Image, ImageDraw
+
+    image = Image.new("RGBA", (180, 180), (255, 255, 255, 0))
+    draw = ImageDraw.Draw(image)
+    draw.rounded_rectangle((58, 18, 164, 162), radius=24, fill="#0A6ED1")
+
+    circuit_rows = (
+        (62, "#1C86F3"),
+        (90, "#25C6B7"),
+        (118, "#21D89B"),
+    )
+    for y, color in circuit_rows:
+        draw.line((18, y, 82, y), fill=color, width=10)
+        draw.ellipse((7, y - 11, 29, y + 11), fill=color)
+        draw.ellipse((71, y - 11, 93, y + 11), fill=color)
+
+    stream = BytesIO()
+    image.save(stream, format="PNG")
+    stream.seek(0)
+    return stream
 
 
 def consolidate_usage(
@@ -203,20 +233,30 @@ def build_excel_report(
     history: Iterable[PrinterUsageDaily],
 ) -> bytes:
     from openpyxl import Workbook
+    from openpyxl.drawing.image import Image as XLImage
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import get_column_letter
 
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = "Resumo"
+    sheet.sheet_view.showGridLines = False
 
     sheet["A1"] = "Printflow - Relatorio de Impressao"
-    sheet["A1"].font = Font(size=16, bold=True)
+    sheet["A1"].font = Font(size=18, bold=True, color=BRAND_NAVY)
     sheet["A2"] = f"Empresa: {company_name}"
+    sheet["A2"].font = Font(size=10, color=BRAND_MUTED)
     sheet["A3"] = (
         f"Periodo: {start.strftime('%d/%m/%Y')} "
         f"a {end.strftime('%d/%m/%Y')}"
     )
+    sheet["A3"].font = Font(size=10, color=BRAND_MUTED)
+
+    logo_stream = _build_brand_icon_png()
+    logo = XLImage(logo_stream)
+    logo.width = 48
+    logo.height = 48
+    sheet.add_image(logo, "N1")
 
     headers = [
         "Impressora", "IP", "Hostname", "Fabricante", "Modelo", "Serial",
@@ -229,7 +269,7 @@ def build_excel_report(
     for column, label in enumerate(headers, start=1):
         cell = sheet.cell(row=header_row, column=column, value=label)
         cell.font = Font(bold=True, color="FFFFFF")
-        cell.fill = PatternFill("solid", fgColor="12344D")
+        cell.fill = PatternFill("solid", fgColor=BRAND_BLUE)
         cell.alignment = Alignment(horizontal="center")
 
     for row_index, item in enumerate(rows, start=header_row + 1):
@@ -257,6 +297,7 @@ def build_excel_report(
         sheet.column_dimensions[get_column_letter(index)].width = width
 
     detail = workbook.create_sheet("Historico diario")
+    detail.sheet_view.showGridLines = False
     detail_headers = [
         "Data", "Impressora", "IP", "Unidade", "Setor",
         "Contador abertura", "Contador fechamento", "Impressoes", "Anomalias",
@@ -264,7 +305,7 @@ def build_excel_report(
     for column, label in enumerate(detail_headers, start=1):
         cell = detail.cell(row=1, column=column, value=label)
         cell.font = Font(bold=True, color="FFFFFF")
-        cell.fill = PatternFill("solid", fgColor="12344D")
+        cell.fill = PatternFill("solid", fgColor=BRAND_BLUE)
 
     for row_index, usage in enumerate(
         sorted(history, key=lambda item: (item.usage_date, item.printer_uuid)),
@@ -296,6 +337,7 @@ def build_pdf_report(
     end: date,
     rows: list[dict],
 ) -> bytes:
+    from reportlab.graphics.shapes import Circle, Drawing, Line, Rect
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.lib.styles import getSampleStyleSheet
@@ -314,8 +356,35 @@ def build_pdf_report(
         title="Printflow - Relatorio de Impressao",
     )
     styles = getSampleStyleSheet()
+
+    mark = Drawing(17 * mm, 17 * mm)
+    mark.add(Rect(6 * mm, 1 * mm, 10 * mm, 15 * mm, rx=2 * mm, ry=2 * mm,
+                  fillColor=colors.HexColor(f"#{BRAND_BLUE}"), strokeColor=None))
+    for y, color in ((12 * mm, "#1C86F3"), (8.5 * mm, "#25C6B7"), (5 * mm, "#21D89B")):
+        mark.add(Line(1.5 * mm, y, 8.2 * mm, y, strokeColor=colors.HexColor(color), strokeWidth=1.5 * mm))
+        mark.add(Circle(1.5 * mm, y, 1.4 * mm, fillColor=colors.HexColor(color), strokeColor=None))
+        mark.add(Circle(8.2 * mm, y, 1.4 * mm, fillColor=colors.HexColor(color), strokeColor=None))
+
+    brand_copy = Paragraph(
+        (
+            f'<font color="#{BRAND_NAVY}" size="18"><b>Printflow</b></font><br/>'
+            f'<font color="#{BRAND_MUTED}" size="8">Gestão inteligente de impressão</font>'
+        ),
+        styles["Normal"],
+    )
+    brand_header = Table([[mark, brand_copy]], colWidths=[20 * mm, 82 * mm])
+    brand_header.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+
     story = [
-        Paragraph("Printflow - Relatorio de Impressao", styles["Title"]),
+        brand_header,
+        Spacer(1, 2.5 * mm),
+        Paragraph("Relatorio de Impressao", styles["Title"]),
         Paragraph(f"<b>Empresa:</b> {company_name}", styles["Normal"]),
         Paragraph(
             f"<b>Periodo:</b> {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}",
@@ -355,15 +424,15 @@ def build_pdf_report(
         colWidths=[42 * mm, 23 * mm, 38 * mm, 48 * mm, 22 * mm, 22 * mm, 24 * mm, 24 * mm, 28 * mm],
     )
     table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#12344D")),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor(f"#{BRAND_BLUE}")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
         ("FONTSIZE", (0, 0), (-1, -1), 6.6),
         ("ALIGN", (4, 1), (-1, -1), "RIGHT"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F4F7F9")]),
+        ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#A8B8C7")),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F4F8FC")]),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
@@ -389,9 +458,9 @@ def build_pdf_report(
         canvas.setStrokeColor(colors.HexColor("#D7E1EA"))
         canvas.setLineWidth(0.4)
         canvas.line(10 * mm, 9 * mm, width - 10 * mm, 9 * mm)
-        canvas.setFillColor(colors.HexColor("#5D7185"))
+        canvas.setFillColor(colors.HexColor(f"#{BRAND_MUTED}"))
         canvas.setFont("Helvetica", 7)
-        canvas.drawString(10 * mm, 5 * mm, f"Printflow - {company_name}")
+        canvas.drawString(10 * mm, 5 * mm, f"Printflow · {company_name}")
         canvas.drawRightString(
             width - 10 * mm,
             5 * mm,
