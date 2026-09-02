@@ -22,6 +22,7 @@ type Company = {
   city?: string | null
   state?: string | null
   plan: string
+  default_cost_per_page: number
   agent_token: string
   active: boolean
 }
@@ -119,6 +120,7 @@ function App() {
           document: form.get("document") || null,
           city: form.get("city") || null,
           state: form.get("state") || null,
+          default_cost_per_page: Number(form.get("default_cost_per_page") || 0),
         }),
       })
       setCompany(updated)
@@ -226,7 +228,10 @@ function App() {
                     {printersLoading ? "Atualizando..." : "Atualizar lista"}
                   </button>
                 </div>
-                <PrinterTable printers={printers} />
+                <PrinterTable
+                  printers={printers}
+                  defaultCostPerPage={company?.default_cost_per_page || 0}
+                />
               </article>
             </section>
           </>
@@ -235,14 +240,14 @@ function App() {
         ) : page === "company" ? (
           <>
             <header>
-              <div><small>SPRINT COMERCIAL</small><h1>Empresa e Agent</h1></div>
+              <div><small>CONFIGURAÇÃO</small><h1>Empresa e Agent</h1></div>
               <span className="online">● API Online</span>
             </header>
             <section className="hero">
               <div>
-                <small>PRINTFLOW AI · PACOTE 001</small>
+                <small>PRINTFLOW AI · AMBIENTE DO CLIENTE</small>
                 <h2>{company?.name || "Carregando empresa..."}</h2>
-                <p>Conta protegida por JWT e ambiente isolado por empresa.</p>
+                <p>Dados corporativos, tarifa padrão e vínculo seguro do Agent.</p>
               </div>
               <div className="plan">Plano {company?.plan || "pilot"}</div>
             </section>
@@ -257,6 +262,18 @@ function App() {
                       <label>Cidade<input name="city" defaultValue={company.city || ""} /></label>
                       <label>UF<input name="state" maxLength={2} defaultValue={company.state || ""} /></label>
                     </div>
+                    <label>
+                      Custo padrão por página (R$)
+                      <input
+                        name="default_cost_per_page"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.0001"
+                        defaultValue={Number(company.default_cost_per_page || 0).toFixed(4)}
+                      />
+                      <small>Usado no relatório quando a impressora não possui tarifa específica.</small>
+                    </label>
                     <button className="primary">Salvar empresa</button>
                   </form>
                 </article>
@@ -269,8 +286,8 @@ function App() {
                     <button className="danger" onClick={regenerateToken}>Gerar novo</button>
                   </div>
                   <div className="status-box">
-                    <strong>Próxima etapa</strong>
-                    <span>Executar Agent na rede e descobrir a HP 10.2.0.124.</span>
+                    <strong>Tarifa padrão atual</strong>
+                    <span>R$ {Number(company.default_cost_per_page || 0).toFixed(4).replace(".", ",")} por página.</span>
                   </div>
                 </article>
               </section>
