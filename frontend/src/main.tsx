@@ -12,6 +12,7 @@ import './login-enterprise.css'
 import './brand-system.css'
 import './theme-system.css'
 import './theme-header-alignment.css'
+import './compact-ui-v052.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
