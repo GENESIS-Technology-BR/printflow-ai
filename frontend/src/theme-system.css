@@ -1,0 +1,404 @@
+/* Printflow v0.5.1 — Theme System */
+:root,
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --pf-bg: #08111f;
+  --pf-surface: #0f1b2d;
+  --pf-surface-soft: #132238;
+  --pf-border: #26374f;
+  --pf-border-strong: #40546e;
+  --pf-text: #e9f0f8;
+  --pf-muted: #9fb0c4;
+  --pf-blue: #4da3ff;
+  --pf-blue-hover: #78bbff;
+  --pf-blue-soft: #102a47;
+  --pf-green: #43d39e;
+  --pf-green-soft: #0d2d26;
+  --pf-red: #ff7480;
+  --pf-red-soft: #35181e;
+  --pf-orange: #ffb65e;
+  --pf-orange-soft: #352515;
+  --pf-shadow: 0 8px 24px rgba(0, 0, 0, .24);
+}
+
+/* Controle global de tema */
+.pf-theme-toggle {
+  position: fixed !important;
+  z-index: 10000;
+  top: 10px;
+  right: 238px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 82px;
+  min-height: 34px !important;
+  padding: 6px 10px !important;
+  border: 1px solid var(--pf-border) !important;
+  border-radius: 999px !important;
+  background: var(--pf-surface) !important;
+  color: var(--pf-text) !important;
+  box-shadow: 0 2px 8px rgba(34, 54, 73, .10) !important;
+  cursor: pointer;
+  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+}
+
+.pf-theme-toggle:hover {
+  transform: translateY(-1px);
+  border-color: var(--pf-blue) !important;
+  background: var(--pf-blue-soft) !important;
+}
+
+.pf-theme-toggle-icon {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  color: var(--pf-blue);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.pf-theme-toggle-label {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.auth-page .pf-theme-toggle {
+  right: 18px;
+}
+
+/* Base escura */
+html[data-theme="dark"] body,
+html[data-theme="dark"] #root,
+html[data-theme="dark"] .shell,
+html[data-theme="dark"] .dashboard,
+html[data-theme="dark"] .control-center-page,
+html[data-theme="dark"] .agent-monitor-page,
+html[data-theme="dark"] .reports-page,
+html[data-theme="dark"] .printer-list-shell {
+  background: var(--pf-bg) !important;
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .shell aside,
+html[data-theme="dark"] .dashboard > header,
+html[data-theme="dark"] .modern-dashboard-header,
+html[data-theme="dark"] .control-center-header,
+html[data-theme="dark"] .agent-monitor-header,
+html[data-theme="dark"] .reports-header {
+  background: #0b1626 !important;
+  border-color: var(--pf-border) !important;
+  color: var(--pf-text) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .02) !important;
+}
+
+html[data-theme="dark"] .brand strong,
+html[data-theme="dark"] .dashboard h1,
+html[data-theme="dark"] .dashboard h2,
+html[data-theme="dark"] .dashboard h3,
+html[data-theme="dark"] .control-center-page h1,
+html[data-theme="dark"] .control-center-page h2,
+html[data-theme="dark"] .control-center-page h3,
+html[data-theme="dark"] .agent-monitor-page h1,
+html[data-theme="dark"] .agent-monitor-page h2,
+html[data-theme="dark"] .agent-monitor-page h3,
+html[data-theme="dark"] .reports-page h1,
+html[data-theme="dark"] .reports-page h2,
+html[data-theme="dark"] .reports-page h3 {
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .shell nav button,
+html[data-theme="dark"] .logout {
+  color: #b8c6d7 !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+html[data-theme="dark"] .shell nav button.active {
+  color: #74b8ff !important;
+  background: #102a47 !important;
+  border-left-color: #4da3ff !important;
+}
+
+html[data-theme="dark"] .shell nav button:hover,
+html[data-theme="dark"] .logout:hover {
+  color: var(--pf-text) !important;
+  background: #132238 !important;
+}
+
+/* Superfícies compartilhadas */
+html[data-theme="dark"] .hero,
+html[data-theme="dark"] .modern-company-bar,
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .modern-panel,
+html[data-theme="dark"] .control-center-kpis article,
+html[data-theme="dark"] .control-center-panel,
+html[data-theme="dark"] .control-center-onboarding,
+html[data-theme="dark"] .control-center-created,
+html[data-theme="dark"] .agent-overview,
+html[data-theme="dark"] .agent-metrics article,
+html[data-theme="dark"] .agent-panel,
+html[data-theme="dark"] .printer-organization-catalog,
+html[data-theme="dark"] .printer-card,
+html[data-theme="dark"] .reports-intro,
+html[data-theme="dark"] .reports-filters,
+html[data-theme="dark"] .reports-metrics article,
+html[data-theme="dark"] .reports-table-card,
+html[data-theme="dark"] .clean-summary-item,
+html[data-theme="dark"] .modern-company-selector,
+html[data-theme="dark"] .status-box {
+  background: var(--pf-surface) !important;
+  border-color: var(--pf-border) !important;
+  color: var(--pf-text) !important;
+  box-shadow: var(--pf-shadow) !important;
+}
+
+html[data-theme="dark"] .modern-company-selector:hover {
+  background: var(--pf-surface-soft) !important;
+}
+
+html[data-theme="dark"] p,
+html[data-theme="dark"] small,
+html[data-theme="dark"] .printer-filter-count,
+html[data-theme="dark"] .control-center-kpis span,
+html[data-theme="dark"] .control-center-kpis small,
+html[data-theme="dark"] .agent-state-copy p,
+html[data-theme="dark"] .agent-state-time span,
+html[data-theme="dark"] .agent-metrics span,
+html[data-theme="dark"] .agent-metrics small,
+html[data-theme="dark"] .agent-token-help,
+html[data-theme="dark"] .reports-header p {
+  color: var(--pf-muted) !important;
+}
+
+/* Botões, campos e códigos */
+html[data-theme="dark"] button:not(.primary):not(.reports-downloads button),
+html[data-theme="dark"] .actions button:not(.primary),
+html[data-theme="dark"] .modern-refresh-button,
+html[data-theme="dark"] .modern-company-manage,
+html[data-theme="dark"] .modern-view-all,
+html[data-theme="dark"] .agent-actions button,
+html[data-theme="dark"] .printer-alias-editor button,
+html[data-theme="dark"] .printer-organization-editor button {
+  background: var(--pf-surface) !important;
+  border-color: var(--pf-border-strong) !important;
+  color: var(--pf-blue) !important;
+}
+
+html[data-theme="dark"] button:hover:not(:disabled) {
+  background: var(--pf-blue-soft) !important;
+  border-color: var(--pf-blue) !important;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] code {
+  background: #0a1525 !important;
+  border-color: var(--pf-border-strong) !important;
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #70839a !important;
+}
+
+html[data-theme="dark"] label {
+  color: #bac8d8 !important;
+}
+
+/* Control Center */
+html[data-theme="dark"] .control-center-title,
+html[data-theme="dark"] .control-center-row,
+html[data-theme="dark"] .control-center-row.header,
+html[data-theme="dark"] .cc-onboarding-form,
+html[data-theme="dark"] .cc-secret-row code {
+  background: var(--pf-surface) !important;
+  border-color: var(--pf-border) !important;
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .control-center-row.header {
+  background: var(--pf-surface-soft) !important;
+  color: #b8c8da !important;
+}
+
+html[data-theme="dark"] .control-center-created {
+  background: var(--pf-green-soft) !important;
+}
+
+/* Agentes */
+html[data-theme="dark"] .agent-state-icon,
+html[data-theme="dark"] .agent-alert {
+  background: var(--pf-green-soft) !important;
+  border-color: #1f5b49 !important;
+}
+
+html[data-theme="dark"] .agent-token {
+  background: #0a1525 !important;
+  color: #c7d8e9 !important;
+  border-color: var(--pf-border) !important;
+}
+
+/* Impressoras */
+html[data-theme="dark"] .printer-filter-bar,
+html[data-theme="dark"] .printer-card-main,
+html[data-theme="dark"] .printer-organization-create,
+html[data-theme="dark"] .printer-organization-totals strong {
+  background: var(--pf-surface) !important;
+  border-color: var(--pf-border) !important;
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .printer-icon {
+  background: var(--pf-blue-soft) !important;
+  color: var(--pf-blue) !important;
+}
+
+/* Tabelas e relatórios */
+html[data-theme="dark"] table,
+html[data-theme="dark"] thead,
+html[data-theme="dark"] tbody,
+html[data-theme="dark"] tr,
+html[data-theme="dark"] td,
+html[data-theme="dark"] th {
+  border-color: var(--pf-border) !important;
+}
+
+html[data-theme="dark"] th {
+  background: #132238 !important;
+  color: #c4d2e2 !important;
+}
+
+html[data-theme="dark"] td {
+  background: var(--pf-surface) !important;
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] tr:hover td {
+  background: #14253b !important;
+}
+
+/* Intelligence */
+html[data-theme="dark"] .pf-intelligence-panel {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(33, 216, 155, .10), transparent 28%),
+    radial-gradient(circle at 80% 18%, rgba(77, 163, 255, .13), transparent 34%),
+    var(--pf-surface) !important;
+  border-color: var(--pf-border) !important;
+  box-shadow: var(--pf-shadow) !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-heading h2,
+html[data-theme="dark"] .pf-intelligence-score strong,
+html[data-theme="dark"] .pf-intelligence-item h3 {
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-heading p,
+html[data-theme="dark"] .pf-intelligence-score span,
+html[data-theme="dark"] .pf-intelligence-score small,
+html[data-theme="dark"] .pf-intelligence-item p,
+html[data-theme="dark"] .pf-intelligence-item-top > small,
+html[data-theme="dark"] .pf-intelligence-location,
+html[data-theme="dark"] .pf-intelligence-summary > small {
+  color: var(--pf-muted) !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-score,
+html[data-theme="dark"] .pf-intelligence-item,
+html[data-theme="dark"] .pf-intelligence-action {
+  background: var(--pf-surface-soft) !important;
+  border-color: var(--pf-border) !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-item p b,
+html[data-theme="dark"] .pf-intelligence-action span,
+html[data-theme="dark"] .pf-intelligence-item-top > span {
+  color: #c0cfdf !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-summary {
+  border-color: var(--pf-border) !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-summary .critical { color: #ff9aa2 !important; background: #35181e !important; }
+html[data-theme="dark"] .pf-intelligence-summary .warning { color: #ffc57e !important; background: #352515 !important; }
+html[data-theme="dark"] .pf-intelligence-summary .opportunity { color: #73e4bb !important; background: #0d2d26 !important; }
+html[data-theme="dark"] .pf-intelligence-clear { background: #0d2d26 !important; border-color: #1f5b49 !important; }
+html[data-theme="dark"] .pf-intelligence-clear strong { color: #73e4bb !important; }
+
+/* Login */
+html[data-theme="dark"] .auth-page {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(77, 163, 255, .13) 0 19%, transparent 19.5%),
+    radial-gradient(circle at 100% 100%, rgba(43, 203, 169, .10) 0 18%, transparent 18.5%),
+    linear-gradient(135deg, #07101c 0%, #0b1727 48%, #08131f 100%) !important;
+}
+
+html[data-theme="dark"] .auth-page::before {
+  opacity: .25 !important;
+}
+
+html[data-theme="dark"] .auth-page::after {
+  color: #6f8197 !important;
+}
+
+html[data-theme="dark"] .auth-card {
+  background: rgba(15, 27, 45, .96) !important;
+  border-color: #2a3d56 !important;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, .38) !important;
+}
+
+html[data-theme="dark"] .auth-card h1 {
+  color: #f0f5fb !important;
+}
+
+html[data-theme="dark"] .auth-card > p {
+  color: var(--pf-muted) !important;
+}
+
+html[data-theme="dark"] .auth-card .tabs {
+  background: #0a1525 !important;
+  border-color: var(--pf-border) !important;
+}
+
+html[data-theme="dark"] .auth-card .tabs button:not(.active) {
+  background: transparent !important;
+  color: #b8c6d7 !important;
+}
+
+html[data-theme="dark"] .auth-card .tabs button + button {
+  border-left-color: var(--pf-border) !important;
+}
+
+html[data-theme="dark"] .auth-card::after {
+  border-top-color: var(--pf-border) !important;
+  color: #57d7a4 !important;
+}
+
+/* Scrollbar discreta */
+html[data-theme="dark"] * {
+  scrollbar-color: #40546e #0b1626;
+}
+
+@media (max-width: 900px) {
+  .pf-theme-toggle {
+    right: 16px;
+    top: 12px;
+    min-width: 38px;
+    width: 38px;
+    padding: 5px !important;
+  }
+
+  .pf-theme-toggle-label {
+    display: none;
+  }
+}
