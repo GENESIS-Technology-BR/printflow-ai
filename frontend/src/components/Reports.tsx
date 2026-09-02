@@ -29,6 +29,25 @@ function number(value: number | null): string {
   return new Intl.NumberFormat("pt-BR").format(value)
 }
 
+function currency(value: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value)
+}
+
+function rate(value: number): string {
+  return `R$ ${Number(value || 0).toFixed(4).replace(".", ",")}`
+}
+
+function modelLabel(manufacturer: string | null, model: string | null): string {
+  const brand = (manufacturer || "").trim()
+  const modelText = (model || "").trim()
+  if (!modelText) return brand || "-"
+  if (brand && modelText.toLowerCase().startsWith(brand.toLowerCase())) return modelText
+  return [brand, modelText].filter(Boolean).join(" ") || "-"
+}
+
 export default function Reports({ companyName }: ReportsProps) {
   const today = useMemo(() => new Date(), [])
   const initialStart = useMemo(() => {
@@ -113,6 +132,7 @@ export default function Reports({ companyName }: ReportsProps) {
 
   const totalPages = rows.reduce((total, row) => total + row.pages_printed, 0)
   const totalAnomalies = rows.reduce((total, row) => total + row.anomaly_count, 0)
+  const totalCost = rows.reduce((total, row) => total + row.estimated_cost, 0)
 
   async function handleDownload(format: "xlsx" | "pdf") {
     setDownloading(format)
@@ -138,7 +158,7 @@ export default function Reports({ companyName }: ReportsProps) {
     <div className="reports-page">
       <header className="reports-header">
         <div>
-          <small>GESTÃO DE CONSUMO</small>
+          <small>GESTÃO DE CONSUMO E CUSTOS</small>
           <h1>Relatórios</h1>
           <p>{companyName}</p>
         </div>
@@ -147,9 +167,9 @@ export default function Reports({ companyName }: ReportsProps) {
 
       <section className="reports-intro">
         <div>
-          <small>PRINTFLOW AI · CONSUMO POR IMPRESSORA</small>
+          <small>PRINTFLOW AI · CONSUMO FINANCEIRO POR IMPRESSORA</small>
           <h2>Fechamento de impressão por período</h2>
-          <p>Consulte cada equipamento individualmente e exporte o resultado em Excel ou PDF.</p>
+          <p>Consulte páginas, tarifa e custo estimado por equipamento e exporte em Excel ou PDF.</p>
         </div>
         <div className="reports-downloads">
           <button type="button" onClick={() => void handleDownload("xlsx")} disabled={loading || downloading !== null}>
@@ -195,6 +215,7 @@ export default function Reports({ companyName }: ReportsProps) {
       <section className="reports-metrics">
         <article><span>Impressoras</span><strong>{loading ? "..." : rows.length}</strong></article>
         <article><span>Impressões no período</span><strong>{loading ? "..." : number(totalPages)}</strong></article>
+        <article><span>Custo estimado</span><strong>{loading ? "..." : currency(totalCost)}</strong></article>
         <article><span>Anomalias de contador</span><strong>{loading ? "..." : number(totalAnomalies)}</strong></article>
       </section>
 
@@ -204,11 +225,12 @@ export default function Reports({ companyName }: ReportsProps) {
           <span>{startDate} → {endDate}</span>
         </div>
         <div className="reports-table-scroll">
-          <table className="reports-table">
+          <table className="reports-table reports-table-financial">
             <thead>
               <tr>
                 <th>Impressora</th><th>IP</th><th>Unidade</th><th>Setor</th>
                 <th>Modelo</th><th>Inicial</th><th>Final</th><th>Impressões</th>
+                <th>R$/pág.</th><th>Custo estimado</th>
               </tr>
             </thead>
             <tbody>
@@ -218,14 +240,16 @@ export default function Reports({ companyName }: ReportsProps) {
                   <td>{row.ip || "-"}</td>
                   <td>{row.unit_name || "-"}</td>
                   <td>{row.sector_name || "-"}</td>
-                  <td>{[row.manufacturer, row.model].filter(Boolean).join(" ") || "-"}</td>
+                  <td>{modelLabel(row.manufacturer, row.model)}</td>
                   <td>{number(row.opening_page_count)}</td>
                   <td>{number(row.closing_page_count)}</td>
                   <td className="pages">{number(row.pages_printed)}</td>
+                  <td className="rate">{rate(row.cost_per_page)}<small>{row.cost_source === "printer" ? "específica" : "padrão empresa"}</small></td>
+                  <td className="cost">{currency(row.estimated_cost)}</td>
                 </tr>
               ))}
               {!loading && rows.length === 0 && (
-                <tr><td colSpan={8} className="reports-empty">Nenhum histórico encontrado para este período.</td></tr>
+                <tr><td colSpan={10} className="reports-empty">Nenhum histórico encontrado para este período.</td></tr>
               )}
             </tbody>
           </table>
