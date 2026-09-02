@@ -33,6 +33,15 @@ function formatElapsed(value: string | null): string {
   return `Há ${Math.floor(hours / 24)} dia(s)`;
 }
 
+function formatTechnicalStatus(value: string | null | undefined): string {
+  const normalized = String(value || "").toLowerCase();
+  if (normalized === "running") return "Em execução";
+  if (normalized === "error") return "Com erro";
+  if (normalized === "offline") return "Offline";
+  if (normalized === "online") return "Online";
+  return value || "Aguardando";
+}
+
 export default function AgentMonitor({
   agentToken,
   onRegenerateToken,
@@ -111,7 +120,7 @@ export default function AgentMonitor({
       <header className="agent-monitor-header">
         <div>
           <span>MONITORAMENTO OPERACIONAL</span>
-          <h1>Agents</h1>
+          <h1>Agentes</h1>
           <p>Estado da coleta, comunicação e versão instalada.</p>
         </div>
         <button type="button" onClick={() => void loadAgent(true)} disabled={refreshing}>
@@ -137,7 +146,7 @@ export default function AgentMonitor({
       <div className="agent-metrics">
         <article>
           <span>Nome</span>
-          <strong>{agent?.name || "PRINTFLOW Agent"}</strong>
+          <strong>{agent?.name || "Printflow Agent"}</strong>
           <small>Identificação registrada</small>
         </article>
         <article>
@@ -152,7 +161,7 @@ export default function AgentMonitor({
         </article>
         <article>
           <span>Status técnico</span>
-          <strong>{agent?.status || "Aguardando"}</strong>
+          <strong>{formatTechnicalStatus(agent?.status)}</strong>
           <small>{summary ? `${summary.active_printers} impressora(s) monitorada(s)` : "Carregando frota"}</small>
         </article>
       </div>
