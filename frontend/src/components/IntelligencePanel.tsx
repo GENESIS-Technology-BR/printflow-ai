@@ -73,6 +73,8 @@ export default function IntelligencePanel({
   useEffect(() => {
     setLoading(true);
     void load();
+    const intervalId = window.setInterval(() => void load(), 60_000);
+    return () => window.clearInterval(intervalId);
   }, [load, refreshKey]);
 
   if (loading && !overview) {
