@@ -113,7 +113,13 @@ def _report_rows(
         unit_name,
         sector_name,
     )
-    return consolidate_usage(history, printers)
+    company = (
+        db.query(Company)
+        .filter(Company.id == current_user.company_id)
+        .first()
+    )
+    default_cost = company.default_cost_per_page if company else 0
+    return consolidate_usage(history, printers, default_cost)
 
 
 @router.get("/daily", response_model=list[DailyUsageResponse])

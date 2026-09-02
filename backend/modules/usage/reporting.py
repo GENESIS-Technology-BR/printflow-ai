@@ -50,6 +50,25 @@ def _format_number(value: int | None) -> str:
     return f"{int(value):,}".replace(",", ".")
 
 
+def _format_currency(value: float) -> str:
+    text = f"{float(value):,.2f}"
+    text = text.replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"R$ {text}"
+
+
+def _format_rate(value: float) -> str:
+    return f"R$ {float(value):.4f}".replace(".", ",")
+
+
+def _cost_value(value) -> float:
+    if value is None:
+        return 0.0
+    try:
+        return max(float(value), 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def _model_label(manufacturer: str | None, model: str | None) -> str:
     brand = (manufacturer or "").strip()
     model_text = (model or "").strip()
@@ -65,7 +84,10 @@ def _model_label(manufacturer: str | None, model: str | None) -> str:
 def consolidate_usage(
     history: Iterable[PrinterUsageDaily],
     printers: Iterable[Printer] = (),
+    default_cost_per_page=0,
 ) -> list[dict]:
+    printer_list = list(printers)
+    printer_map = {printer.uuid: printer for printer in printer_list}
     groups: dict[str, dict] = {}
     ordered_history = sorted(
         history,
@@ -125,15 +147,11 @@ def consolidate_usage(
         if usage.last_anomaly_type:
             item["last_anomaly_type"] = usage.last_anomaly_type
 
-    for printer in printers:
+    for printer in printer_list:
         if printer.uuid in groups:
             continue
 
-        page_count = (
-            int(printer.page_count)
-            if printer.page_count is not None
-            else None
-        )
+        page_count = int(printer.page_count) if printer.page_count is not None else None
         groups[printer.uuid] = {
             "printer_uuid": printer.uuid,
             "display_name": _display_name(
@@ -157,6 +175,15 @@ def consolidate_usage(
             "anomaly_count": 0,
             "last_anomaly_type": None,
         }
+
+    default_cost = _cost_value(default_cost_per_page)
+    for printer_uuid, item in groups.items():
+        printer = printer_map.get(printer_uuid)
+        override = getattr(printer, "cost_per_page", None) if printer else None
+        effective_cost = _cost_value(override) if override is not None else default_cost
+        item["cost_per_page"] = round(effective_cost, 4)
+        item["estimated_cost"] = round(item["pages_printed"] * effective_cost, 2)
+        item["cost_source"] = "printer" if override is not None else "company"
 
     return sorted(
         groups.values(),
@@ -195,6 +222,7 @@ def build_excel_report(
         "Impressora", "IP", "Hostname", "Fabricante", "Modelo", "Serial",
         "Unidade", "Setor", "Primeira leitura", "Ultima leitura",
         "Contador inicial", "Contador final", "Impressoes no periodo", "Anomalias",
+        "Custo/pagina (R$)", "Custo estimado (R$)",
     ]
     header_row = 5
 
@@ -213,13 +241,18 @@ def build_excel_report(
             item["last_usage_date"].strftime("%d/%m/%Y") if item["last_usage_date"] else "Sem historico",
             item["opening_page_count"], item["closing_page_count"],
             item["pages_printed"], item["anomaly_count"],
+            item["cost_per_page"], item["estimated_cost"],
         ]
         for column, value in enumerate(values, start=1):
-            sheet.cell(row=row_index, column=column, value=value)
+            cell = sheet.cell(row=row_index, column=column, value=value)
+            if column == 15:
+                cell.number_format = 'R$ #,##0.0000'
+            elif column == 16:
+                cell.number_format = 'R$ #,##0.00'
 
     sheet.freeze_panes = "A6"
-    sheet.auto_filter.ref = f"A{header_row}:N{max(header_row, header_row + len(rows))}"
-    widths = [30, 16, 24, 18, 28, 22, 20, 20, 16, 16, 16, 16, 20, 12]
+    sheet.auto_filter.ref = f"A{header_row}:P{max(header_row, header_row + len(rows))}"
+    widths = [30, 16, 24, 18, 28, 22, 20, 20, 16, 16, 16, 16, 20, 12, 18, 20]
     for index, width in enumerate(widths, start=1):
         sheet.column_dimensions[get_column_letter(index)].width = width
 
@@ -288,12 +321,16 @@ def build_pdf_report(
             f"<b>Periodo:</b> {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}",
             styles["Normal"],
         ),
-        Spacer(1, 6 * mm),
+        Paragraph(
+            "<b>Custos:</b> estimativa calculada pelas tarifas atualmente configuradas.",
+            styles["Normal"],
+        ),
+        Spacer(1, 5 * mm),
     ]
 
     table_data = [[
         "Impressora", "IP", "Unidade / Setor", "Modelo",
-        "Inicial", "Final", "Impressoes",
+        "Inicial", "Final", "Impressoes", "R$/pag.", "Custo estimado",
     ]]
     for item in rows:
         organization = " / ".join(
@@ -308,19 +345,21 @@ def build_pdf_report(
             _format_number(item["opening_page_count"]),
             _format_number(item["closing_page_count"]),
             _format_number(item["pages_printed"]),
+            _format_rate(item["cost_per_page"]),
+            _format_currency(item["estimated_cost"]),
         ])
 
     table = Table(
         table_data,
         repeatRows=1,
-        colWidths=[48 * mm, 25 * mm, 45 * mm, 58 * mm, 25 * mm, 25 * mm, 28 * mm],
+        colWidths=[42 * mm, 23 * mm, 38 * mm, 48 * mm, 22 * mm, 22 * mm, 24 * mm, 24 * mm, 28 * mm],
     )
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#12344D")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
-        ("FONTSIZE", (0, 0), (-1, -1), 7),
+        ("FONTSIZE", (0, 0), (-1, -1), 6.6),
         ("ALIGN", (4, 1), (-1, -1), "RIGHT"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
@@ -331,12 +370,14 @@ def build_pdf_report(
     story.append(table)
 
     total_pages = sum(item["pages_printed"] for item in rows)
+    total_cost = sum(float(item["estimated_cost"]) for item in rows)
     story.extend([
         Spacer(1, 5 * mm),
         Paragraph(
             (
                 f"<b>Total de impressoras:</b> {len(rows)} &nbsp;&nbsp; "
-                f"<b>Total de impressoes:</b> {_format_number(total_pages)}"
+                f"<b>Total de impressoes:</b> {_format_number(total_pages)} &nbsp;&nbsp; "
+                f"<b>Custo estimado:</b> {_format_currency(total_cost)}"
             ),
             styles["Normal"],
         ),

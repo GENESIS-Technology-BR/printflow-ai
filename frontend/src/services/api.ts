@@ -44,6 +44,7 @@ export type DashboardPrinter = {
   page_count_source: string | null;
   page_count_confidence: number | null;
   page_count_confirmed: boolean;
+  cost_per_page: number | null;
   serial: string | null;
   serial_source: string | null;
   serial_confidence: number | null;
@@ -117,6 +118,20 @@ export async function updatePrinterCustomName(
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ custom_name: customName }),
+    },
+  );
+}
+
+export async function updatePrinterCost(
+  printerUuid: string,
+  costPerPage: number | null,
+): Promise<{ cost_per_page: number | null }> {
+  return request<{ cost_per_page: number | null }>(
+    `/api/v1/printers/${printerUuid}/cost`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cost_per_page: costPerPage }),
     },
   );
 }
@@ -286,6 +301,9 @@ export type UsageReportRow = {
   pages_printed: number;
   anomaly_count: number;
   last_anomaly_type: string | null;
+  cost_per_page: number;
+  estimated_cost: number;
+  cost_source: "company" | "printer";
 };
 
 export type UsageReportFilters = {

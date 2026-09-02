@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -53,6 +54,10 @@ class Printer(Base):
     page_count_source: Mapped[str | None] = mapped_column(String(60), nullable=True)
     page_count_confidence: Mapped[int | None] = mapped_column(Integer, nullable=True)
     page_count_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    cost_per_page: Mapped[Decimal | None] = mapped_column(
+        Numeric(10, 4),
+        nullable=True,
+    )
     serial: Mapped[str | None] = mapped_column(String(180), nullable=True)
     serial_source: Mapped[str | None] = mapped_column(String(60), nullable=True)
     serial_confidence: Mapped[int | None] = mapped_column(Integer, nullable=True)

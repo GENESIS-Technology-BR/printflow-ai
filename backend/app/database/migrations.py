@@ -21,6 +21,7 @@ PRINTER_COLUMNS = {
     "page_count_source": "VARCHAR(60)",
     "page_count_confidence": "INTEGER",
     "page_count_confirmed": "BOOLEAN DEFAULT FALSE",
+    "cost_per_page": "NUMERIC(10,4)",
 }
 
 COMPANY_AGENT_COLUMNS = {
@@ -29,6 +30,7 @@ COMPANY_AGENT_COLUMNS = {
     "agent_name": "VARCHAR(120)",
     "agent_version": "VARCHAR(30)",
     "agent_last_error": "VARCHAR(500)",
+    "default_cost_per_page": "NUMERIC(10,4) DEFAULT 0 NOT NULL",
 }
 
 OPERATIONAL_ALERT_COLUMNS = {

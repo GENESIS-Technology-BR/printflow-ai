@@ -41,3 +41,6 @@ class UsageReportRow(BaseModel):
     pages_printed: int = 0
     anomaly_count: int = 0
     last_anomaly_type: str | None = None
+    cost_per_page: float = 0.0
+    estimated_cost: float = 0.0
+    cost_source: str = "company"

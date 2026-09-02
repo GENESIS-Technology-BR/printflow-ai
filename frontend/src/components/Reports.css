@@ -92,7 +92,7 @@
 
 .reports-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -103,7 +103,7 @@
   background: #0b1b2c;
 }
 .reports-metrics span { display: block; margin-bottom: 7px; color: #86a1bc; font-size: 12px; }
-.reports-metrics strong { color: #fff; font-size: 28px; }
+.reports-metrics strong { color: #fff; font-size: 26px; }
 
 .reports-error {
   padding: 12px 14px;
@@ -135,6 +135,8 @@
   border-collapse: collapse;
 }
 
+.reports-table-financial { min-width: 1220px; }
+
 .reports-table th,
 .reports-table td {
   padding: 13px 14px;
@@ -155,7 +157,13 @@
 .reports-table td strong { display: block; color: #fff; }
 .reports-table td small { display: block; margin-top: 3px; color: #7591aa; }
 .reports-table td.pages { color: #45e2b1; font-weight: 800; }
+.reports-table td.rate { white-space: nowrap; color: #b8d4ea; }
+.reports-table td.cost { white-space: nowrap; color: #45e2b1; font-weight: 800; }
 .reports-empty, .reports-loading { padding: 28px !important; text-align: center !important; color: #819bb4 !important; }
+
+@media (max-width: 1250px) {
+  .reports-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 @media (max-width: 1150px) {
   .reports-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
