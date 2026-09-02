@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import './fiori-theme.css'
 import './fiori-typography-fix.css'
+import './fiori-polish-v2.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
