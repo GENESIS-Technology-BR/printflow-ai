@@ -160,7 +160,7 @@ function App() {
     return (
       <main className="auth-page">
         <section className="auth-card">
-          <div className="logo">P</div>
+          <img className="auth-brand-mark" src="/brand/printflow-mark.svg" alt="Símbolo Printflow" />
           <h1>Printflow</h1>
           <p>Gestão inteligente de impressão</p>
           <div className="tabs">
@@ -189,7 +189,10 @@ function App() {
   return (
     <div className="shell">
       <aside>
-        <div className="brand"><span>P</span><strong>Printflow</strong></div>
+        <div className="brand">
+          <img src="/brand/printflow-mark.svg" alt="" aria-hidden="true" />
+          <strong>Printflow</strong>
+        </div>
         <nav>
           <button className={page === "dashboard" ? "active" : ""} onClick={() => setPage("dashboard")}>Visão Geral</button>
           {profile?.role === "platform_admin" && (
