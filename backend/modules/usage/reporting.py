@@ -210,7 +210,7 @@ def build_excel_report(
     sheet = workbook.active
     sheet.title = "Resumo"
 
-    sheet["A1"] = "PRINTFLOW AI - Relatorio de Impressao"
+    sheet["A1"] = "Printflow - Relatorio de Impressao"
     sheet["A1"].font = Font(size=16, bold=True)
     sheet["A2"] = f"Empresa: {company_name}"
     sheet["A3"] = (
@@ -311,11 +311,11 @@ def build_pdf_report(
         rightMargin=10 * mm,
         topMargin=10 * mm,
         bottomMargin=15 * mm,
-        title="PRINTFLOW AI - Relatorio de Impressao",
+        title="Printflow - Relatorio de Impressao",
     )
     styles = getSampleStyleSheet()
     story = [
-        Paragraph("PRINTFLOW AI - Relatorio de Impressao", styles["Title"]),
+        Paragraph("Printflow - Relatorio de Impressao", styles["Title"]),
         Paragraph(f"<b>Empresa:</b> {company_name}", styles["Normal"]),
         Paragraph(
             f"<b>Periodo:</b> {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}",
@@ -391,7 +391,7 @@ def build_pdf_report(
         canvas.line(10 * mm, 9 * mm, width - 10 * mm, 9 * mm)
         canvas.setFillColor(colors.HexColor("#5D7185"))
         canvas.setFont("Helvetica", 7)
-        canvas.drawString(10 * mm, 5 * mm, f"PRINTFLOW AI - {company_name}")
+        canvas.drawString(10 * mm, 5 * mm, f"Printflow - {company_name}")
         canvas.drawRightString(
             width - 10 * mm,
             5 * mm,
