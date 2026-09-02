@@ -1,0 +1,275 @@
+/* Ajuste fino do tema corporativo: tipografia + contraste.
+   Mantem a estrutura visual e neutraliza variaveis do dashboard escuro legado. */
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+  font-family: "Segoe UI Variable Text", "Segoe UI", Arial, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* O dashboard legado declarava variaveis escuras localmente.
+   Estas variaveis precisam ser redefinidas depois do tema Fiori. */
+.modern-dashboard {
+  --pf-bg: #f5f6f7 !important;
+  --pf-panel: #ffffff !important;
+  --pf-panel-2: #ffffff !important;
+  --pf-border: #d9d9d9 !important;
+  --pf-muted: #556b82 !important;
+  --pf-text: #1d2d3e !important;
+  --pf-green: #188918 !important;
+  --pf-blue: #0a6ed1 !important;
+  --pf-red: #bb0000 !important;
+  --pf-amber: #e9730c !important;
+}
+
+/* Navegacao */
+.brand strong {
+  color: #1d2d3e !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+.shell nav button {
+  color: #2f4458 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+.shell nav button.active {
+  color: #0a6ed1 !important;
+  font-weight: 700 !important;
+}
+
+/* Cabecalho */
+.modern-dashboard-header h1,
+.dashboard header h1,
+.reports-header h1 {
+  color: #1d2d3e !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.modern-dashboard-kicker,
+.dashboard header small,
+.reports-header small {
+  color: #3b536b !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: .04em !important;
+}
+
+.modern-dashboard-header p {
+  color: #445b70 !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
+
+.modern-update-row {
+  color: #667b8f !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+.modern-agent-badge,
+.modern-refresh-button,
+.modern-company-manage,
+.modern-view-all {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+/* Empresa monitorada */
+.modern-company-selector span {
+  color: #5b7187 !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+.modern-company-selector strong {
+  color: #1d2d3e !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+}
+
+.modern-company-selector i {
+  color: #445b70 !important;
+}
+
+.modern-company-icon {
+  color: #34556f !important;
+}
+
+/* KPIs */
+.modern-dashboard .metric-card-title {
+  color: #445b70 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.modern-dashboard .metric-card-value {
+  color: #1d2d3e !important;
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+}
+
+.modern-dashboard .metric-card-subtitle {
+  color: #5b7187 !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+/* Paineis principais */
+.clean-card-kicker,
+.modern-alert-kicker {
+  color: #3f5870 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: .06em !important;
+}
+
+.clean-card-heading h2,
+.modern-panel-heading h2,
+.modern-alert-heading h2,
+.modern-panel h2 {
+  color: #1d2d3e !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+.clean-card-heading p,
+.modern-alert-heading p,
+.modern-panel-heading p {
+  color: #526a80 !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+}
+
+.clean-health-score-row strong {
+  color: #1d2d3e !important;
+  font-size: 30px !important;
+  font-weight: 700 !important;
+}
+
+.clean-health-score-row span,
+.clean-health-meta span {
+  color: #556b82 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.clean-health-meta strong {
+  color: #1d2d3e !important;
+  font-weight: 700 !important;
+}
+
+.clean-health-status {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+}
+
+/* Alertas */
+.modern-no-alerts strong {
+  color: #188918 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+}
+
+.modern-no-alerts span {
+  color: #526a80 !important;
+  font-size: 12px !important;
+}
+
+.modern-alert-item strong {
+  color: #1d2d3e !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+.modern-alert-item span,
+.modern-alert-item small {
+  color: #556b82 !important;
+  font-size: 11px !important;
+}
+
+/* Faixa de resumo inferior */
+.clean-summary-strip {
+  color: #1d2d3e !important;
+  background: #ffffff !important;
+}
+
+.clean-summary-item span {
+  color: #556b82 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.clean-summary-item strong {
+  color: #1d2d3e !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+.modern-dashboard-footer {
+  color: #6a7e90 !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+}
+
+/* Formularios e relatorios */
+label {
+  color: #30475e !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+input,
+select,
+textarea,
+button {
+  font-size: 14px;
+}
+
+.panel h3,
+.reports-intro h2,
+.reports-table-title h3 {
+  color: #1d2d3e !important;
+  font-weight: 700 !important;
+}
+
+.reports-metrics article span {
+  color: #556b82 !important;
+  font-weight: 500 !important;
+}
+
+.reports-metrics article strong {
+  color: #1d2d3e !important;
+  font-weight: 700 !important;
+}
+
+.reports-table thead th,
+table thead th {
+  color: #23384d !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.reports-table tbody td,
+table tbody td {
+  color: #263b4f !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+}
