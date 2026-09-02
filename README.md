@@ -1,4 +1,4 @@
-# PRINTFLOW AI
+# Printflow
 
 Monitoramento inteligente de impressoras com Agent local, API em nuvem, dashboard web, multiempresa, unidades/setores e relatórios de consumo.
 

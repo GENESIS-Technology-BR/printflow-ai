@@ -302,7 +302,7 @@ export default function Dashboard({
       <header className="modern-dashboard-header">
         <div>
           <span className="modern-dashboard-kicker">
-            PRINTFLOW AI · OPERAÇÕES
+            Printflow · OPERAÇÕES
           </span>
 
           <h1>Visão geral</h1>
@@ -619,7 +619,7 @@ export default function Dashboard({
       </section>
 
       <footer className="modern-dashboard-footer">
-        PRINTFLOW AI — Gestão inteligente de
+        Printflow — Gestão inteligente de
         impressão.
       </footer>
     </section>
