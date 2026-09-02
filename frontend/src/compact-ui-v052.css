@@ -1,0 +1,589 @@
+/* Printflow v0.5.2 — Compact UI + Dark Mode 2.0 */
+
+/* Densidade executiva: mais informação na mesma tela */
+.executive-clean-page.clean-dashboard-v2 {
+  min-height: 100% !important;
+  padding: 10px 18px 14px !important;
+}
+
+.modern-dashboard-header {
+  min-height: 60px !important;
+  margin: -10px -18px 8px !important;
+  padding: 9px 18px !important;
+}
+
+.modern-dashboard-header h1 {
+  margin: 1px 0 !important;
+  font-size: 23px !important;
+}
+
+.modern-dashboard-header p {
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+}
+
+.modern-dashboard-kicker {
+  font-size: 9px !important;
+}
+
+.modern-dashboard-actions {
+  gap: 7px !important;
+}
+
+.modern-agent-badge,
+.modern-refresh-button,
+.pf-theme-toggle {
+  min-height: 31px !important;
+  height: 31px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  font-size: 10px !important;
+}
+
+.pf-theme-toggle {
+  min-width: 70px !important;
+}
+
+.modern-update-row {
+  min-height: 16px !important;
+  margin: 0 1px 5px !important;
+  font-size: 9px !important;
+}
+
+.modern-company-bar {
+  grid-template-columns: 34px minmax(280px, 520px) auto 1fr !important;
+  min-height: 50px !important;
+  margin-bottom: 8px !important;
+  padding: 6px 10px !important;
+}
+
+.modern-company-icon {
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 14px !important;
+}
+
+.modern-company-selector {
+  min-height: 36px !important;
+  padding: 4px 34px 4px 10px !important;
+}
+
+.modern-company-selector span {
+  font-size: 8px !important;
+}
+
+.modern-company-selector strong {
+  font-size: 12px !important;
+}
+
+.modern-company-manage {
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 11px !important;
+  font-size: 10px !important;
+}
+
+.metrics-grid.modern-kpi-grid {
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.modern-dashboard .metric-card {
+  min-height: 84px !important;
+  padding: 10px 13px !important;
+}
+
+.modern-dashboard .metric-card-header {
+  gap: 8px !important;
+}
+
+.modern-dashboard .metric-card-icon {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 7px !important;
+  font-size: 14px !important;
+}
+
+.modern-dashboard .metric-card-title {
+  font-size: 10px !important;
+}
+
+.modern-dashboard .metric-card-value {
+  margin-top: 6px !important;
+  font-size: 27px !important;
+}
+
+.modern-dashboard .metric-card-subtitle {
+  margin-top: 3px !important;
+  font-size: 9px !important;
+}
+
+/* Intelligence compacto */
+.pf-intelligence-panel {
+  margin: 8px 0 !important;
+  padding: 13px 15px !important;
+  border-radius: 10px !important;
+}
+
+.pf-intelligence-header {
+  gap: 14px !important;
+}
+
+.pf-intelligence-heading {
+  gap: 9px !important;
+}
+
+.pf-intelligence-heading img {
+  width: 30px !important;
+  height: 30px !important;
+  flex-basis: 30px !important;
+}
+
+.pf-intelligence-heading > div > span {
+  font-size: 8px !important;
+}
+
+.pf-intelligence-heading h2 {
+  margin: 2px 0 !important;
+  font-size: 17px !important;
+}
+
+.pf-intelligence-heading p {
+  font-size: 10px !important;
+}
+
+.pf-intelligence-score {
+  min-width: 68px !important;
+  padding: 6px 9px !important;
+}
+
+.pf-intelligence-score span {
+  font-size: 8px !important;
+}
+
+.pf-intelligence-score strong {
+  font-size: 25px !important;
+}
+
+.pf-intelligence-score small {
+  font-size: 9px !important;
+}
+
+.pf-intelligence-summary {
+  gap: 6px !important;
+  margin: 10px 0 !important;
+  padding: 7px 0 !important;
+}
+
+.pf-intelligence-summary > span {
+  padding: 4px 7px !important;
+  font-size: 9px !important;
+}
+
+.pf-intelligence-summary > small {
+  font-size: 8px !important;
+}
+
+.pf-intelligence-list {
+  gap: 8px !important;
+}
+
+.pf-intelligence-item {
+  padding: 10px 12px !important;
+  border-radius: 8px !important;
+}
+
+.pf-intelligence-item-top > span,
+.pf-intelligence-item-top > small,
+.pf-intelligence-location {
+  font-size: 8px !important;
+}
+
+.pf-intelligence-item h3 {
+  margin: 4px 0 5px !important;
+  font-size: 12px !important;
+}
+
+.pf-intelligence-item p {
+  margin: 2px 0 !important;
+  font-size: 9px !important;
+  line-height: 1.35 !important;
+}
+
+.pf-intelligence-action {
+  margin-top: 6px !important;
+  padding: 6px 8px !important;
+}
+
+.pf-intelligence-action strong {
+  font-size: 8px !important;
+}
+
+.pf-intelligence-action span {
+  font-size: 9px !important;
+  line-height: 1.3 !important;
+}
+
+.pf-intelligence-clear {
+  padding: 10px 12px !important;
+}
+
+.pf-intelligence-clear strong {
+  font-size: 11px !important;
+}
+
+.pf-intelligence-clear span {
+  font-size: 9px !important;
+}
+
+/* Saúde e alertas mais baixos */
+.clean-dashboard-main {
+  gap: 8px !important;
+}
+
+.clean-health-card,
+.clean-alert-panel {
+  min-height: 170px !important;
+  padding: 12px 14px !important;
+}
+
+.clean-card-kicker,
+.modern-alert-kicker {
+  font-size: 8px !important;
+}
+
+.clean-card-heading h2,
+.modern-alert-heading h2 {
+  margin-top: 3px !important;
+  font-size: 14px !important;
+}
+
+.clean-card-heading p,
+.modern-alert-heading p {
+  font-size: 9px !important;
+}
+
+.clean-health-score-row {
+  margin-top: 12px !important;
+}
+
+.clean-health-score-row > div:first-child strong {
+  font-size: 27px !important;
+}
+
+.clean-health-score-row > div:first-child span {
+  font-size: 9px !important;
+}
+
+.clean-health-progress {
+  height: 7px !important;
+}
+
+.clean-health-meta {
+  margin-top: 10px !important;
+  padding-top: 9px !important;
+}
+
+.clean-health-meta span,
+.clean-health-meta strong {
+  font-size: 9px !important;
+}
+
+.clean-health-status {
+  font-size: 11px !important;
+}
+
+.modern-panel-icon.alert {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.modern-view-all {
+  min-height: 29px !important;
+  height: 29px !important;
+  padding: 0 9px !important;
+  font-size: 9px !important;
+}
+
+.modern-no-alerts {
+  min-height: 86px !important;
+  margin-top: 8px !important;
+  padding: 11px 13px !important;
+}
+
+.modern-no-alerts strong {
+  font-size: 11px !important;
+}
+
+.modern-no-alerts span {
+  font-size: 9px !important;
+}
+
+.modern-alert-list {
+  gap: 6px !important;
+  margin-top: 8px !important;
+}
+
+.modern-alert-item {
+  min-height: 42px !important;
+  padding: 7px 9px !important;
+}
+
+.modern-alert-item strong {
+  font-size: 10px !important;
+}
+
+.modern-alert-item span,
+.modern-alert-item small {
+  font-size: 8px !important;
+}
+
+/* Resumo inferior compacto */
+.clean-summary-strip {
+  gap: 8px !important;
+  margin-top: 8px !important;
+}
+
+.clean-summary-item {
+  min-height: 50px !important;
+  padding: 8px 11px !important;
+}
+
+.clean-summary-item span {
+  font-size: 9px !important;
+}
+
+.clean-summary-item strong {
+  font-size: 17px !important;
+}
+
+.modern-dashboard-footer {
+  padding-top: 8px !important;
+  font-size: 8px !important;
+}
+
+/* Dark Mode 2.0 — slate/graphite, sem blocos brancos */
+html[data-theme="dark"] {
+  --pf-bg: #0f1722;
+  --pf-surface: #182231;
+  --pf-surface-soft: #202d3d;
+  --pf-border: #334457;
+  --pf-border-strong: #4a5f75;
+  --pf-text: #f2f6fa;
+  --pf-muted: #a9b7c7;
+  --pf-blue: #6ab0ff;
+  --pf-blue-hover: #8dc3ff;
+  --pf-blue-soft: #203a56;
+  --pf-green: #58d6a5;
+  --pf-green-soft: #173a31;
+  --pf-red: #ff858e;
+  --pf-red-soft: #45262b;
+  --pf-orange: #ffc06b;
+  --pf-orange-soft: #49361e;
+  --pf-shadow: 0 5px 16px rgba(0, 0, 0, .20);
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] #root,
+html[data-theme="dark"] .shell,
+html[data-theme="dark"] .dashboard,
+html[data-theme="dark"] .dashboard-modern-shell,
+html[data-theme="dark"] .executive-clean-page.clean-dashboard-v2 {
+  background: #0f1722 !important;
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .shell aside,
+html[data-theme="dark"] .modern-dashboard-header {
+  background: #131d2a !important;
+  border-color: #314052 !important;
+}
+
+html[data-theme="dark"] .brand strong,
+html[data-theme="dark"] .modern-dashboard-header h1,
+html[data-theme="dark"] .modern-dashboard-header p,
+html[data-theme="dark"] .modern-dashboard-kicker {
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .modern-dashboard-header p,
+html[data-theme="dark"] .modern-dashboard-kicker,
+html[data-theme="dark"] .modern-update-row {
+  color: var(--pf-muted) !important;
+}
+
+html[data-theme="dark"] .modern-company-bar,
+html[data-theme="dark"] .modern-dashboard .metric-card,
+html[data-theme="dark"] .modern-panel,
+html[data-theme="dark"] .clean-health-card,
+html[data-theme="dark"] .clean-alert-panel,
+html[data-theme="dark"] .clean-summary-item {
+  background: var(--pf-surface) !important;
+  border-color: var(--pf-border) !important;
+  color: var(--pf-text) !important;
+  box-shadow: var(--pf-shadow) !important;
+}
+
+html[data-theme="dark"] .modern-company-selector {
+  background: #111b29 !important;
+  border-color: var(--pf-border-strong) !important;
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .modern-company-selector:hover {
+  background: #1b2a3b !important;
+}
+
+html[data-theme="dark"] .modern-company-selector strong,
+html[data-theme="dark"] .modern-dashboard .metric-card-value,
+html[data-theme="dark"] .clean-card-heading h2,
+html[data-theme="dark"] .modern-alert-heading h2,
+html[data-theme="dark"] .clean-health-score-row > div:first-child strong,
+html[data-theme="dark"] .clean-health-meta strong,
+html[data-theme="dark"] .clean-summary-item strong {
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .modern-company-selector span,
+html[data-theme="dark"] .modern-dashboard .metric-card-title,
+html[data-theme="dark"] .modern-dashboard .metric-card-subtitle,
+html[data-theme="dark"] .clean-card-kicker,
+html[data-theme="dark"] .clean-card-heading p,
+html[data-theme="dark"] .modern-alert-heading p,
+html[data-theme="dark"] .clean-health-score-row > div:first-child span,
+html[data-theme="dark"] .clean-health-meta span,
+html[data-theme="dark"] .clean-summary-item span {
+  color: var(--pf-muted) !important;
+}
+
+html[data-theme="dark"] .clean-health-progress {
+  background: #35465a !important;
+}
+
+html[data-theme="dark"] .modern-agent-badge.online {
+  background: #173a31 !important;
+  border-color: #356b59 !important;
+  color: #78e0b9 !important;
+}
+
+html[data-theme="dark"] .pf-theme-toggle,
+html[data-theme="dark"] .modern-refresh-button,
+html[data-theme="dark"] .modern-company-manage,
+html[data-theme="dark"] .modern-view-all {
+  background: #182536 !important;
+  border-color: #42556b !important;
+  color: #8dc3ff !important;
+}
+
+html[data-theme="dark"] .pf-theme-toggle:hover,
+html[data-theme="dark"] .modern-refresh-button:hover,
+html[data-theme="dark"] .modern-company-manage:hover,
+html[data-theme="dark"] .modern-view-all:hover {
+  background: #203a56 !important;
+  border-color: #6ab0ff !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-panel {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(46, 181, 142, .12), transparent 34%),
+    radial-gradient(circle at 82% 0%, rgba(75, 143, 217, .14), transparent 40%),
+    #182231 !important;
+  border-color: #3a4c60 !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-heading h2,
+html[data-theme="dark"] .pf-intelligence-score strong,
+html[data-theme="dark"] .pf-intelligence-item h3,
+html[data-theme="dark"] .pf-intelligence-item p,
+html[data-theme="dark"] .pf-intelligence-item p b,
+html[data-theme="dark"] .pf-intelligence-action span {
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-heading p,
+html[data-theme="dark"] .pf-intelligence-score span,
+html[data-theme="dark"] .pf-intelligence-score small,
+html[data-theme="dark"] .pf-intelligence-item-top > span,
+html[data-theme="dark"] .pf-intelligence-item-top > small,
+html[data-theme="dark"] .pf-intelligence-location,
+html[data-theme="dark"] .pf-intelligence-summary > small {
+  color: var(--pf-muted) !important;
+}
+
+html[data-theme="dark"] .pf-intelligence-score,
+html[data-theme="dark"] .pf-intelligence-item,
+html[data-theme="dark"] .pf-intelligence-action {
+  background: rgba(32, 45, 61, .92) !important;
+  border-color: #3a4d63 !important;
+}
+
+html[data-theme="dark"] .modern-alert-item {
+  background: #1c2939 !important;
+  border-color: #3a4a5e !important;
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .modern-alert-item strong,
+html[data-theme="dark"] .modern-alert-item span,
+html[data-theme="dark"] .modern-alert-item b {
+  color: var(--pf-text) !important;
+}
+
+html[data-theme="dark"] .modern-no-alerts {
+  background: #173a31 !important;
+  border-color: #356b59 !important;
+}
+
+html[data-theme="dark"] .modern-no-alerts strong {
+  color: #80e2bc !important;
+}
+
+html[data-theme="dark"] .modern-no-alerts span {
+  color: #b7c7d7 !important;
+}
+
+/* Login escuro menos agressivo */
+html[data-theme="dark"] .auth-page {
+  background:
+    radial-gradient(circle at 10% 8%, rgba(70, 132, 204, .18), transparent 28%),
+    radial-gradient(circle at 92% 88%, rgba(55, 188, 151, .13), transparent 30%),
+    linear-gradient(145deg, #111a26 0%, #172332 52%, #111b28 100%) !important;
+}
+
+html[data-theme="dark"] .auth-card {
+  background: rgba(27, 39, 54, .97) !important;
+  border-color: #415168 !important;
+  box-shadow: 0 24px 58px rgba(0, 0, 0, .30) !important;
+}
+
+@media (min-width: 1500px) {
+  .executive-clean-page.clean-dashboard-v2 {
+    padding-left: 22px !important;
+    padding-right: 22px !important;
+  }
+
+  .modern-dashboard-header {
+    margin-left: -22px !important;
+    margin-right: -22px !important;
+    padding-left: 22px !important;
+    padding-right: 22px !important;
+  }
+}
+
+@media (max-width: 1100px) {
+  .clean-health-card,
+  .clean-alert-panel {
+    min-height: 150px !important;
+  }
+}
+
+@media (max-width: 850px) {
+  .executive-clean-page.clean-dashboard-v2 {
+    padding: 10px !important;
+  }
+
+  .modern-dashboard-header {
+    margin: -10px -10px 8px !important;
+    padding: 10px !important;
+  }
+}
