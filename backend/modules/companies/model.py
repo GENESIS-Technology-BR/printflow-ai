@@ -1,8 +1,9 @@
 import secrets
 from datetime import datetime, timezone
+from decimal import Decimal
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, Integer, String
+from sqlalchemy import Boolean, DateTime, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.database.connection import Base
@@ -20,6 +21,11 @@ class Company(Base):
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     state: Mapped[str | None] = mapped_column(String(2), nullable=True)
     plan: Mapped[str] = mapped_column(String(30), default="pilot")
+    default_cost_per_page: Mapped[Decimal] = mapped_column(
+        Numeric(10, 4),
+        default=Decimal("0.0000"),
+        nullable=False,
+    )
     agent_token: Mapped[str] = mapped_column(
         String(100), unique=True, index=True,
         default=lambda: secrets.token_urlsafe(32),
