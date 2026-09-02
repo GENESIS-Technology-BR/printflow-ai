@@ -1,0 +1,70 @@
+/* Identidade oficial Printflow */
+.auth-card .auth-brand-mark {
+  display: block;
+  width: 74px;
+  height: 74px;
+  margin: 0 auto 12px;
+  object-fit: contain;
+}
+
+.auth-card h1 {
+  color: #0b2a52 !important;
+  font-weight: 750 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.auth-card::before {
+  width: 100% !important;
+  height: 4px !important;
+  background: linear-gradient(90deg, #0a6ed1 0%, #1c86f3 48%, #21d89b 100%) !important;
+}
+
+.brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+}
+
+.brand > img {
+  display: block;
+  width: 31px !important;
+  height: 31px !important;
+  flex: 0 0 31px;
+  object-fit: contain;
+}
+
+.brand > strong {
+  color: #0b2a52 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+}
+
+.modern-dashboard-header > div:first-child,
+.control-center-header > div:first-child,
+.agent-monitor-header > div:first-child,
+.reports-header > div:first-child,
+.dashboard > header > div:first-child {
+  position: relative;
+  padding-left: 35px;
+}
+
+.modern-dashboard-header > div:first-child::before,
+.control-center-header > div:first-child::before,
+.agent-monitor-header > div:first-child::before,
+.reports-header > div:first-child::before,
+.dashboard > header > div:first-child::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 25px;
+  height: 25px;
+  background: url('/brand/printflow-mark.svg') center / contain no-repeat;
+}
+
+@media (max-width: 480px) {
+  .auth-card .auth-brand-mark {
+    width: 64px;
+    height: 64px;
+  }
+}
