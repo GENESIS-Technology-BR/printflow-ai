@@ -39,6 +39,29 @@
   letter-spacing: -0.015em !important;
 }
 
+.modern-dashboard-header > div:first-child,
+.control-center-header > div:first-child,
+.agent-monitor-header > div:first-child,
+.reports-header > div:first-child,
+.dashboard > header > div:first-child {
+  position: relative;
+  padding-left: 35px;
+}
+
+.modern-dashboard-header > div:first-child::before,
+.control-center-header > div:first-child::before,
+.agent-monitor-header > div:first-child::before,
+.reports-header > div:first-child::before,
+.dashboard > header > div:first-child::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 25px;
+  height: 25px;
+  background: url('/brand/printflow-mark.svg') center / contain no-repeat;
+}
+
 @media (max-width: 480px) {
   .auth-card .auth-brand-mark {
     width: 64px;
