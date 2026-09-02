@@ -1,11 +1,25 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#0A6ED1" />
     <meta name="description" content="Printflow - Gestão inteligente de impressão" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        try {
+          const saved = localStorage.getItem('printflow_theme');
+          const theme = saved === 'dark' ? 'dark' : 'light';
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+          const meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', theme === 'dark' ? '#0B1524' : '#0A6ED1');
+        } catch (_) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
     <title>Printflow | Gestão inteligente de impressão</title>
   </head>
   <body>

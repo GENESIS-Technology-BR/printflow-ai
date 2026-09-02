@@ -6,6 +6,7 @@ import PrinterTable from "./components/PrinterTable"
 import AgentMonitor from "./components/AgentMonitor"
 import ControlCenter from "./components/ControlCenter"
 import Reports from "./components/Reports"
+import ThemeToggle from "./components/ThemeToggle"
 import { getDashboardPrinters, getMe } from "./services/api"
 import type { DashboardPrinter, MeProfile } from "./services/api"
 
@@ -159,6 +160,7 @@ function App() {
   if (!token) {
     return (
       <main className="auth-page">
+        <ThemeToggle />
         <section className="auth-card">
           <img className="auth-brand-mark" src="/brand/printflow-mark.svg" alt="Símbolo Printflow" />
           <h1>Printflow</h1>
@@ -188,6 +190,7 @@ function App() {
 
   return (
     <div className="shell">
+      <ThemeToggle />
       <aside>
         <div className="brand">
           <img src="/brand/printflow-mark.svg" alt="" aria-hidden="true" />

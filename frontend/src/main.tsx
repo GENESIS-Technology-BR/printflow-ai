@@ -10,6 +10,7 @@ import './fiori-premium.css'
 import './printflow-design-system.css'
 import './login-enterprise.css'
 import './brand-system.css'
+import './theme-system.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
