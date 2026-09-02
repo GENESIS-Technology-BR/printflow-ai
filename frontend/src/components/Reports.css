@@ -27,8 +27,20 @@
   background: #0d1d30;
 }
 
+.reports-intro small,
+.reports-table-title small {
+  color: #7fa2bf;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.reports-intro h2,
+.reports-table-title h3 {
+  color: #f4f8fc;
+}
+
 .reports-intro h2 { margin: 5px 0 7px; }
-.reports-intro p { margin: 0; color: #8da6c1; }
+.reports-intro p { margin: 0; color: #a9c0d7; }
 
 .reports-downloads { display: flex; gap: 10px; flex-wrap: wrap; }
 .reports-downloads button {
