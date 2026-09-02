@@ -13,6 +13,7 @@ import './brand-system.css'
 import './theme-system.css'
 import './theme-header-alignment.css'
 import './compact-ui-v052.css'
+import './dark-visibility-v053.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
