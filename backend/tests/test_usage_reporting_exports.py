@@ -24,6 +24,9 @@ SAMPLE_ROWS = [
         "pages_printed": 125,
         "anomaly_count": 0,
         "last_anomaly_type": None,
+        "cost_per_page": 0.12,
+        "estimated_cost": 15.0,
+        "cost_source": "company",
     }
 ]
 
@@ -47,6 +50,8 @@ def test_excel_report_generates_valid_workbook():
     assert summary["A2"].value == "Empresa: Empresa Teste"
     assert summary["A6"].value == "Impressora Financeiro"
     assert summary["M6"].value == 125
+    assert summary["O6"].value == 0.12
+    assert summary["P6"].value == 15.0
 
 
 def test_pdf_report_generates_valid_pdf():
