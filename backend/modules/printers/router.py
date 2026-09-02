@@ -11,6 +11,7 @@ from backend.modules.organization.model import CompanySector, CompanyUnit
 from backend.modules.printers.model import Printer
 from backend.modules.printers.schema import (
     AgentHeartbeat,
+    PrinterCostUpdate,
     PrinterCustomNameUpdate,
     PrinterOrganizationUpdate,
     PrinterResponse,
@@ -129,8 +130,6 @@ def receive_agent_heartbeat(
     company.agent_version = payload.agent_version
     company.agent_last_error = _clean_text(payload.error)
 
-    # A lista só é autoritativa quando o Agent conclui todo o ciclo. Isso
-    # preserva a frota anterior em falhas parciais, desligamentos e timeouts.
     if payload.status == "healthy" and payload.inventory_complete:
         company_printers = (
             db.query(Printer)
@@ -248,7 +247,6 @@ def receive_agent_data(
     return printer
 
 
-# PRINTFLOW_V036_CUSTOM_NAME
 @router.patch(
     "/{printer_uuid}/custom-name",
     response_model=PrinterResponse,
@@ -274,18 +272,42 @@ def update_printer_custom_name(
             detail="Impressora nao encontrada.",
         )
 
-    printer.custom_name = _clean_text(
-        payload.custom_name
-    )
-
+    printer.custom_name = _clean_text(payload.custom_name)
     db.commit()
     db.refresh(printer)
-
     return printer
 
 
+@router.patch(
+    "/{printer_uuid}/cost",
+    response_model=PrinterResponse,
+)
+def update_printer_cost(
+    printer_uuid: str,
+    payload: PrinterCostUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    printer = (
+        db.query(Printer)
+        .filter(
+            Printer.uuid == printer_uuid,
+            Printer.company_id == current_user.company_id,
+        )
+        .first()
+    )
+    if printer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Impressora nao encontrada.",
+        )
 
-# PRINTFLOW_V037_ORGANIZATION
+    printer.cost_per_page = payload.cost_per_page
+    db.commit()
+    db.refresh(printer)
+    return printer
+
+
 @router.patch(
     "/{printer_uuid}/organization",
     response_model=PrinterResponse,
@@ -372,5 +394,4 @@ def update_printer_organization(
 
     db.commit()
     db.refresh(printer)
-
     return printer
