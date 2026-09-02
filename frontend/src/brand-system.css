@@ -1,0 +1,47 @@
+/* Identidade oficial Printflow */
+.auth-card .auth-brand-mark {
+  display: block;
+  width: 74px;
+  height: 74px;
+  margin: 0 auto 12px;
+  object-fit: contain;
+}
+
+.auth-card h1 {
+  color: #0b2a52 !important;
+  font-weight: 750 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.auth-card::before {
+  width: 100% !important;
+  height: 4px !important;
+  background: linear-gradient(90deg, #0a6ed1 0%, #1c86f3 48%, #21d89b 100%) !important;
+}
+
+.brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+}
+
+.brand > img {
+  display: block;
+  width: 31px !important;
+  height: 31px !important;
+  flex: 0 0 31px;
+  object-fit: contain;
+}
+
+.brand > strong {
+  color: #0b2a52 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+}
+
+@media (max-width: 480px) {
+  .auth-card .auth-brand-mark {
+    width: 64px;
+    height: 64px;
+  }
+}
