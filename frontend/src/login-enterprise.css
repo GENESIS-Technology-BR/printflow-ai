@@ -1,0 +1,202 @@
+/* Printflow login — corporate reference inspired by enterprise ERP portals */
+.auth-page {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center start;
+  padding: 48px clamp(28px, 8vw, 160px);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 74% 78%, rgba(9, 52, 86, 0.34), transparent 34%),
+    radial-gradient(circle at 58% 22%, rgba(17, 67, 103, 0.18), transparent 26%),
+    linear-gradient(135deg, #050b14 0%, #07111d 52%, #06101a 100%);
+}
+
+.auth-page::before,
+.auth-page::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(2px);
+  opacity: 0.7;
+}
+
+.auth-page::before {
+  width: 540px;
+  height: 540px;
+  right: 10%;
+  bottom: -310px;
+  background: rgba(10, 68, 108, 0.18);
+}
+
+.auth-page::after {
+  width: 240px;
+  height: 240px;
+  right: 29%;
+  bottom: -118px;
+  border: 1px solid rgba(63, 153, 206, 0.12);
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  width: min(390px, calc(100vw - 48px));
+  margin-left: clamp(0px, 11vw, 210px);
+  padding: 38px 30px 32px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.36);
+}
+
+.auth-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #30c8a4 0%, #2b7be4 100%);
+}
+
+.auth-card .logo {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 18px;
+  border: 6px solid #35c9a8;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #16365d;
+  box-shadow: inset 0 0 0 4px #ffffff, 0 0 0 1px rgba(53, 201, 168, 0.12);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.auth-card h1 {
+  margin: 0;
+  text-align: center;
+  color: #14243a;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.auth-card > p {
+  margin: 7px 0 22px;
+  text-align: center;
+  color: #7b8798;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.auth-card .tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: 0 0 22px;
+  padding: 0;
+  border-bottom: 1px solid #e6eaf0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.auth-card .tabs button {
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #7b8798;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.auth-card .tabs button.active {
+  border-bottom-color: #2f6fd6;
+  background: transparent;
+  color: #2f6fd6;
+  box-shadow: none;
+}
+
+.auth-card form {
+  display: grid;
+  gap: 15px;
+}
+
+.auth-card label {
+  display: grid;
+  gap: 7px;
+  color: #596779;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.auth-card input {
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #c8d0dc;
+  border-radius: 2px;
+  outline: none;
+  background: #ffffff;
+  color: #14243a;
+  font-size: 14px;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.auth-card input:focus {
+  border-color: #2f6fd6;
+  box-shadow: 0 0 0 2px rgba(47, 111, 214, 0.12);
+}
+
+.auth-card .primary {
+  min-height: 42px;
+  margin-top: 3px;
+  border: 1px solid #2b64c9;
+  border-radius: 2px;
+  background: #356fd0;
+  color: #ffffff;
+  box-shadow: 0 5px 12px rgba(47, 111, 214, 0.17);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.auth-card .primary:hover:not(:disabled) {
+  background: #2d63bf;
+}
+
+.auth-card .primary:disabled {
+  opacity: 0.66;
+  cursor: wait;
+}
+
+.auth-card .message {
+  margin-top: 16px;
+  padding: 11px 12px;
+  border: 1px solid #f0c7c4;
+  border-radius: 3px;
+  background: #fff6f5;
+  color: #b42318;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .auth-page {
+    place-items: center;
+    padding: 28px 20px;
+  }
+
+  .auth-card {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    width: 100%;
+    padding: 30px 22px 26px;
+  }
+}
