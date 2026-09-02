@@ -1,53 +1,57 @@
-/* Printflow login — corporate reference inspired by enterprise ERP portals */
+/* Printflow login — identidade aprovada */
 .auth-page {
   position: relative;
   min-height: 100vh;
   display: grid;
-  place-items: center start;
-  padding: 48px clamp(28px, 8vw, 160px);
+  place-items: center;
+  padding: 48px 24px 72px;
   overflow: hidden;
   background:
-    radial-gradient(circle at 74% 78%, rgba(9, 52, 86, 0.34), transparent 34%),
-    radial-gradient(circle at 58% 22%, rgba(17, 67, 103, 0.18), transparent 26%),
-    linear-gradient(135deg, #050b14 0%, #07111d 52%, #06101a 100%);
-}
-
-.auth-page::before,
-.auth-page::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  border-radius: 50%;
-  filter: blur(2px);
-  opacity: 0.7;
+    radial-gradient(circle at 0% 0%, rgba(51, 111, 220, .14) 0 19%, transparent 19.5%),
+    radial-gradient(circle at 100% 100%, rgba(43, 203, 169, .13) 0 18%, transparent 18.5%),
+    radial-gradient(circle at 8% 96%, rgba(48, 113, 220, .08) 0 13%, transparent 13.5%),
+    linear-gradient(135deg, #f7fbff 0%, #edf5fd 48%, #f8fcff 100%);
 }
 
 .auth-page::before {
-  width: 540px;
-  height: 540px;
-  right: 10%;
-  bottom: -310px;
-  background: rgba(10, 68, 108, 0.18);
+  content: "";
+  position: absolute;
+  inset: 20% -8% auto -8%;
+  height: 58%;
+  pointer-events: none;
+  opacity: .48;
+  background:
+    repeating-radial-gradient(
+      ellipse at center,
+      transparent 0 18px,
+      rgba(47, 111, 214, .11) 19px 20px,
+      transparent 21px 36px
+    );
+  mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
 }
 
 .auth-page::after {
-  width: 240px;
-  height: 240px;
-  right: 29%;
-  bottom: -118px;
-  border: 1px solid rgba(63, 153, 206, 0.12);
+  content: "© 2026 Printflow. Todos os direitos reservados.";
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  color: #8da0b8;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .auth-card {
   position: relative;
   z-index: 1;
-  width: min(390px, calc(100vw - 48px));
-  margin-left: clamp(0px, 11vw, 210px);
-  padding: 38px 30px 32px;
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  border-radius: 4px;
-  background: #ffffff;
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.36);
+  width: min(500px, calc(100vw - 32px));
+  margin: 0;
+  padding: 38px 40px 30px;
+  border: 1px solid rgba(204, 216, 232, .84);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 28px 70px rgba(50, 82, 120, .17);
+  backdrop-filter: blur(14px);
 }
 
 .auth-card::before {
@@ -55,121 +59,187 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(180deg, #30c8a4 0%, #2b7be4 100%);
+  right: 0;
+  height: 4px;
+  border-radius: 22px 22px 0 0;
+  background: linear-gradient(90deg, #1469e5 0%, #1897e5 48%, #23cda1 100%);
+}
+
+.auth-card::after {
+  content: "✓  Conexão segura";
+  display: block;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #e5ebf3;
+  color: #0c9b61;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .auth-card .logo {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 18px;
-  border: 6px solid #35c9a8;
-  border-radius: 50%;
-  background: #ffffff;
-  color: #16365d;
-  box-shadow: inset 0 0 0 4px #ffffff, 0 0 0 1px rgba(53, 201, 168, 0.12);
-  font-size: 18px;
+  position: relative;
+  width: 92px;
+  height: 92px;
+  margin: 2px auto 8px;
+  border: 0;
+  border-radius: 0;
+  display: grid;
+  place-items: center;
+  overflow: visible;
+  background: linear-gradient(155deg, #1767e5 0%, #1478df 52%, #20caa4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  box-shadow: none;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 88px;
   font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.12em;
+}
+
+/* circuitos do símbolo P */
+.auth-card .logo::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 43px;
+  width: 39px;
+  height: 2px;
+  border-radius: 2px;
+  background: #1777e5;
+  box-shadow:
+    0 -13px 0 #1777e5,
+    0 13px 0 #20c5a9;
+}
+
+.auth-card .logo::after {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 41px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1777e5;
+  box-shadow:
+    0 -13px 0 #1777e5,
+    0 13px 0 #20c5a9,
+    38px -13px 0 #1777e5,
+    38px 0 0 #1c9dd1,
+    38px 13px 0 #20c5a9;
 }
 
 .auth-card h1 {
-  margin: 0;
+  margin: 2px 0 2px;
   text-align: center;
-  color: #14243a;
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  color: #092b56;
+  font-size: clamp(38px, 5vw, 52px);
+  font-weight: 800;
+  letter-spacing: -.045em;
+  line-height: 1.05;
 }
 
 .auth-card > p {
-  margin: 7px 0 22px;
+  margin: 8px 0 28px;
   text-align: center;
-  color: #7b8798;
-  font-size: 13px;
-  line-height: 1.5;
+  color: #77879c;
+  font-size: 15px;
+  line-height: 1.45;
 }
 
 .auth-card .tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  margin: 0 0 22px;
+  margin: 0 0 26px;
   padding: 0;
-  border-bottom: 1px solid #e6eaf0;
-  border-radius: 0;
-  background: transparent;
+  overflow: hidden;
+  border: 1px solid #d6e0ec;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(33, 78, 132, .06);
 }
 
 .auth-card .tabs button {
-  min-height: 38px;
-  padding: 8px 10px;
+  min-height: 52px;
+  padding: 10px 14px;
   border: 0;
-  border-bottom: 2px solid transparent;
   border-radius: 0;
   background: transparent;
-  color: #7b8798;
+  color: #34465d;
   box-shadow: none;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.auth-card .tabs button + button {
+  border-left: 1px solid #dce5ef;
 }
 
 .auth-card .tabs button.active {
-  border-bottom-color: #2f6fd6;
-  background: transparent;
-  color: #2f6fd6;
+  border: 0;
+  background: linear-gradient(135deg, #1769e6 0%, #0e74e4 100%);
+  color: #fff;
   box-shadow: none;
 }
 
 .auth-card form {
   display: grid;
-  gap: 15px;
+  gap: 17px;
 }
 
 .auth-card label {
   display: grid;
-  gap: 7px;
-  color: #596779;
-  font-size: 12px;
-  font-weight: 500;
+  gap: 8px;
+  color: #25384f;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .auth-card input {
-  min-height: 42px;
-  padding: 10px 12px;
-  border: 1px solid #c8d0dc;
-  border-radius: 2px;
+  min-height: 50px;
+  padding: 12px 14px;
+  border: 1px solid #ccd8e6;
+  border-radius: 9px;
   outline: none;
-  background: #ffffff;
+  background: #fbfdff;
   color: #14243a;
   font-size: 14px;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  box-shadow: inset 0 1px 2px rgba(27, 61, 101, .03);
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.auth-card input:hover {
+  border-color: #aebfd3;
 }
 
 .auth-card input:focus {
-  border-color: #2f6fd6;
-  box-shadow: 0 0 0 2px rgba(47, 111, 214, 0.12);
+  border-color: #2077df;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(32, 119, 223, .11);
 }
 
 .auth-card .primary {
-  min-height: 42px;
-  margin-top: 3px;
-  border: 1px solid #2b64c9;
-  border-radius: 2px;
-  background: #356fd0;
-  color: #ffffff;
-  box-shadow: 0 5px 12px rgba(47, 111, 214, 0.17);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  min-height: 52px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1468e5 0%, #0579e7 100%);
+  color: #fff;
+  box-shadow: 0 9px 20px rgba(21, 104, 229, .20);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .01em;
 }
 
 .auth-card .primary:hover:not(:disabled) {
-  background: #2d63bf;
+  background: linear-gradient(135deg, #105dcc 0%, #006fd7 100%);
+  box-shadow: 0 11px 24px rgba(21, 104, 229, .24);
 }
 
 .auth-card .primary:disabled {
-  opacity: 0.66;
+  opacity: .66;
   cursor: wait;
 }
 
@@ -177,26 +247,35 @@
   margin-top: 16px;
   padding: 11px 12px;
   border: 1px solid #f0c7c4;
-  border-radius: 3px;
+  border-radius: 8px;
   background: #fff6f5;
   color: #b42318;
   font-size: 12px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 620px) {
   .auth-page {
-    place-items: center;
-    padding: 28px 20px;
+    padding: 26px 16px 66px;
   }
 
-  .auth-card {
-    margin-left: 0;
+  .auth-page::after {
+    bottom: 18px;
+    font-size: 10px;
   }
-}
 
-@media (max-width: 480px) {
   .auth-card {
     width: 100%;
-    padding: 30px 22px 26px;
+    padding: 30px 22px 24px;
+    border-radius: 18px;
+  }
+
+  .auth-card h1 {
+    font-size: 40px;
+  }
+
+  .auth-card .logo {
+    width: 78px;
+    height: 78px;
+    font-size: 76px;
   }
 }
