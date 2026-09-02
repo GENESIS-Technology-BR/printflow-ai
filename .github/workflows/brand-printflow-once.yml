@@ -1,0 +1,47 @@
+name: Brand Printflow Once
+
+on:
+  push:
+    branches:
+      - feature/brand-printflow
+    paths:
+      - ".github/workflows/brand-printflow-once.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  rename-brand:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: feature/brand-printflow
+
+      - name: Padronizar marca visivel
+        shell: python
+        run: |
+          from pathlib import Path
+
+          allowed = {".py", ".tsx", ".ts", ".html", ".md", ".txt"}
+          changed = []
+          for path in Path(".").rglob("*"):
+              if not path.is_file() or ".git" in path.parts or path.suffix.lower() not in allowed:
+                  continue
+              text = path.read_text(encoding="utf-8")
+              updated = text.replace("PRINTFLOW AI", "Printflow")
+              if updated != text:
+                  path.write_text(updated, encoding="utf-8")
+                  changed.append(str(path))
+          print("Arquivos atualizados:")
+          for item in changed:
+              print(item)
+
+      - name: Commit da marca
+        run: |
+          git config user.name "GENESIS Technology"
+          git config user.email "tecdalinformatica@gmail.com"
+          git add .
+          git commit -m "style: padroniza marca para Printflow" || exit 0
+          git push origin feature/brand-printflow
