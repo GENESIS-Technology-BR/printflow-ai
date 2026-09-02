@@ -1,0 +1,62 @@
+.deployment-status {
+  margin: auto 10px 10px;
+  padding: 10px 11px;
+  border: 1px solid #d5dadd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1d2d3e;
+  font-family: "72", "Segoe UI", Arial, sans-serif;
+}
+
+.deployment-status-title {
+  display: block;
+  margin-bottom: 6px;
+  color: #556b82;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.deployment-status-state {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.deployment-status-state i {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: #89919a;
+}
+
+.deployment-status-state strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deployment-status small {
+  display: block;
+  margin-top: 5px;
+  color: #6a6d70;
+  font-size: 10px;
+}
+
+.deployment-success i { background: #188918; }
+.deployment-success strong { color: #107e3e; }
+.deployment-warning i { background: #e9730c; }
+.deployment-warning strong { color: #8d4a00; }
+.deployment-error i { background: #bb0000; }
+.deployment-error strong { color: #bb0000; }
+.deployment-loading i { background: #89919a; }
+
+@media (max-width: 760px) {
+  .deployment-status {
+    margin: 8px;
+  }
+}
