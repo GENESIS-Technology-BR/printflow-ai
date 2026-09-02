@@ -1,4 +1,6 @@
 from datetime import datetime
+from decimal import Decimal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -35,6 +37,7 @@ class PrinterResponse(PrinterBase):
     sector_name: str | None = None
     unit_id: int | None = None
     sector_id: int | None = None
+    cost_per_page: Decimal | None = None
 
     id: int
     uuid: str
@@ -59,6 +62,15 @@ class PrinterOrganizationUpdate(BaseModel):
     sector_name: str | None = Field(
         default=None,
         max_length=120,
+    )
+
+
+class PrinterCostUpdate(BaseModel):
+    cost_per_page: Decimal | None = Field(
+        default=None,
+        ge=Decimal("0"),
+        le=Decimal("100"),
+        decimal_places=4,
     )
 
 
