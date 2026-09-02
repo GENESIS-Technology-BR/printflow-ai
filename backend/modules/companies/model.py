@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, Integer, Numeric, String
+from sqlalchemy import Boolean, DateTime, Integer, Numeric, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.database.connection import Base
@@ -24,6 +24,7 @@ class Company(Base):
     default_cost_per_page: Mapped[Decimal] = mapped_column(
         Numeric(10, 4),
         default=Decimal("0.0000"),
+        server_default=text("0"),
         nullable=False,
     )
     agent_token: Mapped[str] = mapped_column(
