@@ -16,8 +16,9 @@ def test_printer_screen_can_create_units():
     )
 
     assert "Nova unidade" in table
-    assert "+ Adicionar unidade" in table
     assert "createOrganizationUnit" in table
+    assert "createUnit(event)" in table
+    assert 'catalogSaving === "unit"' in table
 
 
 def test_printer_screen_can_create_sectors():
@@ -26,8 +27,9 @@ def test_printer_screen_can_create_sectors():
     )
 
     assert "Novo setor" in table
-    assert "+ Adicionar setor" in table
     assert "createOrganizationSector" in table
+    assert "createSector(event)" in table
+    assert 'catalogSaving === "sector"' in table
 
 
 def test_printer_uses_catalog_selectors():
