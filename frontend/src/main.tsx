@@ -26,6 +26,7 @@ import './executive-overview-v064.css'
 import './enterprise-minimal-v065.css'
 import './executive-balance-v066.css'
 import './dark-balance-v067.css'
+import './printers-operational-v068.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
