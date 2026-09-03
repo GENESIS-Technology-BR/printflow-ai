@@ -1,0 +1,250 @@
+/* PRINTFLOW v0.6.5 — Enterprise Minimal Shell
+   Referência conceitual: SAP Fiori/TOTVS; identidade própria Printflow. */
+
+:root {
+  --em-bg: #f6f7f9;
+  --em-surface: #ffffff;
+  --em-surface-soft: #fafbfc;
+  --em-line: #e6e9ee;
+  --em-line-strong: #d8dee7;
+  --em-text: #17202b;
+  --em-muted: #667085;
+  --em-accent: #0b74de;
+  --em-radius: 10px;
+}
+
+html[data-theme="dark"] {
+  --em-bg: #0d1117;
+  --em-surface: #141a22;
+  --em-surface-soft: #10161d;
+  --em-line: #25303d;
+  --em-line-strong: #334152;
+  --em-text: #edf2f7;
+  --em-muted: #9aa7b6;
+  --em-accent: #5aa7ff;
+}
+
+body { background: var(--em-bg) !important; }
+.shell { background: var(--em-bg) !important; }
+
+/* Navegação: mais ERP moderno, menos “app de cards”. */
+.shell > aside {
+  width: 172px !important;
+  background: var(--em-surface) !important;
+  border-right: 1px solid var(--em-line) !important;
+  box-shadow: none !important;
+}
+.shell > aside::after { display: none !important; }
+.shell > aside .brand {
+  min-height: 64px;
+  padding: 16px 18px !important;
+  border-bottom: 1px solid var(--em-line);
+}
+.shell > aside .brand::after { display: none !important; }
+.shell > aside .brand strong { font-size: 14px !important; letter-spacing: -.01em; }
+.shell > aside nav { padding: 12px 8px !important; gap: 3px !important; }
+.shell > aside nav button {
+  min-height: 38px !important;
+  padding: 0 11px !important;
+  border-radius: 7px !important;
+  color: var(--em-muted) !important;
+  font-size: 12px !important;
+  font-weight: 560 !important;
+}
+.shell > aside nav button:hover { background: var(--em-surface-soft) !important; color: var(--em-text) !important; }
+.shell > aside nav button.active {
+  color: var(--em-text) !important;
+  background: color-mix(in srgb, var(--em-accent) 8%, var(--em-surface)) !important;
+  box-shadow: inset 3px 0 0 var(--em-accent) !important;
+}
+.shell > aside nav button.active::before { display: none !important; }
+.shell > aside .logout { margin: auto 10px 12px !important; }
+
+.dashboard {
+  margin-left: 172px !important;
+  min-width: 0;
+  background: var(--em-bg) !important;
+}
+
+/* Cabeçalho padronizado em todo o produto. */
+.dashboard > header,
+.modern-dashboard-header,
+.control-center-header,
+.reports-header,
+.agent-monitor-header {
+  min-height: 78px !important;
+  padding: 16px 28px !important;
+  border-bottom: 1px solid var(--em-line) !important;
+  background: var(--em-surface) !important;
+  box-shadow: none !important;
+}
+.dashboard > header::after,
+.modern-dashboard-header::after,
+.control-center-header::after,
+.reports-header::after,
+.agent-monitor-header::after { display: none !important; }
+.dashboard h1,
+.modern-dashboard-header h1,
+.control-center-header h1,
+.reports-header h1,
+.agent-monitor-header h1 {
+  color: var(--em-text) !important;
+  font-size: 24px !important;
+  line-height: 1.1 !important;
+  letter-spacing: -.035em !important;
+}
+.dashboard header small,
+.modern-dashboard-kicker,
+.clean-card-kicker,
+.modern-alert-kicker {
+  color: var(--em-muted) !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  letter-spacing: .12em !important;
+}
+
+/* Superfícies corporativas: pouca curva, pouca sombra, mais alinhamento. */
+.panel,
+.modern-panel,
+.metric-card,
+.clean-summary-strip,
+.modern-company-bar,
+.intelligence-panel,
+.printer-clean-cards,
+.printer-clean-catalog,
+.printer-clean-filter-bar {
+  border: 1px solid var(--em-line) !important;
+  border-radius: var(--em-radius) !important;
+  background: var(--em-surface) !important;
+  box-shadow: none !important;
+}
+
+button,
+input,
+select,
+textarea { font-family: inherit; }
+button { border-radius: 7px !important; }
+input,
+select,
+textarea {
+  border-color: var(--em-line-strong) !important;
+  border-radius: 7px !important;
+  background: var(--em-surface) !important;
+  color: var(--em-text) !important;
+}
+
+/* Visão Geral: painel executivo respirado. */
+.dashboard-modern-shell .dashboard-page {
+  --exec-max: 1360px !important;
+  padding: 0 32px 44px !important;
+  background: var(--em-bg) !important;
+}
+.dashboard-modern-shell .modern-dashboard-header {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding-left: max(28px, calc((100% - 1360px)/2)) !important;
+  padding-right: max(28px, calc((100% - 1360px)/2)) !important;
+}
+.dashboard-modern-shell .modern-update-row,
+.dashboard-modern-shell .modern-company-bar,
+.dashboard-modern-shell .modern-kpi-grid,
+.dashboard-modern-shell .intelligence-panel,
+.dashboard-modern-shell .clean-dashboard-main,
+.dashboard-modern-shell .clean-summary-strip,
+.dashboard-modern-shell .modern-dashboard-footer {
+  width: min(100%, 1360px) !important;
+}
+.dashboard-modern-shell .modern-update-row { min-height: 36px !important; margin-bottom: 14px !important; }
+.dashboard-modern-shell .modern-company-bar { min-height: 68px !important; margin-bottom: 18px !important; }
+.dashboard-modern-shell .modern-kpi-grid { gap: 12px !important; margin-bottom: 18px !important; }
+.dashboard-modern-shell .modern-kpi-grid .metric-card {
+  min-height: 106px !important;
+  padding: 17px 18px !important;
+}
+.dashboard-modern-shell .intelligence-panel {
+  min-height: 170px !important;
+  margin-bottom: 18px !important;
+  padding: 22px 24px !important;
+}
+.dashboard-modern-shell .clean-dashboard-main { gap: 14px !important; margin-bottom: 18px !important; }
+.dashboard-modern-shell .clean-dashboard-main .modern-panel { min-height: 200px !important; padding: 20px 22px !important; }
+.dashboard-modern-shell .clean-summary-strip { min-height: 62px !important; }
+
+/* Empresa: formulário mais próximo de ERP premium, sem “cartão gigante”. */
+.dashboard > .hero {
+  margin: 18px 28px 12px !important;
+  padding: 16px 18px !important;
+  border: 1px solid var(--em-line) !important;
+  border-radius: var(--em-radius) !important;
+  background: var(--em-surface) !important;
+}
+.dashboard > .content-grid { margin: 0 28px 28px !important; gap: 16px !important; }
+.dashboard > .content-grid > .panel { background: var(--em-surface) !important; }
+.dashboard form label { color: var(--em-text) !important; font-size: 11px !important; }
+.dashboard form input,
+.dashboard form select { min-height: 40px !important; }
+
+/* Control Center: tabela é protagonista, métricas viram cabeçalho operacional. */
+.control-center-page,
+.reports-page,
+.agent-monitor-page { background: var(--em-bg) !important; }
+.control-center-metrics,
+.reports-summary-grid,
+.agent-monitor-grid { gap: 12px !important; }
+.control-center-metrics > *,
+.reports-summary-grid > *,
+.agent-monitor-grid > * {
+  border: 1px solid var(--em-line) !important;
+  border-radius: var(--em-radius) !important;
+  background: var(--em-surface) !important;
+  box-shadow: none !important;
+}
+
+/* Impressoras: aspecto de tabela operacional contínua. */
+main.dashboard:has(.printer-clean-shell) { background: var(--em-bg) !important; }
+.printer-clean-shell { gap: 12px !important; }
+.printer-clean-cards { border-radius: 8px !important; overflow: hidden; }
+.printer-clean-card { background: var(--em-surface) !important; }
+.printer-clean-card:hover,
+.printer-clean-card.is-expanded { background: var(--em-surface-soft) !important; }
+.printer-clean-summary { min-height: 72px !important; }
+.printer-clean-details-button { background: transparent !important; }
+
+/* Relatórios: menos banners, mais “workspace”. */
+.reports-page .reports-hero,
+.reports-page .reports-filter-panel,
+.reports-page .reports-table-panel {
+  border: 1px solid var(--em-line) !important;
+  border-radius: var(--em-radius) !important;
+  background: var(--em-surface) !important;
+  box-shadow: none !important;
+}
+
+/* Agentes: leitura técnica sem excesso visual. */
+.agent-monitor-page .agent-status-hero,
+.agent-monitor-page .agent-card {
+  border: 1px solid var(--em-line) !important;
+  border-radius: var(--em-radius) !important;
+  background: var(--em-surface) !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 1100px) {
+  .shell > aside { width: 150px !important; }
+  .dashboard { margin-left: 150px !important; }
+  .dashboard-modern-shell .dashboard-page { padding-left: 20px !important; padding-right: 20px !important; }
+}
+
+@media (max-width: 760px) {
+  .shell > aside { width: 72px !important; }
+  .dashboard { margin-left: 72px !important; }
+  .shell > aside .brand strong,
+  .shell > aside nav button { font-size: 0 !important; }
+  .dashboard > header,
+  .modern-dashboard-header,
+  .control-center-header,
+  .reports-header,
+  .agent-monitor-header { padding-left: 18px !important; padding-right: 18px !important; }
+  .dashboard-modern-shell .dashboard-page { padding-left: 14px !important; padding-right: 14px !important; }
+}
