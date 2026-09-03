@@ -1,0 +1,157 @@
+/* PRINTFLOW v0.6.4 — Executive Overview
+   Mais respiro, hierarquia executiva e leitura em 5 segundos. */
+
+.dashboard-modern-shell .dashboard-page {
+  --exec-max: 1480px;
+  --exec-gap: 22px;
+  padding: 0 34px 42px !important;
+  background: var(--pf-bg) !important;
+}
+
+.dashboard-modern-shell .modern-dashboard-header,
+.dashboard-modern-shell .modern-update-row,
+.dashboard-modern-shell .modern-company-bar,
+.dashboard-modern-shell .dashboard-error,
+.dashboard-modern-shell .modern-loading,
+.dashboard-modern-shell .modern-kpi-grid,
+.dashboard-modern-shell .intelligence-panel,
+.dashboard-modern-shell .clean-dashboard-main,
+.dashboard-modern-shell .clean-summary-strip,
+.dashboard-modern-shell .modern-dashboard-footer {
+  width: min(100%, var(--exec-max));
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.dashboard-modern-shell .modern-dashboard-header {
+  min-height: 108px;
+  padding: 25px 0 20px !important;
+  align-items: center !important;
+  border-bottom: 1px solid var(--pf-line) !important;
+  background: transparent !important;
+}
+.dashboard-modern-shell .modern-dashboard-header::after { display: none !important; }
+.dashboard-modern-shell .modern-dashboard-header h1 {
+  margin: 5px 0 4px !important;
+  font-size: clamp(25px, 2vw, 32px) !important;
+  letter-spacing: -.035em !important;
+}
+.dashboard-modern-shell .modern-dashboard-header p {
+  max-width: 650px;
+  font-size: 12px !important;
+  line-height: 1.5;
+}
+.dashboard-modern-shell .modern-dashboard-kicker { font-size: 8px !important; letter-spacing: .16em !important; }
+.dashboard-modern-shell .modern-dashboard-actions { gap: 10px !important; }
+.dashboard-modern-shell .modern-agent-badge,
+.dashboard-modern-shell .modern-refresh-button { min-height: 34px !important; }
+
+.dashboard-modern-shell .modern-update-row {
+  min-height: 32px;
+  margin-top: 0 !important;
+  margin-bottom: 12px !important;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 9px !important;
+  opacity: .72;
+}
+
+.dashboard-modern-shell .modern-company-bar {
+  min-height: 72px !important;
+  margin-bottom: var(--exec-gap) !important;
+  padding: 12px 16px !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+.dashboard-modern-shell .modern-company-selector { min-height: 44px !important; }
+.dashboard-modern-shell .modern-company-selector span { font-size: 8px !important; }
+.dashboard-modern-shell .modern-company-selector strong { font-size: 13px !important; }
+
+/* KPIs: somente leitura executiva, com mais ar. */
+.dashboard-modern-shell .modern-kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  margin-bottom: var(--exec-gap) !important;
+}
+.dashboard-modern-shell .modern-kpi-grid .metric-card {
+  min-height: 112px !important;
+  padding: 18px 20px !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+.dashboard-modern-shell .modern-kpi-grid .metric-card-value {
+  margin-top: 12px !important;
+  font-size: 28px !important;
+  letter-spacing: -.04em;
+}
+.dashboard-modern-shell .modern-kpi-grid .metric-card-title { font-size: 10px !important; }
+.dashboard-modern-shell .modern-kpi-grid .metric-card-subtitle { font-size: 9px !important; }
+
+/* Intelligence é o protagonista da página. */
+.dashboard-modern-shell .intelligence-panel {
+  min-height: 190px !important;
+  margin-top: 0 !important;
+  margin-bottom: var(--exec-gap) !important;
+  padding: 24px 26px !important;
+  border-radius: 18px !important;
+  box-shadow: none !important;
+}
+.dashboard-modern-shell .intelligence-panel h2 { font-size: 20px !important; letter-spacing: -.025em; }
+.dashboard-modern-shell .intelligence-panel p { line-height: 1.55; }
+
+/* Segundo nível: saúde e ação, sem esmagar o conteúdo. */
+.dashboard-modern-shell .clean-dashboard-main {
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr) !important;
+  gap: var(--exec-gap) !important;
+  margin-top: 0 !important;
+  margin-bottom: var(--exec-gap) !important;
+}
+.dashboard-modern-shell .clean-dashboard-main .modern-panel {
+  min-height: 220px !important;
+  padding: 22px 24px !important;
+  border-radius: 18px !important;
+  box-shadow: none !important;
+}
+.dashboard-modern-shell .clean-card-heading h2,
+.dashboard-modern-shell .modern-alert-heading h2 { font-size: 17px !important; }
+.dashboard-modern-shell .clean-health-score-row { margin-top: 25px !important; }
+.dashboard-modern-shell .clean-health-score-row > div:first-child > strong { font-size: 31px !important; }
+.dashboard-modern-shell .modern-no-alerts { min-height: 112px !important; padding: 22px !important; border-radius: 12px !important; }
+
+/* Informações secundárias deixam de competir com a decisão principal. */
+.dashboard-modern-shell .clean-summary-strip {
+  min-height: 66px !important;
+  margin-top: 0 !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  opacity: .9;
+}
+.dashboard-modern-shell .clean-summary-item { padding: 15px 18px !important; }
+.dashboard-modern-shell .clean-summary-item span { font-size: 8px !important; }
+.dashboard-modern-shell .clean-summary-item strong { font-size: 15px !important; }
+.dashboard-modern-shell .modern-dashboard-footer { padding-top: 28px !important; opacity: .55; }
+
+@media (min-width: 1700px) {
+  .dashboard-modern-shell .dashboard-page { --exec-max: 1520px; padding-left: 48px !important; padding-right: 48px !important; }
+  .dashboard-modern-shell .modern-dashboard-header { min-height: 118px; }
+  .dashboard-modern-shell .modern-company-bar { min-height: 78px !important; }
+  .dashboard-modern-shell .intelligence-panel { min-height: 205px !important; }
+  .dashboard-modern-shell .clean-dashboard-main .modern-panel { min-height: 230px !important; }
+}
+
+@media (max-width: 1180px) {
+  .dashboard-modern-shell .dashboard-page { padding-left: 24px !important; padding-right: 24px !important; }
+  .dashboard-modern-shell .modern-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .dashboard-modern-shell .clean-dashboard-main { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 720px) {
+  .dashboard-modern-shell .dashboard-page { padding-left: 16px !important; padding-right: 16px !important; }
+  .dashboard-modern-shell .modern-dashboard-header { align-items: flex-start !important; min-height: auto; padding: 20px 0 16px !important; }
+  .dashboard-modern-shell .modern-dashboard-actions { width: 100%; margin-top: 14px; }
+  .dashboard-modern-shell .modern-kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+  .dashboard-modern-shell .modern-kpi-grid .metric-card { min-height: 100px !important; padding: 15px !important; }
+  .dashboard-modern-shell .intelligence-panel { min-height: auto !important; padding: 19px !important; }
+  .dashboard-modern-shell .clean-dashboard-main .modern-panel { min-height: auto !important; padding: 18px !important; }
+  .dashboard-modern-shell .clean-summary-strip { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+}
