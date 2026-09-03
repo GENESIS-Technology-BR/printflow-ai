@@ -17,6 +17,7 @@ import './dark-visibility-v053.css'
 import './ux-polish-v054.css'
 import './printers-clean-v055.css'
 import './apple-dark-v056.css'
+import './minimal-system-v060.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
