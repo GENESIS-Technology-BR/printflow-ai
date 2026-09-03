@@ -1,0 +1,339 @@
+/* PRINTFLOW v0.6.1 — System Polish
+   Direção: interface operacional, baixa poluição visual, leitura rápida e paridade claro/escuro. */
+
+main.dashboard:has(.printer-clean-shell) > .hero {
+  display: none !important;
+}
+
+main.dashboard:has(.printer-clean-shell) > header {
+  min-height: 66px !important;
+  padding: 13px 22px !important;
+}
+
+main.dashboard:has(.printer-clean-shell) > header h1 {
+  font-size: 22px !important;
+}
+
+main.dashboard:has(.printer-clean-shell) .content-grid {
+  display: block !important;
+  margin: 14px 22px 24px !important;
+}
+
+main.dashboard:has(.printer-clean-shell) .content-grid > .panel {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+main.dashboard:has(.printer-clean-shell) .content-grid > .panel > .actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin: 0 0 8px !important;
+}
+
+main.dashboard:has(.printer-clean-shell) .content-grid > .panel > .actions button {
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 11px !important;
+  border: 1px solid var(--pf-line) !important;
+  color: var(--pf-text-2) !important;
+  background: var(--pf-surface-strong) !important;
+  box-shadow: none !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+}
+
+.printer-clean-shell {
+  gap: 8px !important;
+}
+
+.printer-clean-catalog {
+  border: 1px solid var(--pf-line) !important;
+  border-radius: 12px !important;
+  background: var(--pf-surface-strong) !important;
+  box-shadow: none !important;
+}
+
+.printer-clean-catalog-summary {
+  min-height: 48px !important;
+  padding: 8px 12px !important;
+}
+
+.printer-clean-eyebrow {
+  font-size: 7px !important;
+  letter-spacing: .11em !important;
+}
+
+.printer-clean-catalog-summary strong {
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+
+.printer-clean-catalog-summary small {
+  font-size: 8px !important;
+}
+
+.printer-clean-secondary-button {
+  min-height: 28px !important;
+  height: 28px !important;
+  padding: 0 9px !important;
+  border: 0 !important;
+  color: var(--pf-blue) !important;
+  background: transparent !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+}
+
+.printer-clean-secondary-button:hover {
+  background: color-mix(in srgb, var(--pf-blue) 7%, transparent) !important;
+}
+
+.printer-clean-filter-bar {
+  min-height: 42px !important;
+  padding: 5px 7px !important;
+  gap: 6px !important;
+  border: 1px solid var(--pf-line) !important;
+  border-radius: 12px !important;
+  background: var(--pf-surface-strong) !important;
+  box-shadow: none !important;
+}
+
+.printer-clean-filter-bar input,
+.printer-clean-filter-bar select {
+  min-height: 30px !important;
+  height: 30px !important;
+  border-color: transparent !important;
+  border-radius: 8px !important;
+  background: color-mix(in srgb, var(--pf-text) 4%, transparent) !important;
+  font-size: 9px !important;
+}
+
+.printer-clean-filter-bar input:focus,
+.printer-clean-filter-bar select:focus {
+  border-color: color-mix(in srgb, var(--pf-blue) 45%, transparent) !important;
+  background: var(--pf-surface-strong) !important;
+}
+
+.printer-clean-filter-bar .printer-filter-count {
+  font-size: 8px !important;
+}
+
+.printer-clean-cards {
+  display: block !important;
+  overflow: hidden !important;
+  border: 1px solid var(--pf-line) !important;
+  border-radius: 14px !important;
+  background: var(--pf-surface-strong) !important;
+  box-shadow: none !important;
+}
+
+.printer-clean-card {
+  border: 0 !important;
+  border-bottom: 1px solid var(--pf-line-soft) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.printer-clean-card:last-child {
+  border-bottom: 0 !important;
+}
+
+.printer-clean-card:hover {
+  border-color: var(--pf-line-soft) !important;
+  background: color-mix(in srgb, var(--pf-text) 2.4%, transparent) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.printer-clean-card.is-expanded {
+  border-color: var(--pf-line-soft) !important;
+  background: color-mix(in srgb, var(--pf-blue) 2.5%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.printer-clean-summary {
+  grid-template-columns: minmax(300px, 2.25fr) minmax(82px, .55fr) minmax(86px, .55fr) minmax(96px, .62fr) minmax(142px, .9fr) auto !important;
+  gap: 10px !important;
+  min-height: 66px !important;
+  padding: 8px 12px !important;
+}
+
+.printer-clean-identity {
+  grid-template-columns: 38px minmax(0, 1fr) !important;
+  gap: 10px !important;
+}
+
+.printer-clean-icon {
+  width: 38px !important;
+  height: 28px !important;
+  border: 1px solid var(--pf-line) !important;
+  border-radius: 8px !important;
+  color: var(--pf-text-2) !important;
+  background: color-mix(in srgb, var(--pf-text) 3%, transparent) !important;
+  font-size: 8px !important;
+  font-weight: 750 !important;
+  letter-spacing: .035em !important;
+}
+
+.printer-clean-name-row {
+  gap: 7px !important;
+}
+
+.printer-clean-name-row > strong {
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  letter-spacing: -.01em !important;
+}
+
+.printer-clean-name-row .status-pill {
+  min-height: 18px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: 7px !important;
+  font-weight: 600 !important;
+}
+
+.printer-clean-name-row .status-pill i {
+  width: 5px !important;
+  height: 5px !important;
+}
+
+.printer-clean-model {
+  margin-top: 2px !important;
+  font-size: 8px !important;
+}
+
+.printer-clean-meta-row {
+  gap: 6px !important;
+  margin-top: 3px !important;
+  font-size: 7px !important;
+}
+
+.printer-clean-meta-row code {
+  padding: 2px 5px !important;
+  border-radius: 5px !important;
+  font-size: 7px !important;
+}
+
+.printer-clean-stat {
+  gap: 2px !important;
+}
+
+.printer-clean-stat > span {
+  font-size: 7px !important;
+  font-weight: 550 !important;
+}
+
+.printer-clean-stat > strong {
+  font-size: 10px !important;
+  font-weight: 650 !important;
+}
+
+.printer-clean-last-seen > strong {
+  font-size: 8px !important;
+  font-weight: 600 !important;
+}
+
+.printer-clean-mini-track {
+  height: 3px !important;
+  margin-top: 2px !important;
+  background: color-mix(in srgb, var(--pf-text) 8%, transparent) !important;
+}
+
+.printer-clean-mini-track > span {
+  background: var(--pf-blue) !important;
+}
+
+.printer-clean-details-button {
+  min-height: 28px !important;
+  height: 28px !important;
+  padding: 0 8px !important;
+  border: 0 !important;
+  color: var(--pf-text-3) !important;
+  background: transparent !important;
+  font-size: 8px !important;
+  font-weight: 600 !important;
+}
+
+.printer-clean-details-button:hover {
+  color: var(--pf-text) !important;
+  background: color-mix(in srgb, var(--pf-text) 5%, transparent) !important;
+}
+
+.printer-clean-details {
+  border-top: 1px solid var(--pf-line-soft) !important;
+  background: color-mix(in srgb, var(--pf-text) 1.6%, transparent) !important;
+}
+
+.printer-clean-edit-section {
+  padding: 12px !important;
+  border-color: var(--pf-line-soft) !important;
+}
+
+.printer-clean-section-title {
+  margin-bottom: 8px !important;
+}
+
+.printer-clean-technical-grid > div,
+.printer-clean-catalog-body .printer-organization-create {
+  border: 1px solid var(--pf-line-soft) !important;
+  background: transparent !important;
+}
+
+html[data-theme="dark"] .printer-clean-catalog,
+html[data-theme="dark"] .printer-clean-filter-bar,
+html[data-theme="dark"] .printer-clean-cards {
+  border-color: var(--pf-line) !important;
+  background: var(--pf-surface-strong) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .printer-clean-card,
+html[data-theme="dark"] .printer-clean-card:hover,
+html[data-theme="dark"] .printer-clean-card.is-expanded {
+  border-color: var(--pf-line-soft) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .printer-clean-icon {
+  border-color: var(--pf-line) !important;
+  color: var(--pf-text-2) !important;
+  background: rgba(255, 255, 255, .035) !important;
+}
+
+html[data-theme="dark"] .printer-clean-filter-bar input,
+html[data-theme="dark"] .printer-clean-filter-bar select {
+  border-color: transparent !important;
+  color: var(--pf-text) !important;
+  background: rgba(255, 255, 255, .045) !important;
+}
+
+html[data-theme="dark"] .printer-clean-details {
+  background: rgba(255, 255, 255, .018) !important;
+}
+
+@media (max-width: 1120px) {
+  .printer-clean-summary {
+    grid-template-columns: minmax(280px, 2fr) repeat(3, minmax(80px, .55fr)) minmax(130px, .85fr) auto !important;
+  }
+}
+
+@media (max-width: 900px) {
+  main.dashboard:has(.printer-clean-shell) .content-grid {
+    margin: 10px 12px 18px !important;
+  }
+
+  .printer-clean-summary {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    row-gap: 8px !important;
+  }
+
+  .printer-clean-stat,
+  .printer-clean-last-seen {
+    display: none !important;
+  }
+}
