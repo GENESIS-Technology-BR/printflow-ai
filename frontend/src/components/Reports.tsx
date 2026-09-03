@@ -18,6 +18,7 @@ import type {
 import "./Reports.css"
 
 type ReportsProps = { companyName: string }
+type PeriodPreset = 7 | 30 | 90
 
 function inputDate(date: Date): string {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
@@ -46,6 +47,12 @@ function modelLabel(manufacturer: string | null, model: string | null): string {
   if (!modelText) return brand || "-"
   if (brand && modelText.toLowerCase().startsWith(brand.toLowerCase())) return modelText
   return [brand, modelText].filter(Boolean).join(" ") || "-"
+}
+
+function dateLabel(value: string): string {
+  const [year, month, day] = value.split("-")
+  if (!year || !month || !day) return value
+  return `${day}/${month}/${year}`
 }
 
 export default function Reports({ companyName }: ReportsProps) {
@@ -133,6 +140,28 @@ export default function Reports({ companyName }: ReportsProps) {
   const totalPages = rows.reduce((total, row) => total + row.pages_printed, 0)
   const totalAnomalies = rows.reduce((total, row) => total + row.anomaly_count, 0)
   const totalCost = rows.reduce((total, row) => total + row.estimated_cost, 0)
+  const averageCost = totalPages > 0 ? totalCost / totalPages : 0
+
+  const selectedPrinter = printers.find((printer) => printer.uuid === printerUuid)
+  const activeScope = [
+    unitName ? `Unidade: ${unitName}` : null,
+    sectorName ? `Setor: ${sectorName}` : null,
+    selectedPrinter ? `Impressora: ${selectedPrinter.custom_name || selectedPrinter.hostname || selectedPrinter.name}` : null,
+  ].filter(Boolean)
+
+  function applyPeriod(days: PeriodPreset): void {
+    const end = new Date()
+    const start = new Date(end)
+    start.setDate(start.getDate() - days)
+    setStartDate(inputDate(start))
+    setEndDate(inputDate(end))
+  }
+
+  function clearScope(): void {
+    setUnitName("")
+    setSectorName("")
+    setPrinterUuid("")
+  }
 
   async function handleDownload(format: "xlsx" | "pdf") {
     setDownloading(format)
@@ -167,18 +196,28 @@ export default function Reports({ companyName }: ReportsProps) {
 
       <section className="reports-intro">
         <div>
-          <small>Printflow · CONSUMO FINANCEIRO POR IMPRESSORA</small>
-          <h2>Fechamento de impressão por período</h2>
-          <p>Consulte páginas, tarifa e custo estimado por equipamento e exporte em Excel ou PDF.</p>
+          <small>Printflow · FECHAMENTO COMERCIAL</small>
+          <h2>Consumo individual do parque</h2>
+          <p>Fechamento por equipamento com contadores, volume, tarifa e custo estimado, pronto para Excel ou PDF.</p>
         </div>
         <div className="reports-downloads">
           <button type="button" onClick={() => void handleDownload("xlsx")} disabled={loading || downloading !== null}>
-            {downloading === "xlsx" ? "Gerando..." : "Baixar Excel"}
+            {downloading === "xlsx" ? "Gerando..." : "Exportar Excel"}
           </button>
           <button type="button" className="pdf" onClick={() => void handleDownload("pdf")} disabled={loading || downloading !== null}>
-            {downloading === "pdf" ? "Gerando..." : "Baixar PDF"}
+            {downloading === "pdf" ? "Gerando..." : "Exportar PDF"}
           </button>
         </div>
+      </section>
+
+      <section className="reports-period-bar" aria-label="Períodos rápidos">
+        <div>
+          <span>Período rápido</span>
+          <button type="button" onClick={() => applyPeriod(7)}>7 dias</button>
+          <button type="button" onClick={() => applyPeriod(30)}>30 dias</button>
+          <button type="button" onClick={() => applyPeriod(90)}>90 dias</button>
+        </div>
+        <strong>{dateLabel(startDate)} → {dateLabel(endDate)}</strong>
       </section>
 
       <section className="reports-filters">
@@ -210,19 +249,27 @@ export default function Reports({ companyName }: ReportsProps) {
         </label>
       </section>
 
+      <section className="reports-scope-bar">
+        <div>
+          <span>Escopo</span>
+          <strong>{activeScope.length ? activeScope.join(" · ") : "Parque completo"}</strong>
+        </div>
+        {activeScope.length > 0 && <button type="button" onClick={clearScope}>Limpar filtros</button>}
+      </section>
+
       {error && <div className="reports-error">{error}</div>}
 
       <section className="reports-metrics">
-        <article><span>Impressoras</span><strong>{loading ? "..." : rows.length}</strong></article>
+        <article><span>Impressoras no fechamento</span><strong>{loading ? "..." : rows.length}</strong></article>
         <article><span>Impressões no período</span><strong>{loading ? "..." : number(totalPages)}</strong></article>
         <article><span>Custo estimado</span><strong>{loading ? "..." : currency(totalCost)}</strong></article>
-        <article><span>Anomalias de contador</span><strong>{loading ? "..." : number(totalAnomalies)}</strong></article>
+        <article><span>Custo médio/página</span><strong>{loading ? "..." : rate(averageCost)}</strong></article>
       </section>
 
       <section className="reports-table-card">
         <div className="reports-table-title">
-          <div><small>DETALHAMENTO</small><h3>Consumo individual das impressoras</h3></div>
-          <span>{startDate} → {endDate}</span>
+          <div><small>DETALHAMENTO POR EQUIPAMENTO</small><h3>Fechamento individual das impressoras</h3></div>
+          <span>{rows.length} item(ns) · {totalAnomalies} anomalia(s)</span>
         </div>
         <div className="reports-table-scroll">
           <table className="reports-table reports-table-financial">
