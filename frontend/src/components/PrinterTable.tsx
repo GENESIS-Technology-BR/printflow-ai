@@ -56,6 +56,10 @@ function getStatusLabel(status: string): string {
   return "Desconhecido";
 }
 
+function getPrinterKey(printer: DashboardPrinter): string {
+  return String(printer.uuid || printer.id || printer.ip || printer.name);
+}
+
 export default function PrinterTable({
   printers,
   defaultCostPerPage,
@@ -77,6 +81,8 @@ export default function PrinterTable({
   const [catalogSaving, setCatalogSaving] = useState<"unit" | "sector" | null>(null);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [catalogMessage, setCatalogMessage] = useState<string | null>(null);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [expandedPrinterKey, setExpandedPrinterKey] = useState<string | null>(null);
 
   async function loadOrganizationCatalog(): Promise<void> {
     try {
@@ -326,94 +332,101 @@ export default function PrinterTable({
   }
 
   return (
-    <div className="printer-list-shell">
-      <section className="printer-organization-catalog">
-        <div className="printer-organization-catalog-header">
+    <div className="printer-list-shell printer-clean-shell">
+      <section className={`printer-organization-catalog printer-clean-catalog ${catalogOpen ? "is-open" : "is-closed"}`}>
+        <div className="printer-clean-catalog-summary">
           <div>
-            <span>ORGANIZAÇÃO DO PARQUE</span>
-            <h3>Unidades e setores</h3>
-            <p>Cadastre a estrutura da empresa e depois associe cada impressora.</p>
+            <span className="printer-clean-eyebrow">ORGANIZAÇÃO</span>
+            <strong>Unidades e setores</strong>
+            <small>{catalogUnits.length} unidades · {catalogSectors.length} setores</small>
           </div>
-          <div className="printer-organization-totals">
-            <strong>{catalogUnits.length}<small> unidades</small></strong>
-            <strong>{catalogSectors.length}<small> setores</small></strong>
-          </div>
+          <button
+            type="button"
+            className="printer-clean-secondary-button"
+            aria-expanded={catalogOpen}
+            onClick={() => setCatalogOpen((current) => !current)}
+          >
+            {catalogOpen ? "Fechar" : "Organizar parque"}
+          </button>
         </div>
 
-        <div className="printer-organization-create-grid">
-          <form className="printer-organization-create" onSubmit={(event) => void createUnit(event)}>
-            <label>
-              Nova unidade
-              <div>
-                <input
-                  type="text"
-                  maxLength={120}
-                  value={newUnitName}
-                  placeholder="Ex.: Caxias do Sul"
-                  onChange={(event) => setNewUnitName(event.target.value)}
-                />
-                <button type="submit" disabled={catalogSaving === "unit"}>
-                  {catalogSaving === "unit" ? "Salvando..." : "+ Adicionar unidade"}
-                </button>
-              </div>
-            </label>
-          </form>
+        {catalogOpen && (
+          <div className="printer-clean-catalog-body">
+            <div className="printer-organization-create-grid">
+              <form className="printer-organization-create" onSubmit={(event) => void createUnit(event)}>
+                <label>
+                  Nova unidade
+                  <div>
+                    <input
+                      type="text"
+                      maxLength={120}
+                      value={newUnitName}
+                      placeholder="Ex.: Caxias do Sul"
+                      onChange={(event) => setNewUnitName(event.target.value)}
+                    />
+                    <button type="submit" disabled={catalogSaving === "unit"}>
+                      {catalogSaving === "unit" ? "Salvando..." : "Adicionar"}
+                    </button>
+                  </div>
+                </label>
+              </form>
 
-          <form className="printer-organization-create" onSubmit={(event) => void createSector(event)}>
-            <label>
-              Novo setor
-              <div className="printer-sector-create-row">
-                <select
-                  value={newSectorUnitId}
-                  disabled={!catalogUnits.length}
-                  onChange={(event) => setNewSectorUnitId(event.target.value)}
-                >
-                  {!catalogUnits.length && <option value="">Cadastre uma unidade primeiro</option>}
-                  {catalogUnits.map((unit) => (
-                    <option key={unit.id} value={unit.id}>{unit.name}</option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  maxLength={120}
-                  value={newSectorName}
-                  placeholder="Ex.: Comercial"
-                  disabled={!catalogUnits.length}
-                  onChange={(event) => setNewSectorName(event.target.value)}
-                />
-                <button type="submit" disabled={!catalogUnits.length || catalogSaving === "sector"}>
-                  {catalogSaving === "sector" ? "Salvando..." : "+ Adicionar setor"}
-                </button>
-              </div>
-            </label>
-          </form>
-        </div>
-
-        {catalogMessage && <div className="printer-catalog-message success">{catalogMessage}</div>}
-        {catalogError && <div className="printer-catalog-message error">{catalogError}</div>}
+              <form className="printer-organization-create" onSubmit={(event) => void createSector(event)}>
+                <label>
+                  Novo setor
+                  <div className="printer-sector-create-row">
+                    <select
+                      value={newSectorUnitId}
+                      disabled={!catalogUnits.length}
+                      onChange={(event) => setNewSectorUnitId(event.target.value)}
+                    >
+                      {!catalogUnits.length && <option value="">Cadastre uma unidade primeiro</option>}
+                      {catalogUnits.map((unit) => (
+                        <option key={unit.id} value={unit.id}>{unit.name}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      maxLength={120}
+                      value={newSectorName}
+                      placeholder="Ex.: Comercial"
+                      disabled={!catalogUnits.length}
+                      onChange={(event) => setNewSectorName(event.target.value)}
+                    />
+                    <button type="submit" disabled={!catalogUnits.length || catalogSaving === "sector"}>
+                      {catalogSaving === "sector" ? "Salvando..." : "Adicionar"}
+                    </button>
+                  </div>
+                </label>
+              </form>
+            </div>
+            {catalogMessage && <div className="printer-catalog-message success">{catalogMessage}</div>}
+            {catalogError && <div className="printer-catalog-message error">{catalogError}</div>}
+          </div>
+        )}
       </section>
 
-      <div className="printer-filter-bar">
+      <div className="printer-filter-bar printer-clean-filter-bar">
         <input
           className="printer-search"
           type="search"
-          placeholder="Buscar por nome, IP, host ou serial..."
+          placeholder="Buscar impressora..."
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
         <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-          <option value="all">Todos os status</option>
+          <option value="all">Status</option>
           <option value="online">Online</option>
           <option value="offline">Offline</option>
           <option value="inactive">Inativos</option>
           <option value="unknown">Desconhecidos</option>
         </select>
         <select value={unitFilter} onChange={(event) => setUnitFilter(event.target.value)}>
-          <option value="all">Todas as unidades</option>
+          <option value="all">Unidades</option>
           {units.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
         </select>
         <select value={sectorFilter} onChange={(event) => setSectorFilter(event.target.value)}>
-          <option value="all">Todos os setores</option>
+          <option value="all">Setores</option>
           {sectors.map((sector) => <option key={sector} value={sector}>{sector}</option>)}
         </select>
         <span className="printer-filter-count">{filteredPrinters.length} de {printers.length}</span>
@@ -424,7 +437,7 @@ export default function PrinterTable({
         <div className="printer-filter-empty">Nenhuma impressora encontrada com os filtros atuais.</div>
       )}
 
-      <div className="printer-cards">
+      <div className="printer-cards printer-clean-cards">
         {filteredPrinters.map((printer) => {
           const organization = currentOrganization(printer);
           const printerCatalogUnit = catalogUnits.find((unit) => unit.name === organization.unit_name);
@@ -436,30 +449,90 @@ export default function PrinterTable({
           ])).sort((a, b) => a.localeCompare(b, "pt-BR"));
           const costInput = currentCost(printer);
           const hasSpecificCost = costInput.trim() !== "";
+          const key = getPrinterKey(printer);
+          const expanded = expandedPrinterKey === key;
+          const customName = currentCustomName(printer).trim();
+          const displayName = customName || printer.name;
+          const modelLabel = [printer.manufacturer, printer.model].filter(Boolean).join(" · ") || "Modelo não identificado";
+          const locationLabel = [organization.unit_name, organization.sector_name].filter(Boolean).join(" · ") || "Sem localização";
+          const tonerLabel = printer.toner_percent === null ? "—" : `${printer.toner_percent}%`;
 
           return (
-            <article
-              className="printer-card"
-              key={printer.uuid || printer.id || printer.ip || printer.name}
-            >
-              <div className="printer-card-main">
-                <div className="printer-identity">
-                  <span className="printer-icon">🖨️</span>
-                  <div className="printer-identity-content">
-                    <div className="printer-title-row">
-                      <strong>{printer.name}</strong>
-                      <form
-                        className="printer-alias-editor"
-                        onSubmit={(event) => {
-                          event.preventDefault();
-                          void saveCustomName(printer);
-                        }}
-                      >
+            <article className={`printer-card printer-clean-card ${expanded ? "is-expanded" : ""}`} key={key}>
+              <div className="printer-clean-summary">
+                <div className="printer-clean-identity">
+                  <span className="printer-clean-icon" aria-hidden="true">▣</span>
+                  <div>
+                    <div className="printer-clean-name-row">
+                      <strong>{displayName}</strong>
+                      <span className={`status-pill status-${printer.status}`}>
+                        <i />{getStatusLabel(printer.status)}
+                      </span>
+                    </div>
+                    <span className="printer-clean-model">{modelLabel}</span>
+                    <div className="printer-clean-meta-row">
+                      <code>{printer.ip || "IP não informado"}</code>
+                      <span>{locationLabel}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="printer-clean-stat">
+                  <span>Páginas</span>
+                  <strong>{formatPages(printer.page_count)}</strong>
+                </div>
+
+                <div className="printer-clean-stat printer-clean-toner">
+                  <span>Toner</span>
+                  <strong>{tonerLabel}</strong>
+                  {printer.toner_percent !== null && (
+                    <div className="printer-clean-mini-track"><span style={{ width: `${printer.toner_percent}%` }} /></div>
+                  )}
+                </div>
+
+                <div className="printer-clean-stat printer-clean-health">
+                  <span>Saúde</span>
+                  <strong>{printer.health_score}%</strong>
+                  <div className="printer-clean-mini-track"><span style={{ width: `${printer.health_score}%` }} /></div>
+                </div>
+
+                <div className="printer-clean-stat printer-clean-last-seen">
+                  <span>Última comunicação</span>
+                  <strong>{formatLastSeen(printer.last_seen)}</strong>
+                </div>
+
+                <button
+                  type="button"
+                  className="printer-clean-details-button"
+                  aria-expanded={expanded}
+                  onClick={() => setExpandedPrinterKey(expanded ? null : key)}
+                >
+                  {expanded ? "Fechar" : "Detalhes"}
+                  <span aria-hidden="true">{expanded ? "↑" : "↓"}</span>
+                </button>
+              </div>
+
+              {expanded && (
+                <div className="printer-clean-details">
+                  <section className="printer-clean-edit-section">
+                    <div className="printer-clean-section-title">
+                      <span>Identidade</span>
+                      <small>Nome e informações técnicas</small>
+                    </div>
+                    <form
+                      className="printer-clean-inline-form"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void saveCustomName(printer);
+                      }}
+                    >
+                      <label>
+                        Nome personalizado
                         <input
                           type="text"
                           maxLength={150}
                           value={currentCustomName(printer)}
-                          placeholder="Nome personalizado"
+                          placeholder={printer.name}
                           onChange={(event) => {
                             if (!printer.uuid) return;
                             setDraftNames((current) => ({
@@ -468,20 +541,25 @@ export default function PrinterTable({
                             }));
                           }}
                         />
-                        <button type="submit" disabled={!printer.uuid || savingKey === `name:${printer.uuid}`}>
-                          {savingKey === `name:${printer.uuid}` ? "Salvando..." : "Salvar"}
-                        </button>
-                      </form>
+                      </label>
+                      <button type="submit" disabled={!printer.uuid || savingKey === `name:${printer.uuid}`}>
+                        {savingKey === `name:${printer.uuid}` ? "Salvando..." : "Salvar nome"}
+                      </button>
+                    </form>
+                    <div className="printer-clean-technical-grid">
+                      <div><span>Nome detectado</span><strong>{printer.name}</strong></div>
+                      <div><span>Host</span><strong>{printer.hostname || "Não identificado"}</strong></div>
+                      <div><span>Serial</span><strong>{printer.serial || "Não disponível"}</strong></div>
+                      <div><span>Origem</span><strong>{printer.source || "Não informada"}</strong></div>
                     </div>
+                  </section>
 
-                    <span>
-                      {printer.manufacturer || "Fabricante não identificado"}
-                      {printer.model ? ` • ${printer.model}` : ""}
-                    </span>
-                    <small className="printer-hostname">Host: {printer.hostname || "Não identificado"}</small>
-                    <small>Origem: {printer.source || "Não informada"}</small>
-
-                    <div className="printer-organization-editor">
+                  <section className="printer-clean-edit-section">
+                    <div className="printer-clean-section-title">
+                      <span>Localização</span>
+                      <small>Organização dentro da empresa</small>
+                    </div>
+                    <div className="printer-clean-location-form">
                       <label>
                         Unidade
                         <select
@@ -511,86 +589,56 @@ export default function PrinterTable({
                         {savingKey === `org:${printer.uuid}` ? "Salvando..." : "Salvar localização"}
                       </button>
                     </div>
-                  </div>
-                </div>
+                  </section>
 
-                <div className="printer-connection">
-                  <code>{printer.ip || "Não informado"}</code>
-                  <span className={`status-pill status-${printer.status}`}>
-                    <i />{getStatusLabel(printer.status)}
-                  </span>
-                </div>
-
-                <div className="health-cell">
-                  <strong>{printer.health_score}%</strong>
-                  <div className="health-bar">
-                    <span style={{ width: `${printer.health_score}%` }} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="printer-card-details">
-                <div className="printer-detail">
-                  <span>Serial</span>
-                  <strong>{printer.serial || "Não disponível"}</strong>
-                  {printer.serial_confidence !== null && (
-                    <small>{`${printer.serial_confidence}%${printer.serial_confirmed ? " • confirmado" : ""}`}</small>
-                  )}
-                </div>
-
-                <div className="printer-detail">
-                  <span>Páginas</span>
-                  <strong>{formatPages(printer.page_count)}</strong>
-                  {printer.page_count_confidence !== null && (
-                    <small>{`${printer.page_count_confidence}% de confiança`}</small>
-                  )}
-                </div>
-
-                <div className="printer-detail">
-                  <span>Custo por página</span>
-                  <form
-                    className="printer-alias-editor"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      void saveCost(printer);
-                    }}
-                  >
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.0001"
-                      value={costInput}
-                      placeholder={Number(defaultCostPerPage || 0).toFixed(4)}
-                      onChange={(event) => {
-                        if (!printer.uuid) return;
-                        setCostDrafts((current) => ({
-                          ...current,
-                          [printer.uuid as string]: event.target.value,
-                        }));
+                  <section className="printer-clean-edit-section">
+                    <div className="printer-clean-section-title">
+                      <span>Custos e telemetria</span>
+                      <small>Tarifa e qualidade dos dados</small>
+                    </div>
+                    <form
+                      className="printer-clean-cost-form"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void saveCost(printer);
                       }}
-                    />
-                    <button type="submit" disabled={!printer.uuid || savingKey === `cost:${printer.uuid}`}>
-                      {savingKey === `cost:${printer.uuid}` ? "Salvando..." : "Salvar"}
-                    </button>
-                  </form>
-                  <small>
-                    {hasSpecificCost
-                      ? "Tarifa específica desta impressora"
-                      : `Usando padrão: ${formatRate(defaultCostPerPage)}`}
-                  </small>
+                    >
+                      <label>
+                        Custo por página
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.0001"
+                          value={costInput}
+                          placeholder={Number(defaultCostPerPage || 0).toFixed(4)}
+                          onChange={(event) => {
+                            if (!printer.uuid) return;
+                            setCostDrafts((current) => ({
+                              ...current,
+                              [printer.uuid as string]: event.target.value,
+                            }));
+                          }}
+                        />
+                      </label>
+                      <button type="submit" disabled={!printer.uuid || savingKey === `cost:${printer.uuid}`}>
+                        {savingKey === `cost:${printer.uuid}` ? "Salvando..." : "Salvar custo"}
+                      </button>
+                      <small>
+                        {hasSpecificCost
+                          ? "Tarifa específica desta impressora"
+                          : `Padrão da empresa: ${formatRate(defaultCostPerPage)}`}
+                      </small>
+                    </form>
+                    <div className="printer-clean-technical-grid printer-clean-confidence-grid">
+                      <div><span>Confiança serial</span><strong>{printer.serial_confidence === null ? "—" : `${printer.serial_confidence}%`}</strong></div>
+                      <div><span>Confiança contador</span><strong>{printer.page_count_confidence === null ? "—" : `${printer.page_count_confidence}%`}</strong></div>
+                      <div><span>Serial confirmado</span><strong>{printer.serial_confirmed ? "Sim" : "Não"}</strong></div>
+                      <div><span>Status</span><strong>{getStatusLabel(printer.status)}</strong></div>
+                    </div>
+                  </section>
                 </div>
-
-                <div className="printer-detail">
-                  <span>Toner</span>
-                  <strong>{printer.toner_percent === null ? "Não disponível" : `${printer.toner_percent}%`}</strong>
-                </div>
-
-                <div className="printer-detail">
-                  <span>Última comunicação</span>
-                  <strong>{formatLastSeen(printer.last_seen)}</strong>
-                </div>
-              </div>
+              )}
             </article>
           );
         })}
