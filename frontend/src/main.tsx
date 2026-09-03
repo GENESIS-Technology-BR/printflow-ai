@@ -23,6 +23,7 @@ import './flow-console-v062.css'
 import './visual-qa-v063.css'
 import './reports-commercial-v070.css'
 import './executive-overview-v064.css'
+import './enterprise-minimal-v065.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
