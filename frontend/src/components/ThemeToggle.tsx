@@ -5,6 +5,14 @@ type Theme = "light" | "dark";
 
 const STORAGE_KEY = "printflow_theme";
 
+const HEADER_TARGETS = [
+  ".modern-dashboard-actions",
+  ".control-center-actions",
+  ".reports-header",
+  ".agent-monitor-header",
+  ".dashboard > header",
+];
+
 function readInitialTheme(): Theme {
   const current = document.documentElement.dataset.theme;
   if (current === "dark" || current === "light") return current;
@@ -21,6 +29,14 @@ function applyTheme(theme: Theme): void {
   themeMeta?.setAttribute("content", theme === "dark" ? "#0B1524" : "#0A6ED1");
 }
 
+function resolveHeaderTarget(): Element | null {
+  for (const selector of HEADER_TARGETS) {
+    const target = document.querySelector(selector);
+    if (target) return target;
+  }
+  return null;
+}
+
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>(readInitialTheme);
   const [headerTarget, setHeaderTarget] = useState<Element | null>(null);
@@ -31,8 +47,14 @@ export default function ThemeToggle() {
   }, [theme]);
 
   useEffect(() => {
+    let currentTarget: Element | null = null;
+
     const resolveTarget = () => {
-      setHeaderTarget(document.querySelector(".modern-dashboard-actions"));
+      const nextTarget = resolveHeaderTarget();
+      if (nextTarget !== currentTarget) {
+        currentTarget = nextTarget;
+        setHeaderTarget(nextTarget);
+      }
     };
 
     resolveTarget();
