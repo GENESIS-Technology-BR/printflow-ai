@@ -19,6 +19,7 @@ import './printers-clean-v055.css'
 import './apple-dark-v056.css'
 import './minimal-system-v060.css'
 import './system-polish-v061.css'
+import './flow-console-v062.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
