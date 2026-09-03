@@ -1,0 +1,415 @@
+/* PRINTFLOW v0.5.6 — Apple Dark Polish
+   Dark mode premium para a experiência de Impressoras.
+   Princípios: profundidade suave, contraste limpo, poucas bordas e foco no conteúdo. */
+
+html[data-theme="dark"] .shell:has(.printer-clean-shell),
+html[data-theme="dark"] .shell:has(.printer-clean-shell) .dashboard {
+  color: #f5f5f7 !important;
+  background:
+    radial-gradient(circle at 86% 0%, rgba(10, 132, 255, .045), transparent 28%),
+    #0b0d10 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+}
+
+/* Sidebar — escura, silenciosa e com separação mínima. */
+html[data-theme="dark"] .shell:has(.printer-clean-shell) aside {
+  border-right: 1px solid rgba(255, 255, 255, .065) !important;
+  background: linear-gradient(180deg, #0c0f13 0%, #0f1217 100%) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .shell:has(.printer-clean-shell) aside .brand {
+  border-bottom: 1px solid rgba(255, 255, 255, .055) !important;
+  color: #f5f5f7 !important;
+}
+
+html[data-theme="dark"] .shell:has(.printer-clean-shell) aside nav button {
+  margin: 2px 8px !important;
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  color: #aeb4bd !important;
+  background: transparent !important;
+  font-weight: 500 !important;
+  transition: color .16s ease, background .16s ease, border-color .16s ease;
+}
+
+html[data-theme="dark"] .shell:has(.printer-clean-shell) aside nav button:hover {
+  color: #f5f5f7 !important;
+  background: rgba(255, 255, 255, .035) !important;
+}
+
+html[data-theme="dark"] .shell:has(.printer-clean-shell) aside nav button.active {
+  border-color: rgba(255, 255, 255, .055) !important;
+  color: #f5f5f7 !important;
+  background: #1b2027 !important;
+  box-shadow: inset 2px 0 0 #0a84ff !important;
+}
+
+html[data-theme="dark"] .shell:has(.printer-clean-shell) aside .logout {
+  color: #8e949d !important;
+  background: transparent !important;
+}
+
+/* Header da página. */
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) > header {
+  min-height: 68px !important;
+  margin: 0 !important;
+  padding: 12px 22px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .065) !important;
+  background: rgba(11, 13, 16, .82) !important;
+  backdrop-filter: blur(18px);
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) > header small {
+  color: #8b93a0 !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  letter-spacing: .11em !important;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) > header h1 {
+  margin-top: 3px !important;
+  color: #f5f5f7 !important;
+  font-size: 25px !important;
+  font-weight: 700 !important;
+  letter-spacing: -.02em !important;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) > header .online {
+  border: 1px solid rgba(48, 209, 88, .18) !important;
+  border-radius: 999px !important;
+  padding: 7px 11px !important;
+  color: #78e792 !important;
+  background: rgba(48, 209, 88, .075) !important;
+  box-shadow: none !important;
+  font-size: 10px !important;
+  font-weight: 650 !important;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .pf-theme-toggle {
+  min-height: 32px !important;
+  border: 1px solid rgba(255, 255, 255, .09) !important;
+  border-radius: 999px !important;
+  color: #d7dbe1 !important;
+  background: rgba(255, 255, 255, .035) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .pf-theme-toggle:hover {
+  border-color: rgba(255, 255, 255, .14) !important;
+  background: rgba(255, 255, 255, .06) !important;
+}
+
+/* Hero — profundidade leve, sem contorno pesado. */
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .hero {
+  min-height: 106px !important;
+  margin: 14px 20px 0 !important;
+  padding: 20px 22px !important;
+  border: 1px solid rgba(255, 255, 255, .065) !important;
+  border-radius: 16px !important;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, .025), transparent 44%),
+    #15191f !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .18) !important;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .hero small {
+  color: #8e96a2 !important;
+  font-size: 9px !important;
+  font-weight: 650 !important;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .hero h2 {
+  margin: 8px 0 5px !important;
+  color: #f5f5f7 !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  letter-spacing: -.018em !important;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .hero p {
+  color: #989fa9 !important;
+  font-size: 10px !important;
+}
+
+/* Elimina o grande painel externo: conteúdo passa a respirar no fundo. */
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .content-grid {
+  margin: 12px 20px 24px !important;
+  gap: 0 !important;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .content-grid > .panel {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .content-grid > .panel > .actions {
+  margin: 0 0 10px !important;
+  padding: 0 !important;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .content-grid > .panel > .actions button {
+  min-height: 34px !important;
+  border: 1px solid rgba(255, 255, 255, .075) !important;
+  border-radius: 10px !important;
+  padding: 0 12px !important;
+  color: #d8dde4 !important;
+  background: #15191f !important;
+  box-shadow: none !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .content-grid > .panel > .actions button:hover {
+  border-color: rgba(255, 255, 255, .12) !important;
+  background: #1a1f26 !important;
+}
+
+/* Organização do parque e filtros. */
+html[data-theme="dark"] .printer-clean-catalog,
+html[data-theme="dark"] .printer-clean-filter-bar {
+  border: 1px solid rgba(255, 255, 255, .065) !important;
+  background: #15191f !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .16) !important;
+}
+
+html[data-theme="dark"] .printer-clean-catalog {
+  border-radius: 15px !important;
+}
+
+html[data-theme="dark"] .printer-clean-catalog-summary {
+  min-height: 60px !important;
+  padding: 10px 14px !important;
+}
+
+html[data-theme="dark"] .printer-clean-eyebrow {
+  color: #7f8792 !important;
+}
+
+html[data-theme="dark"] .printer-clean-catalog-summary strong {
+  color: #f5f5f7 !important;
+  font-weight: 650 !important;
+}
+
+html[data-theme="dark"] .printer-clean-catalog-summary small {
+  color: #9299a3 !important;
+}
+
+html[data-theme="dark"] .printer-clean-catalog-body {
+  border-top-color: rgba(255, 255, 255, .055) !important;
+  background: #11151a !important;
+}
+
+html[data-theme="dark"] .printer-clean-catalog-body .printer-organization-create {
+  border: 1px solid rgba(255, 255, 255, .05) !important;
+  background: #181d23 !important;
+}
+
+html[data-theme="dark"] .printer-clean-filter-bar {
+  min-height: 50px !important;
+  border-radius: 14px !important;
+  padding: 7px 9px !important;
+}
+
+html[data-theme="dark"] .printer-clean-filter-bar input,
+html[data-theme="dark"] .printer-clean-filter-bar select,
+html[data-theme="dark"] .printer-clean-inline-form input,
+html[data-theme="dark"] .printer-clean-location-form select,
+html[data-theme="dark"] .printer-clean-cost-form input {
+  border: 1px solid rgba(255, 255, 255, .075) !important;
+  color: #f2f2f4 !important;
+  background: #101318 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .printer-clean-filter-bar input::placeholder,
+html[data-theme="dark"] .printer-clean-inline-form input::placeholder,
+html[data-theme="dark"] .printer-clean-cost-form input::placeholder {
+  color: #6f7680 !important;
+}
+
+html[data-theme="dark"] .printer-clean-filter-bar .printer-filter-count {
+  color: #969da7 !important;
+}
+
+/* Cards — o principal do Apple Dark. */
+html[data-theme="dark"] .printer-clean-cards {
+  gap: 9px !important;
+}
+
+html[data-theme="dark"] .printer-clean-card {
+  border: 1px solid rgba(255, 255, 255, .06) !important;
+  border-radius: 15px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .012), transparent 58%),
+    #171b21 !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .14) !important;
+  transform: none !important;
+}
+
+html[data-theme="dark"] .printer-clean-card:hover {
+  border-color: rgba(255, 255, 255, .095) !important;
+  background: #1a1f25 !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .20) !important;
+  transform: translateY(-1px) !important;
+}
+
+html[data-theme="dark"] .printer-clean-card.is-expanded {
+  border-color: rgba(10, 132, 255, .28) !important;
+  background: #191e24 !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .22) !important;
+}
+
+html[data-theme="dark"] .printer-clean-summary {
+  min-height: 82px !important;
+  padding: 11px 14px !important;
+}
+
+html[data-theme="dark"] .printer-clean-icon {
+  border: 1px solid rgba(255, 255, 255, .055) !important;
+  border-radius: 10px !important;
+  color: #d8dde4 !important;
+  background: linear-gradient(145deg, #2b3139, #20252c) !important;
+  box-shadow: inset 0 1px rgba(255, 255, 255, .035) !important;
+}
+
+html[data-theme="dark"] .printer-clean-name-row > strong {
+  color: #f5f5f7 !important;
+  font-weight: 650 !important;
+  letter-spacing: -.01em !important;
+}
+
+html[data-theme="dark"] .printer-clean-model,
+html[data-theme="dark"] .printer-clean-meta-row,
+html[data-theme="dark"] .printer-clean-stat > span,
+html[data-theme="dark"] .printer-clean-section-title > small,
+html[data-theme="dark"] .printer-clean-technical-grid span,
+html[data-theme="dark"] .printer-clean-cost-form > small {
+  color: #8f96a0 !important;
+}
+
+html[data-theme="dark"] .printer-clean-stat > strong,
+html[data-theme="dark"] .printer-clean-section-title > span,
+html[data-theme="dark"] .printer-clean-technical-grid strong {
+  color: #f0f1f3 !important;
+  font-weight: 620 !important;
+}
+
+html[data-theme="dark"] .printer-clean-meta-row code {
+  border: 1px solid rgba(255, 255, 255, .055) !important;
+  color: #a7c7ea !important;
+  background: #11161c !important;
+}
+
+/* Badges mais discretos. */
+html[data-theme="dark"] .printer-clean-card .status-pill {
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  font-weight: 650 !important;
+}
+
+html[data-theme="dark"] .printer-clean-card .status-online {
+  border-color: rgba(48, 209, 88, .12) !important;
+  color: #71e58d !important;
+  background: rgba(48, 209, 88, .08) !important;
+}
+
+html[data-theme="dark"] .printer-clean-card .status-offline {
+  border-color: rgba(255, 69, 58, .14) !important;
+  color: #ff8a82 !important;
+  background: rgba(255, 69, 58, .075) !important;
+}
+
+html[data-theme="dark"] .printer-clean-card .status-inactive,
+html[data-theme="dark"] .printer-clean-card .status-unknown {
+  border-color: rgba(255, 159, 10, .13) !important;
+  color: #ffc56f !important;
+  background: rgba(255, 159, 10, .075) !important;
+}
+
+/* Barras finas e sem excesso de cor. */
+html[data-theme="dark"] .printer-clean-mini-track {
+  height: 3px !important;
+  background: rgba(255, 255, 255, .10) !important;
+}
+
+html[data-theme="dark"] .printer-clean-mini-track > span {
+  background: linear-gradient(90deg, #30d158, #63e77b) !important;
+  box-shadow: none !important;
+}
+
+/* Ações e detalhes. */
+html[data-theme="dark"] .printer-clean-secondary-button,
+html[data-theme="dark"] .printer-clean-details-button,
+html[data-theme="dark"] .printer-clean-inline-form button,
+html[data-theme="dark"] .printer-clean-location-form button,
+html[data-theme="dark"] .printer-clean-cost-form button {
+  border: 1px solid rgba(255, 255, 255, .085) !important;
+  border-radius: 9px !important;
+  color: #d5dae0 !important;
+  background: rgba(255, 255, 255, .025) !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="dark"] .printer-clean-secondary-button:hover,
+html[data-theme="dark"] .printer-clean-details-button:hover,
+html[data-theme="dark"] .printer-clean-inline-form button:hover,
+html[data-theme="dark"] .printer-clean-location-form button:hover,
+html[data-theme="dark"] .printer-clean-cost-form button:hover {
+  border-color: rgba(255, 255, 255, .14) !important;
+  color: #fff !important;
+  background: rgba(255, 255, 255, .055) !important;
+}
+
+html[data-theme="dark"] .printer-clean-details {
+  border-top: 1px solid rgba(255, 255, 255, .055) !important;
+  background: #111419 !important;
+}
+
+html[data-theme="dark"] .printer-clean-edit-section {
+  border-color: rgba(255, 255, 255, .055) !important;
+}
+
+html[data-theme="dark"] .printer-clean-technical-grid > div {
+  border: 1px solid rgba(255, 255, 255, .045) !important;
+  background: #181c22 !important;
+}
+
+html[data-theme="dark"] .printer-clean-inline-form label,
+html[data-theme="dark"] .printer-clean-location-form label,
+html[data-theme="dark"] .printer-clean-cost-form label {
+  color: #9198a2 !important;
+}
+
+html[data-theme="dark"] .printer-clean-shell .printer-alias-error,
+html[data-theme="dark"] .printer-clean-shell .printer-filter-empty,
+html[data-theme="dark"] .printer-clean-shell .printer-catalog-message {
+  border-color: rgba(255, 255, 255, .07) !important;
+  background: #171b20 !important;
+}
+
+/* Scrollbar discreta — compatível com Chromium usado no ambiente do projeto. */
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell)::-webkit-scrollbar {
+  width: 10px;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell)::-webkit-scrollbar-track {
+  background: #0b0d10;
+}
+
+html[data-theme="dark"] .dashboard:has(.printer-clean-shell)::-webkit-scrollbar-thumb {
+  border: 3px solid #0b0d10;
+  border-radius: 999px;
+  background: #343940;
+}
+
+@media (max-width: 900px) {
+  html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .hero,
+  html[data-theme="dark"] .dashboard:has(.printer-clean-shell) .content-grid {
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+  }
+}
