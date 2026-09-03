@@ -17,10 +17,10 @@ def read_table() -> str:
 def test_frontend_has_search_and_filters():
     table = read_table()
 
-    assert "Buscar por nome, IP, host ou serial" in table
-    assert "Todos os status" in table
-    assert "Todas as unidades" in table
-    assert "Todos os setores" in table
+    assert 'placeholder="Buscar impressora..."' in table
+    assert '<option value="all">Status</option>' in table
+    assert '<option value="all">Unidades</option>' in table
+    assert '<option value="all">Setores</option>' in table
 
 
 def test_frontend_has_organization_editor():
