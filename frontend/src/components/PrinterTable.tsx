@@ -60,6 +60,29 @@ function getPrinterKey(printer: DashboardPrinter): string {
   return String(printer.uuid || printer.id || printer.ip || printer.name);
 }
 
+function getManufacturerBadge(printer: DashboardPrinter): string {
+  const source = [printer.manufacturer, printer.model, printer.name]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  if (source.includes("hewlett") || /(^|\s)hp([\s-]|$)/.test(source)) return "HP";
+  if (source.includes("ricoh")) return "RIC";
+  if (source.includes("zebra")) return "ZBR";
+  if (source.includes("kyocera")) return "KYO";
+  if (source.includes("canon")) return "CAN";
+  if (source.includes("epson")) return "EPS";
+  if (source.includes("brother")) return "BRO";
+  if (source.includes("xerox")) return "XRX";
+  if (source.includes("lexmark")) return "LEX";
+  if (source.includes("samsung")) return "SAM";
+  if (source.includes("konica") || source.includes("minolta")) return "KM";
+
+  const manufacturer = String(printer.manufacturer || "").trim();
+  if (manufacturer) return manufacturer.slice(0, 3).toUpperCase();
+  return "PF";
+}
+
 export default function PrinterTable({
   printers,
   defaultCostPerPage,
@@ -456,12 +479,14 @@ export default function PrinterTable({
           const modelLabel = [printer.manufacturer, printer.model].filter(Boolean).join(" · ") || "Modelo não identificado";
           const locationLabel = [organization.unit_name, organization.sector_name].filter(Boolean).join(" · ") || "Sem localização";
           const tonerLabel = printer.toner_percent === null ? "—" : `${printer.toner_percent}%`;
+          const manufacturerBadge = getManufacturerBadge(printer);
+          const manufacturerTitle = printer.manufacturer || "Fabricante não identificado";
 
           return (
             <article className={`printer-card printer-clean-card ${expanded ? "is-expanded" : ""}`} key={key}>
               <div className="printer-clean-summary">
                 <div className="printer-clean-identity">
-                  <span className="printer-clean-icon" aria-hidden="true">▣</span>
+                  <span className="printer-clean-icon" title={manufacturerTitle} aria-label={`Fabricante: ${manufacturerTitle}`}>{manufacturerBadge}</span>
                   <div>
                     <div className="printer-clean-name-row">
                       <strong>{displayName}</strong>
