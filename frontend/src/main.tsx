@@ -21,6 +21,7 @@ import './minimal-system-v060.css'
 import './system-polish-v061.css'
 import './flow-console-v062.css'
 import './visual-qa-v063.css'
+import './reports-commercial-v070.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
