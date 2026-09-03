@@ -1,0 +1,277 @@
+/* PRINTFLOW v0.6.3 — Visual QA Final
+   Fecha inconsistências de contraste, foco, densidade e responsividade.
+   Não altera lógica do produto. */
+
+:root {
+  --pf-focus-ring: 0 0 0 3px color-mix(in srgb, var(--flow-accent) 18%, transparent);
+}
+
+/* Contraste e leitura */
+.printer-clean-name-row > strong,
+.printer-clean-stat > strong,
+.dashboard > .hero h2 {
+  text-rendering: optimizeLegibility;
+}
+
+.printer-clean-model,
+.printer-clean-meta-row,
+.printer-clean-stat > span,
+.printer-clean-catalog-summary small {
+  line-height: 1.35 !important;
+}
+
+/* Foco acessível e consistente */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none !important;
+  box-shadow: var(--pf-focus-ring) !important;
+}
+
+/* Toolbar mais silenciosa */
+.dashboard > .content-grid > .panel > .actions {
+  min-height: 30px;
+  align-items: center;
+}
+
+.dashboard > .content-grid > .panel > .actions button {
+  opacity: .82;
+}
+
+.dashboard > .content-grid > .panel > .actions button:hover,
+.dashboard > .content-grid > .panel > .actions button:focus-visible {
+  opacity: 1;
+}
+
+/* Organização e filtros: hierarquia sem peso excessivo */
+.printer-clean-catalog,
+.printer-clean-filter-bar {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent) !important;
+}
+
+html[data-theme="dark"] .printer-clean-catalog,
+html[data-theme="dark"] .printer-clean-filter-bar {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent) !important;
+}
+
+.printer-clean-filter-bar input::placeholder {
+  color: color-mix(in srgb, var(--flow-muted) 82%, transparent) !important;
+}
+
+/* Console de equipamentos */
+.printer-clean-cards {
+  isolation: isolate;
+}
+
+.printer-clean-card {
+  min-width: 0;
+}
+
+.printer-clean-card:hover::before,
+.printer-clean-card.is-expanded::before {
+  width: 3px;
+}
+
+.printer-clean-summary {
+  transition: background-color .16s ease;
+}
+
+.printer-clean-identity,
+.printer-clean-name-row,
+.printer-clean-stat {
+  min-width: 0;
+}
+
+.printer-clean-icon {
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status menos “badge”, mais telemetria */
+.printer-clean-name-row .status-pill {
+  letter-spacing: .015em !important;
+}
+
+.printer-clean-name-row .status-pill.status-online {
+  color: var(--flow-online) !important;
+}
+
+.printer-clean-name-row .status-pill.status-offline,
+.printer-clean-name-row .status-pill.status-inactive {
+  color: var(--flow-offline) !important;
+}
+
+/* Detalhes expandidos */
+.printer-clean-card.is-expanded .printer-clean-summary {
+  background: color-mix(in srgb, var(--flow-accent) 2.5%, transparent) !important;
+}
+
+.printer-clean-details {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent);
+}
+
+html[data-theme="dark"] .printer-clean-details {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+/* Dark: reduzir preto chapado e melhorar separação sem poluição */
+html[data-theme="dark"] .printer-clean-cards {
+  background: rgba(18,24,31,.92) !important;
+}
+
+html[data-theme="dark"] .printer-clean-card:hover,
+html[data-theme="dark"] .printer-clean-card.is-expanded {
+  background: rgba(27,36,46,.92) !important;
+}
+
+html[data-theme="dark"] .printer-clean-icon {
+  border-color: color-mix(in srgb, var(--flow-accent) 34%, var(--flow-hairline)) !important;
+  background: color-mix(in srgb, var(--flow-accent) 7%, transparent) !important;
+}
+
+/* Light: retirar aspecto excessivamente branco */
+html:not([data-theme="dark"]) .printer-clean-cards {
+  background: rgba(255,255,255,.76) !important;
+}
+
+html:not([data-theme="dark"]) .printer-clean-card:hover,
+html:not([data-theme="dark"]) .printer-clean-card.is-expanded {
+  background: rgba(248,251,255,.96) !important;
+}
+
+/* Notebook */
+@media (max-width: 1366px) {
+  .dashboard > header,
+  .modern-dashboard-header,
+  .control-center-header,
+  .reports-header,
+  .agent-monitor-header {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  .dashboard > .hero,
+  .dashboard > .content-grid {
+    margin-left: 18px !important;
+    margin-right: 18px !important;
+  }
+
+  .printer-clean-summary {
+    grid-template-columns: minmax(300px, 2.15fr) minmax(80px,.56fr) minmax(82px,.56fr) minmax(90px,.6fr) minmax(125px,.82fr) 76px !important;
+  }
+}
+
+/* Tablet / janela estreita */
+@media (max-width: 980px) {
+  .shell {
+    grid-template-columns: 150px minmax(0,1fr) !important;
+  }
+
+  .shell > aside {
+    width: 150px !important;
+  }
+
+  .printer-clean-filter-bar {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1px !important;
+  }
+
+  .printer-clean-filter-bar .printer-search {
+    min-width: 0 !important;
+    grid-column: 1 / -1;
+  }
+
+  .printer-clean-filter-count {
+    justify-self: end;
+    align-self: center;
+    padding-right: 8px;
+  }
+}
+
+/* Mobile / troubleshooting remoto */
+@media (max-width: 720px) {
+  .shell {
+    display: block !important;
+  }
+
+  .shell > aside {
+    position: static !important;
+    width: 100% !important;
+    min-height: auto !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--flow-hairline) !important;
+  }
+
+  .shell > aside::after,
+  .shell > aside .brand::after {
+    display: none !important;
+  }
+
+  .shell > aside nav {
+    display: flex !important;
+    overflow-x: auto;
+    gap: 4px !important;
+    padding-bottom: 4px;
+  }
+
+  .shell > aside nav button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .shell > aside .logout {
+    display: none !important;
+  }
+
+  .dashboard > header {
+    min-height: 64px !important;
+    padding: 12px 14px !important;
+  }
+
+  .dashboard > header h1 {
+    font-size: 21px !important;
+  }
+
+  .dashboard > .hero,
+  .dashboard > .content-grid {
+    margin-left: 14px !important;
+    margin-right: 14px !important;
+  }
+
+  .printer-clean-filter-bar {
+    grid-template-columns: 1fr !important;
+  }
+
+  .printer-clean-filter-bar .printer-search {
+    grid-column: auto;
+  }
+
+  .printer-clean-filter-count {
+    justify-self: start;
+    padding: 4px 8px;
+  }
+
+  .printer-clean-summary {
+    min-height: 62px !important;
+  }
+
+  .printer-clean-identity {
+    grid-template-columns: 38px minmax(0,1fr) !important;
+  }
+
+  .printer-clean-icon {
+    width: 34px !important;
+  }
+}
+
+/* Respeitar preferência de movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
