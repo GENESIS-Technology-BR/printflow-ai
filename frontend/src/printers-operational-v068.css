@@ -1,0 +1,240 @@
+/* PRINTFLOW v0.6.8 — Printers Operational View
+   Menos ruído, mais leitura operacional. */
+
+main.dashboard:has(.printer-clean-shell) > .hero {
+  display: none !important;
+}
+
+main.dashboard:has(.printer-clean-shell) > .content-grid {
+  margin-top: 18px !important;
+}
+
+main.dashboard:has(.printer-clean-shell) > .content-grid > .panel {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+main.dashboard:has(.printer-clean-shell) > .content-grid > .panel > .actions {
+  justify-content: flex-end !important;
+  min-height: 34px !important;
+  margin-bottom: 10px !important;
+}
+
+main.dashboard:has(.printer-clean-shell) > .content-grid > .panel > .actions button {
+  min-height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 10px !important;
+}
+
+.printer-clean-shell {
+  gap: 10px !important;
+}
+
+/* Organização vira faixa de contexto, não bloco principal. */
+.printer-clean-catalog {
+  min-height: 48px !important;
+  border-radius: 8px !important;
+}
+.printer-clean-catalog-summary {
+  min-height: 48px !important;
+  padding: 8px 12px !important;
+  align-items: center !important;
+}
+.printer-clean-catalog-summary > div {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 10px !important;
+  flex-wrap: wrap;
+}
+.printer-clean-eyebrow {
+  font-size: 8px !important;
+  letter-spacing: .12em !important;
+}
+.printer-clean-catalog-summary strong {
+  font-size: 12px !important;
+}
+.printer-clean-catalog-summary small {
+  font-size: 9px !important;
+  opacity: .7;
+}
+.printer-clean-secondary-button {
+  min-height: 28px !important;
+  padding: 0 9px !important;
+  font-size: 9px !important;
+}
+
+/* Filtros como toolbar única. */
+.printer-clean-filter-bar {
+  display: grid !important;
+  grid-template-columns: minmax(260px, 1.5fr) repeat(3, minmax(130px, .55fr)) auto !important;
+  min-height: 44px !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+  border-radius: 8px !important;
+}
+.printer-clean-filter-bar input,
+.printer-clean-filter-bar select {
+  min-height: 44px !important;
+  border: 0 !important;
+  border-right: 1px solid var(--em-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  font-size: 10px !important;
+  box-shadow: none !important;
+}
+.printer-clean-filter-count {
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 12px !important;
+  font-size: 9px !important;
+  white-space: nowrap;
+}
+
+/* Lista contínua, mais parecida com monitor operacional. */
+.printer-clean-cards {
+  border-radius: 8px !important;
+  overflow: hidden;
+  border: 1px solid var(--em-line) !important;
+}
+.printer-clean-card {
+  border: 0 !important;
+  border-bottom: 1px solid var(--em-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.printer-clean-card:last-child {
+  border-bottom: 0 !important;
+}
+.printer-clean-card::before {
+  width: 2px !important;
+}
+
+.printer-clean-summary {
+  grid-template-columns: minmax(360px, 2.2fr) minmax(105px,.6fr) minmax(95px,.55fr) minmax(105px,.6fr) minmax(145px,.82fr) 64px !important;
+  min-height: 66px !important;
+  padding: 8px 12px !important;
+  gap: 12px !important;
+}
+
+/* Identidade: foco no nome; resto vira contexto secundário. */
+.printer-clean-identity {
+  grid-template-columns: 40px minmax(0,1fr) !important;
+  gap: 10px !important;
+}
+.printer-clean-icon {
+  width: 34px !important;
+  height: 30px !important;
+  border-radius: 6px !important;
+  font-size: 9px !important;
+}
+.printer-clean-name-row {
+  gap: 7px !important;
+  margin-bottom: 1px !important;
+}
+.printer-clean-name-row > strong {
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+.printer-clean-name-row .status-pill {
+  padding: 0 !important;
+  background: transparent !important;
+  font-size: 8px !important;
+  font-weight: 700 !important;
+}
+.printer-clean-name-row .status-pill i {
+  width: 5px !important;
+  height: 5px !important;
+  box-shadow: none !important;
+}
+.printer-clean-model {
+  font-size: 9px !important;
+  opacity: .72;
+}
+.printer-clean-meta-row {
+  margin-top: 4px !important;
+  gap: 7px !important;
+  font-size: 8px !important;
+  opacity: .62;
+}
+.printer-clean-meta-row code {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: inherit !important;
+}
+
+/* Métricas: menos rótulo e menos barras. */
+.printer-clean-stat {
+  padding-left: 10px !important;
+  border-left: 1px solid color-mix(in srgb, var(--em-line) 72%, transparent) !important;
+}
+.printer-clean-stat > span {
+  font-size: 7px !important;
+  letter-spacing: .11em !important;
+  opacity: .65;
+}
+.printer-clean-stat > strong {
+  margin-top: 4px !important;
+  font-size: 11px !important;
+}
+.printer-clean-mini-track {
+  height: 2px !important;
+  margin-top: 5px !important;
+  max-width: 92px;
+  opacity: .72;
+}
+.printer-clean-last-seen > strong {
+  font-size: 9px !important;
+  font-weight: 600 !important;
+}
+
+.printer-clean-details-button {
+  min-height: 28px !important;
+  padding: 0 5px !important;
+  font-size: 8px !important;
+  opacity: .7;
+}
+.printer-clean-details-button:hover {
+  opacity: 1;
+}
+
+/* Expansão continua completa, mas visualmente separada da linha principal. */
+.printer-clean-details {
+  padding: 14px 16px !important;
+  background: var(--em-surface-soft) !important;
+}
+
+html[data-theme="dark"] .printer-clean-filter-bar input,
+html[data-theme="dark"] .printer-clean-filter-bar select,
+html[data-theme="dark"] .printer-clean-card {
+  background: #181f28 !important;
+}
+html[data-theme="dark"] .printer-clean-card:hover,
+html[data-theme="dark"] .printer-clean-card.is-expanded {
+  background: #1d2631 !important;
+}
+
+@media (max-width: 1180px) {
+  .printer-clean-summary {
+    grid-template-columns: minmax(300px, 1.8fr) minmax(90px,.55fr) minmax(90px,.55fr) minmax(100px,.6fr) minmax(130px,.75fr) 58px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .printer-clean-filter-bar {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .printer-clean-filter-bar .printer-search {
+    grid-column: 1 / -1;
+  }
+  .printer-clean-summary {
+    grid-template-columns: minmax(0,1fr) auto !important;
+    min-height: 72px !important;
+  }
+  .printer-clean-stat {
+    display: none !important;
+  }
+}
