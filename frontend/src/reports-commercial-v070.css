@@ -1,0 +1,138 @@
+/* PRINTFLOW v0.7.0 — Reports Revenue Ready */
+.reports-period-bar,
+.reports-scope-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 7px 10px;
+  border: 1px solid var(--pf-line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--pf-surface-strong) 86%, transparent);
+}
+
+.reports-period-bar > div,
+.reports-scope-bar > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.reports-period-bar span,
+.reports-scope-bar span {
+  color: var(--pf-text-3);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.reports-period-bar button,
+.reports-scope-bar button {
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--pf-line) !important;
+  border-radius: 7px !important;
+  color: var(--pf-text-2) !important;
+  background: transparent !important;
+  font-size: 8px !important;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.reports-period-bar button:hover,
+.reports-scope-bar button:hover {
+  color: var(--pf-blue) !important;
+  border-color: color-mix(in srgb, var(--pf-blue) 35%, var(--pf-line)) !important;
+  background: color-mix(in srgb, var(--pf-blue) 6%, transparent) !important;
+}
+
+.reports-period-bar > strong,
+.reports-scope-bar strong {
+  overflow: hidden;
+  color: var(--pf-text-2);
+  font-size: 9px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reports-intro {
+  border: 1px solid var(--pf-line) !important;
+  background:
+    linear-gradient(115deg, color-mix(in srgb, var(--pf-blue) 7%, transparent), transparent 38%),
+    var(--pf-surface) !important;
+  box-shadow: none !important;
+}
+
+.reports-intro h2,
+.reports-table-title h3 {
+  color: var(--pf-text) !important;
+}
+
+.reports-intro p,
+.reports-intro small,
+.reports-table-title small {
+  color: var(--pf-text-3) !important;
+}
+
+.reports-downloads button {
+  min-width: 118px !important;
+  min-height: 34px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: var(--pf-blue) !important;
+  box-shadow: none !important;
+  font-size: 9px !important;
+}
+
+.reports-downloads button.pdf {
+  border: 1px solid var(--pf-line) !important;
+  color: var(--pf-text) !important;
+  background: transparent !important;
+}
+
+.reports-metrics article {
+  position: relative;
+  overflow: hidden;
+}
+
+.reports-metrics article::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--pf-blue), transparent 68%);
+  opacity: .34;
+}
+
+.reports-table-card {
+  box-shadow: none !important;
+}
+
+.reports-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--pf-blue) 3.5%, transparent) !important;
+}
+
+html[data-theme="dark"] .reports-period-bar,
+html[data-theme="dark"] .reports-scope-bar {
+  background: color-mix(in srgb, var(--pf-surface-strong) 90%, transparent);
+}
+
+@media (max-width: 760px) {
+  .reports-period-bar,
+  .reports-scope-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .reports-period-bar > div,
+  .reports-scope-bar > div {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
