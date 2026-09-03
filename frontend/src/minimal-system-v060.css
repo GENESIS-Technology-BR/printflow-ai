@@ -1,0 +1,1031 @@
+/* PRINTFLOW v0.6.0 — Minimal System
+   Direção: menos ruído, mais hierarquia, foco na decisão principal.
+   Carregado por último para unificar visual sem alterar regras de negócio. */
+
+:root {
+  --pf-bg: #f5f5f7;
+  --pf-surface: rgba(255, 255, 255, .92);
+  --pf-surface-strong: #ffffff;
+  --pf-surface-soft: #fafafa;
+  --pf-text: #1d1d1f;
+  --pf-text-2: #515154;
+  --pf-text-3: #86868b;
+  --pf-line: rgba(0, 0, 0, .08);
+  --pf-line-soft: rgba(0, 0, 0, .05);
+  --pf-blue: #0071e3;
+  --pf-green: #30d158;
+  --pf-orange: #ff9f0a;
+  --pf-red: #ff453a;
+  --pf-radius: 18px;
+  --pf-radius-sm: 12px;
+  --pf-shadow: 0 8px 30px rgba(0, 0, 0, .055);
+  --pf-shadow-soft: 0 3px 16px rgba(0, 0, 0, .035);
+  --pf-page-gap: 18px;
+}
+
+html[data-theme="dark"] {
+  --pf-bg: #0b0b0c;
+  --pf-surface: rgba(28, 28, 30, .94);
+  --pf-surface-strong: #1c1c1e;
+  --pf-surface-soft: #161617;
+  --pf-text: #f5f5f7;
+  --pf-text-2: #c7c7cc;
+  --pf-text-3: #8e8e93;
+  --pf-line: rgba(255, 255, 255, .10);
+  --pf-line-soft: rgba(255, 255, 255, .055);
+  --pf-blue: #0a84ff;
+  --pf-green: #30d158;
+  --pf-orange: #ff9f0a;
+  --pf-red: #ff453a;
+  --pf-shadow: 0 12px 36px rgba(0, 0, 0, .28);
+  --pf-shadow-soft: 0 5px 20px rgba(0, 0, 0, .18);
+}
+
+html,
+body,
+#root {
+  background: var(--pf-bg) !important;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+body {
+  color: var(--pf-text) !important;
+  letter-spacing: -.01em;
+}
+
+button,
+input,
+select,
+textarea {
+  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;
+}
+
+/* ---------- Estrutura global ---------- */
+.shell {
+  grid-template-columns: 172px minmax(0, 1fr) !important;
+  min-height: 100vh !important;
+  background: var(--pf-bg) !important;
+}
+
+.shell > aside {
+  width: 172px !important;
+  padding: 14px 10px 12px !important;
+  border-right: 1px solid var(--pf-line) !important;
+  background: color-mix(in srgb, var(--pf-surface-strong) 92%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.shell > aside .brand {
+  min-height: 48px !important;
+  padding: 4px 8px 14px !important;
+  border-bottom: 0 !important;
+  gap: 9px !important;
+}
+
+.shell > aside .brand img {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.shell > aside .brand strong {
+  color: var(--pf-text) !important;
+  font-size: 14px !important;
+  font-weight: 650 !important;
+  letter-spacing: -.02em !important;
+}
+
+.shell > aside nav {
+  display: grid !important;
+  gap: 3px !important;
+  margin-top: 8px !important;
+}
+
+.shell > aside nav button,
+.shell > aside .logout {
+  min-height: 38px !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  color: var(--pf-text-2) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 11px !important;
+  font-weight: 550 !important;
+  text-align: left !important;
+}
+
+.shell > aside nav button:hover,
+.shell > aside .logout:hover {
+  color: var(--pf-text) !important;
+  background: color-mix(in srgb, var(--pf-text) 6%, transparent) !important;
+}
+
+.shell > aside nav button.active {
+  color: var(--pf-text) !important;
+  background: color-mix(in srgb, var(--pf-blue) 10%, transparent) !important;
+  box-shadow: inset 2px 0 0 var(--pf-blue) !important;
+  font-weight: 650 !important;
+}
+
+.shell > aside .logout {
+  margin-top: auto !important;
+}
+
+.dashboard {
+  min-width: 0 !important;
+  padding: 0 !important;
+  background: var(--pf-bg) !important;
+  color: var(--pf-text) !important;
+}
+
+.dashboard > header,
+.modern-dashboard-header,
+.control-center-header,
+.reports-header,
+.agent-monitor-header {
+  min-height: 74px !important;
+  margin: 0 !important;
+  padding: 15px 22px !important;
+  border-bottom: 1px solid var(--pf-line) !important;
+  background: color-mix(in srgb, var(--pf-surface-strong) 88%, transparent) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(18px);
+}
+
+.dashboard > header h1,
+.modern-dashboard-header h1,
+.control-center-header h1,
+.reports-header h1,
+.agent-monitor-header h1 {
+  margin: 2px 0 0 !important;
+  color: var(--pf-text) !important;
+  font-size: 24px !important;
+  line-height: 1.05 !important;
+  font-weight: 700 !important;
+  letter-spacing: -.035em !important;
+}
+
+.dashboard > header small,
+.dashboard > header span,
+.modern-dashboard-kicker,
+.control-center-header > div > span,
+.reports-header small,
+.agent-monitor-header > div > span {
+  color: var(--pf-text-3) !important;
+  font-size: 9px !important;
+  font-weight: 650 !important;
+  letter-spacing: .08em !important;
+}
+
+.modern-dashboard-header p,
+.control-center-header p,
+.agent-monitor-header p {
+  margin-top: 4px !important;
+  color: var(--pf-text-3) !important;
+  font-size: 10px !important;
+}
+
+/* ---------- Controles globais ---------- */
+button:not(.logout),
+.actions button,
+.reports-downloads button,
+.control-center-actions button,
+.agent-actions button {
+  border-radius: 10px !important;
+}
+
+button.primary,
+.cc-primary,
+.cc-create-button,
+.reports-downloads button,
+.modern-refresh-button,
+.modern-company-manage {
+  border: 0 !important;
+  color: #fff !important;
+  background: var(--pf-blue) !important;
+  box-shadow: none !important;
+}
+
+button.primary:hover,
+.cc-primary:hover,
+.cc-create-button:hover,
+.reports-downloads button:hover,
+.modern-refresh-button:hover,
+.modern-company-manage:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--pf-line) !important;
+  border-radius: 10px !important;
+  color: var(--pf-text) !important;
+  background: var(--pf-surface-strong) !important;
+  box-shadow: none !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: color-mix(in srgb, var(--pf-blue) 55%, transparent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pf-blue) 14%, transparent) !important;
+}
+
+.online,
+.modern-agent-badge,
+.status-pill,
+.cc-online,
+.cc-offline {
+  box-shadow: none !important;
+}
+
+.pf-theme-toggle {
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 11px !important;
+  border: 1px solid var(--pf-line) !important;
+  border-radius: 999px !important;
+  color: var(--pf-text-2) !important;
+  background: color-mix(in srgb, var(--pf-surface-strong) 92%, transparent) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(14px);
+}
+
+/* ---------- Visão Geral ---------- */
+.dashboard-page,
+.executive-clean-page,
+.clean-dashboard-v2 {
+  padding: 0 22px 18px !important;
+  background: var(--pf-bg) !important;
+}
+
+.dashboard-page .modern-dashboard-header {
+  margin: 0 -22px !important;
+}
+
+.modern-update-row {
+  min-height: 26px !important;
+  margin: 0 !important;
+  padding: 7px 2px 0 !important;
+  color: var(--pf-text-3) !important;
+  font-size: 8px !important;
+}
+
+.modern-company-bar {
+  min-height: 58px !important;
+  margin: 8px 0 12px !important;
+  padding: 8px 10px !important;
+  border: 0 !important;
+  border-radius: var(--pf-radius) !important;
+  background: var(--pf-surface) !important;
+  box-shadow: var(--pf-shadow-soft) !important;
+}
+
+.modern-company-icon {
+  width: 30px !important;
+  height: 30px !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  color: var(--pf-blue) !important;
+  background: color-mix(in srgb, var(--pf-blue) 9%, transparent) !important;
+}
+
+.modern-company-selector {
+  min-height: 38px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.modern-company-selector span,
+.modern-company-selector i {
+  color: var(--pf-text-3) !important;
+}
+
+.modern-company-selector strong {
+  color: var(--pf-text) !important;
+  font-size: 12px !important;
+}
+
+.modern-company-manage {
+  min-height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 9px !important;
+}
+
+.metrics-grid,
+.modern-kpi-grid,
+.executive-clean-metrics {
+  gap: 10px !important;
+}
+
+.metric-card {
+  min-height: 82px !important;
+  padding: 12px 14px !important;
+  border: 0 !important;
+  border-radius: var(--pf-radius) !important;
+  background: var(--pf-surface) !important;
+  box-shadow: var(--pf-shadow-soft) !important;
+}
+
+.metric-card-title,
+.metric-card-subtitle {
+  color: var(--pf-text-3) !important;
+}
+
+.metric-card-value {
+  margin-top: 8px !important;
+  color: var(--pf-text) !important;
+  font-size: 25px !important;
+  font-weight: 700 !important;
+  letter-spacing: -.04em !important;
+}
+
+.pf-intelligence-panel {
+  margin-top: 12px !important;
+  padding: 14px 16px !important;
+  border: 0 !important;
+  border-radius: var(--pf-radius) !important;
+  background: var(--pf-surface) !important;
+  box-shadow: var(--pf-shadow-soft) !important;
+}
+
+.pf-intelligence-header {
+  padding: 0 !important;
+  border-bottom: 0 !important;
+}
+
+.pf-intelligence-heading img {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.pf-intelligence-heading span,
+.pf-intelligence-summary small {
+  color: var(--pf-text-3) !important;
+}
+
+.pf-intelligence-heading h2 {
+  margin: 2px 0 !important;
+  color: var(--pf-text) !important;
+  font-size: 16px !important;
+  letter-spacing: -.02em !important;
+}
+
+.pf-intelligence-heading p {
+  color: var(--pf-text-2) !important;
+  font-size: 9px !important;
+}
+
+.pf-intelligence-score {
+  min-width: 64px !important;
+  padding: 6px 8px !important;
+  border: 1px solid var(--pf-line) !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+}
+
+.pf-intelligence-score strong {
+  color: var(--pf-text) !important;
+  font-size: 22px !important;
+}
+
+.pf-intelligence-summary {
+  margin-top: 10px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid var(--pf-line-soft) !important;
+}
+
+.pf-intelligence-item,
+.pf-intelligence-clear,
+.pf-intelligence-action {
+  border-color: var(--pf-line) !important;
+  background: var(--pf-surface-soft) !important;
+}
+
+.clean-dashboard-main {
+  gap: 10px !important;
+  margin-top: 12px !important;
+}
+
+.modern-panel,
+.clean-health-card,
+.clean-alert-panel {
+  min-height: 150px !important;
+  padding: 14px 16px !important;
+  border: 0 !important;
+  border-radius: var(--pf-radius) !important;
+  background: var(--pf-surface) !important;
+  box-shadow: var(--pf-shadow-soft) !important;
+}
+
+.clean-card-heading h2,
+.modern-alert-heading h2 {
+  color: var(--pf-text) !important;
+  font-size: 15px !important;
+}
+
+.clean-card-heading p,
+.modern-alert-heading p,
+.modern-no-alerts span {
+  color: var(--pf-text-3) !important;
+  font-size: 9px !important;
+}
+
+.clean-health-score-row > div > strong {
+  color: var(--pf-text) !important;
+  font-size: 28px !important;
+}
+
+.clean-health-progress,
+.printer-clean-mini-track {
+  height: 3px !important;
+}
+
+.clean-summary-strip {
+  gap: 8px !important;
+  margin-top: 10px !important;
+}
+
+.clean-summary-item {
+  min-height: 48px !important;
+  padding: 9px 12px !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  background: var(--pf-surface) !important;
+  box-shadow: var(--pf-shadow-soft) !important;
+}
+
+.clean-summary-item span {
+  color: var(--pf-text-3) !important;
+}
+
+.clean-summary-item strong {
+  color: var(--pf-text) !important;
+  font-size: 16px !important;
+}
+
+.modern-dashboard-footer {
+  display: none !important;
+}
+
+/* ---------- Hero e painéis genéricos ---------- */
+.dashboard > .hero,
+.dashboard > section.hero,
+.reports-intro {
+  margin: 14px 22px 12px !important;
+  padding: 16px 18px !important;
+  min-height: auto !important;
+  border: 0 !important;
+  border-radius: var(--pf-radius) !important;
+  background: var(--pf-surface) !important;
+  box-shadow: var(--pf-shadow-soft) !important;
+}
+
+.hero h2,
+.reports-intro h2 {
+  margin: 3px 0 4px !important;
+  color: var(--pf-text) !important;
+  font-size: 19px !important;
+  letter-spacing: -.025em !important;
+}
+
+.hero p,
+.reports-intro p {
+  margin: 0 !important;
+  color: var(--pf-text-3) !important;
+  font-size: 10px !important;
+}
+
+.hero small,
+.reports-intro small {
+  color: var(--pf-text-3) !important;
+  font-size: 8px !important;
+}
+
+.content-grid,
+.dashboard > .grid,
+.dashboard > section.grid {
+  gap: 12px !important;
+  margin: 0 22px 18px !important;
+}
+
+.panel {
+  padding: 16px !important;
+  border: 0 !important;
+  border-radius: var(--pf-radius) !important;
+  background: var(--pf-surface) !important;
+  box-shadow: var(--pf-shadow-soft) !important;
+}
+
+.panel h3 {
+  margin-top: 0 !important;
+  color: var(--pf-text) !important;
+  font-size: 16px !important;
+}
+
+.panel p,
+.panel small,
+.status-box span {
+  color: var(--pf-text-3) !important;
+}
+
+/* ---------- Impressoras ---------- */
+.printer-clean-shell {
+  gap: 9px !important;
+}
+
+.printer-clean-catalog,
+.printer-clean-filter-bar,
+.printer-clean-card {
+  border: 0 !important;
+  background: var(--pf-surface) !important;
+  box-shadow: var(--pf-shadow-soft) !important;
+}
+
+.printer-clean-catalog,
+.printer-clean-card {
+  border-radius: var(--pf-radius) !important;
+}
+
+.printer-clean-filter-bar {
+  min-height: 46px !important;
+  border-radius: 14px !important;
+}
+
+.printer-clean-catalog-summary {
+  min-height: 52px !important;
+}
+
+.printer-clean-catalog-summary strong,
+.printer-clean-name-row > strong,
+.printer-clean-stat > strong,
+.printer-clean-section-title > span,
+.printer-clean-technical-grid strong {
+  color: var(--pf-text) !important;
+}
+
+.printer-clean-eyebrow,
+.printer-clean-catalog-summary small,
+.printer-clean-model,
+.printer-clean-meta-row,
+.printer-clean-stat > span,
+.printer-clean-section-title > small,
+.printer-clean-technical-grid span,
+.printer-clean-cost-form > small {
+  color: var(--pf-text-3) !important;
+}
+
+.printer-clean-summary {
+  min-height: 76px !important;
+  padding: 10px 14px !important;
+}
+
+.printer-clean-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 9px !important;
+  color: var(--pf-blue) !important;
+  background: color-mix(in srgb, var(--pf-blue) 9%, transparent) !important;
+}
+
+.printer-clean-name-row > strong {
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+
+.printer-clean-meta-row code {
+  color: var(--pf-text-2) !important;
+  background: color-mix(in srgb, var(--pf-text) 5%, transparent) !important;
+}
+
+.printer-clean-details-button,
+.printer-clean-secondary-button {
+  border: 1px solid var(--pf-line) !important;
+  color: var(--pf-text-2) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.printer-clean-details {
+  border-top: 1px solid var(--pf-line-soft) !important;
+  background: var(--pf-surface-soft) !important;
+}
+
+.printer-clean-edit-section {
+  border-color: var(--pf-line-soft) !important;
+}
+
+.printer-clean-technical-grid > div,
+.printer-clean-catalog-body .printer-organization-create {
+  background: color-mix(in srgb, var(--pf-text) 3%, transparent) !important;
+}
+
+/* ---------- Control Center ---------- */
+.control-center-page,
+.reports-page,
+.agent-monitor-page {
+  padding: 0 22px 18px !important;
+  background: var(--pf-bg) !important;
+  color: var(--pf-text) !important;
+}
+
+.control-center-header,
+.reports-header,
+.agent-monitor-header {
+  margin: 0 -22px 14px !important;
+}
+
+.control-center-kpis,
+.reports-metrics,
+.agent-metrics {
+  gap: 10px !important;
+}
+
+.control-center-kpis article,
+.reports-metrics article,
+.agent-metrics article {
+  min-height: 82px !important;
+  padding: 13px 15px !important;
+  border: 0 !important;
+  border-radius: var(--pf-radius) !important;
+  background: var(--pf-surface) !important;
+  box-shadow: var(--pf-shadow-soft) !important;
+}
+
+.control-center-kpis article span,
+.control-center-kpis article small,
+.reports-metrics article span,
+.agent-metrics article span,
+.agent-metrics article small {
+  color: var(--pf-text-3) !important;
+}
+
+.control-center-kpis article strong,
+.reports-metrics article strong,
+.agent-metrics article strong {
+  color: var(--pf-text) !important;
+  font-size: 24px !important;
+  letter-spacing: -.035em !important;
+}
+
+.control-center-panel,
+.control-center-onboarding,
+.control-center-created,
+.reports-filters,
+.reports-table-card,
+.agent-overview,
+.agent-panel {
+  border: 0 !important;
+  border-radius: var(--pf-radius) !important;
+  background: var(--pf-surface) !important;
+  box-shadow: var(--pf-shadow-soft) !important;
+}
+
+.control-center-panel,
+.reports-table-card {
+  margin-top: 12px !important;
+}
+
+.control-center-title,
+.reports-table-title,
+.agent-panel-title {
+  border-bottom: 1px solid var(--pf-line-soft) !important;
+}
+
+.control-center-title h2,
+.reports-table-title h3,
+.agent-panel-title h3 {
+  color: var(--pf-text) !important;
+  font-size: 16px !important;
+}
+
+.control-center-title span,
+.reports-table-title small,
+.agent-panel-title span {
+  color: var(--pf-text-3) !important;
+}
+
+.control-center-row {
+  border-color: var(--pf-line-soft) !important;
+  color: var(--pf-text-2) !important;
+  background: transparent !important;
+}
+
+.control-center-row.header {
+  color: var(--pf-text-3) !important;
+  background: color-mix(in srgb, var(--pf-text) 3%, transparent) !important;
+}
+
+.control-center-row strong {
+  color: var(--pf-text) !important;
+}
+
+/* ---------- Relatórios ---------- */
+.reports-intro {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.reports-downloads {
+  gap: 7px !important;
+}
+
+.reports-downloads button {
+  min-height: 34px !important;
+  padding: 0 12px !important;
+  font-size: 9px !important;
+}
+
+.reports-downloads .pdf {
+  color: var(--pf-text) !important;
+  background: color-mix(in srgb, var(--pf-text) 6%, transparent) !important;
+}
+
+.reports-filters {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin: 0 0 12px !important;
+  padding: 12px !important;
+}
+
+.reports-filters label {
+  color: var(--pf-text-3) !important;
+  font-size: 8px !important;
+}
+
+.reports-filters input,
+.reports-filters select {
+  min-height: 34px !important;
+  height: 34px !important;
+  font-size: 9px !important;
+}
+
+.reports-table {
+  color: var(--pf-text-2) !important;
+}
+
+.reports-table th {
+  color: var(--pf-text-3) !important;
+  background: color-mix(in srgb, var(--pf-text) 3%, transparent) !important;
+  border-color: var(--pf-line-soft) !important;
+  font-size: 8px !important;
+}
+
+.reports-table td {
+  border-color: var(--pf-line-soft) !important;
+  background: transparent !important;
+  font-size: 9px !important;
+}
+
+.reports-table td strong,
+.reports-table .pages,
+.reports-table .cost {
+  color: var(--pf-text) !important;
+}
+
+/* ---------- Agentes ---------- */
+.agent-overview {
+  min-height: 104px !important;
+  padding: 16px !important;
+}
+
+.agent-state-icon {
+  width: 38px !important;
+  height: 38px !important;
+  background: color-mix(in srgb, var(--pf-green) 10%, transparent) !important;
+}
+
+.agent-state-copy h2 {
+  color: var(--pf-text) !important;
+  font-size: 19px !important;
+}
+
+.agent-state-copy p,
+.agent-state-time span,
+.agent-token-help {
+  color: var(--pf-text-3) !important;
+}
+
+.agent-state-time strong {
+  color: var(--pf-text) !important;
+}
+
+.agent-monitor-grid {
+  gap: 10px !important;
+}
+
+.agent-alert,
+.agent-error-detail,
+.status-box {
+  border-color: var(--pf-line) !important;
+  background: var(--pf-surface-soft) !important;
+}
+
+.agent-token,
+.panel > code {
+  border: 1px solid var(--pf-line) !important;
+  border-radius: 10px !important;
+  color: var(--pf-text-2) !important;
+  background: var(--pf-surface-soft) !important;
+}
+
+/* ---------- Login ---------- */
+.auth-page {
+  min-height: 100vh !important;
+  background:
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--pf-blue) 8%, transparent), transparent 34%),
+    var(--pf-bg) !important;
+}
+
+.auth-page::before {
+  opacity: .18 !important;
+}
+
+.auth-card {
+  width: min(390px, calc(100vw - 32px)) !important;
+  padding: 28px 30px 24px !important;
+  border: 0 !important;
+  border-radius: 24px !important;
+  background: color-mix(in srgb, var(--pf-surface-strong) 94%, transparent) !important;
+  box-shadow: var(--pf-shadow) !important;
+  backdrop-filter: blur(24px);
+}
+
+.auth-card::before {
+  display: none !important;
+}
+
+.auth-brand-mark {
+  width: 48px !important;
+  height: 48px !important;
+  margin-bottom: 14px !important;
+}
+
+.auth-card h1 {
+  margin: 0 !important;
+  color: var(--pf-text) !important;
+  font-size: 38px !important;
+  font-weight: 720 !important;
+  letter-spacing: -.045em !important;
+}
+
+.auth-card > p {
+  margin: 6px 0 22px !important;
+  color: var(--pf-text-3) !important;
+  font-size: 12px !important;
+}
+
+.auth-card .tabs {
+  padding: 3px !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: color-mix(in srgb, var(--pf-text) 5%, transparent) !important;
+}
+
+.auth-card .tabs button {
+  min-height: 34px !important;
+  border: 0 !important;
+  color: var(--pf-text-3) !important;
+  background: transparent !important;
+}
+
+.auth-card .tabs button.active {
+  color: var(--pf-text) !important;
+  background: var(--pf-surface-strong) !important;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .08) !important;
+}
+
+.auth-card label {
+  color: var(--pf-text-2) !important;
+  font-size: 10px !important;
+}
+
+.auth-card input {
+  min-height: 42px !important;
+  height: 42px !important;
+}
+
+.auth-card button.primary {
+  min-height: 42px !important;
+  margin-top: 4px !important;
+}
+
+.auth-card::after {
+  color: var(--pf-text-3) !important;
+  opacity: .8 !important;
+}
+
+/* ---------- Dark mode refinado global ---------- */
+html[data-theme="dark"] .shell > aside,
+html[data-theme="dark"] .dashboard > header,
+html[data-theme="dark"] .modern-dashboard-header,
+html[data-theme="dark"] .control-center-header,
+html[data-theme="dark"] .reports-header,
+html[data-theme="dark"] .agent-monitor-header {
+  background: rgba(18, 18, 19, .92) !important;
+}
+
+html[data-theme="dark"] .metric-card,
+html[data-theme="dark"] .pf-intelligence-panel,
+html[data-theme="dark"] .modern-panel,
+html[data-theme="dark"] .clean-summary-item,
+html[data-theme="dark"] .modern-company-bar,
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .printer-clean-card,
+html[data-theme="dark"] .printer-clean-catalog,
+html[data-theme="dark"] .printer-clean-filter-bar,
+html[data-theme="dark"] .control-center-kpis article,
+html[data-theme="dark"] .reports-metrics article,
+html[data-theme="dark"] .agent-metrics article,
+html[data-theme="dark"] .control-center-panel,
+html[data-theme="dark"] .reports-filters,
+html[data-theme="dark"] .reports-table-card,
+html[data-theme="dark"] .agent-overview,
+html[data-theme="dark"] .agent-panel,
+html[data-theme="dark"] .hero,
+html[data-theme="dark"] .reports-intro {
+  background: linear-gradient(180deg, rgba(30, 30, 32, .96), rgba(26, 26, 28, .96)) !important;
+  box-shadow: var(--pf-shadow-soft) !important;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background: #232325 !important;
+}
+
+html[data-theme="dark"] .printer-clean-details,
+html[data-theme="dark"] .agent-alert,
+html[data-theme="dark"] .agent-error-detail,
+html[data-theme="dark"] .status-box,
+html[data-theme="dark"] .pf-intelligence-item,
+html[data-theme="dark"] .pf-intelligence-clear,
+html[data-theme="dark"] .pf-intelligence-action,
+html[data-theme="dark"] .printer-clean-technical-grid > div {
+  background: rgba(255, 255, 255, .035) !important;
+}
+
+/* ---------- Responsividade ---------- */
+@media (max-width: 1100px) {
+  .shell {
+    grid-template-columns: 150px minmax(0, 1fr) !important;
+  }
+
+  .shell > aside {
+    width: 150px !important;
+  }
+
+  .reports-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .shell {
+    display: block !important;
+  }
+
+  .shell > aside {
+    position: static !important;
+    width: 100% !important;
+    min-height: auto !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--pf-line) !important;
+  }
+
+  .shell > aside nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .dashboard-page,
+  .control-center-page,
+  .reports-page,
+  .agent-monitor-page {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .dashboard-page .modern-dashboard-header,
+  .control-center-header,
+  .reports-header,
+  .agent-monitor-header {
+    margin-left: -12px !important;
+    margin-right: -12px !important;
+  }
+
+  .reports-filters {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
