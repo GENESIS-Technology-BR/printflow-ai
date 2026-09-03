@@ -1,0 +1,149 @@
+/* PRINTFLOW v0.6.7 — Dark Balance
+   Tema escuro premium: carvão, superfícies graduais e menos blocos pretos. */
+
+html[data-theme="dark"] {
+  --em-bg: #11161d;
+  --em-surface: #181f28;
+  --em-surface-soft: #202934;
+  --em-line: #2d3845;
+  --em-line-strong: #3b4858;
+  --em-text: #f2f5f8;
+  --em-muted: #9eabb9;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] .shell,
+html[data-theme="dark"] .dashboard,
+html[data-theme="dark"] .dashboard-modern-shell .dashboard-page {
+  background: #11161d !important;
+}
+
+/* Sidebar: separada do workspace sem virar faixa preta. */
+html[data-theme="dark"] .shell > aside {
+  background: #151b23 !important;
+  border-right-color: #2a3440 !important;
+}
+html[data-theme="dark"] .shell > aside .brand {
+  background: #151b23 !important;
+  border-bottom-color: #27313d !important;
+}
+html[data-theme="dark"] .shell > aside nav button {
+  background: transparent !important;
+  color: #aeb9c6 !important;
+}
+html[data-theme="dark"] .shell > aside nav button:hover {
+  background: #1c2530 !important;
+  color: #f3f6f9 !important;
+}
+html[data-theme="dark"] .shell > aside nav button.active {
+  background: #1b2b40 !important;
+  color: #ffffff !important;
+}
+
+/* Cabeçalho deve pertencer à página, não parecer uma tarja preta. */
+html[data-theme="dark"] .dashboard-modern-shell .modern-dashboard-header {
+  background: #151b23 !important;
+  border-bottom-color: #2a3440 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .modern-dashboard-header h1 {
+  color: #f7f9fb !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .modern-dashboard-header p,
+html[data-theme="dark"] .dashboard-modern-shell .modern-update-row {
+  color: #96a4b3 !important;
+}
+
+/* Empresa e KPIs: superfície azul-carvão sutil, sem azul chapado. */
+html[data-theme="dark"] .dashboard-modern-shell .modern-company-bar {
+  background: #181f28 !important;
+  border-color: #303b48 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .modern-company-selector {
+  background: transparent !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .modern-kpi-grid {
+  background: #18212d !important;
+  border-color: #334153 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .modern-kpi-grid .metric-card {
+  background: transparent !important;
+  border-right-color: #334153 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .modern-kpi-grid .metric-card:hover {
+  background: #1d2937 !important;
+}
+
+/* Intelligence e módulos operacionais usam a mesma família de superfícies. */
+html[data-theme="dark"] .dashboard-modern-shell .pf-intelligence-panel,
+html[data-theme="dark"] .dashboard-modern-shell .clean-dashboard-main .modern-panel,
+html[data-theme="dark"] .dashboard-modern-shell .clean-summary-strip {
+  background: #181f28 !important;
+  border-color: #303b48 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .pf-intelligence-heading h2,
+html[data-theme="dark"] .dashboard-modern-shell .clean-card-heading h2,
+html[data-theme="dark"] .dashboard-modern-shell .modern-alert-heading h2 {
+  color: #f4f7fa !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .pf-intelligence-heading p,
+html[data-theme="dark"] .dashboard-modern-shell .clean-card-heading p,
+html[data-theme="dark"] .dashboard-modern-shell .modern-alert-heading p {
+  color: #9eabb9 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .pf-intelligence-summary {
+  border-color: #303b48 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .pf-intelligence-clear {
+  background: #142c27 !important;
+  border-color: #246c59 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .pf-intelligence-clear strong {
+  color: #62ddb3 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .pf-intelligence-clear span {
+  color: #b1c1c0 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .pf-intelligence-score {
+  background: #1d2835 !important;
+  border-color: #3a526c !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .pf-intelligence-score strong {
+  color: #f5f8fb !important;
+}
+
+/* Saúde e alertas: contraste útil, sem preencher áreas inteiras com verde. */
+html[data-theme="dark"] .dashboard-modern-shell .modern-no-alerts {
+  background: #152923 !important;
+  border-color: #285b4b !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .modern-no-alerts strong {
+  color: #69d9ad !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .modern-no-alerts span {
+  color: #a9bbb5 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .modern-alert-item {
+  background: #1d2530 !important;
+  border-color: #34404e !important;
+}
+
+/* Faixa final deve ser secundária. */
+html[data-theme="dark"] .dashboard-modern-shell .clean-summary-strip {
+  background: #161d25 !important;
+}
+html[data-theme="dark"] .dashboard-modern-shell .clean-summary-item {
+  border-color: #2d3845 !important;
+}
+
+/* Botões no dark ficam discretos; azul só para ação principal. */
+html[data-theme="dark"] .dashboard-modern-shell button:not(.modern-refresh-button) {
+  border-color: #3a4858 !important;
+}
+
+/* Evita preto absoluto herdado de folhas antigas. */
+html[data-theme="dark"] .dashboard-modern-shell .metric-card,
+html[data-theme="dark"] .dashboard-modern-shell .modern-panel,
+html[data-theme="dark"] .dashboard-modern-shell .modern-company-bar,
+html[data-theme="dark"] .dashboard-modern-shell .pf-intelligence-panel {
+  box-shadow: none !important;
+}
