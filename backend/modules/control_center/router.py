@@ -191,6 +191,8 @@ def overview(
     total_active_printers = 0
     total_open_alerts = 0
     total_agents_online = 0
+    pilots_ready = 0
+    companies_needing_attention = 0
 
     for company in companies:
         active_query = (
@@ -239,6 +241,18 @@ def overview(
         if agent_online:
             total_agents_online += 1
 
+        onboarding_state = _onboarding_state(
+            company,
+            active_printers,
+            agent_communication_state,
+        )
+
+        if onboarding_state == "pilot_active":
+            pilots_ready += 1
+
+        if onboarding_state == "agent_attention" or alerts > 0:
+            companies_needing_attention += 1
+
         items.append(
             ControlCenterCompany(
                 id=company.id,
@@ -252,11 +266,7 @@ def overview(
                 agent_status=company.agent_status,
                 agent_version=company.agent_version,
                 agent_last_seen=company.agent_last_seen,
-                onboarding_state=_onboarding_state(
-                    company,
-                    active_printers,
-                    agent_communication_state,
-                ),
+                onboarding_state=onboarding_state,
                 active_printers=active_printers,
                 online_printers=online_printers,
                 offline_printers=offline_printers,
@@ -274,5 +284,7 @@ def overview(
         agents_online=total_agents_online,
         active_printers=total_active_printers,
         open_alerts=total_open_alerts,
+        pilots_ready=pilots_ready,
+        companies_needing_attention=companies_needing_attention,
         companies=items,
     )
