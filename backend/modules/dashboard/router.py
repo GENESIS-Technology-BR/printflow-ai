@@ -198,13 +198,33 @@ def dashboard_summary(
 
     agent_last_seen = getattr(company, "agent_last_seen", None)
     agent_online = False
+    agent_stale = False
+    agent_age_seconds: int | None = None
+    agent_communication_state = "never_seen"
+
     if agent_last_seen is not None:
         normalized_seen = agent_last_seen
         if normalized_seen.tzinfo is None:
             normalized_seen = normalized_seen.replace(tzinfo=timezone.utc)
-        agent_online = (
-            datetime.now(timezone.utc) - normalized_seen
-        ).total_seconds() <= 1800
+
+        agent_age_seconds = max(
+            0,
+            int(
+                (
+                    datetime.now(timezone.utc)
+                    - normalized_seen
+                ).total_seconds()
+            ),
+        )
+
+        if agent_age_seconds <= 600:
+            agent_online = True
+            agent_communication_state = "healthy"
+        elif agent_age_seconds <= 1800:
+            agent_stale = True
+            agent_communication_state = "stale"
+        else:
+            agent_communication_state = "offline"
 
     return {
         "total_printers": total,
@@ -221,6 +241,9 @@ def dashboard_summary(
         "manufacturers": manufacturers,
         "agent": {
             "online": agent_online,
+            "stale": agent_stale,
+            "communication_state": agent_communication_state,
+            "age_seconds": agent_age_seconds,
             "status": getattr(company, "agent_status", None),
             "name": getattr(company, "agent_name", None),
             "version": getattr(company, "agent_version", None),
