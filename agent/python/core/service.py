@@ -348,9 +348,26 @@ class PrintflowAgentService:
                 queue_result["failed"],
             )
 
-        result = self.api_client.send_inventory(
-            printers=printers
-        )
+        try:
+            result = self.api_client.send_inventory(
+                printers=printers
+            )
+        except Exception as api_error:
+            self.logger.exception(
+                "Falha global de sincronização com a API: %s",
+                api_error,
+            )
+            return {
+                "success": 0,
+                "failed": len(printers),
+                "skipped": 0,
+                "details": [
+                    {
+                        "success": False,
+                        "message": str(api_error),
+                    }
+                ],
+            }
 
         self.logger.info(
             "Sincronização API: %s sucesso(s), "
