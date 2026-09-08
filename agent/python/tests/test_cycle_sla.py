@@ -56,8 +56,8 @@ def test_cycle_above_sla_is_reported_as_slow(monkeypatch, tmp_path: Path) -> Non
 
     monotonic_values = iter([0.0, 95.0, 95.0])
     monkeypatch.setattr(
-        service_module.time,
-        "monotonic",
+        service_module,
+        "_monotonic",
         lambda: next(monotonic_values),
     )
 
