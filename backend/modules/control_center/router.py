@@ -33,16 +33,25 @@ def _utc(value: datetime) -> datetime:
     return value.astimezone(timezone.utc)
 
 
-def _agent_online(company: Company) -> bool:
-    if not company.active or not company.agent_last_seen:
-        return False
+def _agent_communication(company: Company) -> tuple[bool, bool, str]:
+    if not company.active:
+        return False, False, "inactive"
+
+    if not company.agent_last_seen:
+        return False, False, "never_seen"
 
     elapsed = (
         datetime.now(timezone.utc)
         - _utc(company.agent_last_seen)
     )
 
-    return elapsed <= timedelta(minutes=30)
+    if elapsed <= timedelta(minutes=10):
+        return True, False, "healthy"
+
+    if elapsed <= timedelta(minutes=30):
+        return False, True, "stale"
+
+    return False, False, "offline"
 
 
 
@@ -198,7 +207,11 @@ def overview(
             .count()
         )
 
-        agent_online = _agent_online(company)
+        (
+            agent_online,
+            agent_stale,
+            agent_communication_state,
+        ) = _agent_communication(company)
 
         total_active_printers += active_printers
         total_open_alerts += alerts
@@ -214,6 +227,8 @@ def overview(
                 plan=company.plan,
                 active=company.active,
                 agent_online=agent_online,
+                agent_stale=agent_stale,
+                agent_communication_state=agent_communication_state,
                 agent_status=company.agent_status,
                 agent_version=company.agent_version,
                 agent_last_seen=company.agent_last_seen,
