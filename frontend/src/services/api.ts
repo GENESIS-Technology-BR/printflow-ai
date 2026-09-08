@@ -235,6 +235,8 @@ export type ControlCenterCompany = {
   plan: string;
   active: boolean;
   agent_online: boolean;
+  agent_stale: boolean;
+  agent_communication_state: "healthy" | "stale" | "offline" | "never_seen" | "inactive";
   agent_status: string | null;
   agent_version: string | null;
   agent_last_seen: string | null;
