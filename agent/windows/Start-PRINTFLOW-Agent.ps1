@@ -310,7 +310,7 @@ try {
 
     $processInfo.EnvironmentVariables[
         "PRINTFLOW_SCAN_INTERVAL"
-    ] = "900"
+    ] = "300"
 
     $processInfo.EnvironmentVariables[
         "PRINTFLOW_MAXIMUM_HOSTS"
