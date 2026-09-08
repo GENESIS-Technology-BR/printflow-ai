@@ -199,7 +199,7 @@ function Register-PrintflowTask {
         -RunLevel Highest
 
     $settings = New-ScheduledTaskSettingsSet `
-        -RestartCount 3 `
+        -RestartCount 10 `
         -RestartInterval (New-TimeSpan -Minutes 1) `
         -ExecutionTimeLimit ([TimeSpan]::Zero) `
         -MultipleInstances IgnoreNew `
