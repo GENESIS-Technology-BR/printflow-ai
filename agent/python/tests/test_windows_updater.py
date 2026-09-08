@@ -46,6 +46,8 @@ def test_updater_restores_system_resident_agent():
     assert "New-ScheduledTaskTrigger" in updater
     assert "-AtStartup" in updater
     assert "Start-AndValidatePrintflowAgent" in updater
+    assert "-RestartCount 10" in updater
+    assert "-RestartInterval (New-TimeSpan -Minutes 1)" in updater
 
 
 def test_two_click_updater_is_safe():
