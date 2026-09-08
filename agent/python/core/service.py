@@ -17,7 +17,7 @@ from snmp.engine import collect_printer_intelligence
 
 
 def _monotonic() -> float:
-    return _monotonic()
+    return time.monotonic()
 
 
 class PrintflowAgentService:
