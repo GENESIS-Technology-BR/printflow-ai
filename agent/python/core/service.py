@@ -16,6 +16,10 @@ from network_manager import get_authorized_networks
 from snmp.engine import collect_printer_intelligence
 
 
+def _monotonic() -> float:
+    return _monotonic()
+
+
 class PrintflowAgentService:
     def __init__(
         self,
@@ -104,7 +108,7 @@ class PrintflowAgentService:
                 ).isoformat(),
                 "cycle_duration_seconds": round(
                     max(
-                        time.monotonic()
+                        _monotonic()
                         - cycle_started_monotonic,
                         0.0,
                     ),
@@ -464,7 +468,7 @@ class PrintflowAgentService:
         return result
 
     def run_cycle(self) -> int:
-        cycle_started_monotonic = time.monotonic()
+        cycle_started_monotonic = _monotonic()
 
         self.logger.info(
             "Iniciando ciclo do PRINTFLOW Agent."
@@ -520,7 +524,7 @@ class PrintflowAgentService:
         )
 
         cycle_duration_seconds = max(
-            time.monotonic() - cycle_started_monotonic,
+            _monotonic() - cycle_started_monotonic,
             0.0,
         )
         cycle_sla_seconds = max(
