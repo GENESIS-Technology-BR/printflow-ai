@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
 from sqlalchemy.orm import Session
 
 from backend.modules.alerts.model import OperationalAlert
 from backend.modules.auth.model import User
+from backend.modules.companies.model import Company
 from backend.modules.printers.model import Printer
 
 
@@ -80,7 +81,29 @@ def reconcile_company_alerts(
 ) -> list[OperationalAlert]:
     now = datetime.now(timezone.utc)
     printers = db.query(Printer).filter(Printer.company_id == company_id).all()
-    desired: dict[str, tuple[Printer, dict[str, str]]] = {}
+    desired: dict[str, tuple[Printer | None, dict[str, str]]] = {}
+
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if company is not None and company.active and company.agent_last_seen is not None:
+        last_agent_seen = _normalized_seen(company.agent_last_seen)
+        elapsed = now - last_agent_seen
+        if elapsed > timedelta(minutes=30):
+            desired[f"agent:{company_id}:communication"] = (None, {
+                "event_key": f"agent:{company_id}:communication",
+                "category": "agent",
+                "severity": "critical",
+                "title": "Agent sem comunicação",
+                "description": "Heartbeat do Agent ausente há mais de 30 minutos.",
+            })
+        elif elapsed > timedelta(minutes=10):
+            desired[f"agent:{company_id}:communication"] = (None, {
+                "event_key": f"agent:{company_id}:communication",
+                "category": "agent",
+                "severity": "warning",
+                "title": "Ciclo do Agent atrasado",
+                "description": "Heartbeat do Agent atrasado há mais de 10 minutos.",
+            })
+
     for printer in printers:
         for item in desired_alerts(printer, serializer(printer)):
             desired[item["event_key"]] = (printer, item)
@@ -96,7 +119,7 @@ def reconcile_company_alerts(
         if alert is None:
             db.add(OperationalAlert(
                 company_id=company_id,
-                printer_id=printer.id,
+                printer_id=printer.id if printer is not None else None,
                 event_key=event_key,
                 category=item["category"],
                 severity=item["severity"],
