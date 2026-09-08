@@ -5,6 +5,7 @@ import json
 import logging
 from dataclasses import asdict
 from datetime import datetime, timezone
+import time
 from pathlib import Path
 from typing import Any
 
@@ -77,6 +78,58 @@ class PrintflowAgentService:
             return False
 
         return True
+
+    def _write_local_health(
+        self,
+        *,
+        status: str,
+        cycle_started_monotonic: float,
+        printers_count: int = 0,
+        api_failed: int = 0,
+        error: str | None = None,
+    ) -> None:
+        try:
+            self.settings.output_directory.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+            health_path = (
+                self.settings.output_directory
+                / "agent_health.json"
+            )
+            payload = {
+                "status": status,
+                "updated_at": datetime.now(
+                    timezone.utc
+                ).isoformat(),
+                "cycle_duration_seconds": round(
+                    max(
+                        time.monotonic()
+                        - cycle_started_monotonic,
+                        0.0,
+                    ),
+                    2,
+                ),
+                "printers_count": printers_count,
+                "api_failed": api_failed,
+                "agent_version": self.settings.agent_version,
+            }
+            if error:
+                payload["error"] = error
+
+            health_path.write_text(
+                json.dumps(
+                    payload,
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+        except Exception as health_error:
+            self.logger.warning(
+                "Não foi possível atualizar agent_health.json: %s",
+                health_error,
+            )
 
     def discover_devices(self) -> list[Any]:
         """
@@ -411,6 +464,8 @@ class PrintflowAgentService:
         return result
 
     def run_cycle(self) -> int:
+        cycle_started_monotonic = time.monotonic()
+
         self.logger.info(
             "Iniciando ciclo do PRINTFLOW Agent."
         )
@@ -435,6 +490,11 @@ class PrintflowAgentService:
         except Exception as error:
             self._send_heartbeat_safe(
                 status="error",
+                error=str(error),
+            )
+            self._write_local_health(
+                status="error",
+                cycle_started_monotonic=cycle_started_monotonic,
                 error=str(error),
             )
             self.logger.exception("Falha no ciclo do PRINTFLOW Agent.")
@@ -467,6 +527,13 @@ class PrintflowAgentService:
                 for printer in printers
                 if printer.get("discovery", {}).get("ip_address")
             ],
+        )
+
+        self._write_local_health(
+            status="healthy",
+            cycle_started_monotonic=cycle_started_monotonic,
+            printers_count=len(printers),
+            api_failed=int(api_result.get("failed", 0)),
         )
 
         return 0
