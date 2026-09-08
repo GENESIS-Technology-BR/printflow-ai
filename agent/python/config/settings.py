@@ -59,6 +59,7 @@ class AgentSettings:
     agent_version: str
 
     scan_interval_seconds: int
+    cycle_sla_seconds: int
     network_timeout: float
     network_workers: int
     maximum_hosts: int
@@ -88,6 +89,10 @@ class AgentSettings:
             scan_interval_seconds=env_int(
                 "PRINTFLOW_SCAN_INTERVAL",
                 300,
+            ),
+            cycle_sla_seconds=env_int(
+                "PRINTFLOW_CYCLE_SLA_SECONDS",
+                90,
             ),
             network_timeout=env_float(
                 "PRINTFLOW_NETWORK_TIMEOUT",
