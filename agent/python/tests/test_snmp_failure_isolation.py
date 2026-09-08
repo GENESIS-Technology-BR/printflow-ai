@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 
 import pytest
@@ -25,8 +26,7 @@ class FakeLogger:
         pass
 
 
-@pytest.mark.asyncio
-async def test_snmp_failure_is_isolated_per_printer(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_snmp_failure_is_isolated_per_printer(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[str] = []
 
     async def fake_collect_printer_intelligence(**kwargs: object) -> dict[str, object]:
@@ -57,11 +57,13 @@ async def test_snmp_failure_is_isolated_per_printer(monkeypatch: pytest.MonkeyPa
         },
     )()
 
-    result = await service.collect_snmp_data(
-        [
-            FakeDevice("10.2.0.10"),
-            FakeDevice("10.2.0.20"),
-        ]
+    result = asyncio.run(
+        service.collect_snmp_data(
+            [
+                FakeDevice("10.2.0.10"),
+                FakeDevice("10.2.0.20"),
+            ]
+        )
     )
 
     assert calls == ["10.2.0.10", "10.2.0.20"]
