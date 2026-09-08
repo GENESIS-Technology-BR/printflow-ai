@@ -48,6 +48,9 @@ const EMPTY_SUMMARY: DashboardSummary = {
   generated_at: "",
   agent: {
     online: false,
+    stale: false,
+    communication_state: "never_seen",
+    age_seconds: null,
     status: null,
     name: null,
     version: null,
