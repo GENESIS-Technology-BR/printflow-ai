@@ -29,6 +29,8 @@ class ControlCenterOverview(BaseModel):
     agents_online: int
     active_printers: int
     open_alerts: int
+    pilots_ready: int
+    companies_needing_attention: int
     companies: list[ControlCenterCompany]
 
 
