@@ -19,6 +19,9 @@ export type DashboardSummary = {
   generated_at: string;
   agent: {
     online: boolean;
+    stale: boolean;
+    communication_state: "healthy" | "stale" | "offline" | "never_seen";
+    age_seconds: number | null;
     status: string | null;
     name: string | null;
     version: string | null;
