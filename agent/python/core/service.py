@@ -36,6 +36,48 @@ class PrintflowAgentService:
             ),
         )
 
+    def _send_heartbeat_safe(
+        self,
+        *,
+        status: str,
+        error: str | None = None,
+        inventory_complete: bool | None = None,
+        observed_printer_ips: list[str] | None = None,
+    ) -> bool:
+        """
+        Heartbeat é telemetria de disponibilidade e nunca deve
+        interromper um ciclo local de coleta.
+
+        Em indisponibilidade temporária da API, o Agent continua
+        descobrindo, consultando SNMP e persistindo o inventário.
+        """
+        payload: dict[str, Any] = {
+            "agent_name": self.settings.agent_name,
+            "agent_version": self.settings.agent_version,
+            "status": status,
+        }
+
+        if error is not None:
+            payload["error"] = error
+
+        if inventory_complete is not None:
+            payload["inventory_complete"] = inventory_complete
+
+        if observed_printer_ips is not None:
+            payload["observed_printer_ips"] = observed_printer_ips
+
+        try:
+            self.api_client.send_heartbeat(**payload)
+        except Exception as heartbeat_error:
+            self.logger.warning(
+                "Heartbeat não enviado (%s): %s",
+                status,
+                heartbeat_error,
+            )
+            return False
+
+        return True
+
     def discover_devices(self) -> list[Any]:
         """
         PRINTFLOW SAFE DISCOVERY #17
@@ -171,9 +213,6 @@ class PrintflowAgentService:
                 retries=self.settings.snmp_retries,
             )
 
-            # ==================================================
-            # DIAGNOSTICO SNMP
-            # ==================================================
             if snmp_result.get("snmp_online"):
                 dados = snmp_result.get("dados") or {}
 
@@ -185,9 +224,7 @@ class PrintflowAgentService:
                     dados.get("modelo"),
                     dados.get("serial"),
                     dados.get("contador_paginas"),
-
                     dados.get("contador_origem"),
-
                     dados.get("toner_percentual"),
                 )
             else:
@@ -311,9 +348,6 @@ class PrintflowAgentService:
             result["skipped"],
         )
 
-        # BUILD 14 - diagnóstico detalhado da sincronização.
-        # Exibe no log o IP, código HTTP e mensagem retornada pela API
-        # para cada equipamento que não conseguiu sincronizar.
         for detail in result.get("details", []):
             if detail.get("success"):
                 continue
@@ -341,9 +375,7 @@ class PrintflowAgentService:
             "Iniciando ciclo do PRINTFLOW Agent."
         )
 
-        self.api_client.send_heartbeat(
-            agent_name=self.settings.agent_name,
-            agent_version=self.settings.agent_version,
+        self._send_heartbeat_safe(
             status="running",
         )
 
@@ -361,9 +393,7 @@ class PrintflowAgentService:
                 api_result=api_result,
             )
         except Exception as error:
-            self.api_client.send_heartbeat(
-                agent_name=self.settings.agent_name,
-                agent_version=self.settings.agent_version,
+            self._send_heartbeat_safe(
                 status="error",
                 error=str(error),
             )
@@ -389,9 +419,7 @@ class PrintflowAgentService:
             output_file,
         )
 
-        self.api_client.send_heartbeat(
-            agent_name=self.settings.agent_name,
-            agent_version=self.settings.agent_version,
+        self._send_heartbeat_safe(
             status="healthy",
             inventory_complete=True,
             observed_printer_ips=[
