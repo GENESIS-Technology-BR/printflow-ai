@@ -240,6 +240,7 @@ export type ControlCenterCompany = {
   agent_status: string | null;
   agent_version: string | null;
   agent_last_seen: string | null;
+  onboarding_state: "awaiting_agent" | "agent_connected" | "pilot_active" | "agent_attention" | "inactive";
   active_printers: number;
   online_printers: number;
   offline_printers: number;
