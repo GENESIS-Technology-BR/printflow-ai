@@ -111,3 +111,26 @@ def test_control_center_exposes_operational_onboarding_states():
     assert "Agent conectado" in component
     assert "Piloto ativo" in component
     assert "Requer atenção" in component
+
+
+def test_pilot_readiness_contract_is_covered():
+    control_center = source(
+        "backend/modules/control_center/router.py"
+    )
+    alerts = source(
+        "backend/modules/alerts/service.py"
+    )
+    reports = source(
+        "backend/modules/usage/router.py"
+    )
+    workflow = source(
+        ".github/workflows/build-agent-windows.yml"
+    )
+
+    assert "agent_last_seen" in control_center
+    assert "active_printers" in control_center
+    assert "Agent sem comunicação" in alerts
+    assert '"/export.xlsx"' in reports
+    assert '"/export.pdf"' in reports
+    assert "Testar EXE gerado" in workflow
+    assert "Validar pacote final" in workflow
