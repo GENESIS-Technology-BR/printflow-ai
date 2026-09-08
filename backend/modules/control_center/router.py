@@ -54,6 +54,26 @@ def _agent_communication(company: Company) -> tuple[bool, bool, str]:
     return False, False, "offline"
 
 
+def _onboarding_state(
+    company: Company,
+    active_printers: int,
+    agent_communication_state: str,
+) -> str:
+    if not company.active:
+        return "inactive"
+
+    if not company.agent_last_seen:
+        return "awaiting_agent"
+
+    if agent_communication_state in ("stale", "offline"):
+        return "agent_attention"
+
+    if active_printers <= 0:
+        return "agent_connected"
+
+    return "pilot_active"
+
+
 
 @router.post(
     "/clients",
@@ -232,6 +252,11 @@ def overview(
                 agent_status=company.agent_status,
                 agent_version=company.agent_version,
                 agent_last_seen=company.agent_last_seen,
+                onboarding_state=_onboarding_state(
+                    company,
+                    active_printers,
+                    agent_communication_state,
+                ),
                 active_printers=active_printers,
                 online_printers=online_printers,
                 offline_printers=offline_printers,
