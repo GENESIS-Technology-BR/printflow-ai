@@ -254,6 +254,8 @@ export type ControlCenterOverview = {
   agents_online: number;
   active_printers: number;
   open_alerts: number;
+  pilots_ready: number;
+  companies_needing_attention: number;
   companies: ControlCenterCompany[];
 };
 
