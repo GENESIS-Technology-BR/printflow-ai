@@ -430,6 +430,26 @@ export default function ControlCenter() {
             requerem atenção
           </small>
         </article>
+
+        <article>
+          <span>Pilotos prontos</span>
+          <strong>
+            {data?.pilots_ready ?? "—"}
+          </strong>
+          <small>
+            clientes em operação
+          </small>
+        </article>
+
+        <article>
+          <span>Clientes em atenção</span>
+          <strong>
+            {data?.companies_needing_attention ?? "—"}
+          </strong>
+          <small>
+            precisam de acompanhamento
+          </small>
+        </article>
       </div>
 
       <section className="control-center-panel">
