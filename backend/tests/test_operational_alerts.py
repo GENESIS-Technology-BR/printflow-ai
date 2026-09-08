@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -205,3 +207,27 @@ def test_inactive_printer_does_not_generate_operational_alert(tmp_path):
     ]
 
     assert active_alerts == []
+
+
+def test_agent_heartbeat_alert_opens_and_resolves(tmp_path):
+    db = _database(tmp_path)
+    company = _company(1, "a" * 43)
+    company.agent_last_seen = datetime.now(timezone.utc) - timedelta(minutes=31)
+    db.add(company)
+    db.commit()
+
+    alerts = reconcile_company_alerts(db, 1, serialize_printer)
+    agent_alert = next(item for item in alerts if item.category == "agent")
+
+    assert agent_alert.severity == "critical"
+    assert agent_alert.printer_id is None
+    assert agent_alert.status == "open"
+
+    company.agent_last_seen = datetime.now(timezone.utc)
+    db.commit()
+
+    resolved = reconcile_company_alerts(db, 1, serialize_printer)
+    closed = next(item for item in resolved if item.id == agent_alert.id)
+
+    assert closed.status == "resolved"
+    assert closed.resolved_at is not None
