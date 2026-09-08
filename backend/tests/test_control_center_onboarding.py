@@ -132,5 +132,5 @@ def test_pilot_readiness_contract_is_covered():
     assert "Agent sem comunicação" in alerts
     assert '"/export.xlsx"' in reports
     assert '"/export.pdf"' in reports
-    assert "Testar EXE gerado" in workflow
-    assert "Validar pacote final" in workflow
+    assert "Testar executável" in workflow
+    assert "Montar pacote de teste" in workflow
