@@ -37,6 +37,7 @@ function formatTechnicalStatus(value: string | null | undefined): string {
   const normalized = String(value || "").toLowerCase();
   if (normalized === "running") return "Em execução";
   if (normalized === "error") return "Com erro";
+  if (normalized === "slow") return "Ciclo lento";
   if (normalized === "offline") return "Offline";
   if (normalized === "online") return "Online";
   return value || "Aguardando";
@@ -85,6 +86,13 @@ export default function AgentMonitor({
         tone: "waiting",
         label: "Aguardando instalação",
         message: "Nenhum Agent comunicou com esta empresa.",
+      };
+    }
+    if (agent.communication_state === "stale" || agent.stale) {
+      return {
+        tone: "warning",
+        label: "Ciclo atrasado",
+        message: "O Agent está sem novo ciclo há mais de 10 minutos.",
       };
     }
     if (!agent.online) {
