@@ -519,8 +519,29 @@ class PrintflowAgentService:
             output_file,
         )
 
+        cycle_duration_seconds = max(
+            time.monotonic() - cycle_started_monotonic,
+            0.0,
+        )
+        cycle_sla_seconds = max(
+            int(getattr(self.settings, "cycle_sla_seconds", 90)),
+            1,
+        )
+        cycle_status = (
+            "slow"
+            if cycle_duration_seconds > cycle_sla_seconds
+            else "healthy"
+        )
+
+        if cycle_status == "slow":
+            self.logger.warning(
+                "CICLO LENTO | duração=%.2fs | SLA=%ss",
+                cycle_duration_seconds,
+                cycle_sla_seconds,
+            )
+
         self._send_heartbeat_safe(
-            status="healthy",
+            status=cycle_status,
             inventory_complete=True,
             observed_printer_ips=[
                 str(printer.get("discovery", {}).get("ip_address", ""))
@@ -530,7 +551,7 @@ class PrintflowAgentService:
         )
 
         self._write_local_health(
-            status="healthy",
+            status=cycle_status,
             cycle_started_monotonic=cycle_started_monotonic,
             printers_count=len(printers),
             api_failed=int(api_result.get("failed", 0)),
