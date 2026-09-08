@@ -457,7 +457,7 @@ export default function ControlCenter() {
           <div className="control-center-row header">
             <span>Empresa</span>
             <span>Agent</span>
-            <span>Versão</span>
+            <span>Onboarding</span>
             <span>Impressoras</span>
             <span>Alertas</span>
             <span>
@@ -502,9 +502,15 @@ export default function ControlCenter() {
                 </span>
 
                 <span>
-                  {company.agent_version
-                    ? `v${company.agent_version}`
-                    : "—"}
+                  {company.onboarding_state === "pilot_active"
+                    ? "● Piloto ativo"
+                    : company.onboarding_state === "agent_connected"
+                      ? "● Agent conectado"
+                      : company.onboarding_state === "awaiting_agent"
+                        ? "● Aguardando instalação"
+                        : company.onboarding_state === "agent_attention"
+                          ? "● Requer atenção"
+                          : "● Inativo"}
                 </span>
 
                 <span>
