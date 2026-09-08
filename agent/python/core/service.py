@@ -330,14 +330,25 @@ class PrintflowAgentService:
                 "PRINTFLOW_AGENT_TOKEN não configurado. "
                 "Inventário será mantido apenas localmente."
             )
+            return {
+                "success": 0,
+                "failed": 0,
+                "skipped": len(printers),
+                "details": [],
+            }
 
-            return self.api_client.send_inventory(
-                printers=printers
+        try:
+            queue_result = self.api_client.retry_queue()
+        except Exception as queue_error:
+            self.logger.warning(
+                "Fila pendente não pôde ser processada agora: %s",
+                queue_error,
             )
-
-        queue_result = (
-            self.api_client.retry_queue()
-        )
+            queue_result = {
+                "processed": 0,
+                "success": 0,
+                "failed": 0,
+            }
 
         if queue_result["processed"]:
             self.logger.info(
