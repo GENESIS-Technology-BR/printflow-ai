@@ -135,3 +135,29 @@ def test_pilot_readiness_contract_is_covered():
     assert "dist/PRINTFLOW-Agent.exe --help" in workflow
     assert "Compress-Archive" in workflow
     assert "BUILD-VALIDATION.txt" in workflow
+
+
+def test_control_center_pilot_kpis_are_wired_end_to_end():
+    schema = source(
+        "backend/modules/control_center/schema.py"
+    )
+    router = source(
+        "backend/modules/control_center/router.py"
+    )
+    api = source(
+        "frontend/src/services/api.ts"
+    )
+    component = source(
+        "frontend/src/components/ControlCenter.tsx"
+    )
+
+    for field in ("pilots_ready", "companies_needing_attention"):
+        assert field in schema
+        assert field in router
+        assert field in api
+        assert field in component
+
+    assert 'onboarding_state == "pilot_active"' in router
+    assert 'onboarding_state == "agent_attention"' in router
+    assert "Pilotos prontos" in component
+    assert "Clientes em atenção" in component
