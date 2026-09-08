@@ -80,3 +80,34 @@ def test_frontend_calls_admin_onboarding_api():
         '"/api/v1/control-center/clients"'
         in api
     )
+
+
+def test_control_center_exposes_operational_onboarding_states():
+    router = source(
+        "backend/modules/control_center/router.py"
+    )
+    schema = source(
+        "backend/modules/control_center/schema.py"
+    )
+    api = source(
+        "frontend/src/services/api.ts"
+    )
+    component = source(
+        "frontend/src/components/ControlCenter.tsx"
+    )
+
+    for state in (
+        "awaiting_agent",
+        "agent_connected",
+        "pilot_active",
+        "agent_attention",
+        "inactive",
+    ):
+        assert state in router
+        assert state in api
+
+    assert "onboarding_state" in schema
+    assert "Aguardando instalação" in component
+    assert "Agent conectado" in component
+    assert "Piloto ativo" in component
+    assert "Requer atenção" in component
