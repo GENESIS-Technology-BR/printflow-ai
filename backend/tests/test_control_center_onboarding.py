@@ -132,5 +132,6 @@ def test_pilot_readiness_contract_is_covered():
     assert "Agent sem comunicação" in alerts
     assert '"/export.xlsx"' in reports
     assert '"/export.pdf"' in reports
-    assert "Testar executável" in workflow
-    assert "Montar pacote de teste" in workflow
+    assert "dist/PRINTFLOW-Agent.exe --help" in workflow
+    assert "Compress-Archive" in workflow
+    assert "BUILD-VALIDATION.txt" in workflow
