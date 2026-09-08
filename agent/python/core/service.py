@@ -206,12 +206,24 @@ class PrintflowAgentService:
                 device.ip_address,
             )
 
-            snmp_result = await collect_printer_intelligence(
-                ip_address=device.ip_address,
-                community=self.settings.snmp_community,
-                timeout=self.settings.snmp_timeout,
-                retries=self.settings.snmp_retries,
-            )
+            try:
+                snmp_result = await collect_printer_intelligence(
+                    ip_address=device.ip_address,
+                    community=self.settings.snmp_community,
+                    timeout=self.settings.snmp_timeout,
+                    retries=self.settings.snmp_retries,
+                )
+            except Exception as snmp_error:
+                self.logger.exception(
+                    "SNMP %s: FALHA ISOLADA | %s",
+                    device.ip_address,
+                    snmp_error,
+                )
+                snmp_result = {
+                    "snmp_online": False,
+                    "erro": str(snmp_error),
+                    "dados": {},
+                }
 
             if snmp_result.get("snmp_online"):
                 dados = snmp_result.get("dados") or {}
