@@ -10,6 +10,8 @@ class ControlCenterCompany(BaseModel):
     plan: str
     active: bool
     agent_online: bool
+    agent_stale: bool
+    agent_communication_state: str
     agent_status: str | None
     agent_version: str | None
     agent_last_seen: datetime | None
