@@ -483,14 +483,22 @@ export default function ControlCenter() {
 
                 <span
                   className={
-                    company.agent_online
+                    company.agent_communication_state === "healthy"
                       ? "cc-online"
-                      : "cc-offline"
+                      : company.agent_communication_state === "stale"
+                        ? "cc-warning"
+                        : "cc-offline"
                   }
                 >
-                  {company.agent_online
+                  {company.agent_communication_state === "healthy"
                     ? "● Online"
-                    : "● Offline"}
+                    : company.agent_communication_state === "stale"
+                      ? "● Ciclo atrasado"
+                      : company.agent_communication_state === "never_seen"
+                        ? "● Aguardando Agent"
+                        : company.agent_communication_state === "inactive"
+                          ? "● Inativo"
+                          : "● Offline"}
                 </span>
 
                 <span>
