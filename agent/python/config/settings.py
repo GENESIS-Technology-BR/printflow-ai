@@ -74,6 +74,8 @@ class AgentSettings:
 
     api_url: str
     agent_token: str
+    heartbeat_retries: int
+    heartbeat_retry_delay_seconds: float
 
     @classmethod
     def load(cls) -> "AgentSettings":
@@ -131,5 +133,13 @@ class AgentSettings:
             agent_token=os.getenv(
                 "PRINTFLOW_AGENT_TOKEN",
                 "",
+            ),
+            heartbeat_retries=env_int(
+                "PRINTFLOW_HEARTBEAT_RETRIES",
+                2,
+            ),
+            heartbeat_retry_delay_seconds=env_float(
+                "PRINTFLOW_HEARTBEAT_RETRY_DELAY",
+                1.0,
             ),
         )

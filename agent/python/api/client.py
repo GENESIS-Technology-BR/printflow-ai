@@ -289,26 +289,46 @@ class PrintflowApiClient:
         error: str | None = None,
         inventory_complete: bool = False,
         observed_printer_ips: list[str] | None = None,
+        retries: int = 2,
+        retry_delay_seconds: float = 1.0,
     ) -> bool:
         if not self.is_configured:
             return False
-        try:
-            response = requests.post(
-                self.heartbeat_endpoint,
-                json={
-                    "agent_token": self.agent_token,
-                    "agent_name": agent_name,
-                    "agent_version": agent_version,
-                    "status": status,
-                    "error": error[:500] if error else None,
-                    "inventory_complete": inventory_complete,
-                    "observed_printer_ips": observed_printer_ips or [],
-                },
-                timeout=self.timeout_seconds,
-            )
-            return response.status_code == 200
-        except requests.RequestException:
-            return False
+
+        payload = {
+            "agent_token": self.agent_token,
+            "agent_name": agent_name,
+            "agent_version": agent_version,
+            "status": status,
+            "error": error[:500] if error else None,
+            "inventory_complete": inventory_complete,
+            "observed_printer_ips": observed_printer_ips or [],
+        }
+        maximum_attempts = max(int(retries), 0) + 1
+
+        for attempt in range(maximum_attempts):
+            try:
+                response = requests.post(
+                    self.heartbeat_endpoint,
+                    json=payload,
+                    timeout=self.timeout_seconds,
+                )
+                if response.status_code == 200:
+                    return True
+
+                # Falhas de autenticação/validação não melhoram com retry.
+                if response.status_code in {400, 401, 403, 404, 422}:
+                    return False
+            except requests.RequestException:
+                pass
+
+            if attempt < maximum_attempts - 1:
+                time.sleep(
+                    max(float(retry_delay_seconds), 0.0)
+                    * (attempt + 1)
+                )
+
+        return False
 
     def send_printer(
         self,
