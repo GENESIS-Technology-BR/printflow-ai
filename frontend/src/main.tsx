@@ -46,3 +46,5 @@ import './printers-refine-v074.css'
 import './reports-commercial-rc-v075.css'
 
 import './fixed-workspace-v076.css'
+
+import './shell-refine-v077.css'
