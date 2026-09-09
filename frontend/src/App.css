@@ -262,3 +262,341 @@ form{display:grid;gap:14px}label{display:grid;gap:6px;font-size:13px;font-weight
     display: none;
   }
 }
+
+
+/* ============================================================
+   PRINTFLOW UI V2 CORPORATE
+   ERP-inspired visual language
+   ============================================================ */
+
+:root {
+  --pf-bg: #f5f7fa;
+  --pf-surface: #ffffff;
+  --pf-surface-soft: #f8fafc;
+  --pf-border: #dfe5ec;
+  --pf-border-strong: #cbd5e1;
+  --pf-text: #1f2937;
+  --pf-muted: #64748b;
+  --pf-accent: #2563eb;
+  --pf-accent-soft: #eff6ff;
+  --pf-success: #178a65;
+  --pf-danger: #c24152;
+  --pf-warning: #b7791f;
+  --pf-sidebar: #ffffff;
+}
+
+body {
+  background: var(--pf-bg);
+  color: var(--pf-text);
+}
+
+.shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 248px 1fr;
+  background: var(--pf-bg);
+}
+
+.shell aside {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 30;
+  width: 248px;
+  padding: 20px 16px;
+  border-right: 1px solid var(--pf-border);
+  background: var(--pf-sidebar);
+  color: var(--pf-text);
+  box-shadow: none;
+}
+
+.brand {
+  min-height: 48px;
+  padding: 0 8px 18px;
+  border-bottom: 1px solid var(--pf-border);
+}
+
+.brand img {
+  width: 34px;
+  height: 34px;
+}
+
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-copy strong {
+  color: #162033;
+  font-size: 16px;
+  letter-spacing: -.01em;
+}
+
+.brand-copy span {
+  color: #8a99aa;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.shell nav {
+  display: grid;
+  gap: 4px;
+  margin-top: 22px;
+}
+
+.nav-section-title {
+  padding: 0 10px 8px;
+  color: #9aa8b7;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.shell nav button,
+.logout {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #526174;
+  padding: 10px 11px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 650;
+  transition: background .15s ease, color .15s ease;
+}
+
+.shell nav button:hover,
+.logout:hover {
+  background: #f1f5f9;
+  color: #1f2937;
+}
+
+.shell nav button.active {
+  background: var(--pf-accent-soft);
+  color: var(--pf-accent);
+}
+
+.shell nav button.active::after {
+  content: "";
+  width: 3px;
+  height: 24px;
+  margin-left: auto;
+  border-radius: 999px;
+  background: var(--pf-accent);
+}
+
+.nav-icon {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  flex: 0 0 22px;
+  color: #7b8a9c;
+  font-size: 14px;
+}
+
+.shell nav button.active .nav-icon {
+  color: var(--pf-accent);
+}
+
+.logout {
+  margin-top: auto;
+  border-top: 1px solid var(--pf-border);
+  border-radius: 0;
+  padding-top: 16px;
+  color: #6b7280;
+}
+
+.workspace-topbar {
+  position: fixed;
+  top: 0;
+  left: 248px;
+  right: 0;
+  z-index: 25;
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--pf-border);
+  background: rgba(255,255,255,.96);
+  backdrop-filter: blur(8px);
+}
+
+.workspace-context,
+.workspace-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.workspace-product {
+  color: var(--pf-accent);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .12em;
+}
+
+.workspace-divider {
+  color: #c1cad4;
+}
+
+.workspace-context strong {
+  color: #263244;
+  font-size: 13px;
+}
+
+.workspace-environment {
+  padding: 4px 8px;
+  border: 1px solid #cfe1f8;
+  border-radius: 999px;
+  background: #f5f9ff;
+  color: #3569a8;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.workspace-user-copy {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+}
+
+.workspace-user-copy strong {
+  color: #263244;
+  font-size: 12px;
+}
+
+.workspace-user-copy span {
+  color: #8a99aa;
+  font-size: 10px;
+}
+
+.workspace-avatar {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #d8e1eb;
+  border-radius: 50%;
+  background: #f3f6fa;
+  color: #40536b;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.dashboard {
+  grid-column: 2;
+  min-width: 0;
+  padding: 92px 28px 32px;
+  background: var(--pf-bg);
+}
+
+.dashboard header {
+  align-items: flex-start;
+}
+
+.dashboard h1 {
+  color: #1d2939;
+  font-size: 26px;
+  letter-spacing: -.02em;
+}
+
+.online {
+  border: 1px solid #c9eadb;
+  background: #eefaf5;
+  color: #147a58;
+  font-size: 11px;
+}
+
+.hero {
+  border: 1px solid var(--pf-border);
+  border-radius: 12px;
+  background: var(--pf-surface);
+  color: var(--pf-text);
+  box-shadow: 0 1px 2px rgba(15,23,42,.04);
+}
+
+.hero h2 {
+  color: #1f2937;
+  font-size: 22px;
+}
+
+.hero p {
+  color: var(--pf-muted);
+}
+
+.hero small {
+  color: var(--pf-accent);
+}
+
+.plan {
+  border: 1px solid #d8e4f3;
+  background: #f6f9fd;
+  color: #47627f;
+}
+
+.grid {
+  gap: 16px;
+}
+
+.panel {
+  border: 1px solid var(--pf-border);
+  border-radius: 12px;
+  background: var(--pf-surface);
+  box-shadow: 0 1px 3px rgba(15,23,42,.04);
+}
+
+.panel h3 {
+  color: #273449;
+}
+
+.actions button {
+  border-color: var(--pf-border-strong);
+  background: #fff;
+  color: #4b5e73;
+}
+
+.primary {
+  background: var(--pf-accent);
+}
+
+.status-box {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.printer-filter-bar input,
+.printer-filter-bar select {
+  border-color: var(--pf-border-strong);
+  border-radius: 6px;
+}
+
+@media(max-width:800px){
+  .shell {
+    display: block;
+  }
+
+  .shell aside {
+    display: none;
+  }
+
+  .workspace-topbar {
+    left: 0;
+    padding: 0 16px;
+  }
+
+  .workspace-user-copy {
+    display: none;
+  }
+
+  .dashboard {
+    padding: 82px 16px 20px;
+  }
+}

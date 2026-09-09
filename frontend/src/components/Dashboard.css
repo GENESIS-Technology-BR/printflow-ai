@@ -2351,3 +2351,306 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ============================================================
+   PRINTFLOW UI V2 - DASHBOARD CORPORATIVO
+   ============================================================ */
+
+.clean-dashboard-v2,
+.dashboard-page {
+  color: #243247;
+  background: transparent;
+}
+
+.modern-dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 8px;
+}
+
+.modern-dashboard-kicker,
+.clean-card-kicker,
+.modern-alert-kicker {
+  color: #52739a !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: .12em !important;
+}
+
+.modern-dashboard-header h1 {
+  margin: 4px 0 4px;
+  color: #1f2937;
+  font-size: 27px;
+  font-weight: 720;
+  letter-spacing: -.025em;
+}
+
+.modern-dashboard-header p,
+.clean-card-heading p,
+.modern-panel-heading p {
+  color: #748397;
+}
+
+.modern-dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modern-agent-badge {
+  border: 1px solid #dbe3ec;
+  background: #ffffff;
+  color: #516275;
+  box-shadow: none;
+}
+
+.modern-agent-badge.online {
+  border-color: #cae8da;
+  background: #f1faf6;
+  color: #137354;
+}
+
+.modern-agent-badge.offline {
+  border-color: #f0d2d7;
+  background: #fff6f7;
+  color: #b04455;
+}
+
+.modern-refresh-button,
+.modern-company-manage,
+.modern-view-all {
+  border: 1px solid #cfd8e3;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #41566f;
+  box-shadow: none;
+}
+
+.modern-refresh-button:hover,
+.modern-company-manage:hover,
+.modern-view-all:hover {
+  border-color: #9fb6cf;
+  background: #f8fafc;
+}
+
+.modern-update-row {
+  margin: 0 0 14px;
+  color: #8a98a9;
+  font-size: 11px;
+}
+
+.modern-company-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid #dde4ec;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03);
+}
+
+.modern-company-icon {
+  border: 1px solid #dbe4ee;
+  border-radius: 7px;
+  background: #f6f9fc;
+  color: #52739a;
+}
+
+.modern-company-selector {
+  color: #263549;
+}
+
+.modern-company-selector span {
+  color: #8997a8;
+}
+
+.modern-company-selector strong {
+  color: #243247;
+}
+
+.modern-kpi-grid,
+.metrics-grid.executive-clean-metrics {
+  gap: 12px;
+}
+
+.metric-card,
+.executive-clean-metrics .metric-card {
+  min-height: 104px;
+  padding: 15px 16px;
+  border: 1px solid #dde4ec;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15,23,42,.035);
+}
+
+.metric-card:hover {
+  border-color: #cbd6e2;
+  transform: none;
+}
+
+.metric-card-title {
+  color: #718096;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.metric-card-value {
+  margin-top: 9px;
+  color: #243247;
+  font-size: 27px;
+  font-weight: 720;
+}
+
+.metric-card-subtitle {
+  color: #8a98a9;
+}
+
+.metric-card-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  background: #f8fafc;
+  font-size: 13px;
+}
+
+.clean-dashboard-main {
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.modern-panel,
+.clean-health-card,
+.clean-alert-panel,
+.executive-attention-panel,
+.executive-operational-summary,
+.executive-panel,
+.health-panel,
+.dashboard-list-panel {
+  border: 1px solid #dde4ec;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03);
+}
+
+.clean-card-heading h2,
+.modern-alert-heading h2,
+.modern-panel-heading h2,
+.dashboard-section-title h2,
+.executive-panel-header h3 {
+  color: #263549;
+}
+
+.clean-health-score-row > div > strong,
+.clean-summary-item strong {
+  color: #243247;
+}
+
+.clean-health-progress,
+.fleet-index-track,
+.manufacturer-track,
+.health-bar {
+  background: #edf1f5;
+}
+
+.clean-health-meta span,
+.clean-summary-item span {
+  color: #7d8b9b;
+}
+
+.clean-health-meta strong {
+  color: #34475d;
+}
+
+.modern-alert-item,
+.executive-alert-item,
+.ranking-item {
+  border-color: #e2e8f0;
+  background: #fbfcfd;
+}
+
+.modern-alert-item:hover {
+  border-color: #c8d4e1;
+  background: #f7f9fb;
+}
+
+.modern-alert-item strong,
+.executive-alert-item strong,
+.ranking-printer strong,
+.ranking-health strong {
+  color: #334155;
+}
+
+.modern-alert-item span,
+.executive-alert-item span,
+.ranking-printer span,
+.ranking-health span {
+  color: #7b8998;
+}
+
+.modern-no-alerts,
+.executive-clean-state.success,
+.executive-clean-state.attention {
+  border-color: #e1e7ee;
+  background: #f8fafc;
+}
+
+.clean-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 0;
+  margin-top: 14px;
+  border: 1px solid #dde4ec;
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.clean-summary-item {
+  padding: 14px 16px;
+  border-right: 1px solid #e7ecf2;
+  background: transparent;
+}
+
+.clean-summary-item:last-child {
+  border-right: 0;
+}
+
+.modern-dashboard-footer {
+  color: #9aa7b6;
+}
+
+.dashboard-error {
+  border-color: #f1cfd5;
+  background: #fff7f8;
+  color: #a64252;
+}
+
+.modern-loading {
+  color: #748397;
+}
+
+@media (max-width: 760px) {
+  .modern-dashboard-header {
+    flex-direction: column;
+  }
+
+  .clean-summary-strip {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+
+  .clean-summary-item:nth-child(2) {
+    border-right: 0;
+  }
+
+  .clean-summary-item:nth-child(-n+2) {
+    border-bottom: 1px solid #e7ecf2;
+  }
+}
