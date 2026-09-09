@@ -171,6 +171,8 @@ function App() {
 
   function logout() {
     localStorage.removeItem("printflow_token")
+    sessionStorage.removeItem("printflow_platform_admin_token")
+    sessionStorage.removeItem("printflow_preview_company")
     setToken("")
     setCompany(null)
     setProfile(null)
