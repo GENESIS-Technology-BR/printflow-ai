@@ -72,12 +72,19 @@ class PrintflowAgentService:
             payload["observed_printer_ips"] = observed_printer_ips
 
         try:
-            self.api_client.send_heartbeat(**payload)
+            sent = self.api_client.send_heartbeat(**payload)
         except Exception as heartbeat_error:
             self.logger.warning(
                 "Heartbeat não enviado (%s): %s",
                 status,
                 heartbeat_error,
+            )
+            return False
+
+        if sent is False:
+            self.logger.warning(
+                "Heartbeat não confirmado pela API (%s).",
+                status,
             )
             return False
 
