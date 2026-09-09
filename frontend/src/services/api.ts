@@ -357,3 +357,50 @@ export async function downloadUsageReport(
   }
   return response.blob();
 }
+
+
+export type ControlCenterClientUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+  created_at: string;
+};
+
+export async function getControlCenterClientUsers(
+  companyUuid: string,
+): Promise<ControlCenterClientUser[]> {
+  return request<ControlCenterClientUser[]>(
+    `/api/v1/control-center/clients/${companyUuid}/users`,
+  );
+}
+
+export async function createControlCenterClientUser(
+  companyUuid: string,
+  payload: { name: string; email: string; password: string },
+): Promise<ControlCenterClientUser> {
+  return request<ControlCenterClientUser>(
+    `/api/v1/control-center/clients/${companyUuid}/users`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function updateControlCenterClientUserStatus(
+  companyUuid: string,
+  userId: number,
+  active: boolean,
+): Promise<ControlCenterClientUser> {
+  return request<ControlCenterClientUser>(
+    `/api/v1/control-center/clients/${companyUuid}/users/${userId}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active }),
+    },
+  );
+}
