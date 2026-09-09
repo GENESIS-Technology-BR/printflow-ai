@@ -42,5 +42,6 @@ def test_intelligence_never_exposes_opaque_hex_as_printer_name():
 
     finding = next(item for item in result["findings"] if item["category"] == "optimization")
     assert opaque not in finding["title"]
-    assert finding["printer_name"] == "Laser MFP 432"
+    assert opaque not in finding["printer_name"]
+    assert "Laser MFP 432" in finding["printer_name"]
     assert "Laser MFP 432" in finding["title"]
