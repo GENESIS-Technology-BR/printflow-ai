@@ -1,0 +1,414 @@
+/* Printflow v0.7.3 — Printers Workspace */
+
+.printers-workspace {
+  padding: 0 !important;
+  overflow-x: hidden !important;
+  background: #f4f6f8 !important;
+}
+
+.printers-workspace-page {
+  min-height: 100%;
+  padding: 18px 24px 28px;
+}
+
+.printers-workspace-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+  min-height: 74px !important;
+  margin: -18px -24px 14px !important;
+  padding: 12px 24px !important;
+  border-bottom: 1px solid #dfe3e8 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.printers-workspace-header > div:first-child > span {
+  display: block;
+  margin-bottom: 2px;
+  color: #0b5cab;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+
+.printers-workspace-header h1 {
+  margin: 0 !important;
+  color: #172b4d !important;
+  font-size: 23px !important;
+  line-height: 1.15 !important;
+}
+
+.printers-workspace-header p {
+  margin: 3px 0 0 !important;
+  color: #6d7f92 !important;
+  font-size: 10px !important;
+}
+
+.printers-workspace-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.printers-api-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid #b8dfc7;
+  border-radius: 4px;
+  color: #107e3e;
+  background: #f3faf5;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.printers-workspace-actions button {
+  min-height: 30px !important;
+  padding: 0 12px !important;
+  border-radius: 4px !important;
+  font-size: 10px !important;
+}
+
+/* Sidebar: sem cortes em telas largas */
+.shell {
+  grid-template-columns: 236px minmax(0, 1fr) !important;
+}
+
+.shell aside {
+  width: 236px !important;
+}
+
+.shell nav button {
+  width: calc(100% - 20px) !important;
+  min-width: 0 !important;
+  padding-right: 12px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  font-size: 12px !important;
+}
+
+.brand-copy span {
+  white-space: nowrap !important;
+}
+
+/* Organização */
+.printers-workspace .printer-list-shell {
+  display: grid;
+  gap: 10px;
+}
+
+.printers-workspace .printer-organization-catalog {
+  margin: 0 !important;
+  border: 1px solid #dfe3e8 !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.printers-workspace .printer-clean-catalog-summary {
+  min-height: 46px !important;
+  padding: 8px 12px !important;
+}
+
+.printers-workspace .printer-clean-catalog-summary > div {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.printers-workspace .printer-clean-eyebrow {
+  color: #6d7f92 !important;
+  font-size: 8px !important;
+}
+
+.printers-workspace .printer-clean-catalog-summary strong {
+  color: #23364d !important;
+  font-size: 11px !important;
+}
+
+.printers-workspace .printer-clean-catalog-summary small {
+  color: #94a1ae !important;
+  font-size: 8.5px !important;
+}
+
+/* Barra de pesquisa e filtros */
+.printers-workspace .printer-filter-bar {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 1.8fr) repeat(3, minmax(150px, .65fr)) auto !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #dfe3e8 !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.printers-workspace .printer-filter-bar input,
+.printers-workspace .printer-filter-bar select {
+  min-height: 42px !important;
+  height: 42px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-right: 1px solid #e3e7eb !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  font-size: 10px !important;
+}
+
+.printers-workspace .printer-filter-count {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 78px !important;
+  padding: 0 10px !important;
+  color: #6f8091 !important;
+  font-size: 9px !important;
+  white-space: nowrap !important;
+}
+
+/* Lista com densidade ERP */
+.printers-workspace .printer-cards {
+  display: grid !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #dfe3e8 !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+}
+
+.printers-workspace .printer-card {
+  margin: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e6e9ed !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.printers-workspace .printer-card:last-child {
+  border-bottom: 0 !important;
+}
+
+.printers-workspace .printer-card:hover {
+  background: #f8fafc !important;
+  transform: none !important;
+}
+
+.printers-workspace .printer-clean-summary {
+  display: grid !important;
+  grid-template-columns:
+    minmax(330px, 2fr)
+    minmax(90px, .52fr)
+    minmax(90px, .48fr)
+    minmax(100px, .52fr)
+    minmax(145px, .78fr)
+    76px !important;
+  align-items: center !important;
+  gap: 0 !important;
+  min-height: 70px !important;
+  padding: 0 10px !important;
+}
+
+.printers-workspace .printer-clean-identity {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  padding-right: 14px !important;
+}
+
+.printers-workspace .printer-clean-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border: 1px solid #bfd5ec !important;
+  border-radius: 5px !important;
+  color: #0b5cab !important;
+  background: #f4f9fd !important;
+  font-size: 9px !important;
+}
+
+.printers-workspace .printer-clean-name-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+}
+
+.printers-workspace .printer-clean-name-row > strong {
+  max-width: 250px !important;
+  overflow: hidden !important;
+  color: #1d2d3e !important;
+  font-size: 11.5px !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.printers-workspace .status-pill {
+  flex: 0 0 auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: 8.5px !important;
+}
+
+.printers-workspace .status-pill i {
+  width: 5px !important;
+  height: 5px !important;
+  box-shadow: none !important;
+}
+
+.printers-workspace .printer-clean-model {
+  display: block !important;
+  margin-top: 2px !important;
+  overflow: hidden !important;
+  color: #798897 !important;
+  font-size: 8.5px !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.printers-workspace .printer-clean-meta-row {
+  display: flex !important;
+  gap: 8px !important;
+  margin-top: 3px !important;
+  color: #9aa6b2 !important;
+  font-size: 8px !important;
+  white-space: nowrap !important;
+}
+
+.printers-workspace .printer-clean-meta-row code {
+  color: #748596 !important;
+  background: transparent !important;
+  font-size: 8px !important;
+}
+
+.printers-workspace .printer-clean-stat {
+  min-height: 44px !important;
+  padding: 5px 10px !important;
+  border-left: 1px solid #edf0f2 !important;
+}
+
+.printers-workspace .printer-clean-stat > span {
+  display: block !important;
+  margin-bottom: 4px !important;
+  color: #9aa6b2 !important;
+  font-size: 7.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+}
+
+.printers-workspace .printer-clean-stat > strong {
+  color: #22364d !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+}
+
+.printers-workspace .printer-clean-mini-track {
+  width: 100% !important;
+  max-width: 82px !important;
+  height: 2px !important;
+  margin-top: 5px !important;
+  background: #edf1f4 !important;
+}
+
+.printers-workspace .printer-clean-mini-track > span {
+  display: block !important;
+  height: 100% !important;
+  background: #00a9ce !important;
+}
+
+.printers-workspace .printer-clean-details-button {
+  justify-self: end !important;
+  min-height: 28px !important;
+  padding: 0 6px !important;
+  border: 0 !important;
+  color: #0b5cab !important;
+  background: transparent !important;
+  font-size: 9px !important;
+}
+
+.printers-workspace .printer-clean-details-button:hover {
+  background: #edf5fb !important;
+}
+
+.printers-workspace .printer-clean-details {
+  border-top: 1px solid #dfe3e8 !important;
+  background: #f8fafb !important;
+}
+
+/* Cabeçalho visual das colunas via pseudo-elemento */
+.printers-workspace .printer-cards::before {
+  content: "IMPRESSORA / LOCALIZAÇÃO     PÁGINAS     TONER     SAÚDE     ÚLTIMA COMUNICAÇÃO";
+  display: block;
+  padding: 7px 12px;
+  border-bottom: 1px solid #dfe3e8;
+  color: #8795a3;
+  background: #f7f9fa;
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  word-spacing: 15px;
+}
+
+/* Melhor uso de largura */
+@media (min-width: 1500px) {
+  .printers-workspace-page {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .shell,
+  .shell aside {
+    width: auto !important;
+  }
+
+  .shell {
+    grid-template-columns: 205px minmax(0, 1fr) !important;
+  }
+
+  .printers-workspace .printer-clean-summary {
+    grid-template-columns: minmax(280px, 1.8fr) repeat(3, minmax(80px, .6fr)) minmax(130px, .8fr) 70px !important;
+  }
+
+  .printers-workspace .printer-filter-bar {
+    grid-template-columns: minmax(240px, 1.5fr) repeat(3, minmax(120px, .7fr)) auto !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .printers-workspace-page {
+    padding: 12px !important;
+  }
+
+  .printers-workspace-header {
+    margin: -12px -12px 12px !important;
+    padding: 10px 12px !important;
+  }
+
+  .printers-workspace .printer-filter-bar {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .printers-workspace .printer-clean-summary {
+    grid-template-columns: minmax(250px, 1fr) 90px 80px !important;
+  }
+
+  .printers-workspace .printer-clean-health,
+  .printers-workspace .printer-clean-last-seen {
+    display: none !important;
+  }
+}

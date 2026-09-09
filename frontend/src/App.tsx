@@ -307,38 +307,40 @@ function App() {
         <button className="logout" onClick={logout}>Sair</button>
       </aside>
 
-      <main className={`dashboard ${page === "dashboard" ? "dashboard-modern-shell" : ""}`}>
+      <main className={`dashboard ${page === "dashboard" ? "dashboard-modern-shell" : ""} ${page === "printers" ? "printers-workspace" : ""}`}>
         {page === "control" ? (
           <ControlCenter />
         ) : page === "reports" ? (
           <Reports companyName={company?.name || "Empresa monitorada"} />
         ) : page === "printers" ? (
-          <>
-            <header>
-              <div><small>MONITORAMENTO</small><h1>Impressoras</h1></div>
-              <span className="online">● API Online</span>
-            </header>
-            <section className="hero">
+          <section className="printers-workspace-page">
+            <header className="printers-workspace-header">
               <div>
-                <small>Printflow · PARQUE MONITORADO</small>
-                <h2>Impressoras da empresa</h2>
-                <p>{printersLoading ? "Carregando equipamentos..." : `${printers.length} equipamento(s) encontrado(s).`}</p>
+                <span>PARQUE DE IMPRESSÃO</span>
+                <h1>Impressoras</h1>
+                <p>
+                  {printersLoading
+                    ? "Atualizando equipamentos..."
+                    : `${printers.length} equipamento(s) monitorado(s) em ${company?.name || "Empresa monitorada"}.`}
+                </p>
               </div>
-            </section>
-            <section className="content-grid">
-              <article className="panel" style={{ gridColumn: "1 / -1" }}>
-                <div className="actions">
-                  <button type="button" onClick={() => void loadPrinters()} disabled={printersLoading}>
-                    {printersLoading ? "Atualizando..." : "Atualizar lista"}
-                  </button>
-                </div>
-                <PrinterTable
-                  printers={printers}
-                  defaultCostPerPage={company?.default_cost_per_page || 0}
-                />
-              </article>
-            </section>
-          </>
+              <div className="printers-workspace-actions">
+                <span className="printers-api-status">● API Online</span>
+                <button
+                  type="button"
+                  onClick={() => void loadPrinters()}
+                  disabled={printersLoading}
+                >
+                  {printersLoading ? "Atualizando..." : "Atualizar"}
+                </button>
+              </div>
+            </header>
+
+            <PrinterTable
+              printers={printers}
+              defaultCostPerPage={company?.default_cost_per_page || 0}
+            />
+          </section>
         ) : page === "agents" ? (
           <AgentMonitor agentToken={company?.agent_token || null} onRegenerateToken={regenerateToken} />
         ) : page === "company" ? (
