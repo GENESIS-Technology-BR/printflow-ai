@@ -18,6 +18,11 @@ class FailingHeartbeatClient:
         raise RuntimeError("API indisponível")
 
 
+class RejectedHeartbeatClient:
+    def send_heartbeat(self, **kwargs: object) -> bool:
+        return False
+
+
 class RecordingHeartbeatClient:
     def __init__(self) -> None:
         self.payloads: list[dict[str, object]] = []
@@ -66,3 +71,12 @@ def test_heartbeat_preserves_operational_payload() -> None:
             "observed_printer_ips": ["10.2.0.10", "10.2.0.20"],
         }
     ]
+
+
+def test_heartbeat_false_result_is_reported_as_failure() -> None:
+    service = build_service(RejectedHeartbeatClient())
+
+    result = service._send_heartbeat_safe(status="running")
+
+    assert result is False
+    assert service.logger.warnings
