@@ -34,3 +34,5 @@ createRoot(document.getElementById('root')!).render(
     <DeploymentStatus />
   </StrictMode>,
 )
+
+import './totvs-corporate-v071.css'

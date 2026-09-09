@@ -13,14 +13,36 @@ SEVERITY_WEIGHT = {
 }
 
 
+def _looks_like_opaque_hex(value: Any) -> bool:
+    if not value:
+        return False
+    text = str(value).strip().lower()
+    if text.startswith("0x"):
+        text = text[2:]
+    return len(text) >= 32 and all(char in "0123456789abcdef" for char in text)
+
+
+def _clean_identity(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text or _looks_like_opaque_hex(text):
+        return None
+    return text
+
+
 def _printer_name(printer: dict[str, Any]) -> str:
-    return (
-        printer.get("custom_name")
-        or printer.get("hostname")
-        or printer.get("name")
-        or printer.get("ip")
-        or "Impressora"
-    )
+    for candidate in (
+        printer.get("custom_name"),
+        printer.get("hostname"),
+        printer.get("model"),
+        printer.get("name"),
+        printer.get("ip"),
+    ):
+        cleaned = _clean_identity(candidate)
+        if cleaned:
+            return cleaned
+    return "Impressora"
 
 
 def _finding(

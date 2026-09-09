@@ -1,0 +1,367 @@
+/* Printflow v0.7.1 — acabamento corporativo inspirado em ERPs TOTVS */
+:root {
+  --totvs-blue: #0b5cab;
+  --totvs-blue-strong: #074b8a;
+  --totvs-blue-soft: #eaf3fb;
+  --totvs-cyan: #00a9ce;
+  --totvs-bg: #f4f6f8;
+  --totvs-surface: #ffffff;
+  --totvs-border: #dfe3e8;
+  --totvs-text: #24364b;
+  --totvs-muted: #6c7d90;
+  --totvs-shadow: 0 1px 2px rgba(18, 38, 63, .06);
+}
+
+.shell {
+  grid-template-columns: 220px minmax(0, 1fr) !important;
+  background: var(--totvs-bg) !important;
+}
+
+.shell aside {
+  background: #fff !important;
+  border-right: 1px solid var(--totvs-border) !important;
+  box-shadow: none !important;
+}
+
+.brand {
+  min-height: 72px !important;
+  padding: 14px 18px !important;
+  gap: 11px !important;
+  overflow: visible !important;
+}
+
+.brand img {
+  width: 34px !important;
+  height: 34px !important;
+  flex: 0 0 34px !important;
+  object-fit: contain !important;
+}
+
+.brand-copy {
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+}
+
+.brand-copy strong {
+  color: #172b4d !important;
+  font-size: 15px !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.brand-copy span {
+  width: auto !important;
+  height: auto !important;
+  color: #8190a3 !important;
+  background: transparent !important;
+  font-size: 9px !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+}
+
+.nav-section-title {
+  display: block !important;
+  margin: 18px 18px 8px !important;
+  color: #8a99aa !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  letter-spacing: .11em !important;
+}
+
+.shell nav button {
+  min-height: 42px !important;
+  margin: 2px 10px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-left: 3px solid transparent !important;
+  border-radius: 4px !important;
+  color: #455a70 !important;
+  background: transparent !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+}
+
+.shell nav button:hover {
+  color: var(--totvs-blue) !important;
+  background: #f6f9fc !important;
+}
+
+.shell nav button.active {
+  border-left-color: var(--totvs-blue) !important;
+  color: var(--totvs-blue) !important;
+  background: var(--totvs-blue-soft) !important;
+  font-weight: 700 !important;
+}
+
+.nav-icon {
+  width: 20px !important;
+  color: #5e7690 !important;
+  text-align: center !important;
+}
+
+.workspace-topbar {
+  min-height: 62px !important;
+  padding: 0 22px !important;
+  border-bottom: 1px solid var(--totvs-border) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.workspace-product {
+  color: var(--totvs-blue) !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: .12em !important;
+}
+
+.workspace-context strong {
+  color: #25364d !important;
+  font-size: 12px !important;
+}
+
+.workspace-environment {
+  border-color: #b7cee4 !important;
+  color: var(--totvs-blue) !important;
+  background: #f4f9fd !important;
+}
+
+.workspace-user-copy strong {
+  color: #24364b !important;
+  font-size: 12px !important;
+}
+
+.workspace-user-copy span {
+  color: #8a99aa !important;
+  font-size: 9px !important;
+}
+
+.workspace-avatar {
+  border: 1px solid #d5dfe9 !important;
+  color: #405a74 !important;
+  background: #f5f8fb !important;
+}
+
+.dashboard,
+.dashboard-modern-shell,
+.modern-dashboard {
+  background: var(--totvs-bg) !important;
+}
+
+.dashboard {
+  padding: 20px 24px 28px !important;
+}
+
+.executive-clean-page {
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+.modern-dashboard-header {
+  min-height: 78px !important;
+  margin: -20px -24px 14px !important;
+  padding: 14px 24px !important;
+  border-bottom: 1px solid var(--totvs-border) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.modern-dashboard-header h1 {
+  color: #172b4d !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+}
+
+.modern-dashboard-header p {
+  color: var(--totvs-muted) !important;
+  font-size: 11px !important;
+}
+
+.modern-dashboard-kicker {
+  color: var(--totvs-blue) !important;
+  font-size: 9px !important;
+  letter-spacing: .1em !important;
+}
+
+.modern-update-row {
+  margin: 0 0 10px !important;
+  color: #8a99aa !important;
+}
+
+.modern-company-bar {
+  min-height: 58px !important;
+  margin-bottom: 12px !important;
+  padding: 9px 12px !important;
+  border: 1px solid var(--totvs-border) !important;
+  border-left: 3px solid var(--totvs-cyan) !important;
+  border-radius: 4px !important;
+  background: #fff !important;
+  box-shadow: var(--totvs-shadow) !important;
+}
+
+.modern-company-icon {
+  color: var(--totvs-blue) !important;
+  background: #edf5fb !important;
+}
+
+.modern-company-selector {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+.modern-company-selector:hover {
+  border-color: #cbd8e4 !important;
+  background: #f8fafc !important;
+}
+
+.modern-company-manage,
+.modern-refresh-button,
+.modern-view-all {
+  min-height: 32px !important;
+  border: 1px solid #b6c3d0 !important;
+  border-radius: 3px !important;
+  color: var(--totvs-blue) !important;
+  background: #fff !important;
+  font-size: 10px !important;
+}
+
+.metrics-grid.modern-kpi-grid {
+  gap: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--totvs-border) !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+  box-shadow: var(--totvs-shadow) !important;
+}
+
+.modern-dashboard .metric-card {
+  min-height: 102px !important;
+  padding: 15px 18px !important;
+  border: 0 !important;
+  border-right: 1px solid var(--totvs-border) !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.modern-dashboard .metric-card:last-child {
+  border-right: 0 !important;
+}
+
+.modern-dashboard .metric-card-icon {
+  width: 31px !important;
+  height: 31px !important;
+  border-radius: 5px !important;
+}
+
+.modern-dashboard .metric-card-value {
+  color: #172b4d !important;
+  font-size: 27px !important;
+}
+
+.pf-intelligence-panel {
+  margin-top: 14px !important;
+  padding: 16px 18px !important;
+  border: 1px solid var(--totvs-border) !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+  box-shadow: var(--totvs-shadow) !important;
+}
+
+.pf-intelligence-header {
+  padding-bottom: 11px !important;
+  border-bottom: 1px solid #edf0f3 !important;
+}
+
+.pf-intelligence-heading img {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.pf-intelligence-heading span {
+  color: var(--totvs-blue) !important;
+  font-size: 9px !important;
+  letter-spacing: .08em !important;
+}
+
+.pf-intelligence-heading h2 {
+  margin-top: 2px !important;
+  color: #172b4d !important;
+  font-size: 17px !important;
+}
+
+.pf-intelligence-heading p {
+  color: var(--totvs-muted) !important;
+  font-size: 10px !important;
+}
+
+.pf-intelligence-score {
+  min-width: 67px !important;
+  padding: 6px 9px !important;
+  border: 1px solid var(--totvs-border) !important;
+  border-radius: 4px !important;
+  background: #f8fafc !important;
+}
+
+.pf-intelligence-list {
+  gap: 10px !important;
+}
+
+.pf-intelligence-item {
+  padding: 13px 14px !important;
+  border-radius: 4px !important;
+  background: #fbfcfd !important;
+}
+
+.pf-intelligence-item h3 {
+  overflow-wrap: anywhere !important;
+  color: #21364d !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+.pf-intelligence-item p,
+.pf-intelligence-action span {
+  color: #536b82 !important;
+  font-size: 9.5px !important;
+}
+
+.clean-dashboard-main {
+  gap: 12px !important;
+}
+
+.modern-panel,
+.clean-health-card,
+.clean-alert-panel,
+.clean-summary-item {
+  border: 1px solid var(--totvs-border) !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+  box-shadow: var(--totvs-shadow) !important;
+}
+
+.clean-summary-strip {
+  gap: 8px !important;
+}
+
+.clean-summary-item {
+  border-top: 2px solid #c6d6e5 !important;
+}
+
+.modern-dashboard-footer {
+  color: #9aa7b4 !important;
+}
+
+@media (max-width: 1180px) {
+  .shell { grid-template-columns: 190px minmax(0, 1fr) !important; }
+  .metrics-grid.modern-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .modern-dashboard .metric-card:nth-child(2) { border-right: 0 !important; }
+  .modern-dashboard .metric-card:nth-child(-n+2) { border-bottom: 1px solid var(--totvs-border) !important; }
+}
+
+@media (max-width: 760px) {
+  .shell { grid-template-columns: 1fr !important; }
+  .dashboard { padding: 14px !important; }
+  .modern-dashboard-header { margin: -14px -14px 12px !important; padding: 12px 14px !important; }
+}
