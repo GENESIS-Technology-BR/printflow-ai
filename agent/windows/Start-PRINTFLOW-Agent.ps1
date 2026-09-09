@@ -332,6 +332,14 @@ try {
         "PRINTFLOW_SNMP_RETRIES"
     ] = "1"
 
+    $processInfo.EnvironmentVariables[
+        "PRINTFLOW_HEARTBEAT_RETRIES"
+    ] = "2"
+
+    $processInfo.EnvironmentVariables[
+        "PRINTFLOW_HEARTBEAT_RETRY_DELAY"
+    ] = "1.0"
+
     $process = (
         [Diagnostics.Process]::Start(
             $processInfo
