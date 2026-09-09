@@ -1,0 +1,141 @@
+/* Printflow v0.7.6 — shell ERP fixo: navegação persistente e scroll só no workspace */
+
+html,
+body,
+#root {
+  height: 100%;
+  min-height: 100%;
+}
+
+body {
+  overflow: hidden !important;
+}
+
+.shell {
+  height: 100vh !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+  grid-template-rows: 58px minmax(0, 1fr) !important;
+}
+
+.shell aside {
+  position: sticky !important;
+  top: 0 !important;
+  grid-row: 1 / -1 !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  z-index: 40 !important;
+}
+
+.shell aside nav {
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin;
+  scrollbar-color: #c8d1da transparent;
+}
+
+.shell aside nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.shell aside nav::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+  background: #c8d1da;
+}
+
+.workspace-topbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 35 !important;
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  height: 58px !important;
+  min-height: 58px !important;
+}
+
+.shell > main.dashboard {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scroll-behavior: smooth;
+}
+
+.shell > main.dashboard::-webkit-scrollbar {
+  width: 8px;
+}
+
+.shell > main.dashboard::-webkit-scrollbar-track {
+  background: #f4f6f8;
+}
+
+.shell > main.dashboard::-webkit-scrollbar-thumb {
+  border: 2px solid #f4f6f8;
+  border-radius: 8px;
+  background: #bcc7d1;
+}
+
+/* Mantém cabeçalhos das áreas visíveis durante a navegação vertical */
+.printers-workspace-header,
+.reports-header,
+.modern-dashboard-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 20 !important;
+}
+
+/* Evita sobreposição visual do sticky com conteúdo */
+.printers-workspace-header,
+.reports-header {
+  box-shadow: 0 1px 0 rgba(18, 38, 63, .06) !important;
+}
+
+/* Tabelas longas: cabeçalho acompanha o usuário */
+.reports-table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5 !important;
+}
+
+@media (max-width: 760px) {
+  body {
+    overflow: auto !important;
+  }
+
+  .shell {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    grid-template-rows: auto !important;
+  }
+
+  .shell aside,
+  .workspace-topbar,
+  .shell > main.dashboard,
+  .printers-workspace-header,
+  .reports-header,
+  .modern-dashboard-header {
+    position: relative !important;
+    top: auto !important;
+  }
+
+  .shell aside {
+    height: auto !important;
+    max-height: none !important;
+    grid-row: auto !important;
+  }
+
+  .shell > main.dashboard {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
