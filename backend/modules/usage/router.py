@@ -18,6 +18,27 @@ from .service import reporting_date
 router = APIRouter(prefix="/usage", tags=["Usage"])
 
 
+def _report_scope_label(
+    rows: list[dict],
+    printer_uuid: str | None = None,
+    unit_name: str | None = None,
+    sector_name: str | None = None,
+) -> str:
+    parts: list[str] = []
+    if unit_name:
+        parts.append(f"Unidade: {unit_name}")
+    if sector_name:
+        parts.append(f"Setor: {sector_name}")
+    if printer_uuid:
+        selected = next(
+            (row for row in rows if row.get("printer_uuid") == printer_uuid),
+            None,
+        )
+        printer_name = selected.get("display_name") if selected else printer_uuid
+        parts.append(f"Impressora: {printer_name}")
+    return " · ".join(parts) or "Parque completo"
+
+
 def _resolve_period(
     start_date: date | None,
     end_date: date | None,
@@ -206,7 +227,10 @@ def export_usage_excel(
     ).all()
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
     company_name = company.name if company else "Empresa"
-    content = build_excel_report(company_name, start, end, rows, history)
+    report_scope = _report_scope_label(rows, printer_uuid, unit_name, sector_name)
+    content = build_excel_report(
+        company_name, start, end, rows, history, report_scope=report_scope,
+    )
     filename = f"printflow-relatorio-{start.isoformat()}-{end.isoformat()}.xlsx"
 
     return Response(
@@ -233,7 +257,10 @@ def export_usage_pdf(
     )
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
     company_name = company.name if company else "Empresa"
-    content = build_pdf_report(company_name, start, end, rows)
+    report_scope = _report_scope_label(rows, printer_uuid, unit_name, sector_name)
+    content = build_pdf_report(
+        company_name, start, end, rows, report_scope=report_scope,
+    )
     filename = f"printflow-relatorio-{start.isoformat()}-{end.isoformat()}.pdf"
 
     return Response(

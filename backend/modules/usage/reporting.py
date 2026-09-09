@@ -231,6 +231,7 @@ def build_excel_report(
     end: date,
     rows: list[dict],
     history: Iterable[PrinterUsageDaily],
+    report_scope: str = "Parque completo",
 ) -> bytes:
     from openpyxl import Workbook
     from openpyxl.drawing.image import Image as XLImage
@@ -251,6 +252,8 @@ def build_excel_report(
         f"a {end.strftime('%d/%m/%Y')}"
     )
     sheet["A3"].font = Font(size=10, color=BRAND_MUTED)
+    sheet["A4"] = f"Escopo: {report_scope}"
+    sheet["A4"].font = Font(size=10, color=BRAND_MUTED)
 
     logo_stream = _build_brand_icon_png()
     logo = XLImage(logo_stream)
@@ -264,7 +267,7 @@ def build_excel_report(
         "Contador inicial", "Contador final", "Impressoes no periodo", "Anomalias",
         "Custo/pagina (R$)", "Custo estimado (R$)",
     ]
-    header_row = 5
+    header_row = 6
 
     for column, label in enumerate(headers, start=1):
         cell = sheet.cell(row=header_row, column=column, value=label)
@@ -290,7 +293,7 @@ def build_excel_report(
             elif column == 16:
                 cell.number_format = 'R$ #,##0.00'
 
-    sheet.freeze_panes = "A6"
+    sheet.freeze_panes = "A7"
     sheet.auto_filter.ref = f"A{header_row}:P{max(header_row, header_row + len(rows))}"
     widths = [30, 16, 24, 18, 28, 22, 20, 20, 16, 16, 16, 16, 20, 12, 18, 20]
     for index, width in enumerate(widths, start=1):
@@ -336,6 +339,7 @@ def build_pdf_report(
     start: date,
     end: date,
     rows: list[dict],
+    report_scope: str = "Parque completo",
 ) -> bytes:
     from reportlab.graphics.shapes import Circle, Drawing, Line, Rect
     from reportlab.lib import colors
@@ -390,6 +394,7 @@ def build_pdf_report(
             f"<b>Periodo:</b> {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}",
             styles["Normal"],
         ),
+        Paragraph(f"<b>Escopo:</b> {report_scope}", styles["Normal"]),
         Paragraph(
             "<b>Custos:</b> estimativa calculada pelas tarifas atualmente configuradas.",
             styles["Normal"],
@@ -398,22 +403,30 @@ def build_pdf_report(
     ]
 
     table_data = [[
-        "Impressora", "IP", "Unidade / Setor", "Modelo",
-        "Inicial", "Final", "Impressoes", "R$/pag.", "Custo estimado",
+        "Impressora", "Identificacao", "Unidade / Setor", "Modelo",
+        "Inicial", "Final", "Impressoes", "Anom.", "R$/pag.", "Custo estimado",
     ]]
     for item in rows:
         organization = " / ".join(
             part for part in (item["unit_name"], item["sector_name"]) if part
         ) or "-"
         model = _model_label(item["manufacturer"], item["model"])
+        technical_identity = " | ".join(
+            part for part in (
+                item["ip"],
+                item["serial"],
+                item["hostname"],
+            ) if part
+        ) or "-"
         table_data.append([
             item["display_name"],
-            item["ip"] or "-",
+            technical_identity,
             organization,
             model,
             _format_number(item["opening_page_count"]),
             _format_number(item["closing_page_count"]),
             _format_number(item["pages_printed"]),
+            _format_number(item["anomaly_count"]),
             _format_rate(item["cost_per_page"]),
             _format_currency(item["estimated_cost"]),
         ])
@@ -421,7 +434,7 @@ def build_pdf_report(
     table = Table(
         table_data,
         repeatRows=1,
-        colWidths=[42 * mm, 23 * mm, 38 * mm, 48 * mm, 22 * mm, 22 * mm, 24 * mm, 24 * mm, 28 * mm],
+        colWidths=[38 * mm, 35 * mm, 34 * mm, 40 * mm, 18 * mm, 18 * mm, 20 * mm, 13 * mm, 20 * mm, 25 * mm],
     )
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor(f"#{BRAND_BLUE}")),

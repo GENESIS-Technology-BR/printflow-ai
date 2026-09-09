@@ -59,7 +59,7 @@ export default function Reports({ companyName }: ReportsProps) {
   const today = useMemo(() => new Date(), [])
   const initialStart = useMemo(() => {
     const start = new Date(today)
-    start.setDate(start.getDate() - 30)
+    start.setDate(start.getDate() - 29)
     return start
   }, [today])
 
@@ -152,7 +152,7 @@ export default function Reports({ companyName }: ReportsProps) {
   function applyPeriod(days: PeriodPreset): void {
     const end = new Date()
     const start = new Date(end)
-    start.setDate(start.getDate() - days)
+    start.setDate(start.getDate() - (days - 1))
     setStartDate(inputDate(start))
     setEndDate(inputDate(end))
   }

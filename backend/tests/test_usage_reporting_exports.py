@@ -53,10 +53,11 @@ def test_excel_report_generates_valid_workbook():
     summary = workbook["Resumo"]
     assert summary["A1"].value == "Printflow - Relatorio de Impressao"
     assert summary["A2"].value == "Empresa: Empresa Teste"
-    assert summary["A6"].value == "Impressora Financeiro"
-    assert summary["M6"].value == 125
-    assert summary["O6"].value == 0.12
-    assert summary["P6"].value == 15.0
+    assert summary["A4"].value == "Escopo: Parque completo"
+    assert summary["A7"].value == "Impressora Financeiro"
+    assert summary["M7"].value == 125
+    assert summary["O7"].value == 0.12
+    assert summary["P7"].value == 15.0
 
 
 def test_pdf_report_generates_valid_pdf():
@@ -118,3 +119,32 @@ def test_printer_specific_cost_overrides_company_default() -> None:
 
     assert rows[0]["cost_per_page"] == 0.25
     assert rows[0]["cost_source"] == "printer"
+
+
+def test_excel_report_records_filtered_scope() -> None:
+    content = build_excel_report(
+        "Empresa Teste",
+        date(2026, 9, 1),
+        date(2026, 9, 2),
+        SAMPLE_ROWS,
+        [],
+        report_scope="Unidade: Matriz · Setor: Financeiro",
+    )
+
+    workbook = load_workbook(BytesIO(content), read_only=True)
+    assert workbook["Resumo"]["A4"].value == (
+        "Escopo: Unidade: Matriz · Setor: Financeiro"
+    )
+
+
+def test_pdf_report_accepts_filtered_scope_and_technical_identity() -> None:
+    content = build_pdf_report(
+        "Empresa Teste",
+        date(2026, 9, 1),
+        date(2026, 9, 2),
+        SAMPLE_ROWS,
+        report_scope="Impressora: Impressora Financeiro",
+    )
+
+    assert content.startswith(b"%PDF")
+    assert len(content) > 1000
