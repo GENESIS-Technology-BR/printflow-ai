@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -488,17 +489,36 @@ class PrintflowApiClient:
             )
             return result
 
-        for printer in printers:
-            sync_result = self.send_printer(
-                printer=printer
+        api_workers = min(
+            max(len(printers), 1),
+            6,
+        )
+
+        with ThreadPoolExecutor(
+            max_workers=api_workers
+        ) as executor:
+            sync_results = list(
+                executor.map(
+                    self.send_printer,
+                    printers,
+                )
             )
 
+        for printer, sync_result in zip(
+            printers,
+            sync_results,
+        ):
+            discovery = printer.get("discovery", {})
             detail = {
                 "success": sync_result.success,
                 "status_code": (
                     sync_result.status_code
                 ),
                 "message": sync_result.message,
+                "ip": (
+                    discovery.get("ip_address")
+                    or printer.get("ip")
+                ),
             }
 
             result["details"].append(
