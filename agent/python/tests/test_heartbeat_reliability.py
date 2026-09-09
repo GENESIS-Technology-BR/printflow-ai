@@ -69,6 +69,8 @@ def test_heartbeat_preserves_operational_payload() -> None:
             "status": "healthy",
             "inventory_complete": True,
             "observed_printer_ips": ["10.2.0.10", "10.2.0.20"],
+            "retries": 2,
+            "retry_delay_seconds": 1.0,
         }
     ]
 
