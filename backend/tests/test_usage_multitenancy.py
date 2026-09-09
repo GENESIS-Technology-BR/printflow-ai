@@ -30,8 +30,8 @@ def tenant_db():
     SessionLocal = sessionmaker(bind=engine)
     db = SessionLocal()
     try:
-        company_a = Company(name="Empresa A", slug="empresa-a", active=True)
-        company_b = Company(name="Empresa B", slug="empresa-b", active=True)
+        company_a = Company(name="Empresa A", active=True)
+        company_b = Company(name="Empresa B", active=True)
         db.add_all([company_a, company_b])
         db.flush()
 
