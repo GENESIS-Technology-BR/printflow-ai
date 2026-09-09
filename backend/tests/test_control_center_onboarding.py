@@ -5,6 +5,8 @@ from pydantic import ValidationError
 
 from backend.modules.control_center.schema import (
     ControlCenterClientCreate,
+    ControlCenterClientUserCreate,
+    ControlCenterClientUserStatusUpdate,
 )
 
 
@@ -161,3 +163,61 @@ def test_control_center_pilot_kpis_are_wired_end_to_end():
     assert 'onboarding_state == "agent_attention"' in router
     assert "Pilotos prontos" in component
     assert "Clientes em atenção" in component
+
+
+def test_client_user_schema_and_status_contract():
+    user = ControlCenterClientUserCreate(
+        name="Maria Cliente",
+        email="maria@example.com",
+        password="SenhaTeste123",
+    )
+    status_update = ControlCenterClientUserStatusUpdate(
+        active=False,
+    )
+
+    assert user.name == "Maria Cliente"
+    assert str(user.email) == "maria@example.com"
+    assert status_update.active is False
+
+
+def test_control_center_client_user_endpoints_are_admin_protected():
+    router = source(
+        "backend/modules/control_center/router.py"
+    )
+
+    assert '"/clients/{company_uuid}/users"' in router
+    assert '"/clients/{company_uuid}/users/{user_id}"' in router
+    assert "get_platform_admin" in router
+
+
+def test_control_center_preview_is_short_lived_and_admin_only():
+    router = source(
+        "backend/modules/control_center/router.py"
+    )
+    security = source(
+        "backend/modules/auth/security.py"
+    )
+
+    assert '"/clients/{company_uuid}/preview"' in router
+    assert "expires_minutes = 30" in router
+    assert "expires_minutes=expires_minutes" in router
+    assert "expires_minutes: int = ACCESS_TOKEN_MINUTES" in security
+
+
+def test_frontend_exposes_users_and_client_preview():
+    component = source(
+        "frontend/src/components/ControlCenter.tsx"
+    )
+    app = source(
+        "frontend/src/App.tsx"
+    )
+    api = source(
+        "frontend/src/services/api.ts"
+    )
+
+    assert "Visualizar como cliente" in component
+    assert "USUÁRIOS DO CLIENTE" in component
+    assert "createControlCenterClientPreview" in api
+    assert "getControlCenterClientUsers" in api
+    assert "Voltar ao Control Center" in app
+    assert "printflow_platform_admin_token" in app

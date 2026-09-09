@@ -8,7 +8,7 @@ from backend.app.database.session import get_db
 from backend.modules.alerts.model import OperationalAlert
 from backend.modules.auth.dependencies import get_platform_admin
 from backend.modules.auth.model import User
-from backend.modules.auth.security import hash_password
+from backend.modules.auth.security import create_access_token, hash_password
 from backend.modules.companies.model import Company
 from backend.modules.printers.model import Printer
 
@@ -17,6 +17,10 @@ from .schema import (
     ControlCenterClientCreated,
     ControlCenterCompany,
     ControlCenterOverview,
+    ControlCenterClientUser,
+    ControlCenterClientUserCreate,
+    ControlCenterClientUserStatusUpdate,
+    ControlCenterPreviewSession,
 )
 
 
@@ -287,4 +291,157 @@ def overview(
         pilots_ready=pilots_ready,
         companies_needing_attention=companies_needing_attention,
         companies=items,
+    )
+
+
+def _find_company_by_uuid(
+    db: Session,
+    company_uuid: str,
+) -> Company:
+    company = (
+        db.query(Company)
+        .filter(Company.uuid == company_uuid)
+        .first()
+    )
+    if company is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Empresa não encontrada",
+        )
+    return company
+
+
+@router.get(
+    "/clients/{company_uuid}/users",
+    response_model=list[ControlCenterClientUser],
+)
+def list_client_users(
+    company_uuid: str,
+    current_user: User = Depends(get_platform_admin),
+    db: Session = Depends(get_db),
+):
+    company = _find_company_by_uuid(db, company_uuid)
+
+    return (
+        db.query(User)
+        .filter(User.company_id == company.id)
+        .order_by(User.name.asc(), User.id.asc())
+        .all()
+    )
+
+
+@router.post(
+    "/clients/{company_uuid}/users",
+    response_model=ControlCenterClientUser,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_client_user(
+    company_uuid: str,
+    payload: ControlCenterClientUserCreate,
+    current_user: User = Depends(get_platform_admin),
+    db: Session = Depends(get_db),
+):
+    company = _find_company_by_uuid(db, company_uuid)
+    email = str(payload.email).lower().strip()
+
+    existing = (
+        db.query(User)
+        .filter(User.email == email)
+        .first()
+    )
+    if existing is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="E-mail já cadastrado",
+        )
+
+    user = User(
+        company_id=company.id,
+        name=payload.name.strip(),
+        email=email,
+        password_hash=hash_password(payload.password),
+        role="admin",
+        active=True,
+    )
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.patch(
+    "/clients/{company_uuid}/users/{user_id}",
+    response_model=ControlCenterClientUser,
+)
+def update_client_user_status(
+    company_uuid: str,
+    user_id: int,
+    payload: ControlCenterClientUserStatusUpdate,
+    current_user: User = Depends(get_platform_admin),
+    db: Session = Depends(get_db),
+):
+    company = _find_company_by_uuid(db, company_uuid)
+    user = (
+        db.query(User)
+        .filter(
+            User.id == user_id,
+            User.company_id == company.id,
+        )
+        .first()
+    )
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuário não encontrado",
+        )
+
+    user.active = payload.active
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.post(
+    "/clients/{company_uuid}/preview",
+    response_model=ControlCenterPreviewSession,
+)
+def create_client_preview(
+    company_uuid: str,
+    current_user: User = Depends(get_platform_admin),
+    db: Session = Depends(get_db),
+):
+    company = _find_company_by_uuid(db, company_uuid)
+
+    user = (
+        db.query(User)
+        .filter(
+            User.company_id == company.id,
+            User.active.is_(True),
+        )
+        .order_by(User.id.asc())
+        .first()
+    )
+    if user is None:
+        raise HTTPException(
+            status_code=409,
+            detail="O cliente não possui usuário ativo para visualização",
+        )
+
+    expires_minutes = 30
+    access_token = create_access_token(
+        str(user.id),
+        company.id,
+        expires_minutes=expires_minutes,
+    )
+
+    return ControlCenterPreviewSession(
+        access_token=access_token,
+        expires_minutes=expires_minutes,
+        company_id=company.id,
+        company_uuid=company.uuid,
+        company_name=company.name,
+        user_id=user.id,
+        user_name=user.name,
+        user_email=user.email,
     )

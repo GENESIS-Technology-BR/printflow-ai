@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class ControlCenterCompany(BaseModel):
@@ -57,3 +57,36 @@ class ControlCenterClientCreated(BaseModel):
     email: str
     temporary_password: str
     agent_token: str
+
+
+class ControlCenterClientUser(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    email: str
+    role: str
+    active: bool
+    created_at: datetime
+
+
+class ControlCenterClientUserCreate(BaseModel):
+    name: str = Field(min_length=3, max_length=120)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+
+
+class ControlCenterClientUserStatusUpdate(BaseModel):
+    active: bool
+
+
+class ControlCenterPreviewSession(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_minutes: int
+    company_id: int
+    company_uuid: str
+    company_name: str
+    user_id: int
+    user_name: str
+    user_email: str

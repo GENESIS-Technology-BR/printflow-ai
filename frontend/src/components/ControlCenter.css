@@ -103,7 +103,8 @@
     90px
     110px
     80px
-    minmax(160px, 1fr);
+    minmax(160px, 1fr)
+    minmax(220px, 1.2fr);
   gap: 12px;
   align-items: center;
   min-width: 900px;
@@ -339,5 +340,89 @@
 
   .cc-token-field {
     grid-column: auto;
+  }
+}
+
+
+.cc-row-actions {
+  display: flex;
+  flex-direction: row !important;
+  gap: 8px;
+}
+
+.cc-row-actions button,
+.control-center-users button {
+  padding: 8px 10px;
+  border: 1px solid #31506b;
+  border-radius: 8px;
+  background: #10243a;
+  color: #d9e7f5;
+  cursor: pointer;
+}
+
+.cc-row-actions .cc-preview-button {
+  border-color: #23745e;
+  background: #0d3b33;
+  color: #48e3b2;
+}
+
+.control-center-users {
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px solid #203f58;
+  border-radius: 14px;
+  background: #0d1d30;
+}
+
+.cc-user-form {
+  display: grid;
+  grid-template-columns:
+    minmax(160px, 1fr)
+    minmax(220px, 1.2fr)
+    minmax(160px, 1fr)
+    auto;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.cc-user-form input {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #29435d;
+  border-radius: 8px;
+  background: #071425;
+  color: #ffffff;
+}
+
+.cc-user-list {
+  border-top: 1px solid #20344c;
+}
+
+.cc-user-row {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 100px auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #182b42;
+}
+
+.cc-user-row > span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cc-user-row small {
+  color: #829bb5;
+}
+
+@media (max-width: 850px) {
+  .cc-user-form {
+    grid-template-columns: 1fr;
+  }
+
+  .cc-user-row {
+    grid-template-columns: 1fr;
   }
 }

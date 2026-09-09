@@ -7,11 +7,17 @@ import {
 
 import {
   createControlCenterClient,
+  createControlCenterClientPreview,
+  createControlCenterClientUser,
+  getControlCenterClientUsers,
   getControlCenterOverview,
+  updateControlCenterClientUserStatus,
 } from "../services/api";
 
 import type {
   ControlCenterClientCreated,
+  ControlCenterClientUser,
+  ControlCenterCompany,
   ControlCenterOverview,
 } from "../services/api";
 
@@ -68,6 +74,19 @@ export default function ControlCenter() {
   ] = useState("");
 
   const [email, setEmail] =
+    useState("");
+
+  const [selectedCompany, setSelectedCompany] =
+    useState<ControlCenterCompany | null>(null);
+  const [clientUsers, setClientUsers] =
+    useState<ControlCenterClientUser[]>([]);
+  const [usersLoading, setUsersLoading] =
+    useState(false);
+  const [newUserName, setNewUserName] =
+    useState("");
+  const [newUserEmail, setNewUserEmail] =
+    useState("");
+  const [newUserPassword, setNewUserPassword] =
     useState("");
 
   const [
@@ -143,6 +162,130 @@ export default function ControlCenter() {
       );
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function openClientUsers(
+    company: ControlCenterCompany,
+  ) {
+    setSelectedCompany(company);
+    setUsersLoading(true);
+    setError(null);
+
+    try {
+      setClientUsers(
+        await getControlCenterClientUsers(
+          company.uuid,
+        ),
+      );
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Não foi possível carregar os usuários do cliente.",
+      );
+    } finally {
+      setUsersLoading(false);
+    }
+  }
+
+  async function handleCreateUser(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    if (!selectedCompany) return;
+
+    setError(null);
+
+    try {
+      await createControlCenterClientUser(
+        selectedCompany.uuid,
+        {
+          name: newUserName.trim(),
+          email: newUserEmail.trim().toLowerCase(),
+          password: newUserPassword,
+        },
+      );
+
+      setNewUserName("");
+      setNewUserEmail("");
+      setNewUserPassword("");
+
+      await openClientUsers(
+        selectedCompany,
+      );
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Não foi possível criar o usuário.",
+      );
+    }
+  }
+
+  async function toggleClientUser(
+    user: ControlCenterClientUser,
+  ) {
+    if (!selectedCompany) return;
+
+    try {
+      await updateControlCenterClientUserStatus(
+        selectedCompany.uuid,
+        user.id,
+        !user.active,
+      );
+
+      await openClientUsers(
+        selectedCompany,
+      );
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Não foi possível alterar o usuário.",
+      );
+    }
+  }
+
+  async function previewClient(
+    company: ControlCenterCompany,
+  ) {
+    try {
+      const session =
+        await createControlCenterClientPreview(
+          company.uuid,
+        );
+
+      const currentToken =
+        localStorage.getItem(
+          "printflow_token",
+        );
+
+      if (currentToken) {
+        sessionStorage.setItem(
+          "printflow_platform_admin_token",
+          currentToken,
+        );
+      }
+
+      sessionStorage.setItem(
+        "printflow_preview_company",
+        session.company_name,
+      );
+
+      localStorage.setItem(
+        "printflow_token",
+        session.access_token,
+      );
+
+      window.location.assign("/");
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Não foi possível abrir a visualização do cliente.",
+      );
     }
   }
 
@@ -483,6 +626,7 @@ export default function ControlCenter() {
             <span>
               Última comunicação
             </span>
+            <span>Ações</span>
           </div>
 
           {data?.companies.map(
@@ -549,6 +693,31 @@ export default function ControlCenter() {
                     company.agent_last_seen,
                   )}
                 </span>
+
+                <span className="cc-row-actions">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void openClientUsers(
+                        company,
+                      )
+                    }
+                  >
+                    Usuários
+                  </button>
+
+                  <button
+                    type="button"
+                    className="cc-preview-button"
+                    onClick={() =>
+                      void previewClient(
+                        company,
+                      )
+                    }
+                  >
+                    Visualizar como cliente
+                  </button>
+                </span>
               </div>
             ),
           )}
@@ -561,6 +730,127 @@ export default function ControlCenter() {
             )}
         </div>
       </section>
+
+      {selectedCompany && (
+        <section className="control-center-users">
+          <div className="cc-created-header">
+            <div>
+              <span>
+                USUÁRIOS DO CLIENTE
+              </span>
+              <h2>
+                {selectedCompany.name}
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCompany(null);
+                setClientUsers([]);
+              }}
+            >
+              Fechar
+            </button>
+          </div>
+
+          <form
+            className="cc-user-form"
+            onSubmit={handleCreateUser}
+          >
+            <input
+              value={newUserName}
+              minLength={3}
+              required
+              placeholder="Nome do usuário"
+              onChange={(event) =>
+                setNewUserName(
+                  event.target.value,
+                )
+              }
+            />
+
+            <input
+              type="email"
+              value={newUserEmail}
+              required
+              placeholder="usuario@empresa.com.br"
+              onChange={(event) =>
+                setNewUserEmail(
+                  event.target.value,
+                )
+              }
+            />
+
+            <input
+              type="password"
+              value={newUserPassword}
+              minLength={8}
+              required
+              placeholder="Senha inicial"
+              onChange={(event) =>
+                setNewUserPassword(
+                  event.target.value,
+                )
+              }
+            />
+
+            <button
+              type="submit"
+              className="cc-primary"
+            >
+              + Adicionar usuário
+            </button>
+          </form>
+
+          <div className="cc-user-list">
+            {usersLoading ? (
+              <p>Carregando usuários...</p>
+            ) : clientUsers.length ? (
+              clientUsers.map(
+                (user) => (
+                  <div
+                    className="cc-user-row"
+                    key={user.id}
+                  >
+                    <span>
+                      <strong>
+                        {user.name}
+                      </strong>
+                      <small>
+                        {user.email}
+                      </small>
+                    </span>
+
+                    <span>
+                      {user.active
+                        ? "Ativo"
+                        : "Inativo"}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void toggleClientUser(
+                          user,
+                        )
+                      }
+                    >
+                      {user.active
+                        ? "Desativar"
+                        : "Ativar"}
+                    </button>
+                  </div>
+                ),
+              )
+            ) : (
+              <p>
+                Nenhum usuário cadastrado.
+              </p>
+            )}
+          </div>
+        </section>
+      )}
     </section>
   );
 }

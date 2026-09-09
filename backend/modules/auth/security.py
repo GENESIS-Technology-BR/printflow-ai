@@ -28,8 +28,14 @@ def verify_password(password: str, encoded: str) -> bool:
         return False
 
 
-def create_access_token(subject: str, company_id: int) -> str:
-    expires = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_MINUTES)
+def create_access_token(
+    subject: str,
+    company_id: int,
+    expires_minutes: int = ACCESS_TOKEN_MINUTES,
+) -> str:
+    expires = datetime.now(timezone.utc) + timedelta(
+        minutes=max(int(expires_minutes), 1)
+    )
     payload = {"sub": subject, "company_id": company_id, "exp": expires}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
