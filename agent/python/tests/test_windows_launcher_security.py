@@ -52,8 +52,9 @@ def test_installer_reads_clipboard_and_validates_token():
     assert "-AtStartup" in installer
 
     assert "-Daemon" in installer
-    assert "-RepetitionInterval" not in installer
     assert "-AtLogOn" not in installer
+    assert "PRINTFLOW Agent Watchdog" in installer
+    assert "-RepetitionInterval (New-TimeSpan -Minutes 15)" in installer
 
     assert "-MultipleInstances IgnoreNew" in installer
     assert "ExecutionTimeLimit ([TimeSpan]::Zero)" in installer
