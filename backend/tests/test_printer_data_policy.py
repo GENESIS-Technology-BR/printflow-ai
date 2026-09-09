@@ -26,6 +26,11 @@ def test_real_zebra_serial_is_accepted():
     assert _valid_serial("D5N224001157") == "D5N224001157"
 
 
+def test_power_state_is_not_accepted_as_serial():
+    assert _valid_serial("Energy Saver Mode 2") is None
+    assert _valid_serial("Sleep Mode") is None
+
+
 def test_missing_value_does_not_replace_trusted_value():
     assert _merge_optional("KNDK09992", None) == "KNDK09992"
     assert _merge_optional(27377, None) == 27377
@@ -140,6 +145,18 @@ def test_heartbeat_status_is_restricted():
             agent_version="0.1.0",
             status="invented",
         )
+
+
+def test_slow_heartbeat_is_accepted():
+    payload = AgentHeartbeat(
+        agent_token="A" * 43,
+        agent_name="Agent",
+        agent_version="0.4.4",
+        status="slow",
+        inventory_complete=True,
+    )
+    assert payload.status == "slow"
+    assert payload.inventory_complete is True
 
 
 @pytest.mark.parametrize("length", [10, 42, 44, 100, 199])

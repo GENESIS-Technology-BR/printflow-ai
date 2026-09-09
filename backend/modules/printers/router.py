@@ -43,6 +43,9 @@ def _valid_serial(value: str | None) -> str | None:
         "203dpi",
         "300dpi",
         "600dpi",
+        "energy saver",
+        "sleep mode",
+        "power save",
     )
     if any(marker in normalized for marker in description_markers):
         return None
@@ -130,7 +133,7 @@ def receive_agent_heartbeat(
     company.agent_version = payload.agent_version
     company.agent_last_error = _clean_text(payload.error)
 
-    if payload.status == "healthy" and payload.inventory_complete:
+    if payload.status in {"healthy", "slow"} and payload.inventory_complete:
         company_printers = (
             db.query(Printer)
             .filter(Printer.company_id == company.id)
@@ -209,6 +212,13 @@ def receive_agent_data(
         printer.page_count_confidence = page_confidence
         printer.page_count_source = _clean_text(payload.page_count_source)
         printer.page_count_confirmed = payload.page_count_confirmed
+
+    current_serial = _valid_serial(printer.serial)
+    if printer.serial is not None and current_serial is None:
+        printer.serial = None
+        printer.serial_confidence = None
+        printer.serial_source = None
+        printer.serial_confirmed = False
 
     serial, serial_confidence, serial_updated = _merge_trusted(
         printer.serial,

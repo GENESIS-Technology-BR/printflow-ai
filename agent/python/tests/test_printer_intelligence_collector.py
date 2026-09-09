@@ -1,3 +1,4 @@
+from snmp.engine import PrinterIntelligenceEngine
 from intelligence.printer_intelligence_collector import (
     best_serial_candidate,
     build_report,
@@ -153,6 +154,15 @@ def test_learned_serial():
     assert (
         result.value
         == "23J241700123"
+    )
+
+
+def test_engine_rejects_power_state_as_serial():
+    assert not PrinterIntelligenceEngine.is_valid_serial(
+        "Energy Saver Mode 2"
+    )
+    assert not PrinterIntelligenceEngine.is_valid_serial(
+        "Power Save"
     )
 
 
