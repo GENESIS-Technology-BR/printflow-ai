@@ -32,8 +32,20 @@ def _clean_identity(value: Any) -> str | None:
 
 
 def _printer_name(printer: dict[str, Any]) -> str:
+    custom_name = _clean_identity(printer.get("custom_name"))
+    if custom_name:
+        return custom_name
+
+    sector_name = _clean_identity(printer.get("sector_name"))
+    model = _clean_identity(printer.get("model"))
+    if sector_name and model:
+        return f"{sector_name} · {model}"
+
+    unit_name = _clean_identity(printer.get("unit_name"))
+    if unit_name and model:
+        return f"{unit_name} · {model}"
+
     for candidate in (
-        printer.get("custom_name"),
         printer.get("hostname"),
         printer.get("model"),
         printer.get("name"),

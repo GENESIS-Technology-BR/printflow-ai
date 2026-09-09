@@ -36,3 +36,5 @@ createRoot(document.getElementById('root')!).render(
 )
 
 import './totvs-corporate-v071.css'
+
+import './executive-erp-v072.css'
