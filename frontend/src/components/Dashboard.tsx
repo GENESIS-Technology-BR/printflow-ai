@@ -26,6 +26,8 @@ import { parseApiDate } from "../utils/dateTime";
 
 import "./Dashboard.css";
 
+const DASHBOARD_REFRESH_MS = 5 * 60 * 1000;
+
 type DashboardProps = {
   companyName: string;
   onManageCompany: () => void;
@@ -213,7 +215,7 @@ export default function Dashboard({
         () => {
           void loadDashboard();
         },
-        30_000,
+        DASHBOARD_REFRESH_MS,
       );
 
     return () => {
@@ -313,7 +315,7 @@ export default function Dashboard({
 
           <p>
             Acompanhe o desempenho e a saúde do
-            parque de impressoras em tempo real.
+            parque com atualização automática a cada 5 minutos.
           </p>
         </div>
 
