@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import logging
 from dataclasses import asdict
@@ -166,14 +167,13 @@ class PrintflowAgentService:
                 len(candidates),
             )
 
-            for candidate in candidates:
+            def validate_candidate(candidate):
                 self.logger.info(
                     "SAFE DISCOVERY: verificando %s - porta %s.",
                     candidate.ip_address,
                     candidate.port_name,
                 )
-
-                devices = scan_network(
+                return scan_network(
                     cidr=f"{candidate.ip_address}/32",
                     timeout=self.settings.network_timeout,
                     workers=1,
@@ -181,19 +181,33 @@ class PrintflowAgentService:
                     resolve_names=True,
                 )
 
-                for device in devices:
-                    current = discovered_devices.get(
-                        device.ip_address
+            candidate_workers = min(
+                max(len(candidates), 1),
+                12,
+            )
+            with ThreadPoolExecutor(
+                max_workers=candidate_workers
+            ) as executor:
+                futures = [
+                    executor.submit(
+                        validate_candidate,
+                        candidate,
                     )
-
-                    if (
-                        current is None
-                        or device.confidence_score
-                        > current.confidence_score
-                    ):
-                        discovered_devices[
+                    for candidate in candidates
+                ]
+                for future in as_completed(futures):
+                    for device in future.result():
+                        current = discovered_devices.get(
                             device.ip_address
-                        ] = device
+                        )
+                        if (
+                            current is None
+                            or device.confidence_score
+                            > current.confidence_score
+                        ):
+                            discovered_devices[
+                                device.ip_address
+                            ] = device
 
             self.logger.info(
                 "SAFE DISCOVERY: %s candidato(s) responderam.",
@@ -264,57 +278,72 @@ class PrintflowAgentService:
             len(possible_printers),
         )
 
-        for device in possible_printers:
-            self.logger.info(
-                "Consultando SNMP em %s.",
-                device.ip_address,
-            )
+        snmp_workers = min(
+            max(len(possible_printers), 1),
+            8,
+        )
+        semaphore = asyncio.Semaphore(snmp_workers)
 
-            try:
-                snmp_result = await collect_printer_intelligence(
-                    ip_address=device.ip_address,
-                    community=self.settings.snmp_community,
-                    timeout=self.settings.snmp_timeout,
-                    retries=self.settings.snmp_retries,
-                )
-            except Exception as snmp_error:
-                self.logger.exception(
-                    "SNMP %s: FALHA ISOLADA | %s",
-                    device.ip_address,
-                    snmp_error,
-                )
-                snmp_result = {
-                    "snmp_online": False,
-                    "erro": str(snmp_error),
-                    "dados": {},
-                }
-
-            if snmp_result.get("snmp_online"):
-                dados = snmp_result.get("dados") or {}
-
+        async def collect_one(device):
+            async with semaphore:
                 self.logger.info(
-                    "SNMP %s: OK | Fabricante=%s | Modelo=%s | "
-                    "Serial=%s | Contador=%s | Origem=%s | Toner=%s%%",
+                    "Consultando SNMP em %s.",
                     device.ip_address,
-                    dados.get("fabricante"),
-                    dados.get("modelo"),
-                    dados.get("serial"),
-                    dados.get("contador_paginas"),
-                    dados.get("contador_origem"),
-                    dados.get("toner_percentual"),
-                )
-            else:
-                self.logger.warning(
-                    "SNMP %s: SEM RESPOSTA | Erro=%s",
-                    device.ip_address,
-                    snmp_result.get("erro"),
                 )
 
-            inventory.append(
-                {
+                try:
+                    snmp_result = await collect_printer_intelligence(
+                        ip_address=device.ip_address,
+                        community=self.settings.snmp_community,
+                        timeout=self.settings.snmp_timeout,
+                        retries=self.settings.snmp_retries,
+                    )
+                except Exception as snmp_error:
+                    self.logger.exception(
+                        "SNMP %s: FALHA ISOLADA | %s",
+                        device.ip_address,
+                        snmp_error,
+                    )
+                    snmp_result = {
+                        "snmp_online": False,
+                        "erro": str(snmp_error),
+                        "dados": {},
+                    }
+
+                if snmp_result.get("snmp_online"):
+                    dados = snmp_result.get("dados") or {}
+
+                    self.logger.info(
+                        "SNMP %s: OK | Fabricante=%s | Modelo=%s | "
+                        "Serial=%s | Contador=%s | Origem=%s | Toner=%s%%",
+                        device.ip_address,
+                        dados.get("fabricante"),
+                        dados.get("modelo"),
+                        dados.get("serial"),
+                        dados.get("contador_paginas"),
+                        dados.get("contador_origem"),
+                        dados.get("toner_percentual"),
+                    )
+                else:
+                    self.logger.warning(
+                        "SNMP %s: SEM RESPOSTA | Erro=%s",
+                        device.ip_address,
+                        snmp_result.get("erro"),
+                    )
+
+                return {
                     "discovery": asdict(device),
                     "snmp": snmp_result,
                 }
+
+        if possible_printers:
+            inventory = list(
+                await asyncio.gather(
+                    *(
+                        collect_one(device)
+                        for device in possible_printers
+                    )
+                )
             )
 
         return inventory
