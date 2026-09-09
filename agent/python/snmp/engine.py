@@ -475,6 +475,11 @@ class PrinterIntelligenceEngine:
                     if strong_serials:
                         serial = strong_serials[0].value
 
+                # Qualquer candidato aprendido precisa passar
+                # novamente pelo mesmo filtro do motor.
+                if not self.is_valid_serial(serial):
+                    serial = None
+
                 learning_diagnostic = {
                     "sys_object_id": (
                         walk_result.sys_object_id
@@ -504,6 +509,9 @@ class PrinterIntelligenceEngine:
                     "serial_candidates": [],
                     "counter_candidates": [],
                 }
+
+        if not self.is_valid_serial(serial):
+            serial = None
 
         return {
             "ip_address": ip_address,
@@ -889,10 +897,15 @@ class PrinterIntelligenceEngine:
     ) -> str | None:
         vendor_key = vendor.lower()
 
-        oids = VENDOR_SERIAL_OIDS.get(
-            vendor_key,
-            VENDOR_SERIAL_OIDS["generic"],
-        )
+        if vendor_key == "ricoh":
+            oids = (
+                "1.3.6.1.4.1.367.3.2.1.2.1.4.0",
+            )
+        else:
+            oids = VENDOR_SERIAL_OIDS.get(
+                vendor_key,
+                VENDOR_SERIAL_OIDS["generic"],
+            )
 
         for oid in oids:
             result = await self.get_value(
@@ -1046,9 +1059,15 @@ class PrinterIntelligenceEngine:
             "energy saver",
             "sleep mode",
             "power save",
+            " printer",
+            " series",
+            "dpi",
         )
 
         if lowered in invalid_values:
+            return False
+
+        if " " in normalized:
             return False
 
         return not any(

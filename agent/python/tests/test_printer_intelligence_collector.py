@@ -1,4 +1,5 @@
 from snmp.engine import PrinterIntelligenceEngine
+from intelligence.printer_v3 import normalize_serial
 from intelligence.printer_intelligence_collector import (
     best_serial_candidate,
     build_report,
@@ -155,6 +156,11 @@ def test_learned_serial():
         result.value
         == "23J241700123"
     )
+
+
+def test_identity_v3_rejects_ricoh_model_as_serial():
+    assert normalize_serial("RICOH M 320F (7e280d)") is None
+    assert normalize_serial("Energy Saver Mode 2") is None
 
 
 def test_engine_rejects_power_state_as_serial():

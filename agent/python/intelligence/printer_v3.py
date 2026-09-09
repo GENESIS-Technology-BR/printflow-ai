@@ -307,7 +307,23 @@ def normalize_serial(
     if len(serial) < 3:
         return None
 
-    if serial.lower() in INVALID_TEXT_VALUES:
+    lowered = serial.lower()
+
+    if lowered in INVALID_TEXT_VALUES:
+        return None
+
+    invalid_markers = (
+        "energy saver",
+        "sleep mode",
+        "power save",
+        "printer",
+        "series",
+        "dpi",
+    )
+    if any(marker in lowered for marker in invalid_markers):
+        return None
+
+    if " " in serial:
         return None
 
     return serial[:180]
