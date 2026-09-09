@@ -460,6 +460,15 @@ export default function PrinterTable({
         <div className="printer-filter-empty">Nenhuma impressora encontrada com os filtros atuais.</div>
       )}
 
+      <div className="printer-workspace-columns" aria-hidden="true">
+        <span>Impressora / localização</span>
+        <span>Páginas</span>
+        <span>Toner</span>
+        <span>Saúde</span>
+        <span>Última comunicação</span>
+        <span>Ações</span>
+      </div>
+
       <div className="printer-cards printer-clean-cards">
         {filteredPrinters.map((printer) => {
           const organization = currentOrganization(printer);

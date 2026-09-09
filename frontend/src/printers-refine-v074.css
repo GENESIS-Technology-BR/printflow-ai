@@ -1,0 +1,246 @@
+/* Printflow v0.7.4 — refinamento final do workspace de impressoras */
+
+.printers-workspace-page {
+  max-width: 1680px;
+  margin: 0 auto;
+}
+
+.printers-workspace-header {
+  border-bottom-color: #d9dee5 !important;
+}
+
+.printers-workspace-header h1 {
+  font-weight: 700 !important;
+  letter-spacing: -.015em;
+}
+
+.printers-workspace-header p {
+  max-width: 720px;
+  line-height: 1.35;
+}
+
+.printers-workspace .printer-organization-catalog,
+.printers-workspace .printer-filter-bar,
+.printers-workspace .printer-cards {
+  border-color: #d9dee5 !important;
+}
+
+.printers-workspace .printer-clean-catalog-summary {
+  background: #fbfcfd !important;
+}
+
+.printers-workspace .printer-clean-catalog-summary strong {
+  font-weight: 700 !important;
+}
+
+.printers-workspace .printer-clean-secondary-button {
+  min-height: 28px !important;
+  padding: 0 10px !important;
+  border: 1px solid #b8c4d1 !important;
+  border-radius: 3px !important;
+  color: #0b5cab !important;
+  background: #fff !important;
+  font-size: 9px !important;
+}
+
+.printers-workspace .printer-filter-bar input:focus,
+.printers-workspace .printer-filter-bar select:focus {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid rgba(11, 92, 171, .16) !important;
+  outline-offset: -2px !important;
+}
+
+.printers-workspace .printer-filter-bar input::placeholder {
+  color: #9aa6b2 !important;
+}
+
+.printer-workspace-columns {
+  display: grid;
+  grid-template-columns:
+    minmax(330px, 2fr)
+    minmax(90px, .52fr)
+    minmax(90px, .48fr)
+    minmax(100px, .52fr)
+    minmax(145px, .78fr)
+    76px;
+  align-items: center;
+  min-height: 30px;
+  margin-bottom: -10px;
+  padding: 0 10px;
+  border: 1px solid #d9dee5;
+  border-bottom: 0;
+  border-radius: 5px 5px 0 0;
+  color: #7d8c9b;
+  background: #f7f9fa;
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: .065em;
+  text-transform: uppercase;
+}
+
+.printer-workspace-columns span:not(:first-child) {
+  padding-left: 10px;
+  border-left: 1px solid #e7eaee;
+}
+
+.printers-workspace .printer-cards {
+  border-radius: 0 0 5px 5px !important;
+}
+
+.printers-workspace .printer-cards::before {
+  display: none !important;
+  content: none !important;
+}
+
+.printers-workspace .printer-card {
+  position: relative;
+  transition: background .12s ease;
+}
+
+.printers-workspace .printer-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: transparent;
+}
+
+.printers-workspace .printer-card:hover::before {
+  background: #0b5cab;
+}
+
+.printers-workspace .printer-clean-summary {
+  min-height: 66px !important;
+}
+
+.printers-workspace .printer-clean-name-row > strong {
+  color: #172b4d !important;
+  font-weight: 700 !important;
+}
+
+.printers-workspace .status-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  min-height: 18px !important;
+  padding: 0 6px !important;
+  border-radius: 9px !important;
+  font-weight: 700 !important;
+}
+
+.printers-workspace .status-online {
+  color: #107e3e !important;
+  background: #edf8f1 !important;
+}
+
+.printers-workspace .status-offline {
+  color: #b42318 !important;
+  background: #fef1f0 !important;
+}
+
+.printers-workspace .status-inactive {
+  color: #6b7280 !important;
+  background: #f1f3f5 !important;
+}
+
+.printers-workspace .status-unknown {
+  color: #9a6700 !important;
+  background: #fff8e6 !important;
+}
+
+.printers-workspace .printer-clean-stat > strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.printers-workspace .printer-clean-last-seen > strong {
+  font-size: 9px !important;
+  font-weight: 600 !important;
+}
+
+.printers-workspace .printer-clean-details-button {
+  gap: 4px !important;
+  border-radius: 3px !important;
+  font-weight: 700 !important;
+}
+
+.printers-workspace .printer-clean-details-button[aria-expanded="true"] {
+  color: #074b8a !important;
+  background: #eaf3fb !important;
+}
+
+.printers-workspace .printer-clean-details {
+  padding: 12px !important;
+}
+
+.printers-workspace .printer-clean-edit-section {
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+.printers-workspace .printer-clean-section-title > span {
+  color: #24364b !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+}
+
+.printers-workspace .printer-clean-section-title > small {
+  font-size: 8px !important;
+}
+
+.printers-workspace .printer-clean-inline-form input,
+.printers-workspace .printer-clean-location-form select,
+.printers-workspace .printer-clean-cost-form input {
+  border-radius: 3px !important;
+  border-color: #cfd7df !important;
+  font-size: 10px !important;
+}
+
+.printers-workspace .printer-clean-inline-form button,
+.printers-workspace .printer-clean-location-form button,
+.printers-workspace .printer-clean-cost-form button {
+  border-radius: 3px !important;
+  font-size: 9px !important;
+}
+
+.printers-workspace .printer-clean-icon {
+  font-weight: 800 !important;
+  letter-spacing: .03em;
+}
+
+.printers-workspace .printer-clean-meta-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.printers-workspace .printer-filter-count {
+  font-weight: 700 !important;
+  background: #fafbfc !important;
+}
+
+.printers-workspace .printer-alias-error,
+.printers-workspace .printer-filter-empty {
+  border-radius: 4px !important;
+  font-size: 10px !important;
+}
+
+@media (max-width: 1180px) {
+  .printer-workspace-columns {
+    grid-template-columns:
+      minmax(280px, 1.8fr)
+      repeat(3, minmax(80px, .6fr))
+      minmax(130px, .8fr)
+      70px;
+  }
+}
+
+@media (max-width: 900px) {
+  .printer-workspace-columns {
+    display: none;
+  }
+
+  .printers-workspace .printer-cards {
+    border-radius: 5px !important;
+  }
+}

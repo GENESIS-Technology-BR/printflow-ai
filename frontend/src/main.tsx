@@ -40,3 +40,5 @@ import './totvs-corporate-v071.css'
 import './executive-erp-v072.css'
 
 import './printers-workspace-v073.css'
+
+import './printers-refine-v074.css'
