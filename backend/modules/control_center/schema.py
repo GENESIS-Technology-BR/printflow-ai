@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class ControlCenterCompany(BaseModel):
@@ -60,6 +60,8 @@ class ControlCenterClientCreated(BaseModel):
 
 
 class ControlCenterClientUser(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     email: str
