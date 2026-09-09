@@ -149,6 +149,26 @@ function App() {
     setCompany(updated)
   }
 
+  function leaveClientPreview() {
+    const adminToken = sessionStorage.getItem(
+      "printflow_platform_admin_token",
+    );
+
+    if (!adminToken) return;
+
+    localStorage.setItem(
+      "printflow_token",
+      adminToken,
+    );
+    sessionStorage.removeItem(
+      "printflow_platform_admin_token",
+    );
+    sessionStorage.removeItem(
+      "printflow_preview_company",
+    );
+    window.location.assign("/");
+  }
+
   function logout() {
     localStorage.removeItem("printflow_token")
     setToken("")
@@ -188,9 +208,52 @@ function App() {
     )
   }
 
+  const previewCompany =
+    sessionStorage.getItem(
+      "printflow_preview_company",
+    );
+  const isClientPreview = Boolean(
+    previewCompany &&
+    sessionStorage.getItem(
+      "printflow_platform_admin_token",
+    ),
+  );
+
   return (
     <div className="shell">
       <ThemeToggle />
+      {isClientPreview && (
+        <div
+          style={{
+            position: "fixed",
+            top: 12,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "9px 14px",
+            border: "1px solid #1f9d7c",
+            borderRadius: 10,
+            background: "#0b2b27",
+            color: "#d9fff5",
+            boxShadow: "0 10px 30px rgba(0,0,0,.25)",
+          }}
+        >
+          <strong>
+            Visualizando como cliente:
+            {" "}
+            {previewCompany}
+          </strong>
+          <button
+            type="button"
+            onClick={leaveClientPreview}
+          >
+            Voltar ao Control Center
+          </button>
+        </div>
+      )}
       <aside>
         <div className="brand">
           <img src="/brand/printflow-mark.svg" alt="" aria-hidden="true" />
