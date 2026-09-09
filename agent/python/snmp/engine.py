@@ -1032,6 +1032,8 @@ class PrinterIntelligenceEngine:
         if len(normalized) < 3:
             return False
 
+        lowered = normalized.lower()
+
         invalid_values = {
             "unknown",
             "none",
@@ -1040,8 +1042,19 @@ class PrinterIntelligenceEngine:
             "0",
             "-1",
         }
+        invalid_markers = (
+            "energy saver",
+            "sleep mode",
+            "power save",
+        )
 
-        return normalized.lower() not in invalid_values
+        if lowered in invalid_values:
+            return False
+
+        return not any(
+            marker in lowered
+            for marker in invalid_markers
+        )
 
     @staticmethod
     def is_toner_supply(
