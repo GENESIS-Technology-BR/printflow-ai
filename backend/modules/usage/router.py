@@ -109,6 +109,63 @@ def _current_printers(
     return query.order_by(Printer.name.asc()).all()
 
 
+def _validate_report_filters(
+    db: Session,
+    company_id: int,
+    printer_uuid: str | None = None,
+    unit_name: str | None = None,
+    sector_name: str | None = None,
+) -> None:
+    """Fail closed when a requested report filter is outside the tenant."""
+    if printer_uuid:
+        owned_printer = (
+            db.query(Printer.id)
+            .filter(
+                Printer.company_id == company_id,
+                Printer.uuid == printer_uuid,
+                Printer.active.is_(True),
+            )
+            .first()
+        )
+        if owned_printer is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Impressora nao encontrada para esta empresa.",
+            )
+
+    if unit_name:
+        owned_unit = (
+            db.query(Printer.id)
+            .filter(
+                Printer.company_id == company_id,
+                Printer.unit_name == unit_name,
+                Printer.active.is_(True),
+            )
+            .first()
+        )
+        if owned_unit is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Unidade nao encontrada para esta empresa.",
+            )
+
+    if sector_name:
+        owned_sector = (
+            db.query(Printer.id)
+            .filter(
+                Printer.company_id == company_id,
+                Printer.sector_name == sector_name,
+                Printer.active.is_(True),
+            )
+            .first()
+        )
+        if owned_sector is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Setor nao encontrado para esta empresa.",
+            )
+
+
 def _report_rows(
     db: Session,
     current_user: User,
@@ -118,6 +175,13 @@ def _report_rows(
     unit_name: str | None = None,
     sector_name: str | None = None,
 ) -> list[dict]:
+    _validate_report_filters(
+        db,
+        current_user.company_id,
+        printer_uuid,
+        unit_name,
+        sector_name,
+    )
     history = _usage_query(
         db,
         current_user.company_id,
