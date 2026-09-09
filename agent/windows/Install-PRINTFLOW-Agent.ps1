@@ -47,6 +47,7 @@ $outputDirectory = Join-Path `
     "output"
 
 $taskName = "PRINTFLOW Agent"
+$watchdogTaskName = "PRINTFLOW Agent Watchdog"
 
 $sourceDiagnosticPath = Join-Path `
     $sourceRoot `
@@ -417,6 +418,7 @@ try {
     $runtimeFiles = @(
         "PRINTFLOW-Agent.exe",
         "Start-PRINTFLOW-Agent.ps1",
+        "Watchdog-PRINTFLOW-Agent.ps1",
         "Uninstall-PRINTFLOW-Agent.ps1",
         "BUILD-VALIDATION.txt",
         "README-TESTE.txt"
@@ -530,6 +532,37 @@ try {
         -Principal $principal `
         -Settings $settings `
         -Description "PRINTFLOW Agent residente - SYSTEM - inicializacao no boot" `
+        -Force |
+        Out-Null
+
+    $watchdogScript = Join-Path $installRoot "Watchdog-PRINTFLOW-Agent.ps1"
+    $watchdogAction = New-ScheduledTaskAction `
+        -Execute $powerShell `
+        -Argument ("-NoLogo -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$watchdogScript`"") `
+        -WorkingDirectory $installRoot
+
+    $watchdogTrigger = New-ScheduledTaskTrigger `
+        -Once `
+        -At (Get-Date).AddMinutes(2) `
+        -RepetitionInterval (New-TimeSpan -Minutes 15)
+
+    $existingWatchdogTask = Get-ScheduledTask `
+        -TaskName $watchdogTaskName `
+        -ErrorAction SilentlyContinue
+
+    if ($existingWatchdogTask) {
+        Unregister-ScheduledTask `
+            -TaskName $watchdogTaskName `
+            -Confirm:$false
+    }
+
+    Register-ScheduledTask `
+        -TaskName $watchdogTaskName `
+        -Action $watchdogAction `
+        -Trigger $watchdogTrigger `
+        -Principal $principal `
+        -Settings (New-ScheduledTaskSettingsSet -MultipleInstances IgnoreNew -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 2)) `
+        -Description "PRINTFLOW Agent watchdog - recuperacao automatica" `
         -Force |
         Out-Null
 
