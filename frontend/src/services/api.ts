@@ -404,3 +404,25 @@ export async function updateControlCenterClientUserStatus(
     },
   );
 }
+
+
+export type ControlCenterPreviewSession = {
+  access_token: string;
+  token_type: "bearer";
+  expires_minutes: number;
+  company_id: number;
+  company_uuid: string;
+  company_name: string;
+  user_id: number;
+  user_name: string;
+  user_email: string;
+};
+
+export async function createControlCenterClientPreview(
+  companyUuid: string,
+): Promise<ControlCenterPreviewSession> {
+  return request<ControlCenterPreviewSession>(
+    `/api/v1/control-center/clients/${companyUuid}/preview`,
+    { method: "POST" },
+  );
+}
