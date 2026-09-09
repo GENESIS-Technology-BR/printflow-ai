@@ -23,10 +23,25 @@ if (-not $isAdministrator) {
 $ErrorActionPreference = "Stop"
 
 $taskName = "PRINTFLOW Agent"
+$watchdogTaskName = "PRINTFLOW Agent Watchdog"
 
 $installRoot = Join-Path `
     $env:ProgramData `
     "PRINTFLOW\Agent"
+
+$watchdogTask = Get-ScheduledTask `
+    -TaskName $watchdogTaskName `
+    -ErrorAction SilentlyContinue
+
+if ($watchdogTask) {
+    Stop-ScheduledTask `
+        -TaskName $watchdogTaskName `
+        -ErrorAction SilentlyContinue
+
+    Unregister-ScheduledTask `
+        -TaskName $watchdogTaskName `
+        -Confirm:$false
+}
 
 $task = Get-ScheduledTask `
     -TaskName $taskName `
