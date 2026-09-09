@@ -256,20 +256,53 @@ function App() {
           </button>
         </div>
       )}
+      <div className="workspace-topbar">
+        <div className="workspace-context">
+          <span className="workspace-product">
+            PRINTFLOW
+          </span>
+          <span className="workspace-divider">/</span>
+          <strong>
+            {company?.name || "Empresa monitorada"}
+          </strong>
+          <span className="workspace-environment">
+            {company?.plan === "pilot" ? "Piloto" : company?.plan || "Produção"}
+          </span>
+        </div>
+
+        <div className="workspace-user">
+          <div className="workspace-user-copy">
+            <strong>{profile?.name || "Usuário"}</strong>
+            <span>
+              {profile?.role === "platform_admin"
+                ? "Administrador da plataforma"
+                : "Usuário da empresa"}
+            </span>
+          </div>
+          <div className="workspace-avatar">
+            {(profile?.name || "U").slice(0, 1).toUpperCase()}
+          </div>
+        </div>
+      </div>
+
       <aside>
         <div className="brand">
           <img src="/brand/printflow-mark.svg" alt="" aria-hidden="true" />
-          <strong>Printflow</strong>
+          <div className="brand-copy">
+            <strong>Printflow</strong>
+            <span>Operations Platform</span>
+          </div>
         </div>
         <nav>
-          <button className={page === "dashboard" ? "active" : ""} onClick={() => setPage("dashboard")}>Visão Geral</button>
+          <small className="nav-section-title">MENU PRINCIPAL</small>
+          <button className={page === "dashboard" ? "active" : ""} onClick={() => setPage("dashboard")}><span className="nav-icon">⌂</span>Visão Geral</button>
           {profile?.role === "platform_admin" && (
-            <button className={page === "control" ? "active" : ""} onClick={() => setPage("control")}>Control Center</button>
+            <button className={page === "control" ? "active" : ""} onClick={() => setPage("control")}><span className="nav-icon">▦</span>Control Center</button>
           )}
-          <button className={page === "company" ? "active" : ""} onClick={() => setPage("company")}>Empresa e Agent</button>
-          <button className={page === "printers" ? "active" : ""} onClick={() => { setPage("printers"); void loadPrinters() }}>Impressoras</button>
-          <button className={page === "reports" ? "active" : ""} onClick={() => setPage("reports")}>Relatórios</button>
-          <button className={page === "agents" ? "active" : ""} onClick={() => setPage("agents")}>Agentes</button>
+          <button className={page === "company" ? "active" : ""} onClick={() => setPage("company")}><span className="nav-icon">⌘</span>Empresa e Agent</button>
+          <button className={page === "printers" ? "active" : ""} onClick={() => { setPage("printers"); void loadPrinters() }}><span className="nav-icon">▣</span>Impressoras</button>
+          <button className={page === "reports" ? "active" : ""} onClick={() => setPage("reports")}><span className="nav-icon">≡</span>Relatórios</button>
+          <button className={page === "agents" ? "active" : ""} onClick={() => setPage("agents")}><span className="nav-icon">◉</span>Agentes</button>
         </nav>
         <button className="logout" onClick={logout}>Sair</button>
       </aside>
