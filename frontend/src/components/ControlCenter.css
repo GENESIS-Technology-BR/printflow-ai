@@ -426,3 +426,235 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ============================================================
+   PRINTFLOW UI V2 - CONTROL CENTER CORPORATIVO
+   ============================================================ */
+
+.control-center-page {
+  min-height: 100%;
+  padding: 0;
+  background: transparent;
+  color: #243247;
+}
+
+.control-center-header {
+  margin-bottom: 16px;
+  padding: 0 0 4px;
+}
+
+.control-center-header > div > span,
+.control-center-title span,
+.cc-onboarding-intro span,
+.cc-created-header span {
+  color: #52739a;
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+
+.control-center-header h1 {
+  margin: 4px 0 4px;
+  color: #1f2937;
+  font-size: 27px;
+  font-weight: 720;
+  letter-spacing: -.025em;
+}
+
+.control-center-header p,
+.cc-onboarding-intro p,
+.cc-created-warning {
+  color: #748397;
+}
+
+.control-center-header button,
+.control-center-created button,
+.control-center-users button {
+  border: 1px solid #cfd8e3;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #435971;
+}
+
+.control-center-header .cc-primary,
+.cc-create-button,
+.control-center-users .cc-primary {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.control-center-error {
+  border-color: #f0cfd5;
+  background: #fff6f7;
+  color: #a94353;
+}
+
+.control-center-onboarding,
+.control-center-created,
+.control-center-users {
+  border: 1px solid #dde4ec;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03);
+}
+
+.control-center-created {
+  border-left: 3px solid #2b8f6d;
+  background: #fbfefd;
+}
+
+.cc-onboarding-form label {
+  color: #5e6d7e;
+}
+
+.cc-onboarding-form input,
+.cc-user-form input {
+  border-color: #cfd8e3;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #243247;
+}
+
+.cc-onboarding-form input:focus,
+.cc-user-form input:focus {
+  border-color: #8ab0df;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.08);
+}
+
+.control-center-kpis {
+  grid-template-columns: repeat(6,minmax(0,1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.control-center-kpis article {
+  min-height: 100px;
+  padding: 14px 15px;
+  border: 1px solid #dde4ec;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03);
+}
+
+.control-center-kpis span,
+.control-center-kpis small {
+  color: #7d8b9b;
+}
+
+.control-center-kpis span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.control-center-kpis strong {
+  margin: 7px 0 3px;
+  color: #253449;
+  font-size: 25px;
+  font-weight: 720;
+}
+
+.control-center-panel {
+  border: 1px solid #dde4ec;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03);
+}
+
+.control-center-title {
+  padding: 15px 18px;
+  border-bottom: 1px solid #e6ebf1;
+}
+
+.control-center-title h2 {
+  color: #263549;
+  font-size: 17px;
+}
+
+.control-center-title small {
+  color: #8a98a9;
+}
+
+.control-center-row {
+  min-width: 1120px;
+  padding: 13px 18px;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.control-center-row.header {
+  background: #f8fafc;
+  color: #7b8998;
+  font-size: 10px;
+}
+
+.control-center-row:not(.header):hover {
+  background: #fbfcfd;
+}
+
+.control-center-row > span:first-child strong {
+  color: #29384d;
+}
+
+.control-center-row small {
+  color: #8a98a9;
+}
+
+.cc-online {
+  color: #178a65;
+}
+
+.cc-warning {
+  color: #b7791f;
+}
+
+.cc-offline {
+  color: #bd4b5c;
+}
+
+.cc-row-actions button {
+  border-color: #cfd8e3;
+  background: #ffffff;
+  color: #53667c;
+}
+
+.cc-row-actions .cc-preview-button {
+  border-color: #bdd0eb;
+  background: #f5f9ff;
+  color: #356aa9;
+}
+
+.cc-secret-row code {
+  border-color: #dbe3ec;
+  background: #f8fafc;
+  color: #31455e;
+}
+
+.cc-secret-row button {
+  border-color: #c8d7e8;
+  background: #f7faff;
+  color: #356aa9;
+}
+
+.cc-user-list {
+  border-top-color: #e6ebf1;
+}
+
+.cc-user-row {
+  border-bottom-color: #edf1f5;
+}
+
+.cc-user-row small {
+  color: #8492a2;
+}
+
+@media (max-width: 1250px) {
+  .control-center-kpis {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .control-center-kpis {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
