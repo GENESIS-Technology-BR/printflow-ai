@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -12,16 +13,17 @@ class Logger:
         pass
 
 
-def build_client() -> PrintflowApiClient:
+def build_client(tmp_path: Path) -> PrintflowApiClient:
     return PrintflowApiClient(
         api_url="https://printflow.invalid",
         agent_token="token-test",
         logger=Logger(),
+        queue_directory=tmp_path / "queue",
     )
 
 
-def test_heartbeat_retries_transient_connection_failure() -> None:
-    client = build_client()
+def test_heartbeat_retries_transient_connection_failure(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
     ok = SimpleNamespace(status_code=200)
 
     with patch("api.client.requests.post", side_effect=[
@@ -41,8 +43,8 @@ def test_heartbeat_retries_transient_connection_failure() -> None:
     sleep.assert_called_once_with(1.0)
 
 
-def test_heartbeat_does_not_retry_invalid_token() -> None:
-    client = build_client()
+def test_heartbeat_does_not_retry_invalid_token(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
     unauthorized = SimpleNamespace(status_code=401)
 
     with patch("api.client.requests.post", return_value=unauthorized) as post:

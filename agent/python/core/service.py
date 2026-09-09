@@ -73,7 +73,19 @@ class PrintflowAgentService:
             payload["observed_printer_ips"] = observed_printer_ips
 
         try:
-            sent = self.api_client.send_heartbeat(**payload)
+            sent = self.api_client.send_heartbeat(
+                **payload,
+                retries=getattr(
+                    self.settings,
+                    "heartbeat_retries",
+                    2,
+                ),
+                retry_delay_seconds=getattr(
+                    self.settings,
+                    "heartbeat_retry_delay_seconds",
+                    1.0,
+                ),
+            )
         except Exception as heartbeat_error:
             self.logger.warning(
                 "Heartbeat não enviado (%s): %s",
