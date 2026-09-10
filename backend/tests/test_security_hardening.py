@@ -236,3 +236,34 @@ def test_frontend_no_longer_persists_primary_jwt_in_localstorage():
 
     assert "setAuthenticated(true)" in app
     assert 'api("/api/v1/auth/logout", { method: "POST" })' in app
+
+
+def test_login_response_never_exposes_access_token():
+    schema = source("backend/modules/auth/schema.py")
+    router = source("backend/modules/auth/router.py")
+
+    assert "class SessionResponse" in schema
+    session_block = schema.split("class SessionResponse", 1)[1].split("class MeResponse", 1)[0]
+    assert "access_token" not in session_block
+    assert "response_model=SessionResponse" in router
+    assert "return SessionResponse(" in router
+
+
+def test_platform_admin_role_cannot_be_granted_by_environment_email():
+    dependencies = source("backend/modules/auth/dependencies.py")
+    admin_block = dependencies.split("def is_platform_admin", 1)[1].split("def get_platform_admin", 1)[0]
+
+    assert 'user.role == "platform_admin"' in admin_block
+    assert "PRINTFLOW_PLATFORM_ADMIN_EMAILS" not in admin_block
+
+
+def test_security_gate_blocks_high_dependency_risk():
+    workflow = source(".github/workflows/build-agent-windows.yml")
+
+    assert "pip-audit -r requirements.txt" in workflow
+    assert "npm audit --audit-level=high" in workflow
+    assert "python -m pytest -q agent/python/tests backend/tests" in workflow
+    assert "actions/checkout@v5" in workflow
+    assert "actions/setup-python@v6" in workflow
+    assert "actions/setup-node@v5" in workflow
+    assert "actions/upload-artifact@v5" in workflow
