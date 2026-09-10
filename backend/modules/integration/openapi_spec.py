@@ -2,9 +2,10 @@ INTEGRATION_OPENAPI = {
     "openapi": "3.1.0",
     "info": {
         "title": "PRINTFLOW Integration API",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "description": (
             "API read-only para integração segura com assistentes e ferramentas externas. "
+            "Inclui estado operacional, impressoras, usuários, alertas, organização e uso. "
             "Não expõe senhas, JWT, chave de recovery ou token do Agent."
         ),
     },
@@ -116,141 +117,105 @@ INTEGRATION_OPENAPI = {
                 },
                 "additionalProperties": False,
             },
+            "OrganizationItem": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "printers": {"type": "integer"},
+                },
+                "additionalProperties": False,
+            },
+            "OrganizationSnapshot": {
+                "type": "object",
+                "properties": {
+                    "company_uuid": {"type": "string"},
+                    "units": {"type": "array", "items": {"$ref": "#/components/schemas/OrganizationItem"}},
+                    "sectors": {"type": "array", "items": {"$ref": "#/components/schemas/OrganizationItem"}},
+                    "unassigned_printers": {"type": "integer"},
+                },
+                "additionalProperties": False,
+            },
+            "UsageReportRow": {
+                "type": "object",
+                "properties": {
+                    "printer_uuid": {"type": "string"},
+                    "display_name": {"type": "string"},
+                    "ip": {"type": ["string", "null"]},
+                    "hostname": {"type": ["string", "null"]},
+                    "manufacturer": {"type": ["string", "null"]},
+                    "model": {"type": ["string", "null"]},
+                    "serial": {"type": ["string", "null"]},
+                    "unit_name": {"type": ["string", "null"]},
+                    "sector_name": {"type": ["string", "null"]},
+                    "first_usage_date": {"type": ["string", "null"], "format": "date"},
+                    "last_usage_date": {"type": ["string", "null"], "format": "date"},
+                    "opening_page_count": {"type": ["integer", "null"]},
+                    "closing_page_count": {"type": ["integer", "null"]},
+                    "pages_printed": {"type": "integer"},
+                    "anomaly_count": {"type": "integer"},
+                    "last_anomaly_type": {"type": ["string", "null"]},
+                    "cost_per_page": {"type": "number"},
+                    "estimated_cost": {"type": "number"},
+                    "cost_source": {"type": "string"},
+                },
+                "additionalProperties": False,
+            },
+            "UsageDailyRow": {
+                "type": "object",
+                "properties": {
+                    "usage_date": {"type": "string", "format": "date"},
+                    "printer_uuid": {"type": "string"},
+                    "ip": {"type": "string"},
+                    "name": {"type": "string"},
+                    "custom_name": {"type": ["string", "null"]},
+                    "hostname": {"type": ["string", "null"]},
+                    "manufacturer": {"type": ["string", "null"]},
+                    "model": {"type": ["string", "null"]},
+                    "serial": {"type": ["string", "null"]},
+                    "unit_name": {"type": ["string", "null"]},
+                    "sector_name": {"type": ["string", "null"]},
+                    "opening_page_count": {"type": "integer"},
+                    "closing_page_count": {"type": "integer"},
+                    "pages_printed": {"type": "integer"},
+                    "anomaly_count": {"type": "integer"},
+                    "last_anomaly_type": {"type": ["string", "null"]},
+                    "first_seen_at": {"type": ["string", "null"], "format": "date-time"},
+                    "last_seen_at": {"type": ["string", "null"], "format": "date-time"},
+                },
+                "additionalProperties": False,
+            },
+            "UsageReport": {
+                "type": "object",
+                "properties": {
+                    "company_uuid": {"type": "string"},
+                    "start_date": {"type": "string", "format": "date"},
+                    "end_date": {"type": "string", "format": "date"},
+                    "filters": {"type": "object", "additionalProperties": True},
+                    "rows": {"type": "array", "items": {"$ref": "#/components/schemas/UsageReportRow"}},
+                    "totals": {
+                        "type": "object",
+                        "properties": {
+                            "printers": {"type": "integer"},
+                            "pages_printed": {"type": "integer"},
+                            "estimated_cost": {"type": "number"},
+                            "anomalies": {"type": "integer"},
+                        },
+                    },
+                },
+                "additionalProperties": False,
+            },
         },
     },
     "security": [{"IntegrationKey": []}],
     "paths": {
-        "/status": {
-            "get": {
-                "operationId": "getIntegrationStatus",
-                "summary": "Obtém o status geral do PRINTFLOW",
-                "description": "Retorna empresas, Agents online, impressoras ativas e alertas abertos.",
-                "responses": {"200": {"description": "Status geral"}},
-            }
-        },
-        "/companies": {
-            "get": {
-                "operationId": "listCompanies",
-                "summary": "Lista empresas monitoradas",
-                "responses": {
-                    "200": {
-                        "description": "Empresas",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {"$ref": "#/components/schemas/CompanySnapshot"},
-                                }
-                            }
-                        },
-                    }
-                },
-            }
-        },
-        "/companies/{company_uuid}": {
-            "get": {
-                "operationId": "getCompany",
-                "summary": "Obtém o estado de uma empresa",
-                "parameters": [
-                    {
-                        "name": "company_uuid",
-                        "in": "path",
-                        "required": True,
-                        "schema": {"type": "string"},
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Empresa",
-                        "content": {
-                            "application/json": {
-                                "schema": {"$ref": "#/components/schemas/CompanySnapshot"}
-                            }
-                        },
-                    }
-                },
-            }
-        },
-        "/companies/{company_uuid}/printers": {
-            "get": {
-                "operationId": "listCompanyPrinters",
-                "summary": "Lista impressoras de uma empresa",
-                "parameters": [
-                    {
-                        "name": "company_uuid",
-                        "in": "path",
-                        "required": True,
-                        "schema": {"type": "string"},
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Impressoras",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {"$ref": "#/components/schemas/Printer"},
-                                }
-                            }
-                        },
-                    }
-                },
-            }
-        },
-        "/companies/{company_uuid}/users": {
-            "get": {
-                "operationId": "listCompanyUsers",
-                "summary": "Lista usuários de uma empresa",
-                "parameters": [
-                    {
-                        "name": "company_uuid",
-                        "in": "path",
-                        "required": True,
-                        "schema": {"type": "string"},
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Usuários",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {"$ref": "#/components/schemas/User"},
-                                }
-                            }
-                        },
-                    }
-                },
-            }
-        },
-        "/companies/{company_uuid}/alerts": {
-            "get": {
-                "operationId": "listCompanyAlerts",
-                "summary": "Lista alertas operacionais de uma empresa",
-                "parameters": [
-                    {
-                        "name": "company_uuid",
-                        "in": "path",
-                        "required": True,
-                        "schema": {"type": "string"},
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Alertas",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {"$ref": "#/components/schemas/Alert"},
-                                }
-                            }
-                        },
-                    }
-                },
-            }
-        },
+        "/status": {"get": {"operationId": "getIntegrationStatus", "summary": "Obtém o status geral do PRINTFLOW", "responses": {"200": {"description": "Status geral"}}}},
+        "/companies": {"get": {"operationId": "listCompanies", "summary": "Lista empresas monitoradas", "responses": {"200": {"description": "Empresas", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/CompanySnapshot"}}}}}}}},
+        "/companies/{company_uuid}": {"get": {"operationId": "getCompany", "summary": "Obtém o estado de uma empresa", "parameters": [{"name": "company_uuid", "in": "path", "required": True, "schema": {"type": "string"}}], "responses": {"200": {"description": "Empresa", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CompanySnapshot"}}}}}}},
+        "/companies/{company_uuid}/printers": {"get": {"operationId": "listCompanyPrinters", "summary": "Lista impressoras de uma empresa", "parameters": [{"name": "company_uuid", "in": "path", "required": True, "schema": {"type": "string"}}], "responses": {"200": {"description": "Impressoras", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/Printer"}}}}}}}},
+        "/companies/{company_uuid}/users": {"get": {"operationId": "listCompanyUsers", "summary": "Lista usuários de uma empresa", "parameters": [{"name": "company_uuid", "in": "path", "required": True, "schema": {"type": "string"}}], "responses": {"200": {"description": "Usuários", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/User"}}}}}}}},
+        "/companies/{company_uuid}/alerts": {"get": {"operationId": "listCompanyAlerts", "summary": "Lista alertas operacionais de uma empresa", "parameters": [{"name": "company_uuid", "in": "path", "required": True, "schema": {"type": "string"}}], "responses": {"200": {"description": "Alertas", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/Alert"}}}}}}}},
+        "/companies/{company_uuid}/organization": {"get": {"operationId": "getCompanyOrganization", "summary": "Lista unidades e setores da empresa", "parameters": [{"name": "company_uuid", "in": "path", "required": True, "schema": {"type": "string"}}], "responses": {"200": {"description": "Organização", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/OrganizationSnapshot"}}}}}}},
+        "/companies/{company_uuid}/usage/report": {"get": {"operationId": "getCompanyUsageReport", "summary": "Obtém relatório consolidado de uso e custos", "parameters": [{"name": "company_uuid", "in": "path", "required": True, "schema": {"type": "string"}}, {"name": "start_date", "in": "query", "required": False, "schema": {"type": "string", "format": "date"}}, {"name": "end_date", "in": "query", "required": False, "schema": {"type": "string", "format": "date"}}, {"name": "printer_uuid", "in": "query", "required": False, "schema": {"type": "string"}}, {"name": "unit_name", "in": "query", "required": False, "schema": {"type": "string"}}, {"name": "sector_name", "in": "query", "required": False, "schema": {"type": "string"}}], "responses": {"200": {"description": "Relatório de uso", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/UsageReport"}}}}}}},
+        "/companies/{company_uuid}/usage/daily": {"get": {"operationId": "getCompanyDailyUsage", "summary": "Obtém histórico diário de impressão", "parameters": [{"name": "company_uuid", "in": "path", "required": True, "schema": {"type": "string"}}, {"name": "start_date", "in": "query", "required": False, "schema": {"type": "string", "format": "date"}}, {"name": "end_date", "in": "query", "required": False, "schema": {"type": "string", "format": "date"}}, {"name": "printer_uuid", "in": "query", "required": False, "schema": {"type": "string"}}, {"name": "unit_name", "in": "query", "required": False, "schema": {"type": "string"}}, {"name": "sector_name", "in": "query", "required": False, "schema": {"type": "string"}}], "responses": {"200": {"description": "Histórico diário", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/UsageDailyRow"}}}}}}}},
     },
 }
