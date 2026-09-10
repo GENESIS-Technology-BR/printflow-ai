@@ -40,6 +40,7 @@ OPERATIONAL_ALERT_COLUMNS = {
 
 USER_SECURITY_COLUMNS = {
     "session_version": "INTEGER DEFAULT 0 NOT NULL",
+    "password_reset_version": "INTEGER DEFAULT 0 NOT NULL",
 }
 
 
