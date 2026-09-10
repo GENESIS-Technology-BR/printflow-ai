@@ -25,6 +25,17 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+    allow_public_registration = os.getenv(
+        "PRINTFLOW_ALLOW_PUBLIC_REGISTRATION",
+        "false",
+    ).strip().lower() in {"1", "true", "yes"}
+
+    if not allow_public_registration:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cadastro público desabilitado",
+        )
+
     email = payload.email.lower().strip()
 
     if db.query(User).filter(User.email == email).first():
