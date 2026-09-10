@@ -137,6 +137,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         access_token=create_access_token(
             str(user.id),
             company.id,
+            user.session_version,
         ),
         user_name=user.name,
         company_name=company.name,
@@ -191,10 +192,25 @@ def login(
         access_token=create_access_token(
             str(user.id),
             user.company_id,
+            user.session_version,
         ),
         user_name=user.name,
         company_name=user.company.name,
     )
+
+
+@router.post("/logout")
+def logout(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    current_user.session_version += 1
+    db.commit()
+
+    return {
+        "status": "ok",
+        "message": "Sessão encerrada com segurança",
+    }
 
 
 @router.get("/me", response_model=MeResponse)
@@ -281,6 +297,7 @@ def recovery_reset_password(
     user.password_hash = hash_password(
         new_password
     )
+    user.session_version += 1
 
     db.commit()
 
