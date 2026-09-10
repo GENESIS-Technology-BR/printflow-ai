@@ -117,11 +117,6 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     db.refresh(user)
     db.refresh(company)
 
-    _clear_login_rate_limit(
-        request,
-        normalized_email,
-    )
-
     return TokenResponse(
         access_token=create_access_token(
             str(user.id),
@@ -170,6 +165,11 @@ def login(
             status_code=403,
             detail="Usuário inativo",
         )
+
+    _clear_login_rate_limit(
+        request,
+        normalized_email,
+    )
 
     return TokenResponse(
         access_token=create_access_token(
