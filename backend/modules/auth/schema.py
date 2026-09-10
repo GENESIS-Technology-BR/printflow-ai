@@ -25,3 +25,17 @@ class MeResponse(BaseModel):
     role: str
     company_id: int
     company_name: str
+
+
+class PasswordResetIssueRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetIssueResponse(BaseModel):
+    reset_token: str
+    expires_minutes: int = 15
+
+
+class PasswordResetConfirmRequest(BaseModel):
+    reset_token: str = Field(min_length=32, max_length=4096)
+    new_password: str = Field(min_length=8, max_length=128)
