@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
+import os
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.app.config.settings import settings
 from backend.app.database.connection import Base, engine
@@ -45,11 +47,30 @@ async def lifespan(app: FastAPI):
     yield
 
 
+production = settings.environment.lower() == "production"
+
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,
     description="Plataforma GENESIS para gestão inteligente de impressão",
     lifespan=lifespan,
+    docs_url=None if production else "/docs",
+    redoc_url=None if production else "/redoc",
+    openapi_url=None if production else "/openapi.json",
+)
+
+trusted_hosts = [
+    item.strip()
+    for item in os.getenv(
+        "PRINTFLOW_ALLOWED_HOSTS",
+        "*.onrender.com,localhost,127.0.0.1",
+    ).split(",")
+    if item.strip()
+]
+
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=trusted_hosts,
 )
 
 allowed_origins = [
@@ -93,10 +114,14 @@ async def security_headers(
         "camera=(), microphone=(), geolocation=()"
     )
 
-    if settings.environment.lower() == "production":
+    if production:
         response.headers["Strict-Transport-Security"] = (
             "max-age=31536000; includeSubDomains"
         )
+
+    if request.url.path.startswith("/api/v1/auth/"):
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Pragma"] = "no-cache"
 
     if request.url.path not in {"/docs", "/redoc", "/openapi.json"}:
         response.headers["Content-Security-Policy"] = (
