@@ -89,6 +89,45 @@ def _onboarding_progress(
     )
 
 
+def _commercial_readiness(
+    company: Company,
+    onboarding_state: str,
+    agent_communication_state: str,
+    active_printers: int,
+    alerts: int,
+) -> tuple[int, bool, list[str]]:
+    blockers: list[str] = []
+    score = 0
+
+    if company.active:
+        score += 20
+    else:
+        blockers.append("Cliente inativo.")
+
+    if onboarding_state == "pilot_active":
+        score += 30
+    else:
+        blockers.append("Onboarding ainda não concluído.")
+
+    if agent_communication_state == "healthy":
+        score += 25
+    else:
+        blockers.append("Agent sem comunicação saudável.")
+
+    if active_printers > 0:
+        score += 15
+    else:
+        blockers.append("Nenhuma impressora ativa monitorada.")
+
+    if alerts == 0:
+        score += 10
+    else:
+        blockers.append("Existem alertas operacionais pendentes.")
+
+    ready = score == 100
+    return score, ready, blockers
+
+
 def _onboarding_state(
     company: Company,
     active_printers: int,
@@ -228,6 +267,7 @@ def overview(
     total_agents_online = 0
     pilots_ready = 0
     companies_needing_attention = 0
+    companies_commercial_ready = 0
 
     for company in companies:
         active_query = (
@@ -293,6 +333,21 @@ def overview(
         if onboarding_state == "agent_attention" or alerts > 0:
             companies_needing_attention += 1
 
+        (
+            commercial_readiness_score,
+            commercial_ready,
+            commercial_blockers,
+        ) = _commercial_readiness(
+            company,
+            onboarding_state,
+            agent_communication_state,
+            active_printers,
+            alerts,
+        )
+
+        if commercial_ready:
+            companies_commercial_ready += 1
+
         items.append(
             ControlCenterCompany(
                 id=company.id,
@@ -309,6 +364,9 @@ def overview(
                 onboarding_state=onboarding_state,
                 onboarding_progress=onboarding_progress,
                 onboarding_next_action=onboarding_next_action,
+                commercial_readiness_score=commercial_readiness_score,
+                commercial_ready=commercial_ready,
+                commercial_blockers=commercial_blockers,
                 active_printers=active_printers,
                 online_printers=online_printers,
                 offline_printers=offline_printers,
@@ -328,6 +386,7 @@ def overview(
         open_alerts=total_open_alerts,
         pilots_ready=pilots_ready,
         companies_needing_attention=companies_needing_attention,
+        companies_commercial_ready=companies_commercial_ready,
         companies=items,
     )
 
