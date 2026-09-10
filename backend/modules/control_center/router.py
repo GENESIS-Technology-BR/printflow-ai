@@ -529,6 +529,7 @@ def create_client_preview(
     access_token = create_access_token(
         str(user.id),
         company.id,
+        user.session_version,
         expires_minutes=expires_minutes,
     )
 
