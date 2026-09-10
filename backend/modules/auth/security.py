@@ -6,9 +6,25 @@ from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
 
-SECRET_KEY = os.getenv("JWT_SECRET", "CHANGE-ME-IN-RENDER")
+INSECURE_JWT_SECRET = "CHANGE-ME-IN-RENDER"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_MINUTES = 480
+
+
+def _secret_key() -> str:
+    secret = os.getenv("JWT_SECRET", "").strip()
+
+    if not secret or secret == INSECURE_JWT_SECRET:
+        raise RuntimeError(
+            "JWT_SECRET seguro não configurado."
+        )
+
+    if len(secret) < 32:
+        raise RuntimeError(
+            "JWT_SECRET deve possuir pelo menos 32 caracteres."
+        )
+
+    return secret
 
 
 def hash_password(password: str) -> str:
@@ -37,11 +53,11 @@ def create_access_token(
         minutes=max(int(expires_minutes), 1)
     )
     payload = {"sub": subject, "company_id": company_id, "exp": expires}
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(payload, _secret_key(), algorithm=ALGORITHM)
 
 
 def decode_token(token: str) -> dict:
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return jwt.decode(token, _secret_key(), algorithms=[ALGORITHM])
     except JWTError as exc:
         raise ValueError("Token inválido ou expirado") from exc
