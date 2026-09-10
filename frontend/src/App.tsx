@@ -53,6 +53,9 @@ function App() {
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
+        ...(options.method && options.method !== "GET"
+          ? { "X-CSRF-Protection": "1" }
+          : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(options.headers || {}),
       },
