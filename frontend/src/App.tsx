@@ -37,7 +37,8 @@ type AuthResponse = {
 type Page = "dashboard" | "printers" | "reports" | "company" | "agents" | "control"
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem("printflow_token") || "")
+  const [authenticated, setAuthenticated] = useState(false)
+  const [authReady, setAuthReady] = useState(false)
   const [company, setCompany] = useState<Company | null>(null)
   const [profile, setProfile] = useState<MeProfile | null>(null)
   const [mode, setMode] = useState<"login" | "register">("login")
@@ -56,7 +57,11 @@ function App() {
         ...(options.method && options.method !== "GET"
           ? { "X-CSRF-Protection": "1" }
           : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(sessionStorage.getItem("printflow_preview_token")
+          ? {
+              Authorization: `Bearer ${sessionStorage.getItem("printflow_preview_token")}`,
+            }
+          : {}),
         ...(options.headers || {}),
       },
     })
@@ -75,16 +80,21 @@ function App() {
   }
 
   useEffect(() => {
-    if (!token) return
     Promise.all([api("/api/v1/companies/current"), getMe()])
       .then(([companyData, profileData]) => {
         setCompany(companyData)
         setProfile(profileData)
+        setAuthenticated(true)
         if (profileData.role !== "platform_admin") setPage("dashboard")
       })
-      .catch(() => logout())
+      .catch(() => {
+        setAuthenticated(false)
+        setCompany(null)
+        setProfile(null)
+      })
+      .finally(() => setAuthReady(true))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token])
+  }, [])
 
   async function authenticate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -105,8 +115,14 @@ function App() {
         method: "POST",
         body: JSON.stringify(body),
       })
-      localStorage.setItem("printflow_token", result.access_token)
-      setToken(result.access_token)
+      setAuthenticated(true)
+      setAuthReady(true)
+      const [companyData, profileData] = await Promise.all([
+        api("/api/v1/companies/current"),
+        getMe(),
+      ])
+      setCompany(companyData)
+      setProfile(profileData)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Falha na autenticação")
     } finally {
@@ -154,36 +170,47 @@ function App() {
   }
 
   function leaveClientPreview() {
-    const adminToken = sessionStorage.getItem(
-      "printflow_platform_admin_token",
-    );
-
-    if (!adminToken) return;
-
-    localStorage.setItem(
-      "printflow_token",
-      adminToken,
-    );
     sessionStorage.removeItem(
-      "printflow_platform_admin_token",
-    );
+      "printflow_preview_token",
+    )
     sessionStorage.removeItem(
       "printflow_preview_company",
-    );
-    window.location.assign("/");
+    )
+    window.location.assign("/")
   }
 
-  function logout() {
-    localStorage.removeItem("printflow_token")
-    sessionStorage.removeItem("printflow_platform_admin_token")
+  async function logout() {
+    if (sessionStorage.getItem("printflow_preview_token")) {
+      leaveClientPreview()
+      return
+    }
+
+    try {
+      await api("/api/v1/auth/logout", { method: "POST" })
+    } catch {
+      // A sessão local deve ser encerrada mesmo se a API já estiver expirada.
+    }
+
+    sessionStorage.removeItem("printflow_preview_token")
     sessionStorage.removeItem("printflow_preview_company")
-    setToken("")
+    setAuthenticated(false)
     setCompany(null)
     setProfile(null)
     setPage("dashboard")
   }
 
-  if (!token) {
+  if (!authReady) {
+    return (
+      <main className="auth-page">
+        <ThemeToggle />
+        <section className="auth-card">
+          <p>Validando sessão segura...</p>
+        </section>
+      </main>
+    )
+  }
+
+  if (!authenticated) {
     return (
       <main className="auth-page">
         <ThemeToggle />
@@ -221,7 +248,7 @@ function App() {
   const isClientPreview = Boolean(
     previewCompany &&
     sessionStorage.getItem(
-      "printflow_platform_admin_token",
+      "printflow_preview_token",
     ),
   );
 
