@@ -213,3 +213,26 @@ def test_cookie_auth_fallback_and_csrf_contract():
     assert '"X-CSRF-Protection"' in main
     assert '"X-CSRF-Protection": "1"' in api
     assert '"X-CSRF-Protection": "1"' in app
+
+
+def test_frontend_no_longer_persists_primary_jwt_in_localstorage():
+    api = source(
+        "frontend/src/services/api.ts"
+    )
+    app = source(
+        "frontend/src/App.tsx"
+    )
+    control_center = source(
+        "frontend/src/components/ControlCenter.tsx"
+    )
+
+    assert 'localStorage.getItem("printflow_token")' not in api
+    assert 'localStorage.setItem("printflow_token"' not in app
+    assert 'localStorage.removeItem("printflow_token")' not in app
+
+    assert '"printflow_preview_token"' in api
+    assert '"printflow_preview_token"' in app
+    assert '"printflow_preview_token"' in control_center
+
+    assert "setAuthenticated(true)" in app
+    assert 'api("/api/v1/auth/logout", { method: "POST" })' in app
