@@ -593,6 +593,16 @@ export default function ControlCenter() {
             precisam de acompanhamento
           </small>
         </article>
+
+        <article>
+          <span>Prontos comercialmente</span>
+          <strong>
+            {data?.companies_commercial_ready ?? "—"}
+          </strong>
+          <small>
+            sem bloqueios operacionais
+          </small>
+        </article>
       </div>
 
       <section className="control-center-panel">
@@ -623,6 +633,7 @@ export default function ControlCenter() {
             <span>Onboarding</span>
             <span>Impressoras</span>
             <span>Alertas</span>
+            <span>Readiness</span>
             <span>
               Última comunicação
             </span>
@@ -691,6 +702,19 @@ export default function ControlCenter() {
 
                 <span>
                   {company.alerts}
+                </span>
+
+                <span>
+                  <strong>
+                    {company.commercial_ready
+                      ? "● Pronto"
+                      : `${company.commercial_readiness_score}%`}
+                  </strong>
+                  <small>
+                    {company.commercial_ready
+                      ? "Elegível para conversão comercial"
+                      : company.commercial_blockers[0] || "Revisar operação"}
+                  </small>
                 </span>
 
                 <span>
