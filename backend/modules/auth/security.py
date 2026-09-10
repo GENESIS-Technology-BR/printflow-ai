@@ -2,6 +2,7 @@ import base64
 import hashlib
 import hmac
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import jwt
@@ -9,7 +10,7 @@ from jwt import InvalidTokenError
 
 INSECURE_JWT_SECRET = "CHANGE-ME-IN-RENDER"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_MINUTES = 480
+ACCESS_TOKEN_MINUTES = 60
 
 
 def _secret_key() -> str:
@@ -50,15 +51,29 @@ def create_access_token(
     company_id: int,
     expires_minutes: int = ACCESS_TOKEN_MINUTES,
 ) -> str:
-    expires = datetime.now(timezone.utc) + timedelta(
+    issued_at = datetime.now(timezone.utc)
+    expires = issued_at + timedelta(
         minutes=max(int(expires_minutes), 1)
     )
-    payload = {"sub": subject, "company_id": company_id, "exp": expires}
+    payload = {
+        "sub": subject,
+        "company_id": company_id,
+        "iat": issued_at,
+        "exp": expires,
+        "jti": secrets.token_urlsafe(16),
+    }
     return jwt.encode(payload, _secret_key(), algorithm=ALGORITHM)
 
 
 def decode_token(token: str) -> dict:
     try:
-        return jwt.decode(token, _secret_key(), algorithms=[ALGORITHM])
+        return jwt.decode(
+            token,
+            _secret_key(),
+            algorithms=[ALGORITHM],
+            options={
+                "require": ["sub", "company_id", "iat", "exp", "jti"],
+            },
+        )
     except InvalidTokenError as exc:
         raise ValueError("Token inválido ou expirado") from exc
