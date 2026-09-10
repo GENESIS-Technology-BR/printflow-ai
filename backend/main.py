@@ -73,16 +73,32 @@ app.add_middleware(
     allowed_hosts=trusted_hosts,
 )
 
+# Origens oficiais conhecidas. Novas origens podem ser acrescentadas por
+# PRINTFLOW_CORS_ORIGINS sem alterar o código ou abrir CORS globalmente.
 allowed_origins = [
     "https://printflow-web.onrender.com",
     "https://printflow-m84u.onrender.com",
 ]
 
-allow_origin_regex = None
+configured_origins = [
+    item.strip().rstrip("/")
+    for item in os.getenv("PRINTFLOW_CORS_ORIGINS", "").split(",")
+    if item.strip()
+]
+for origin in configured_origins:
+    if origin not in allowed_origins:
+        allowed_origins.append(origin)
 
-if settings.environment.lower() != "production":
+# Compatibilidade controlada com URLs Render do produto Printflow. Mantemos
+# o escopo restrito a hosts que iniciam com "printflow" em onrender.com.
+allow_origin_regex = r"https://printflow(?:-[a-z0-9]+)*\.onrender\.com"
+
+if not production:
     allowed_origins.append("http://localhost:5173")
-    allow_origin_regex = r"https://.*\.app\.github\.dev"
+    allow_origin_regex = (
+        r"(?:https://printflow(?:-[a-z0-9]+)*\.onrender\.com|"
+        r"https://.*\.app\.github\.dev)"
+    )
 
 app.add_middleware(
     CORSMiddleware,
