@@ -221,3 +221,32 @@ def test_frontend_exposes_users_and_client_preview():
     assert "getControlCenterClientUsers" in api
     assert "Voltar ao Control Center" in app
     assert "printflow_platform_admin_token" in app
+
+
+def test_control_center_exposes_commercial_readiness():
+    schema = source(
+        "backend/modules/control_center/schema.py"
+    )
+    router = source(
+        "backend/modules/control_center/router.py"
+    )
+    api = source(
+        "frontend/src/services/api.ts"
+    )
+    component = source(
+        "frontend/src/components/ControlCenter.tsx"
+    )
+
+    for field in (
+        "commercial_readiness_score",
+        "commercial_ready",
+        "commercial_blockers",
+        "companies_commercial_ready",
+    ):
+        assert field in schema
+        assert field in router
+        assert field in api
+
+    assert "_commercial_readiness" in router
+    assert "Prontos comercialmente" in component
+    assert "Elegível para conversão comercial" in component
