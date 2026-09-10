@@ -1,7 +1,9 @@
 import hmac
 import os
+import time
+from collections import defaultdict, deque
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from backend.app.database.session import get_db
@@ -21,6 +23,56 @@ from backend.modules.auth.security import (
 from backend.modules.companies.model import Company
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+LOGIN_ATTEMPT_WINDOW_SECONDS = 300
+LOGIN_ATTEMPT_LIMIT = 5
+_login_attempts: dict[str, deque[float]] = defaultdict(deque)
+
+
+def _login_rate_limit_key(
+    request: Request,
+    email: str,
+) -> str:
+    client_ip = (
+        request.client.host
+        if request.client
+        else "unknown"
+    )
+    return f"{client_ip}:{email.lower().strip()}"
+
+
+def _enforce_login_rate_limit(
+    request: Request,
+    email: str,
+) -> None:
+    now = time.monotonic()
+    key = _login_rate_limit_key(request, email)
+    bucket = _login_attempts[key]
+
+    while (
+        bucket
+        and now - bucket[0]
+        > LOGIN_ATTEMPT_WINDOW_SECONDS
+    ):
+        bucket.popleft()
+
+    if len(bucket) >= LOGIN_ATTEMPT_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Muitas tentativas de login. Tente novamente em alguns minutos.",
+        )
+
+    bucket.append(now)
+
+
+def _clear_login_rate_limit(
+    request: Request,
+    email: str,
+) -> None:
+    _login_attempts.pop(
+        _login_rate_limit_key(request, email),
+        None,
+    )
 
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
@@ -65,6 +117,11 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     db.refresh(user)
     db.refresh(company)
 
+    _clear_login_rate_limit(
+        request,
+        normalized_email,
+    )
+
     return TokenResponse(
         access_token=create_access_token(
             str(user.id),
@@ -78,14 +135,20 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 @router.post("/login", response_model=TokenResponse)
 def login(
     payload: LoginRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ):
+    normalized_email = payload.email.lower().strip()
+    _enforce_login_rate_limit(
+        request,
+        normalized_email,
+    )
 
     user = (
         db.query(User)
         .filter(
             User.email
-            == payload.email.lower().strip()
+            == normalized_email
         )
         .first()
     )
