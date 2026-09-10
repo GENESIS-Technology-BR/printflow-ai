@@ -24,6 +24,22 @@ from backend.modules.companies.model import Company
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+
+def _recovery_key() -> str:
+    key = os.getenv(
+        "PRINTFLOW_RECOVERY_KEY",
+        "",
+    ).strip()
+
+    if len(key) < 32:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Recuperacao desabilitada",
+        )
+
+    return key
+
+
 LOGIN_ATTEMPT_WINDOW_SECONDS = 300
 LOGIN_ATTEMPT_LIMIT = 5
 _login_attempts: dict[str, deque[float]] = defaultdict(deque)
@@ -213,16 +229,7 @@ def recovery_reset_password(
     ),
     db: Session = Depends(get_db),
 ):
-    expected_key = os.getenv(
-        "PRINTFLOW_RECOVERY_KEY",
-        "",
-    )
-
-    if not expected_key:
-        raise HTTPException(
-            status_code=503,
-            detail="Recuperacao desabilitada",
-        )
+    expected_key = _recovery_key()
 
     if not hmac.compare_digest(
         x_recovery_key,
@@ -296,16 +303,18 @@ def recovery_users(
     db: Session = Depends(get_db),
 ):
 
-    expected_key = os.getenv(
-        "PRINTFLOW_RECOVERY_KEY",
-        "",
-    )
+    allow_user_listing = os.getenv(
+        "PRINTFLOW_ALLOW_RECOVERY_USER_LIST",
+        "false",
+    ).strip().lower() in {"1", "true", "yes"}
 
-    if not expected_key:
+    if not allow_user_listing:
         raise HTTPException(
-            status_code=503,
-            detail="Recuperação desabilitada",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Recurso indisponivel",
         )
+
+    expected_key = _recovery_key()
 
     if not hmac.compare_digest(
         x_recovery_key,
