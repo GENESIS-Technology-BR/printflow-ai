@@ -89,6 +89,9 @@ async function request<T>(
       credentials: "include",
       headers: {
         Accept: "application/json",
+        ...(options.method && options.method !== "GET"
+          ? { "X-CSRF-Protection": "1" }
+          : {}),
         ...options.headers,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
