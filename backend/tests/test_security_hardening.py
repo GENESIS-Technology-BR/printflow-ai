@@ -284,3 +284,38 @@ def test_auth_responses_are_not_cached():
 
     assert 'response.headers["Cache-Control"] = "no-store"' in main
     assert 'response.headers["Pragma"] = "no-cache"' in main
+
+
+def test_password_recovery_uses_short_lived_single_use_token(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv(
+        "JWT_SECRET",
+        "security-test-secret-" + ("x" * 48),
+    )
+
+    token = security.create_password_reset_token(
+        subject="123",
+        reset_version=4,
+    )
+    payload = security.decode_password_reset_token(token)
+
+    assert security.PASSWORD_RESET_TOKEN_MINUTES == 15
+    assert payload["sub"] == "123"
+    assert payload["purpose"] == "password_reset"
+    assert payload["reset_version"] == 4
+    assert payload["jti"]
+
+
+def test_recovery_confirm_invalidates_token_and_all_sessions():
+    model = source("backend/modules/auth/model.py")
+    migrations = source("backend/app/database/migrations.py")
+    router = source("backend/modules/auth/router.py")
+
+    assert "password_reset_version" in model
+    assert '"password_reset_version": "INTEGER DEFAULT 0 NOT NULL"' in migrations
+    assert '"/recovery/issue-token"' in router
+    assert '"/recovery/confirm"' in router
+    assert "user.password_reset_version += 1" in router
+    assert "user.session_version += 1" in router
+    assert "Token de recuperação inválido ou já utilizado" in router
