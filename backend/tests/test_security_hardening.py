@@ -103,3 +103,46 @@ def test_recovery_requires_strong_key_and_user_listing_is_off_by_default():
     assert "PRINTFLOW_ALLOW_RECOVERY_USER_LIST" in router
     assert '"false"' in router
     assert "Recurso indisponivel" in router
+
+
+def test_logout_revokes_existing_sessions_by_version():
+    model = source("backend/modules/auth/model.py")
+    migrations = source("backend/app/database/migrations.py")
+    dependencies = source(
+        "backend/modules/auth/dependencies.py"
+    )
+    router = source(
+        "backend/modules/auth/router.py"
+    )
+    security_source = source(
+        "backend/modules/auth/security.py"
+    )
+
+    assert "session_version" in model
+    assert "USER_SECURITY_COLUMNS" in migrations
+    assert "token_session_version" in dependencies
+    assert "Sessão revogada" in dependencies
+    assert '@router.post("/logout")' in router
+    assert "current_user.session_version += 1" in router
+    assert '"session_version"' in security_source
+
+
+def test_password_reset_revokes_previous_sessions():
+    router = source(
+        "backend/modules/auth/router.py"
+    )
+
+    reset_block = router.split(
+        '"/recovery/reset-password"',
+        1,
+    )[1]
+
+    assert "user.session_version += 1" in reset_block
+
+
+def test_preview_token_uses_current_session_version():
+    control_center = source(
+        "backend/modules/control_center/router.py"
+    )
+
+    assert "user.session_version" in control_center
