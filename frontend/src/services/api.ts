@@ -243,6 +243,9 @@ export type ControlCenterCompany = {
   onboarding_state: "awaiting_agent" | "agent_connected" | "pilot_active" | "agent_attention" | "inactive";
   onboarding_progress: number;
   onboarding_next_action: string;
+  commercial_readiness_score: number;
+  commercial_ready: boolean;
+  commercial_blockers: string[];
   active_printers: number;
   online_printers: number;
   offline_printers: number;
@@ -258,6 +261,7 @@ export type ControlCenterOverview = {
   open_alerts: number;
   pilots_ready: number;
   companies_needing_attention: number;
+  companies_commercial_ready: number;
   companies: ControlCenterCompany[];
 };
 
