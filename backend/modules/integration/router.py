@@ -17,6 +17,7 @@ from backend.modules.control_center.router import (
     _onboarding_progress,
     _onboarding_state,
 )
+from backend.modules.integration.openapi_spec import INTEGRATION_OPENAPI
 
 router = APIRouter(prefix="/integration", tags=["Integration"])
 
@@ -112,6 +113,12 @@ def _company_snapshot(db: Session, company: Company) -> dict:
             "blockers": blockers,
         },
     }
+
+
+@router.get("/openapi.json", include_in_schema=False)
+def integration_openapi() -> dict:
+    """Schema público da integração; os dados permanecem protegidos pela chave."""
+    return INTEGRATION_OPENAPI
 
 
 @router.get("/status", dependencies=[Depends(require_integration_key)])
