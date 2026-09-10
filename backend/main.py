@@ -27,6 +27,7 @@ from backend.modules.alerts.router import router as alerts_router
 from backend.modules.control_center.router import router as control_center_router
 from backend.modules.usage.router import router as usage_router
 from backend.modules.intelligence.router import router as intelligence_router
+from backend.modules.integration.router import router as integration_router
 
 try:
     from backend.modules.printers.model import Printer
@@ -112,6 +113,7 @@ app.add_middleware(
         "Accept",
         "X-Recovery-Key",
         "X-CSRF-Protection",
+        "X-Printflow-Integration-Key",
     ],
 )
 
@@ -158,6 +160,7 @@ app.include_router(dashboard_router)
 app.include_router(alerts_router)
 app.include_router(intelligence_router)
 app.include_router(control_center_router, prefix="/api/v1")
+app.include_router(integration_router, prefix="/api/v1")
 
 
 @app.get("/", tags=["Platform"])
