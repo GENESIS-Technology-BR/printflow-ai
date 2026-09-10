@@ -86,6 +86,7 @@ async function request<T>(
     `${API_BASE_URL}${endpoint}`,
     {
       ...options,
+      credentials: "include",
       headers: {
         Accept: "application/json",
         ...options.headers,
@@ -352,6 +353,7 @@ export async function downloadUsageReport(
   const response = await fetch(
     `${API_BASE_URL}/api/v1/usage/export.${format}?${usageReportQuery(filters)}`,
     {
+      credentials: "include",
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
