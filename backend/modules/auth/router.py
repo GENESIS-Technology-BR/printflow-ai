@@ -42,13 +42,16 @@ def _set_auth_cookie(
         "development",
     ).strip().lower() == "production"
 
+    # Frontend e API usam hosts Render distintos. Em produção, a sessão
+    # precisa ser enviada em requisições cross-site; SameSite=None exige
+    # Secure=True e mantém o cookie HttpOnly.
     response.set_cookie(
         key=AUTH_COOKIE_NAME,
         value=token,
         max_age=AUTH_COOKIE_MAX_AGE,
         httponly=True,
         secure=production,
-        samesite="strict",
+        samesite="none" if production else "lax",
         path="/",
     )
 
@@ -56,10 +59,17 @@ def _set_auth_cookie(
 def _clear_auth_cookie(
     response: Response,
 ) -> None:
+    production = os.getenv(
+        "ENVIRONMENT",
+        "development",
+    ).strip().lower() == "production"
+
     response.delete_cookie(
         key=AUTH_COOKIE_NAME,
         path="/",
-        samesite="strict",
+        secure=production,
+        httponly=True,
+        samesite="none" if production else "lax",
     )
 
 
