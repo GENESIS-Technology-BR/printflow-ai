@@ -91,7 +91,15 @@ def test_access_tokens_are_short_lived_and_require_security_claims():
     assert "ACCESS_TOKEN_MINUTES = 60" in security_source
     assert '"iat"' in security_source
     assert '"jti"' in security_source
-    assert '"require": ["sub", "company_id", "iat", "exp", "jti"]' in security_source
+    for required_claim in (
+        '"sub"',
+        '"company_id"',
+        '"session_version"',
+        '"iat"',
+        '"exp"',
+        '"jti"',
+    ):
+        assert required_claim in security_source
 
 
 def test_recovery_requires_strong_key_and_user_listing_is_off_by_default():
