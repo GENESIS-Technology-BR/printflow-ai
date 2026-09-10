@@ -162,3 +162,28 @@ def test_preview_token_uses_current_session_version():
     )
 
     assert "user.session_version" in control_center
+
+
+def test_auth_cookie_is_httponly_secure_in_production():
+    router = source(
+        "backend/modules/auth/router.py"
+    )
+
+    assert 'AUTH_COOKIE_NAME = "printflow_session"' in router
+    assert "httponly=True" in router
+    assert "secure=production" in router
+    assert 'samesite="strict"' in router
+    assert "_set_auth_cookie" in router
+    assert "_clear_auth_cookie" in router
+
+
+def test_frontend_is_ready_to_send_secure_session_cookie():
+    api = source(
+        "frontend/src/services/api.ts"
+    )
+    app = source(
+        "frontend/src/App.tsx"
+    )
+
+    assert 'credentials: "include"' in api
+    assert 'credentials: "include"' in app
