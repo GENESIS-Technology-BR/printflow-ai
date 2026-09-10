@@ -48,11 +48,18 @@ jobs:
           $env:PYTHONPATH = "${{ github.workspace }};${{ github.workspace }}/agent/python"
           python -m pytest -q agent/python/tests backend/tests
 
+      - name: Auditar dependencias Python
+        shell: powershell
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
       - name: Validar frontend
         shell: powershell
         run: |
           Push-Location frontend
           npm ci
+          npm audit --audit-level=high
           npm run build
           Pop-Location
 
