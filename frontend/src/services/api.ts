@@ -81,7 +81,9 @@ async function request<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const token = localStorage.getItem("printflow_token");
+  const previewToken = sessionStorage.getItem(
+    "printflow_preview_token",
+  );
   const response = await fetch(
     `${API_BASE_URL}${endpoint}`,
     {
@@ -93,7 +95,9 @@ async function request<T>(
           ? { "X-CSRF-Protection": "1" }
           : {}),
         ...options.headers,
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(previewToken
+          ? { Authorization: `Bearer ${previewToken}` }
+          : {}),
       },
     },
   );
@@ -352,13 +356,17 @@ export async function downloadUsageReport(
   format: "xlsx" | "pdf",
   filters: UsageReportFilters,
 ): Promise<Blob> {
-  const token = localStorage.getItem("printflow_token");
+  const previewToken = sessionStorage.getItem(
+    "printflow_preview_token",
+  );
   const response = await fetch(
     `${API_BASE_URL}/api/v1/usage/export.${format}?${usageReportQuery(filters)}`,
     {
       credentials: "include",
       headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(previewToken
+          ? { Authorization: `Bearer ${previewToken}` }
+          : {}),
       },
     },
   );
