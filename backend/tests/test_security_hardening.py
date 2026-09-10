@@ -187,3 +187,29 @@ def test_frontend_is_ready_to_send_secure_session_cookie():
 
     assert 'credentials: "include"' in api
     assert 'credentials: "include"' in app
+
+
+def test_cookie_auth_fallback_and_csrf_contract():
+    dependencies = source(
+        "backend/modules/auth/dependencies.py"
+    )
+    main = source(
+        "backend/main.py"
+    )
+    api = source(
+        "frontend/src/services/api.ts"
+    )
+    app = source(
+        "frontend/src/App.tsx"
+    )
+
+    assert 'AUTH_COOKIE_NAME = "printflow_session"' in dependencies
+    assert "HTTPBearer(auto_error=False)" in dependencies
+    assert "request.cookies.get" in dependencies
+    assert 'CSRF_HEADER_NAME = "X-CSRF-Protection"' in dependencies
+    assert 'CSRF_HEADER_VALUE = "1"' in dependencies
+    assert "Proteção CSRF inválida" in dependencies
+
+    assert '"X-CSRF-Protection"' in main
+    assert '"X-CSRF-Protection": "1"' in api
+    assert '"X-CSRF-Protection": "1"' in app
