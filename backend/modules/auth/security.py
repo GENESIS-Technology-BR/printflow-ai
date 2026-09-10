@@ -49,6 +49,7 @@ def verify_password(password: str, encoded: str) -> bool:
 def create_access_token(
     subject: str,
     company_id: int,
+    session_version: int = 0,
     expires_minutes: int = ACCESS_TOKEN_MINUTES,
 ) -> str:
     issued_at = datetime.now(timezone.utc)
@@ -58,6 +59,7 @@ def create_access_token(
     payload = {
         "sub": subject,
         "company_id": company_id,
+        "session_version": int(session_version),
         "iat": issued_at,
         "exp": expires,
         "jti": secrets.token_urlsafe(16),
@@ -72,7 +74,14 @@ def decode_token(token: str) -> dict:
             _secret_key(),
             algorithms=[ALGORITHM],
             options={
-                "require": ["sub", "company_id", "iat", "exp", "jti"],
+                "require": [
+                    "sub",
+                    "company_id",
+                    "session_version",
+                    "iat",
+                    "exp",
+                    "jti",
+                ],
             },
         )
     except InvalidTokenError as exc:
