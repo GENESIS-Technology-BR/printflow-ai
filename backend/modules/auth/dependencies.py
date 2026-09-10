@@ -1,5 +1,5 @@
 import os
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -7,15 +7,48 @@ from backend.app.database.session import get_db
 from backend.modules.auth.model import User
 from backend.modules.auth.security import decode_token
 
-bearer = HTTPBearer(auto_error=True)
+AUTH_COOKIE_NAME = "printflow_session"
+SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
+CSRF_HEADER_NAME = "X-CSRF-Protection"
+CSRF_HEADER_VALUE = "1"
+
+bearer = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer),
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
     db: Session = Depends(get_db),
 ) -> User:
+    bearer_token = (
+        credentials.credentials
+        if credentials is not None
+        else None
+    )
+    cookie_token = request.cookies.get(
+        AUTH_COOKIE_NAME
+    )
+    token = bearer_token or cookie_token
+
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão não informada",
+        )
+
+    if (
+        bearer_token is None
+        and cookie_token is not None
+        and request.method.upper() not in SAFE_METHODS
+        and request.headers.get(CSRF_HEADER_NAME) != CSRF_HEADER_VALUE
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Proteção CSRF inválida",
+        )
+
     try:
-        payload = decode_token(credentials.credentials)
+        payload = decode_token(token)
         user_id = int(payload["sub"])
         token_company_id = int(payload["company_id"])
         token_session_version = int(
