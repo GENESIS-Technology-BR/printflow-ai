@@ -267,3 +267,20 @@ def test_security_gate_blocks_high_dependency_risk():
     assert "actions/setup-python@v6" in workflow
     assert "actions/setup-node@v5" in workflow
     assert "actions/upload-artifact@v5" in workflow
+
+
+def test_production_hardening_disables_docs_and_trusts_hosts():
+    main = source("backend/main.py")
+
+    assert "TrustedHostMiddleware" in main
+    assert "PRINTFLOW_ALLOWED_HOSTS" in main
+    assert 'docs_url=None if production else "/docs"' in main
+    assert 'redoc_url=None if production else "/redoc"' in main
+    assert 'openapi_url=None if production else "/openapi.json"' in main
+
+
+def test_auth_responses_are_not_cached():
+    main = source("backend/main.py")
+
+    assert 'response.headers["Cache-Control"] = "no-store"' in main
+    assert 'response.headers["Pragma"] = "no-cache"' in main
