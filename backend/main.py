@@ -74,6 +74,7 @@ app.add_middleware(
         "Content-Type",
         "Accept",
         "X-Recovery-Key",
+        "X-CSRF-Protection",
     ],
 )
 
