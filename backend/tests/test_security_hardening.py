@@ -172,7 +172,7 @@ def test_auth_cookie_is_httponly_secure_in_production():
     assert 'AUTH_COOKIE_NAME = "printflow_session"' in router
     assert "httponly=True" in router
     assert "secure=production" in router
-    assert 'samesite="strict"' in router
+    assert 'samesite="none" if production else "lax"' in router
     assert "_set_auth_cookie" in router
     assert "_clear_auth_cookie" in router
 
