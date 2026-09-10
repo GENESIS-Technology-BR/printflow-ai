@@ -4,7 +4,8 @@ import hmac
 import os
 from datetime import datetime, timedelta, timezone
 
-from jose import JWTError, jwt
+import jwt
+from jwt import InvalidTokenError
 
 INSECURE_JWT_SECRET = "CHANGE-ME-IN-RENDER"
 ALGORITHM = "HS256"
@@ -59,5 +60,5 @@ def create_access_token(
 def decode_token(token: str) -> dict:
     try:
         return jwt.decode(token, _secret_key(), algorithms=[ALGORITHM])
-    except JWTError as exc:
+    except InvalidTokenError as exc:
         raise ValueError("Token inválido ou expirado") from exc
