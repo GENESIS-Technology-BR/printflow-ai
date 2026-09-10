@@ -28,12 +28,6 @@ type Company = {
   active: boolean
 }
 
-type AuthResponse = {
-  access_token: string
-  user_name: string
-  company_name: string
-}
-
 type Page = "dashboard" | "printers" | "reports" | "company" | "agents" | "control"
 
 function App() {
@@ -111,7 +105,7 @@ function App() {
         }
 
     try {
-      const result: AuthResponse = await api(`/api/v1/auth/${mode}`, {
+      await api(`/api/v1/auth/${mode}`, {
         method: "POST",
         body: JSON.stringify(body),
       })
