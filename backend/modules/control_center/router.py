@@ -58,6 +58,37 @@ def _agent_communication(company: Company) -> tuple[bool, bool, str]:
     return False, False, "offline"
 
 
+def _onboarding_progress(
+    state: str,
+) -> tuple[int, str]:
+    mapping = {
+        "awaiting_agent": (
+            25,
+            "Instalar o Agent e validar a primeira comunicação.",
+        ),
+        "agent_connected": (
+            60,
+            "Aguardar a descoberta das primeiras impressoras.",
+        ),
+        "pilot_active": (
+            100,
+            "Piloto operacional: acompanhar estabilidade e relatórios.",
+        ),
+        "agent_attention": (
+            60,
+            "Restabelecer a comunicação do Agent antes de avançar.",
+        ),
+        "inactive": (
+            0,
+            "Ativar o cliente para iniciar o onboarding.",
+        ),
+    }
+    return mapping.get(
+        state,
+        (10, "Revisar o cadastro do cliente."),
+    )
+
+
 def _onboarding_state(
     company: Company,
     active_printers: int,
@@ -251,6 +282,11 @@ def overview(
             agent_communication_state,
         )
 
+        (
+            onboarding_progress,
+            onboarding_next_action,
+        ) = _onboarding_progress(onboarding_state)
+
         if onboarding_state == "pilot_active":
             pilots_ready += 1
 
@@ -271,6 +307,8 @@ def overview(
                 agent_version=company.agent_version,
                 agent_last_seen=company.agent_last_seen,
                 onboarding_state=onboarding_state,
+                onboarding_progress=onboarding_progress,
+                onboarding_next_action=onboarding_next_action,
                 active_printers=active_printers,
                 online_printers=online_printers,
                 offline_printers=offline_printers,
