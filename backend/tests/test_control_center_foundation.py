@@ -24,7 +24,9 @@ def test_platform_admin_role_is_allowed(monkeypatch):
     assert is_platform_admin(user) is True
 
 
-def test_platform_admin_email_allowlist(monkeypatch):
+def test_platform_admin_email_allowlist_does_not_grant_privilege(
+    monkeypatch,
+):
     monkeypatch.setenv(
         "PRINTFLOW_PLATFORM_ADMIN_EMAILS",
         "administrador@printflow.com.br",
@@ -35,7 +37,7 @@ def test_platform_admin_email_allowlist(monkeypatch):
         email="administrador@printflow.com.br",
     )
 
-    assert is_platform_admin(user) is True
+    assert is_platform_admin(user) is False
 
 
 def test_regular_company_admin_is_not_platform_admin(
