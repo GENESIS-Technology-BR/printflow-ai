@@ -18,6 +18,9 @@ class ControlCenterCompany(BaseModel):
     onboarding_state: str = "created"
     onboarding_progress: int = 0
     onboarding_next_action: str
+    commercial_readiness_score: int = 0
+    commercial_ready: bool = False
+    commercial_blockers: list[str] = []
     active_printers: int
     online_printers: int
     offline_printers: int
@@ -33,6 +36,7 @@ class ControlCenterOverview(BaseModel):
     open_alerts: int
     pilots_ready: int
     companies_needing_attention: int
+    companies_commercial_ready: int
     companies: list[ControlCenterCompany]
 
 
