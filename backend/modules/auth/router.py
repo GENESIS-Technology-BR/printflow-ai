@@ -14,9 +14,14 @@ from backend.modules.auth.schema import (
     MeResponse,
     RegisterRequest,
     SessionResponse,
+    PasswordResetIssueRequest,
+    PasswordResetIssueResponse,
+    PasswordResetConfirmRequest,
 )
 from backend.modules.auth.security import (
     create_access_token,
+    create_password_reset_token,
+    decode_password_reset_token,
     hash_password,
     verify_password,
 )
@@ -417,3 +422,101 @@ def recovery_users(
         ]
     }
 
+
+
+@router.post(
+    "/recovery/issue-token",
+    response_model=PasswordResetIssueResponse,
+    include_in_schema=False,
+)
+def recovery_issue_token(
+    payload: PasswordResetIssueRequest,
+    x_recovery_key: str = Header(
+        ...,
+        alias="X-Recovery-Key",
+    ),
+    db: Session = Depends(get_db),
+):
+    expected_key = _recovery_key()
+
+    if not hmac.compare_digest(
+        x_recovery_key,
+        expected_key,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso negado",
+        )
+
+    user = (
+        db.query(User)
+        .filter(
+            User.email
+            == str(payload.email).lower().strip()
+        )
+        .first()
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario nao encontrado",
+        )
+
+    return PasswordResetIssueResponse(
+        reset_token=create_password_reset_token(
+            str(user.id),
+            user.password_reset_version,
+        ),
+    )
+
+
+@router.post(
+    "/recovery/confirm",
+    include_in_schema=False,
+)
+def recovery_confirm(
+    payload: PasswordResetConfirmRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        token_payload = decode_password_reset_token(
+            payload.reset_token
+        )
+        user_id = int(token_payload["sub"])
+        reset_version = int(
+            token_payload["reset_version"]
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token de recuperação inválido ou expirado",
+        )
+
+    user = (
+        db.query(User)
+        .filter(User.id == user_id)
+        .first()
+    )
+
+    if (
+        user is None
+        or user.password_reset_version
+        != reset_version
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token de recuperação inválido ou já utilizado",
+        )
+
+    user.password_hash = hash_password(
+        payload.new_password
+    )
+    user.password_reset_version += 1
+    user.session_version += 1
+    db.commit()
+
+    return {
+        "status": "ok",
+        "message": "Senha redefinida com sucesso",
+    }
