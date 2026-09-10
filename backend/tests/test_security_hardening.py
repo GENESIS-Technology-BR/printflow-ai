@@ -73,3 +73,11 @@ def test_login_has_basic_bruteforce_protection():
     assert "_enforce_login_rate_limit" in router
     assert "HTTP_429_TOO_MANY_REQUESTS" in router
     assert "_clear_login_rate_limit" in router
+
+
+def test_security_dependencies_avoid_known_blockers():
+    requirements = source("requirements.txt")
+
+    assert "python-jose" not in requirements.lower()
+    assert "PyJWT[crypto]" in requirements
+    assert "pillow>=12.3" in requirements.lower()
