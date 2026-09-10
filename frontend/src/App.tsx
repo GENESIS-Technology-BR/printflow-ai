@@ -50,6 +50,7 @@ function App() {
   async function api(path: string, options: RequestInit = {}) {
     const response = await fetch(`${API_URL}${path}`, {
       ...options,
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
