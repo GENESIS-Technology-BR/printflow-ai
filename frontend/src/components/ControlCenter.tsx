@@ -257,25 +257,12 @@ export default function ControlCenter() {
           company.uuid,
         );
 
-      const currentToken =
-        localStorage.getItem(
-          "printflow_token",
-        );
-
-      if (currentToken) {
-        sessionStorage.setItem(
-          "printflow_platform_admin_token",
-          currentToken,
-        );
-      }
-
       sessionStorage.setItem(
         "printflow_preview_company",
         session.company_name,
       );
-
-      localStorage.setItem(
-        "printflow_token",
+      sessionStorage.setItem(
+        "printflow_preview_token",
         session.access_token,
       );
 
