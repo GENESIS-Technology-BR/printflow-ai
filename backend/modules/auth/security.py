@@ -15,16 +15,21 @@ PASSWORD_RESET_TOKEN_MINUTES = 15
 
 
 def _secret_key() -> str:
-    secret = os.getenv("JWT_SECRET", "").strip()
+    # JWT_SECRET é o nome preferencial. SECRET_KEY permanece aceito para
+    # compatibilidade com ambientes Printflow já provisionados no Render.
+    secret = (
+        os.getenv("JWT_SECRET", "").strip()
+        or os.getenv("SECRET_KEY", "").strip()
+    )
 
     if not secret or secret == INSECURE_JWT_SECRET:
         raise RuntimeError(
-            "JWT_SECRET seguro não configurado."
+            "JWT_SECRET/SECRET_KEY seguro não configurado."
         )
 
     if len(secret) < 32:
         raise RuntimeError(
-            "JWT_SECRET deve possuir pelo menos 32 caracteres."
+            "JWT_SECRET/SECRET_KEY deve possuir pelo menos 32 caracteres."
         )
 
     return secret
