@@ -220,7 +220,8 @@ def test_frontend_exposes_users_and_client_preview():
     assert "createControlCenterClientPreview" in api
     assert "getControlCenterClientUsers" in api
     assert "Voltar ao Control Center" in app
-    assert "printflow_platform_admin_token" in app
+    assert "printflow_preview_token" in app
+    assert "printflow_platform_admin_token" not in app
 
 
 def test_control_center_exposes_commercial_readiness():
