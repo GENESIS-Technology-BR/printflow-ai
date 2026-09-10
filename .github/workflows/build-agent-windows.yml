@@ -201,7 +201,7 @@ jobs:
           }
 
       - name: Publicar pacote
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: PRINTFLOW-Agent-Windows-Build-${{ github.run_number }}
           path: PRINTFLOW-Agent-Windows-Teste.zip
