@@ -16,6 +16,8 @@ class ControlCenterCompany(BaseModel):
     agent_version: str | None
     agent_last_seen: datetime | None
     onboarding_state: str = "created"
+    onboarding_progress: int = 0
+    onboarding_next_action: str
     active_printers: int
     online_printers: int
     offline_printers: int
