@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.config.settings import settings
@@ -50,18 +50,57 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+allowed_origins = [
+    "https://printflow-web.onrender.com",
+    "https://printflow-m84u.onrender.com",
+]
+
+allow_origin_regex = None
+
+if settings.environment.lower() != "production":
+    allowed_origins.append("http://localhost:5173")
+    allow_origin_regex = r"https://.*\.app\.github\.dev"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://printflow-web.onrender.com",
-        "https://printflow-m84u.onrender.com",
-        "http://localhost:5173",
-    ],
-    allow_origin_regex=r"https://.*\.app\.github\.dev",
+    allow_origins=allowed_origins,
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "X-Recovery-Key",
+    ],
 )
+
+
+@app.middleware("http")
+async def security_headers(
+    request: Request,
+    call_next,
+):
+    response = await call_next(request)
+
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Permissions-Policy"] = (
+        "camera=(), microphone=(), geolocation=()"
+    )
+
+    if settings.environment.lower() == "production":
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
+
+    if request.url.path not in {"/docs", "/redoc", "/openapi.json"}:
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+        )
+
+    return response
 
 app.include_router(health_router)
 app.include_router(auth_router, prefix="/api/v1")
