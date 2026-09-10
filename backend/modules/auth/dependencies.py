@@ -18,6 +18,9 @@ def get_current_user(
         payload = decode_token(credentials.credentials)
         user_id = int(payload["sub"])
         token_company_id = int(payload["company_id"])
+        token_session_version = int(
+            payload["session_version"]
+        )
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -32,6 +35,12 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Sessão inválida para esta empresa",
+        )
+
+    if int(user.session_version) != token_session_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão revogada",
         )
 
     return user
