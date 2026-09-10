@@ -83,23 +83,31 @@ def test_security_dependencies_avoid_known_blockers():
     assert "pillow>=12.3" in requirements.lower()
 
 
-def test_access_tokens_are_short_lived_and_require_security_claims():
-    security_source = source(
-        "backend/modules/auth/security.py"
+def test_access_tokens_are_short_lived_and_require_security_claims(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv(
+        "JWT_SECRET",
+        "security-test-secret-" + ("x" * 48),
     )
 
-    assert "ACCESS_TOKEN_MINUTES = 60" in security_source
-    assert '"iat"' in security_source
-    assert '"jti"' in security_source
-    for required_claim in (
-        '"sub"',
-        '"company_id"',
-        '"session_version"',
-        '"iat"',
-        '"exp"',
-        '"jti"',
-    ):
-        assert required_claim in security_source
+    token = security.create_access_token(
+        subject="123",
+        company_id=45,
+        session_version=7,
+    )
+    payload = security.decode_token(token)
+
+    assert security.ACCESS_TOKEN_MINUTES == 60
+    assert payload["sub"] == "123"
+    assert payload["company_id"] == 45
+    assert payload["session_version"] == 7
+    assert payload["iat"] is not None
+    assert payload["exp"] is not None
+    assert payload["jti"]
+
+    ttl_seconds = int(payload["exp"]) - int(payload["iat"])
+    assert 3590 <= ttl_seconds <= 3610
 
 
 def test_recovery_requires_strong_key_and_user_listing_is_off_by_default():
