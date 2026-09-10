@@ -23,6 +23,11 @@ class User(Base):
         default=0,
         nullable=False,
     )
+    password_reset_version: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
