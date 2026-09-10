@@ -81,3 +81,25 @@ def test_security_dependencies_avoid_known_blockers():
     assert "python-jose" not in requirements.lower()
     assert "PyJWT[crypto]" in requirements
     assert "pillow>=12.3" in requirements.lower()
+
+
+def test_access_tokens_are_short_lived_and_require_security_claims():
+    security_source = source(
+        "backend/modules/auth/security.py"
+    )
+
+    assert "ACCESS_TOKEN_MINUTES = 60" in security_source
+    assert '"iat"' in security_source
+    assert '"jti"' in security_source
+    assert '"require": ["sub", "company_id", "iat", "exp", "jti"]' in security_source
+
+
+def test_recovery_requires_strong_key_and_user_listing_is_off_by_default():
+    router = source(
+        "backend/modules/auth/router.py"
+    )
+
+    assert "len(key) < 32" in router
+    assert "PRINTFLOW_ALLOW_RECOVERY_USER_LIST" in router
+    assert '"false"' in router
+    assert "Recurso indisponivel" in router
