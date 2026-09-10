@@ -666,15 +666,20 @@ export default function ControlCenter() {
                 </span>
 
                 <span>
-                  {company.onboarding_state === "pilot_active"
-                    ? "● Piloto ativo"
-                    : company.onboarding_state === "agent_connected"
-                      ? "● Agent conectado"
-                      : company.onboarding_state === "awaiting_agent"
-                        ? "● Aguardando instalação"
-                        : company.onboarding_state === "agent_attention"
-                          ? "● Requer atenção"
-                          : "● Inativo"}
+                  <strong>
+                    {company.onboarding_state === "pilot_active"
+                      ? "● Piloto ativo"
+                      : company.onboarding_state === "agent_connected"
+                        ? "● Agent conectado"
+                        : company.onboarding_state === "awaiting_agent"
+                          ? "● Aguardando instalação"
+                          : company.onboarding_state === "agent_attention"
+                            ? "● Requer atenção"
+                            : "● Inativo"}
+                  </strong>
+                  <small>
+                    {company.onboarding_progress}% · {company.onboarding_next_action}
+                  </small>
                 </span>
 
                 <span>
