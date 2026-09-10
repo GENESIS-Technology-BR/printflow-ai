@@ -13,7 +13,7 @@ from backend.modules.auth.schema import (
     LoginRequest,
     MeResponse,
     RegisterRequest,
-    TokenResponse,
+    SessionResponse,
 )
 from backend.modules.auth.security import (
     create_access_token,
@@ -124,7 +124,7 @@ def _clear_login_rate_limit(
     )
 
 
-@router.post("/register", response_model=TokenResponse, status_code=201)
+@router.post("/register", response_model=SessionResponse, status_code=201)
 def register(
     payload: RegisterRequest,
     response: Response,
@@ -180,14 +180,13 @@ def register(
         access_token,
     )
 
-    return TokenResponse(
-        access_token=access_token,
+    return SessionResponse(
         user_name=user.name,
         company_name=company.name,
     )
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=SessionResponse)
 def login(
     payload: LoginRequest,
     request: Request,
@@ -242,8 +241,7 @@ def login(
         access_token,
     )
 
-    return TokenResponse(
-        access_token=access_token,
+    return SessionResponse(
         user_name=user.name,
         company_name=user.company.name,
     )
