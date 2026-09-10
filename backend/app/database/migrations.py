@@ -38,6 +38,10 @@ OPERATIONAL_ALERT_COLUMNS = {
     "acknowledged_by": "INTEGER",
 }
 
+USER_SECURITY_COLUMNS = {
+    "session_version": "INTEGER DEFAULT 0 NOT NULL",
+}
+
 
 def ensure_printer_columns(engine: Engine) -> None:
     """
@@ -233,3 +237,29 @@ def clean_descriptive_printer_serials(engine: Engine) -> None:
             "[PRINTFLOW DB] Seriais descritivos removidos: "
             f"{result.rowcount}."
         )
+
+
+def ensure_user_security_columns(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "users_v2" not in inspector.get_table_names():
+        return
+
+    existing = {
+        column["name"]
+        for column in inspector.get_columns("users_v2")
+    }
+
+    missing = {
+        name: sql_type
+        for name, sql_type in USER_SECURITY_COLUMNS.items()
+        if name not in existing
+    }
+
+    with engine.begin() as connection:
+        for name, sql_type in missing.items():
+            connection.execute(
+                text(
+                    f"ALTER TABLE users_v2 "
+                    f"ADD COLUMN {name} {sql_type}"
+                )
+            )
