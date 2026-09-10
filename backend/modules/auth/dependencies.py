@@ -17,6 +17,7 @@ def get_current_user(
     try:
         payload = decode_token(credentials.credentials)
         user_id = int(payload["sub"])
+        token_company_id = int(payload["company_id"])
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -26,6 +27,13 @@ def get_current_user(
     user = db.query(User).filter(User.id == user_id, User.active.is_(True)).first()
     if not user:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")
+
+    if int(user.company_id) != token_company_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão inválida para esta empresa",
+        )
+
     return user
 
 
