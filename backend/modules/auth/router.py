@@ -3,7 +3,7 @@ import os
 import time
 from collections import defaultdict, deque
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from backend.app.database.session import get_db
@@ -23,6 +23,39 @@ from backend.modules.auth.security import (
 from backend.modules.companies.model import Company
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+AUTH_COOKIE_NAME = "printflow_session"
+AUTH_COOKIE_MAX_AGE = 60 * 60
+
+
+def _set_auth_cookie(
+    response: Response,
+    token: str,
+) -> None:
+    production = os.getenv(
+        "ENVIRONMENT",
+        "development",
+    ).strip().lower() == "production"
+
+    response.set_cookie(
+        key=AUTH_COOKIE_NAME,
+        value=token,
+        max_age=AUTH_COOKIE_MAX_AGE,
+        httponly=True,
+        secure=production,
+        samesite="strict",
+        path="/",
+    )
+
+
+def _clear_auth_cookie(
+    response: Response,
+) -> None:
+    response.delete_cookie(
+        key=AUTH_COOKIE_NAME,
+        path="/",
+        samesite="strict",
+    )
 
 
 def _recovery_key() -> str:
@@ -92,7 +125,11 @@ def _clear_login_rate_limit(
 
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
-def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+def register(
+    payload: RegisterRequest,
+    response: Response,
+    db: Session = Depends(get_db),
+):
     allow_public_registration = os.getenv(
         "PRINTFLOW_ALLOW_PUBLIC_REGISTRATION",
         "false",
@@ -133,12 +170,18 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     db.refresh(user)
     db.refresh(company)
 
+    access_token = create_access_token(
+        str(user.id),
+        company.id,
+        user.session_version,
+    )
+    _set_auth_cookie(
+        response,
+        access_token,
+    )
+
     return TokenResponse(
-        access_token=create_access_token(
-            str(user.id),
-            company.id,
-            user.session_version,
-        ),
+        access_token=access_token,
         user_name=user.name,
         company_name=company.name,
     )
@@ -148,6 +191,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 def login(
     payload: LoginRequest,
     request: Request,
+    response: Response,
     db: Session = Depends(get_db),
 ):
     normalized_email = payload.email.lower().strip()
@@ -188,12 +232,18 @@ def login(
         normalized_email,
     )
 
+    access_token = create_access_token(
+        str(user.id),
+        user.company_id,
+        user.session_version,
+    )
+    _set_auth_cookie(
+        response,
+        access_token,
+    )
+
     return TokenResponse(
-        access_token=create_access_token(
-            str(user.id),
-            user.company_id,
-            user.session_version,
-        ),
+        access_token=access_token,
         user_name=user.name,
         company_name=user.company.name,
     )
@@ -201,11 +251,13 @@ def login(
 
 @router.post("/logout")
 def logout(
+    response: Response,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     current_user.session_version += 1
     db.commit()
+    _clear_auth_cookie(response)
 
     return {
         "status": "ok",
