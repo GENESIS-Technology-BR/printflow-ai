@@ -81,19 +81,7 @@ def get_current_user(
 
 
 def is_platform_admin(user: User) -> bool:
-    configured = {
-        item.strip().lower()
-        for item in os.getenv(
-            "PRINTFLOW_PLATFORM_ADMIN_EMAILS",
-            "",
-        ).split(",")
-        if item.strip()
-    }
-
-    return (
-        user.role == "platform_admin"
-        or user.email.strip().lower() in configured
-    )
+    return user.role == "platform_admin"
 
 
 def get_platform_admin(
