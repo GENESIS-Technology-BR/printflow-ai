@@ -11,6 +11,7 @@ from jwt import InvalidTokenError
 INSECURE_JWT_SECRET = "CHANGE-ME-IN-RENDER"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_MINUTES = 60
+PASSWORD_RESET_TOKEN_MINUTES = 15
 
 
 def _secret_key() -> str:
@@ -86,3 +87,57 @@ def decode_token(token: str) -> dict:
         )
     except InvalidTokenError as exc:
         raise ValueError("Token inválido ou expirado") from exc
+
+
+def create_password_reset_token(
+    subject: str,
+    reset_version: int,
+    expires_minutes: int = PASSWORD_RESET_TOKEN_MINUTES,
+) -> str:
+    issued_at = datetime.now(timezone.utc)
+    expires = issued_at + timedelta(
+        minutes=max(int(expires_minutes), 1)
+    )
+    payload = {
+        "sub": subject,
+        "purpose": "password_reset",
+        "reset_version": int(reset_version),
+        "iat": issued_at,
+        "exp": expires,
+        "jti": secrets.token_urlsafe(16),
+    }
+    return jwt.encode(
+        payload,
+        _secret_key(),
+        algorithm=ALGORITHM,
+    )
+
+
+def decode_password_reset_token(token: str) -> dict:
+    try:
+        payload = jwt.decode(
+            token,
+            _secret_key(),
+            algorithms=[ALGORITHM],
+            options={
+                "require": [
+                    "sub",
+                    "purpose",
+                    "reset_version",
+                    "iat",
+                    "exp",
+                    "jti",
+                ],
+            },
+        )
+    except InvalidTokenError as exc:
+        raise ValueError(
+            "Token de recuperação inválido ou expirado"
+        ) from exc
+
+    if payload.get("purpose") != "password_reset":
+        raise ValueError(
+            "Token de recuperação inválido"
+        )
+
+    return payload
