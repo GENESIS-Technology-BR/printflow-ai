@@ -1,0 +1,73 @@
+name: PRINTFLOW Production Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "URL base HTTPS da API em produção"
+        required: true
+        type: string
+  workflow_run:
+    workflows:
+      - "Build PRINTFLOW Agent Windows"
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: printflow-production-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke-production:
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        (github.event.workflow_run.conclusion == 'success' && vars.PRINTFLOW_PRODUCTION_URL != '')
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PRODUCTION_URL: ${{ github.event.inputs.base_url || vars.PRINTFLOW_PRODUCTION_URL }}
+
+    steps:
+      - name: Checkout do commit validado
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Configurar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Validar URL de produção
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${PRODUCTION_URL}" ]]; then
+            echo "PRINTFLOW_PRODUCTION_URL não configurada."
+            exit 1
+          fi
+          if [[ "${PRODUCTION_URL}" != https://* ]]; then
+            echo "A URL de produção deve usar HTTPS."
+            exit 1
+          fi
+
+      - name: Aguardar e validar produção
+        run: |
+          python scripts/production_smoke.py "${PRODUCTION_URL}" --attempts 8 --delay 20
+
+      - name: Registrar evidência no summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## PRINTFLOW Production Smoke"
+            echo ""
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Endpoint: \`${PRODUCTION_URL}\`"
+            echo "- Resultado: **${{ job.status }}**"
+          } >> "$GITHUB_STEP_SUMMARY"
