@@ -14,12 +14,13 @@ def dashboard_source() -> str:
     ).read_text(encoding="utf-8")
 
 
-def test_dashboard_is_executive_clean():
+def test_dashboard_uses_sap_fiori_structure():
     source = dashboard_source()
 
-    assert "Saúde do parque" in source
+    assert 'className="sap-dashboard-page"' in source
+    assert "Visão Geral" in source
     assert "Alertas prioritários" in source
-    assert "clean-summary-strip" in source
+    assert 'className="sap-kpi-grid"' in source
     assert "modern-health-gauge" not in source
 
 
@@ -32,18 +33,25 @@ def test_dashboard_no_longer_duplicates_inventory():
     assert "AlertCenter" not in source
 
 
-def test_dashboard_has_four_primary_metrics():
+def test_dashboard_has_five_primary_metrics():
     source = dashboard_source()
 
-    assert source.count("<MetricCard") == 4
+    assert source.count('className="sap-kpi-card"') == 5
+    assert "Total de páginas" in source
+    assert "Impressoras ativas" in source
+    assert "Unidades" in source
+    assert "Contadores válidos" in source
+    assert "Alertas" in source
 
 
 def test_dashboard_final_polish():
     source = dashboard_source()
 
-    assert 'subtitle="Ativas monitoradas"' in source
-    assert "Última coleta:" in source
-    assert "summary.agent.last_seen ||" in source
+    assert "Última atualização:" in source
+    assert "summary.agent.last_seen || summary.generated_at" in source
+    assert "Distribuição por fabricante" in source
+    assert "Impressoras com maior contador" in source
+    assert "Status das impressoras" in source
 
 
 def test_dashboard_has_honest_empty_state():
