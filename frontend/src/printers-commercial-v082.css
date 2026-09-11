@@ -1,0 +1,166 @@
+/* PRINTFLOW v0.8.2 — Impressoras comercial
+   Corrige a homologação visual em modo claro: hierarquia, legibilidade,
+   densidade equilibrada e viewport controlado, sem alterar regras de negócio. */
+
+.printers-workspace-page{
+  padding:16px 22px 22px!important;
+  background:#f4f7fa!important;
+}
+
+.printers-workspace-header{
+  min-height:64px!important;
+  margin:-16px -22px 14px!important;
+  padding:10px 22px!important;
+  background:#0f1d2a!important;
+}
+.printers-workspace-header h1{font-size:22px!important;line-height:1.05!important;color:#f5f9fc!important}
+.printers-workspace-header p{font-size:11px!important;color:#b4c3d0!important}
+
+.printers-workspace .printer-organization-catalog{
+  margin-bottom:12px!important;
+  border:1px solid #d5dee7!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  box-shadow:0 2px 8px rgba(17,40,64,.04)!important;
+}
+.printers-workspace .printer-clean-catalog-summary{
+  min-height:46px!important;
+  padding:8px 14px!important;
+}
+.printers-workspace .printer-clean-eyebrow{font-size:9px!important;color:#58718a!important}
+.printers-workspace .printer-clean-catalog-summary strong{font-size:12px!important;color:#21364a!important}
+.printers-workspace .printer-clean-catalog-summary small{font-size:10px!important;color:#72879a!important}
+.printers-workspace .printer-clean-secondary-button{
+  min-height:30px!important;padding:0 12px!important;
+  background:#11395a!important;color:#fff!important;border-color:#11395a!important;
+  font-size:10px!important;font-weight:700!important;
+}
+
+.printers-workspace .printer-filter-bar{
+  grid-template-columns:minmax(320px,1.7fr) repeat(3,minmax(150px,.72fr)) 86px!important;
+  min-height:46px!important;
+  margin-bottom:12px!important;
+  border:1px solid #d5dee7!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  box-shadow:0 2px 8px rgba(17,40,64,.04)!important;
+}
+.printers-workspace .printer-filter-bar input,
+.printers-workspace .printer-filter-bar select{
+  height:44px!important;min-height:44px!important;
+  padding:0 14px!important;
+  border-right:1px solid #e0e6ec!important;
+  background:#fff!important;color:#263b4f!important;
+  font-size:11px!important;font-weight:500!important;
+}
+.printers-workspace .printer-filter-bar input::placeholder{color:#8495a6!important}
+.printers-workspace .printer-filter-count{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  min-height:44px!important;background:#f7f9fb!important;color:#51687e!important;
+  font-size:10px!important;font-weight:700!important;
+}
+
+.printers-workspace .printer-workspace-columns{
+  grid-template-columns:minmax(340px,2.2fr) minmax(110px,.65fr) minmax(110px,.65fr) minmax(110px,.65fr) minmax(175px,.95fr) 92px!important;
+  min-height:40px!important;
+  padding:0 14px!important;
+  border:1px solid #183c59!important;
+  border-radius:10px 10px 0 0!important;
+  background:#123955!important;
+  color:#eaf3f9!important;
+  font-size:9px!important;font-weight:800!important;letter-spacing:.045em!important;
+}
+
+.printers-workspace .printer-cards{
+  max-height:610px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  border:1px solid #d5dee7!important;
+  border-top:0!important;
+  border-radius:0 0 10px 10px!important;
+  background:#fff!important;
+  box-shadow:0 5px 18px rgba(17,40,64,.06)!important;
+  scrollbar-width:thin;
+}
+.printers-workspace .printer-card{
+  background:#fff!important;
+  border-bottom:1px solid #e5ebf0!important;
+}
+.printers-workspace .printer-card:hover{background:#f7fbfe!important}
+.printers-workspace .printer-card.is-expanded{background:#f8fbfd!important}
+
+.printers-workspace .printer-clean-summary{
+  grid-template-columns:minmax(340px,2.2fr) minmax(110px,.65fr) minmax(110px,.65fr) minmax(110px,.65fr) minmax(175px,.95fr) 92px!important;
+  min-height:62px!important;
+  padding:0 14px!important;
+}
+.printers-workspace .printer-clean-identity{
+  grid-template-columns:38px minmax(0,1fr)!important;
+  gap:11px!important;padding-right:16px!important;
+}
+.printers-workspace .printer-clean-icon{
+  width:36px!important;height:36px!important;
+  border:1px solid #bfd5e5!important;border-radius:8px!important;
+  background:#eaf4fa!important;color:#0b5f93!important;
+  font-size:9px!important;font-weight:800!important;
+}
+.printers-workspace .printer-clean-name-row{gap:8px!important;margin-bottom:2px!important}
+.printers-workspace .printer-clean-name-row>strong{
+  max-width:280px!important;
+  color:#172d40!important;font-size:12px!important;font-weight:750!important;line-height:1.2!important;
+}
+.printers-workspace .printer-clean-model{display:block!important;color:#566d80!important;font-size:10px!important;line-height:1.25!important}
+.printers-workspace .printer-clean-meta-row{margin-top:3px!important;gap:8px!important;color:#73879a!important;font-size:9px!important}
+.printers-workspace .printer-clean-meta-row code{color:#1473a8!important;font-size:9px!important;font-weight:650!important}
+
+.printers-workspace .status-pill{
+  min-height:20px!important;padding:0 7px!important;border-radius:11px!important;
+  font-size:8px!important;font-weight:800!important;
+}
+.printers-workspace .status-pill.status-online{background:#e8f6ee!important;border-color:#9fd5b7!important;color:#13763c!important}
+.printers-workspace .status-pill.status-offline{background:#fdecef!important;border-color:#e8a9b2!important;color:#a32938!important}
+.printers-workspace .status-pill.status-inactive{background:#fff4df!important;border-color:#e7c37c!important;color:#8b5a00!important}
+.printers-workspace .status-pill.status-unknown{background:#edf2f6!important;border-color:#c9d3dd!important;color:#506476!important}
+
+.printers-workspace .printer-clean-stat{
+  display:flex!important;flex-direction:column!important;justify-content:center!important;
+  min-height:48px!important;padding:7px 12px!important;
+  border-left:1px solid #e1e8ee!important;
+}
+.printers-workspace .printer-clean-stat>span{
+  margin-bottom:3px!important;color:#7a8d9f!important;font-size:8px!important;font-weight:750!important;letter-spacing:.03em!important;text-transform:uppercase!important;
+}
+.printers-workspace .printer-clean-stat>strong{
+  color:#173047!important;font-size:11px!important;font-weight:750!important;line-height:1.25!important;
+}
+.printers-workspace .printer-clean-last-seen>strong{font-size:10px!important}
+.printers-workspace .printer-clean-mini-track{width:80px!important;height:4px!important;margin-top:5px!important;background:#dfe7ee!important}
+.printers-workspace .printer-clean-mini-track>span{background:#1f8dca!important}
+.printers-workspace .printer-clean-health .printer-clean-mini-track>span{background:#35a765!important}
+
+.printers-workspace .printer-clean-details-button{
+  min-height:30px!important;padding:0 9px!important;
+  border:1px solid #b9cad8!important;border-radius:7px!important;
+  background:#f4f8fb!important;color:#174f76!important;
+  font-size:9px!important;font-weight:750!important;
+}
+.printers-workspace .printer-clean-details-button:hover{background:#e9f3f9!important;border-color:#8fb3cb!important}
+
+.printers-workspace .printer-clean-details{border-top:1px solid #dce5ec!important;background:#f7f9fb!important}
+.printers-workspace .printer-clean-edit-section{background:#fff!important;border-color:#dce5ec!important}
+.printers-workspace .printer-clean-section-title span{color:#173047!important}
+.printers-workspace .printer-clean-section-title small{color:#71869a!important}
+.printers-workspace .printer-clean-details input,
+.printers-workspace .printer-clean-details select{background:#fff!important;border-color:#cfd9e2!important;color:#243a4e!important}
+.printers-workspace .printer-clean-details button{background:#123955!important;color:#fff!important;border-color:#123955!important}
+.printers-workspace .printer-clean-technical-grid>div{background:#f8fafc!important;border-color:#dde5ec!important}
+.printers-workspace .printer-clean-technical-grid span{color:#71869a!important}
+.printers-workspace .printer-clean-technical-grid strong{color:#20374b!important}
+
+@media(max-width:1350px){
+  .printers-workspace .printer-workspace-columns,
+  .printers-workspace .printer-clean-summary{
+    grid-template-columns:minmax(300px,1.9fr) 96px 96px 96px 150px 82px!important;
+  }
+  .printers-workspace .printer-filter-bar{grid-template-columns:minmax(250px,1.4fr) repeat(3,minmax(120px,.72fr)) 76px!important}
+}
