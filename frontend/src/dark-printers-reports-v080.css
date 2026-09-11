@@ -1,0 +1,59 @@
+/* PRINTFLOW v0.8.0 — Dark polish: Printers + Reports */
+html[data-theme="dark"] .printers-workspace,
+html[data-theme="dark"] .printers-workspace-page,
+html[data-theme="dark"] .reports-page{background:#0f151c!important;color:#eaf0f6!important}
+
+html[data-theme="dark"] .printers-workspace-header,
+html[data-theme="dark"] .reports-header{background:#131b24!important;border-color:#263442!important}
+html[data-theme="dark"] .printers-workspace-header h1,
+html[data-theme="dark"] .reports-header h1{color:#f4f8fb!important}
+html[data-theme="dark"] .printers-workspace-header p,
+html[data-theme="dark"] .reports-header p{color:#93a4b5!important}
+
+html[data-theme="dark"] .printers-workspace .printer-organization-catalog,
+html[data-theme="dark"] .printers-workspace .printer-filter-bar,
+html[data-theme="dark"] .printers-workspace .printer-cards,
+html[data-theme="dark"] .reports-intro,
+html[data-theme="dark"] .reports-period-bar,
+html[data-theme="dark"] .reports-scope-bar,
+html[data-theme="dark"] .reports-filters,
+html[data-theme="dark"] .reports-metrics,
+html[data-theme="dark"] .reports-table-card{background:#151e27!important;border-color:#2b3948!important;box-shadow:none!important}
+
+html[data-theme="dark"] .printers-workspace .printer-filter-bar input,
+html[data-theme="dark"] .printers-workspace .printer-filter-bar select,
+html[data-theme="dark"] .reports-filters input,
+html[data-theme="dark"] .reports-filters select{background:#111922!important;color:#e8eef4!important;border-color:#314152!important}
+
+html[data-theme="dark"] .printers-workspace .printer-card{background:#151e27!important;border-color:#263544!important}
+html[data-theme="dark"] .printers-workspace .printer-card:hover{background:#192531!important}
+html[data-theme="dark"] .printers-workspace .printer-clean-name-row>strong,
+html[data-theme="dark"] .printers-workspace .printer-clean-stat>strong,
+html[data-theme="dark"] .reports-intro h2,
+html[data-theme="dark"] .reports-table-title h3,
+html[data-theme="dark"] .reports-table td strong{color:#f2f6fa!important}
+html[data-theme="dark"] .printers-workspace .printer-clean-model,
+html[data-theme="dark"] .printers-workspace .printer-clean-meta-row,
+html[data-theme="dark"] .printers-workspace .printer-clean-stat>span,
+html[data-theme="dark"] .reports-intro p,
+html[data-theme="dark"] .reports-filters label,
+html[data-theme="dark"] .reports-table-title>span{color:#8fa1b2!important}
+
+html[data-theme="dark"] .printers-workspace .printer-clean-icon{background:#122334!important;border-color:#2f5f88!important;color:#64b5ff!important}
+html[data-theme="dark"] .printers-workspace .printer-clean-stat{border-color:#2a3947!important}
+html[data-theme="dark"] .printers-workspace .printer-clean-mini-track{background:#253441!important}
+html[data-theme="dark"] .printers-workspace .printer-clean-mini-track>span{background:#2f9df4!important}
+html[data-theme="dark"] .printers-workspace .printer-cards::before{background:#111922!important;color:#8598ab!important;border-color:#2a3947!important}
+
+html[data-theme="dark"] .reports-intro{border-left-color:#2f9df4!important}
+html[data-theme="dark"] .reports-period-bar,
+html[data-theme="dark"] .reports-scope-bar{background:#121a23!important}
+html[data-theme="dark"] .reports-metrics article{background:#151e27!important;border-color:#293847!important}
+html[data-theme="dark"] .reports-metrics span{color:#91a3b4!important}
+html[data-theme="dark"] .reports-metrics strong{color:#f4f8fb!important}
+html[data-theme="dark"] .reports-table-title{background:#121a23!important;border-color:#2a3947!important}
+html[data-theme="dark"] .reports-table th{background:#182536!important;color:#a9bbcd!important;border-color:#304154!important}
+html[data-theme="dark"] .reports-table td{background:#141e28!important;color:#d9e3ec!important;border-color:#263645!important}
+html[data-theme="dark"] .reports-table tbody tr:hover td{background:#192734!important}
+html[data-theme="dark"] .reports-table td.pages,
+html[data-theme="dark"] .reports-table td.cost{color:#63b3ff!important}
