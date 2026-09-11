@@ -12,40 +12,20 @@ from backend.app.database.connection import Base
 class Printer(Base):
     __tablename__ = "printers"
     __table_args__ = (
-        UniqueConstraint(
-            "company_id",
-            "ip",
-            name="uq_printers_company_ip",
-        ),
+        UniqueConstraint("company_id", "ip", name="uq_printers_company_ip"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    company_id: Mapped[int] = mapped_column(
-        ForeignKey("companies_v2.id"),
-        index=True
-    )
-
-    uuid: Mapped[str] = mapped_column(
-        String(36), unique=True, index=True, default=lambda: str(uuid4())
-    )
+    company_id: Mapped[int] = mapped_column(ForeignKey("companies_v2.id"), index=True)
+    uuid: Mapped[str] = mapped_column(String(36), unique=True, index=True, default=lambda: str(uuid4()))
     ip: Mapped[str] = mapped_column(String(45), index=True)
     name: Mapped[str] = mapped_column(String(150), default="Impressora")
     hostname: Mapped[str | None] = mapped_column(String(255), nullable=True)
     custom_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
     unit_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
     sector_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
-
-    unit_id: Mapped[int | None] = mapped_column(
-        ForeignKey("company_units.id"),
-        nullable=True,
-        index=True,
-    )
-    sector_id: Mapped[int | None] = mapped_column(
-        ForeignKey("company_sectors.id"),
-        nullable=True,
-        index=True,
-    )
-
+    unit_id: Mapped[int | None] = mapped_column(ForeignKey("company_units.id"), nullable=True, index=True)
+    sector_id: Mapped[int | None] = mapped_column(ForeignKey("company_sectors.id"), nullable=True, index=True)
     manufacturer: Mapped[str | None] = mapped_column(String(100), nullable=True)
     model: Mapped[str | None] = mapped_column(String(180), nullable=True)
     status: Mapped[str] = mapped_column(String(30), default="online")
@@ -54,10 +34,9 @@ class Printer(Base):
     page_count_source: Mapped[str | None] = mapped_column(String(60), nullable=True)
     page_count_confidence: Mapped[int | None] = mapped_column(Integer, nullable=True)
     page_count_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
-    cost_per_page: Mapped[Decimal | None] = mapped_column(
-        Numeric(10, 4),
-        nullable=True,
-    )
+    cost_per_page: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
+    cost_model: Mapped[str] = mapped_column(String(30), default="per_page")
+    fixed_monthly_cost: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     serial: Mapped[str | None] = mapped_column(String(180), nullable=True)
     serial_source: Mapped[str | None] = mapped_column(String(60), nullable=True)
     serial_confidence: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -66,9 +45,5 @@ class Printer(Base):
     health_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     health_status: Mapped[str | None] = mapped_column(String(30), nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
-    last_seen: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc)
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc)
-    )
+    last_seen: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
