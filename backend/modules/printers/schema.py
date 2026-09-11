@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class PrinterBase(BaseModel):
@@ -31,14 +31,14 @@ class PrinterUpsert(PrinterBase):
 
 class PrinterResponse(PrinterBase):
     model_config = ConfigDict(from_attributes=True)
-
     custom_name: str | None = None
     unit_name: str | None = None
     sector_name: str | None = None
     unit_id: int | None = None
     sector_id: int | None = None
     cost_per_page: Decimal | None = None
-
+    cost_model: str = "per_page"
+    fixed_monthly_cost: Decimal | None = None
     id: int
     uuid: str
     active: bool
@@ -47,31 +47,24 @@ class PrinterResponse(PrinterBase):
 
 
 class PrinterCustomNameUpdate(BaseModel):
-    custom_name: str | None = Field(
-        default=None,
-        max_length=150,
-    )
+    custom_name: str | None = Field(default=None, max_length=150)
 
 
 class PrinterOrganizationUpdate(BaseModel):
-    unit_name: str | None = Field(
-        default=None,
-        max_length=120,
-    )
-
-    sector_name: str | None = Field(
-        default=None,
-        max_length=120,
-    )
+    unit_name: str | None = Field(default=None, max_length=120)
+    sector_name: str | None = Field(default=None, max_length=120)
 
 
 class PrinterCostUpdate(BaseModel):
-    cost_per_page: Decimal | None = Field(
-        default=None,
-        ge=Decimal("0"),
-        le=Decimal("100"),
-        decimal_places=4,
-    )
+    cost_per_page: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("100"), decimal_places=4)
+    cost_model: str = Field(default="per_page", pattern="^(per_page|fixed_monthly)$")
+    fixed_monthly_cost: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1000000"), decimal_places=2)
+
+    @model_validator(mode="after")
+    def validate_cost_model(self):
+        if self.cost_model == "fixed_monthly" and self.fixed_monthly_cost is None:
+            raise ValueError("Informe o custo fixo mensal.")
+        return self
 
 
 class AgentHeartbeat(BaseModel):
