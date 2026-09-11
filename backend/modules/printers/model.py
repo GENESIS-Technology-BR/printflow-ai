@@ -35,7 +35,12 @@ class Printer(Base):
     page_count_confidence: Mapped[int | None] = mapped_column(Integer, nullable=True)
     page_count_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
     cost_per_page: Mapped[Decimal | None] = mapped_column(Numeric(10, 4), nullable=True)
-    cost_model: Mapped[str] = mapped_column(String(30), default="per_page")
+    cost_model: Mapped[str] = mapped_column(
+        String(30),
+        default="per_page",
+        server_default="per_page",
+        nullable=False,
+    )
     fixed_monthly_cost: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     serial: Mapped[str | None] = mapped_column(String(180), nullable=True)
     serial_source: Mapped[str | None] = mapped_column(String(60), nullable=True)
