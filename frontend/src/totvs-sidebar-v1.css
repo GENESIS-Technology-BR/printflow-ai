@@ -1,6 +1,7 @@
-/* PRINTFLOW Sidebar V1 — compact enterprise navigation inspired by ERP density */
-.shell{grid-template-columns:190px minmax(0,1fr)!important}
-.shell>aside{width:190px!important;padding:10px 8px 12px!important;background:#f4f5f6!important;border-right:1px solid #d9dde2!important;box-shadow:none!important}
+/* PRINTFLOW Sidebar V2 — compact enterprise navigation with fixed structural alignment */
+:root{--pf-sidebar-width:190px!important}
+.shell{grid-template-columns:var(--pf-sidebar-width) minmax(0,1fr)!important}
+.shell>aside{width:var(--pf-sidebar-width)!important;min-width:var(--pf-sidebar-width)!important;max-width:var(--pf-sidebar-width)!important;padding:10px 8px 12px!important;background:#f4f5f6!important;border-right:1px solid #d9dde2!important;box-shadow:none!important}
 .shell>aside .brand{min-height:64px!important;padding:8px 8px 12px!important;margin:0 0 8px!important;border-bottom:1px solid #dfe3e7!important;display:flex!important;align-items:center!important;gap:9px!important}
 .shell>aside .brand img{width:31px!important;height:31px!important;flex:0 0 31px!important}
 .shell>aside .brand-copy strong{font-size:16px!important;line-height:1.05!important;color:#172a43!important}.shell>aside .brand-copy span{font-size:8px!important;letter-spacing:.08em!important;color:#758397!important}
@@ -10,9 +11,11 @@
 .shell>aside nav button:hover{background:#e8ebee!important;color:#075b9c!important}.shell>aside nav button.active{background:#e1e5e9!important;color:#075b9c!important;border-left-color:#0783c6!important;font-weight:750!important}
 .shell>aside .nav-icon{width:17px!important;min-width:17px!important;text-align:center!important;font-size:13px!important;color:#52708d!important}.shell>aside nav button.active .nav-icon{color:#0783c6!important}
 .shell>aside .logout{min-height:34px!important;height:34px!important;margin-top:auto!important;padding:0 10px!important;border:1px solid #d4d9df!important;border-radius:2px!important;background:#fafafa!important;color:#40566e!important;font-size:10px!important;box-shadow:none!important}.shell>aside .logout:hover{background:#e8ebee!important}
-/* Search-like visual header to mirror dense ERP navigation without changing routing */
 .shell>aside nav::before{content:'Pesquisar no menu…';display:flex;align-items:center;height:32px;margin:0 0 7px;padding:0 10px;border:1px solid #cfd5dc;border-radius:3px;background:#fff;color:#8995a3;font-size:10px;box-shadow:inset 0 1px 1px rgba(0,0,0,.02)}
-.workspace-topbar{left:190px!important}
-.dashboard{margin-left:0!important}
-@media(max-width:1100px){.shell{grid-template-columns:170px minmax(0,1fr)!important}.shell>aside{width:170px!important}.workspace-topbar{left:170px!important}}
-@media(max-width:760px){.shell{grid-template-columns:1fr!important}.shell>aside{width:100%!important;position:relative!important}.workspace-topbar{left:0!important}.shell>aside nav::before{display:none!important}}
+/* Keep all structural columns on the same 190px reference */
+.workspace-topbar{left:auto!important;margin-left:0!important;grid-column:2!important;width:auto!important}
+.shell>main.dashboard{grid-column:2!important;margin-left:0!important;width:auto!important;min-width:0!important}
+.shell>main.dashboard:not(.printers-workspace){padding-left:24px!important;padding-right:24px!important}
+@media(min-width:1440px){:root{--pf-sidebar-width:190px!important}.shell{grid-template-columns:190px minmax(0,1fr)!important}.shell>aside{width:190px!important;min-width:190px!important;max-width:190px!important}.workspace-topbar{grid-column:2!important}.shell>main.dashboard{grid-column:2!important}.shell>main.dashboard:not(.printers-workspace){padding-left:24px!important;padding-right:24px!important}}
+@media(max-width:1100px) and (min-width:761px){:root{--pf-sidebar-width:170px!important}.shell{grid-template-columns:170px minmax(0,1fr)!important}.shell>aside{width:170px!important;min-width:170px!important;max-width:170px!important}}
+@media(max-width:760px){.shell{grid-template-columns:1fr!important}.shell>aside{width:100%!important;min-width:0!important;max-width:none!important;position:relative!important}.workspace-topbar{left:auto!important}.shell>aside nav::before{display:none!important}}
