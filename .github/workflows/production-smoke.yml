@@ -5,7 +5,8 @@ on:
     inputs:
       base_url:
         description: "URL base HTTPS da API em produção"
-        required: true
+        required: false
+        default: "https://printflow-api-genesis.onrender.com"
         type: string
   workflow_run:
     workflows:
@@ -25,12 +26,12 @@ jobs:
     if: >-
       ${{
         github.event_name == 'workflow_dispatch' ||
-        (github.event.workflow_run.conclusion == 'success' && vars.PRINTFLOW_PRODUCTION_URL != '')
+        github.event.workflow_run.conclusion == 'success'
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      PRODUCTION_URL: ${{ github.event.inputs.base_url || vars.PRINTFLOW_PRODUCTION_URL }}
+      PRODUCTION_URL: ${{ github.event.inputs.base_url || vars.PRINTFLOW_PRODUCTION_URL || 'https://printflow-api-genesis.onrender.com' }}
 
     steps:
       - name: Checkout do commit validado
@@ -47,10 +48,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -z "${PRODUCTION_URL}" ]]; then
-            echo "PRINTFLOW_PRODUCTION_URL não configurada."
-            exit 1
-          fi
           if [[ "${PRODUCTION_URL}" != https://* ]]; then
             echo "A URL de produção deve usar HTTPS."
             exit 1
