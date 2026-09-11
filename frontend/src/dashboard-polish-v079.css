@@ -1,0 +1,22 @@
+/* PRINTFLOW Dashboard polish v0.7.9 */
+.sap-dashboard-page{max-width:100%;box-sizing:border-box}
+.sap-page-head{align-items:flex-end!important}.sap-page-head>div:first-child{min-width:0}.sap-page-actions{align-self:flex-end!important}
+.sap-kpi-card{align-items:center!important}.sap-kpi-card>div{align-content:center!important}.sap-kpi-card strong{letter-spacing:-.02em}
+.sap-panel>header{align-items:center!important}.sap-panel>header>div{min-width:0}.sap-panel>header h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sap-bars,.sap-unit-list{align-content:center}
+.sap-bar-row,.sap-unit-list>div{min-height:18px}
+.sap-status-panel .sap-donut-wrap{grid-template-columns:96px minmax(120px,1fr)!important;gap:18px!important;padding:12px 16px!important;align-items:center!important}
+.sap-status-list{gap:9px!important;align-content:center!important}
+.sap-status-list>span{display:grid!important;grid-template-columns:8px minmax(74px,1fr) auto!important;column-gap:8px!important;align-items:center!important;min-height:18px!important;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+.sap-status-list>span>i{display:block!important;width:8px!important;min-width:8px!important;max-width:8px!important;height:8px!important;min-height:8px!important;max-height:8px!important;padding:0!important;margin:0!important;border:0!important;border-radius:50%!important;box-shadow:none!important;outline:none!important;line-height:0!important;overflow:hidden!important}
+.sap-status-list>span>i.online{background:#16a34a!important}.sap-status-list>span>i.offline{background:#dc2626!important}.sap-status-list>span>i.unknown{background:#94a3b8!important}
+.sap-status-list>span>strong{justify-self:end!important;font-variant-numeric:tabular-nums;font-size:10px!important;color:#18324d!important}
+.sap-table th,.sap-table td{vertical-align:middle!important}.sap-table tbody tr:hover{background:#f8fbfe}.sap-table td:last-child{overflow:visible!important}
+.sap-table td .sap-status-dot{display:inline-block!important;vertical-align:middle!important;width:8px!important;min-width:8px!important;max-width:8px!important;height:8px!important;min-height:8px!important;max-height:8px!important;padding:0!important;margin:0 6px 0 0!important;border:0!important;border-radius:50%!important;box-shadow:none!important;outline:none!important}
+.sap-table td .sap-status-dot.online{background:#16a34a!important}.sap-table td .sap-status-dot.offline{background:#dc2626!important}.sap-table td .sap-status-dot.unknown,.sap-table td .sap-status-dot.inactive{background:#94a3b8!important}
+.sap-agent-card{min-height:calc(100% - 43px);box-sizing:border-box}.sap-agent-card>span{display:block!important;flex:0 0 10px!important;width:10px!important;min-width:10px!important;max-width:10px!important;height:10px!important;min-height:10px!important;max-height:10px!important;padding:0!important;margin:0!important;border:0!important;border-radius:50%!important;outline:none!important}.sap-agent-card>span.online{background:#16a34a!important;box-shadow:0 0 0 4px rgba(22,163,74,.12)!important}.sap-agent-card>span.offline{background:#dc2626!important;box-shadow:0 0 0 4px rgba(220,38,38,.11)!important}
+.sap-unit-list>div>div,.sap-bar-row>div{background:#edf2f6!important}.sap-unit-list i,.sap-bar-row i{min-width:6px}
+.sap-dashboard-grid-middle .sap-panel-wide,.sap-dashboard-grid-top .sap-panel-wide{min-width:0}
+.sap-no-alerts{align-content:center!important;min-height:calc(100% - 43px);box-sizing:border-box}
+@media(min-width:1201px){.sap-dashboard-page{padding-left:24px!important;padding-right:24px!important}.sap-page-head{min-height:54px!important}.sap-kpi-grid{gap:10px!important}.sap-dashboard-grid{gap:10px!important}}
+@media(min-width:1600px){.sap-dashboard-page{padding-left:28px!important;padding-right:28px!important}.sap-status-panel .sap-donut-wrap{grid-template-columns:104px minmax(140px,1fr)!important;gap:22px!important}}
