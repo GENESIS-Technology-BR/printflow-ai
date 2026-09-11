@@ -50,3 +50,5 @@ import './fixed-workspace-v076.css'
 import './shell-refine-v077.css'
 
 import './dashboard-single-screen-v078.css'
+
+import './login-enterprise-v2.css'
