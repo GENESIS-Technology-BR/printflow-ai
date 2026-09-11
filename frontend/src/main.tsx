@@ -48,3 +48,5 @@ import './reports-commercial-rc-v075.css'
 import './fixed-workspace-v076.css'
 
 import './shell-refine-v077.css'
+
+import './dashboard-single-screen-v078.css'
