@@ -6,6 +6,7 @@ type Theme = "light" | "dark";
 const STORAGE_KEY = "printflow_theme";
 
 const HEADER_TARGETS = [
+  ".workspace-user",
   ".modern-dashboard-actions",
   ".control-center-actions",
   ".reports-header",
