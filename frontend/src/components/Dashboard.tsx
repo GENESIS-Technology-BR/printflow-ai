@@ -164,6 +164,9 @@ export default function Dashboard({
     ? Math.round((summary.page_count_known / summary.active_printers) * 100)
     : 0;
 
+  const hasMonitoringData =
+    summary.active_printers > 0 || summary.agent.last_seen !== null;
+
   const lastUpdate = summary.agent.last_seen || summary.generated_at;
 
   return (
@@ -321,7 +324,16 @@ export default function Dashboard({
               ))}
             </div>
           ) : (
-            <div className="sap-no-alerts"><strong>Tudo certo por aqui.</strong><span>Nenhuma ação imediata necessária.</span></div>
+            <div className="sap-no-alerts">
+              <strong>
+                {hasMonitoringData ? "Tudo certo por aqui." : "Monitoramento ainda não iniciado."}
+              </strong>
+              <span>
+                {hasMonitoringData
+                  ? "Nenhuma ação imediata necessária."
+                  : "Instale e conecte o Agent para começar."}
+              </span>
+            </div>
           )}
         </article>
       </div>
