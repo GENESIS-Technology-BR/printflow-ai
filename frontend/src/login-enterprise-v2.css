@@ -1,24 +1,228 @@
-/* PRINTFLOW Login V2 — corporate ERP / Protheus-inspired */
-.auth-page{position:relative;min-height:100vh;width:100%;display:grid;place-items:center;padding:76px 24px 82px;overflow:hidden;background:#f7f8fa;color:#172a43}
-.auth-page::before{content:"";position:absolute;z-index:0;width:min(46vw,620px);aspect-ratio:1;right:-7vw;top:50%;transform:translateY(-45%) rotate(-8deg);background:url('/brand/printflow-mark.svg') center/contain no-repeat;opacity:.035;filter:grayscale(1);pointer-events:none}
-.auth-page::after{content:"© 2026 Printflow. Todos os direitos reservados.";position:absolute;z-index:2;left:50%;bottom:24px;transform:translateX(-50%);color:#7f8da0;font-size:12px;white-space:nowrap}
-.auth-card{position:relative;z-index:2;width:min(470px,calc(100vw - 32px));margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
-.auth-card::before{content:"";position:fixed;top:30px;left:38px;width:205px;height:50px;background:url('/brand/printflow-mark.svg') left center/46px 46px no-repeat;pointer-events:none}
-.auth-card::after{content:"Printflow\A OPERATIONS PLATFORM";white-space:pre;position:fixed;top:31px;left:96px;color:#172a43;font-size:25px;font-weight:800;line-height:1.05;letter-spacing:-.025em;pointer-events:none}
-.auth-brand-mark{display:block;width:70px;height:70px;margin:0 auto 16px}
-.auth-card h1{margin:0;text-align:center;color:#172a43;font-size:44px;font-weight:800;letter-spacing:-.045em;line-height:1.05}
-.auth-card>p{margin:8px 0 24px;text-align:center;color:#69798f;font-size:15px;line-height:1.5}
-.auth-card>p::after{content:"\A\A Bem-vindo\A Acesse sua conta para continuar";white-space:pre-line;display:block;color:#172a43;font-size:26px;font-weight:400;line-height:1.45}
-.auth-card .tabs{display:flex;justify-content:center;margin:0 0 14px;padding:0;border:0;background:transparent;box-shadow:none}
-.auth-card .tabs button{min-height:auto;padding:0;border:0!important;background:transparent!important;color:#0a5da8;box-shadow:none!important;font-size:12px;font-weight:700}
-.auth-card .tabs button.active{display:none}.auth-card .tabs button:hover{text-decoration:underline}
-.auth-card form{display:grid;gap:15px}.auth-card label{display:grid;gap:7px;color:#18283b;font-size:13px;font-weight:750}
-.auth-card input{width:100%;min-height:48px;padding:11px 14px 11px 48px;border:1px solid #8995a3;border-radius:4px;outline:none;background-color:#fff;color:#172a43;font-size:14px;box-shadow:none;transition:border-color .15s ease,box-shadow .15s ease}
-.auth-card input[name='email']{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%230a5da8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21a8 8 0 0 0-16 0'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:14px center}
-.auth-card input[name='password']{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%230a5da8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='10' width='14' height='10' rx='2'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:14px center}
-.auth-card input:hover{border-color:#657384}.auth-card input:focus{border-color:#0a6ed1;box-shadow:0 0 0 2px rgba(10,110,209,.10)}
-.auth-card .primary{min-height:48px;margin-top:0;border:0;border-radius:4px;background:#0a5da8;color:#fff;box-shadow:none;font-size:14px;font-weight:800}.auth-card .primary:hover:not(:disabled){background:#084f91;box-shadow:none}.auth-card .primary:disabled{opacity:.58;cursor:wait}
-.auth-card .message{margin-top:14px;padding:10px 12px;border:1px solid #e4b9b6;border-radius:4px;background:#fff6f5;color:#b42318;font-size:12px}
-.auth-page .theme-toggle{position:fixed!important;top:24px!important;right:30px!important;z-index:10!important}
-@media(min-width:900px){.auth-card{transform:translateY(-1vh)}}
-@media(max-width:760px){.auth-page{padding:54px 18px 72px}.auth-page::before{width:82vw;right:-32vw;opacity:.025}.auth-card::before,.auth-card::after{display:none}.auth-brand-mark{width:60px;height:60px}.auth-card h1{font-size:38px}.auth-card>p::after{font-size:22px}.auth-page .theme-toggle{top:14px!important;right:14px!important}}
+/* PRINTFLOW Login V3 — visual corporativo inspirado no Protheus/TOTVS */
+.auth-page{
+  position:relative;
+  min-height:100vh;
+  width:100%;
+  display:grid;
+  place-items:center;
+  padding:54px 24px 78px;
+  overflow:hidden;
+  background:#f7f8fa;
+  color:#172a43;
+}
+
+.auth-page::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  width:min(44vw,650px);
+  aspect-ratio:1;
+  right:-8vw;
+  top:51%;
+  transform:translateY(-42%) rotate(-8deg);
+  background:url('/brand/printflow-mark.svg') center/contain no-repeat;
+  opacity:.035;
+  filter:grayscale(1);
+  pointer-events:none;
+}
+
+.auth-page::after{
+  content:"© 2026 PrintFlow. Todos os direitos reservados.";
+  position:absolute;
+  z-index:2;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%);
+  color:#7f8da0;
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.auth-card{
+  position:relative;
+  z-index:2;
+  width:min(500px,calc(100vw - 34px));
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  backdrop-filter:none;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+}
+
+/* Somente a marca central, como no layout de referência */
+.auth-card::before,
+.auth-card::after{
+  display:none!important;
+  content:none!important;
+}
+
+.auth-brand-mark{
+  display:block;
+  width:76px;
+  height:76px;
+  margin:0 auto 10px;
+  object-fit:contain;
+}
+
+.auth-card h1{
+  margin:0;
+  min-height:48px;
+  text-align:center;
+  color:#172a43;
+  font-size:0;
+  font-weight:800;
+  line-height:1;
+}
+
+.auth-card h1::before{
+  content:"PrintFlow";
+  display:block;
+  font-size:44px;
+  font-weight:800;
+  letter-spacing:-.045em;
+  line-height:1.08;
+}
+
+.auth-card>p{
+  order:2;
+  margin:5px 0 0;
+  text-align:center;
+  color:#6f7f93;
+  font-size:15px;
+  line-height:1.45;
+}
+
+.auth-card>p::after{
+  content:"\A\A Boas-vindas";
+  display:block;
+  white-space:pre-line;
+  margin-top:22px;
+  color:#0a5da8;
+  font-size:26px;
+  font-weight:400;
+  line-height:1.25;
+}
+
+.auth-card form{
+  order:4;
+  width:100%;
+  margin-top:28px;
+  display:grid;
+  gap:15px;
+}
+
+.auth-card label{
+  display:grid;
+  gap:7px;
+  color:#18283b;
+  font-size:13px;
+  font-weight:750;
+}
+
+.auth-card input{
+  width:100%;
+  min-height:50px;
+  padding:11px 14px 11px 50px;
+  border:1px solid #8e99a6;
+  border-radius:4px;
+  outline:none;
+  background-color:#fff;
+  color:#172a43;
+  font-size:14px;
+  box-shadow:none;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+
+.auth-card input[name='email']{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='23' height='23' viewBox='0 0 24 24' fill='none' stroke='%230a5da8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21a8 8 0 0 0-16 0'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:15px center;
+}
+
+.auth-card input[name='password']{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%230a5da8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='10' width='14' height='10' rx='2'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:15px center;
+}
+
+.auth-card input:hover{border-color:#657384}
+.auth-card input:focus{
+  border-color:#0a6ed1;
+  box-shadow:0 0 0 2px rgba(10,110,209,.11);
+}
+
+.auth-card .primary{
+  min-height:50px;
+  margin-top:0;
+  border:0;
+  border-radius:4px;
+  background:#0a5da8;
+  color:#fff;
+  box-shadow:none;
+  font-size:14px;
+  font-weight:800;
+}
+.auth-card .primary:hover:not(:disabled){background:#084f91;box-shadow:none}
+.auth-card .primary:disabled{opacity:.58;cursor:wait}
+
+/* Mantém criação de conta acessível, porém como ação secundária discreta */
+.auth-card .tabs{
+  order:5;
+  display:flex;
+  justify-content:center;
+  margin:24px 0 0;
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+.auth-card .tabs button{
+  min-height:auto;
+  padding:0;
+  border:0!important;
+  background:transparent!important;
+  color:#0a5da8;
+  box-shadow:none!important;
+  font-size:12px;
+  font-weight:700;
+}
+.auth-card .tabs button.active{display:none}
+.auth-card .tabs button:hover{text-decoration:underline}
+
+.auth-card .message{
+  order:6;
+  margin-top:14px;
+  padding:10px 12px;
+  border:1px solid #e4b9b6;
+  border-radius:4px;
+  background:#fff6f5;
+  color:#b42318;
+  font-size:12px;
+}
+
+.auth-page .theme-toggle{
+  position:fixed!important;
+  top:24px!important;
+  right:30px!important;
+  z-index:10!important;
+}
+
+@media(min-width:900px){
+  .auth-card{transform:translateY(-2vh)}
+}
+
+@media(max-width:760px){
+  .auth-page{padding:48px 18px 70px}
+  .auth-page::before{width:82vw;right:-35vw;opacity:.025}
+  .auth-brand-mark{width:62px;height:62px}
+  .auth-card h1::before{font-size:38px}
+  .auth-card>p::after{font-size:23px;margin-top:18px}
+  .auth-card form{margin-top:22px}
+  .auth-page .theme-toggle{top:14px!important;right:14px!important}
+  .auth-page::after{font-size:10px;bottom:16px}
+}
