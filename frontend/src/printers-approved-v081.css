@@ -166,3 +166,71 @@
   .printers-workspace .printer-clean-summary{grid-template-columns:minmax(300px,1.8fr) 90px 90px 100px 145px 70px!important}
   .printers-workspace .printer-filter-bar{grid-template-columns:minmax(240px,1.4fr) repeat(3,minmax(120px,.7fr)) 76px!important}
 }
+
+/* PRINTFLOW v0.8.2 hotfix — legibilidade e viewport da homologação Guerra */
+.printers-workspace-page{
+  width:min(100%,1780px)!important;
+  margin:0 auto!important;
+  box-sizing:border-box!important;
+}
+.printers-workspace .printer-workspace-columns,
+.printers-workspace .printer-clean-summary{
+  grid-template-columns:minmax(340px,2.1fr) minmax(110px,.58fr) minmax(110px,.55fr) minmax(115px,.58fr) minmax(175px,.92fr) 92px!important;
+}
+.printers-workspace .printer-clean-summary{
+  min-height:66px!important;
+  padding:0 16px!important;
+}
+.printers-workspace .printer-workspace-columns{
+  min-height:38px!important;
+  padding:0 16px!important;
+  font-size:9px!important;
+}
+.printers-workspace .printer-clean-identity{grid-template-columns:38px minmax(0,1fr)!important;gap:11px!important}
+.printers-workspace .printer-clean-icon{width:36px!important;height:36px!important;font-size:10px!important}
+.printers-workspace .printer-clean-name-row>strong{max-width:300px!important;font-size:13px!important;line-height:1.25!important}
+.printers-workspace .printer-clean-model{font-size:10px!important;line-height:1.35!important}
+.printers-workspace .printer-clean-meta-row{font-size:9px!important;line-height:1.35!important}
+.printers-workspace .status-pill{min-height:20px!important;padding:0 8px!important;font-size:9px!important}
+.printers-workspace .printer-clean-stat{min-height:50px!important;padding:8px 12px!important}
+.printers-workspace .printer-clean-stat>span{font-size:8px!important}
+.printers-workspace .printer-clean-stat>strong{font-size:12px!important;line-height:1.25!important}
+.printers-workspace .printer-clean-details-button{min-height:32px!important;padding:0 10px!important;font-size:10px!important}
+.printers-workspace .printer-cards{
+  max-height:calc(100vh - 310px)!important;
+  min-height:360px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  scrollbar-gutter:stable!important;
+}
+
+html[data-theme="light"] .printers-workspace .printer-organization-catalog,
+html[data-theme="light"] .printers-workspace .printer-filter-bar,
+html[data-theme="light"] .printers-workspace .printer-card{
+  background:#ffffff!important;
+  border-color:#d7e0e8!important;
+}
+html[data-theme="light"] .printers-workspace .printer-card:hover{background:#f6f9fc!important}
+html[data-theme="light"] .printers-workspace .printer-card.is-expanded{background:#f2f7fb!important}
+html[data-theme="light"] .printers-workspace .printer-cards{background:#ffffff!important;border-color:#cbd7e2!important;box-shadow:0 8px 24px rgba(15,42,64,.08)!important}
+html[data-theme="light"] .printers-workspace .printer-workspace-columns{background:#12324a!important;color:#eaf3fa!important;border-color:#12324a!important}
+html[data-theme="light"] .printers-workspace .printer-clean-name-row>strong{color:#17324a!important}
+html[data-theme="light"] .printers-workspace .printer-clean-model{color:#526b80!important}
+html[data-theme="light"] .printers-workspace .printer-clean-meta-row{color:#667f93!important}
+html[data-theme="light"] .printers-workspace .printer-clean-meta-row code{color:#0b6ba8!important}
+html[data-theme="light"] .printers-workspace .printer-clean-stat{border-left-color:#dbe4ec!important}
+html[data-theme="light"] .printers-workspace .printer-clean-stat>span{color:#6c8192!important}
+html[data-theme="light"] .printers-workspace .printer-clean-stat>strong{color:#17324a!important}
+html[data-theme="light"] .printers-workspace .printer-filter-bar input,
+html[data-theme="light"] .printers-workspace .printer-filter-bar select{background:#ffffff!important;color:#20384b!important;border-right-color:#dbe4ec!important;font-size:11px!important}
+html[data-theme="light"] .printers-workspace .printer-filter-count{background:#f4f7fa!important;color:#526b80!important}
+html[data-theme="light"] .printers-workspace .printer-clean-icon{background:#eaf4fb!important;border-color:#b9d6e8!important;color:#0a6ed1!important}
+html[data-theme="light"] .printers-workspace .printer-clean-details-button{background:#edf5fb!important;border-color:#b7cfdf!important;color:#0a6ed1!important}
+html[data-theme="light"] .printers-workspace .printer-clean-details-button:hover{background:#dfeef8!important}
+
+@media(max-width:1440px){
+  .printers-workspace-page{width:100%!important;padding-left:14px!important;padding-right:14px!important}
+  .printers-workspace .printer-workspace-columns,
+  .printers-workspace .printer-clean-summary{grid-template-columns:minmax(300px,1.9fr) 96px 96px 100px 150px 82px!important}
+  .printers-workspace .printer-clean-name-row>strong{font-size:12px!important}
+}
