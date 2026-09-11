@@ -36,19 +36,12 @@ createRoot(document.getElementById('root')!).render(
 )
 
 import './totvs-corporate-v071.css'
-
 import './executive-erp-v072.css'
-
 import './printers-workspace-v073.css'
-
 import './printers-refine-v074.css'
-
 import './reports-commercial-rc-v075.css'
-
 import './fixed-workspace-v076.css'
-
 import './shell-refine-v077.css'
-
 import './dashboard-single-screen-v078.css'
-
 import './login-enterprise-v2.css'
+import './totvs-sidebar-v1.css'
