@@ -1,0 +1,335 @@
+/* PRINTFLOW v0.8.3 — TOTVS Suite
+   Camada final de identidade visual ERP: shell, cabeçalhos, formulários,
+   tabelas, cards e páginas operacionais. Não altera regras de negócio. */
+
+:root{
+  --pf-erp-blue:#0a6ed1;
+  --pf-erp-blue-strong:#075ca8;
+  --pf-erp-cyan:#0f9bd7;
+  --pf-erp-bg:#f5f6f7;
+  --pf-erp-surface:#ffffff;
+  --pf-erp-surface-alt:#f8f9fa;
+  --pf-erp-line:#d9e0e7;
+  --pf-erp-line-soft:#e9edf1;
+  --pf-erp-text:#25364a;
+  --pf-erp-muted:#6a7d90;
+  --pf-erp-radius:4px;
+  --pf-erp-shadow:0 1px 2px rgba(22,45,68,.07);
+}
+
+/* ===== SHELL ERP ===== */
+html,body,#root{background:var(--pf-erp-bg)!important}
+body{font-family:"Segoe UI",Arial,sans-serif!important;color:var(--pf-erp-text)!important}
+.shell{
+  grid-template-columns:212px minmax(0,1fr)!important;
+  grid-template-rows:54px minmax(0,1fr)!important;
+  background:var(--pf-erp-bg)!important;
+}
+.shell aside{
+  width:212px!important;
+  background:#fff!important;
+  border-right:1px solid var(--pf-erp-line)!important;
+  box-shadow:none!important;
+}
+.brand{
+  min-height:54px!important;
+  height:54px!important;
+  padding:8px 14px!important;
+  border-bottom:1px solid var(--pf-erp-line)!important;
+  background:#fff!important;
+}
+.brand img{width:28px!important;height:28px!important;flex-basis:28px!important}
+.brand-copy strong{font-size:14px!important;font-weight:700!important;color:#1d2f43!important}
+.brand-copy span{font-size:8px!important;letter-spacing:.09em!important;color:#6f8193!important;text-transform:uppercase!important}
+
+.workspace-topbar{
+  min-height:54px!important;height:54px!important;
+  padding:0 18px!important;
+  border-bottom:1px solid var(--pf-erp-line)!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+.workspace-context{gap:7px!important}
+.workspace-product{font-size:10px!important;color:var(--pf-erp-blue)!important;letter-spacing:.1em!important}
+.workspace-divider{color:#a5b1bd!important}
+.workspace-context strong{font-size:11px!important;color:#24364a!important}
+.workspace-environment{
+  padding:2px 7px!important;border-radius:10px!important;
+  border:1px solid #b9d3ea!important;background:#f3f9fe!important;
+  color:var(--pf-erp-blue)!important;font-size:8px!important;font-weight:700!important;
+}
+.workspace-user{gap:8px!important}
+.workspace-user-copy strong{font-size:10px!important}
+.workspace-user-copy span{font-size:8px!important}
+.workspace-avatar{width:28px!important;height:28px!important;font-size:10px!important}
+.pf-theme-toggle{min-height:28px!important;height:28px!important;border-radius:3px!important;font-size:9px!important}
+
+/* ===== MENU LATERAL ===== */
+.shell nav{padding:8px 0!important}
+.nav-section-title{margin:8px 14px 6px!important;font-size:8px!important;letter-spacing:.12em!important;color:#8998a8!important}
+.shell nav button{
+  width:calc(100% - 12px)!important;
+  min-height:36px!important;height:36px!important;
+  margin:1px 6px!important;padding:0 10px!important;
+  border:0!important;border-left:3px solid transparent!important;
+  border-radius:2px!important;
+  background:transparent!important;color:#43566a!important;
+  font-size:11px!important;font-weight:500!important;
+}
+.shell nav button:hover{background:#f3f7fb!important;color:var(--pf-erp-blue)!important}
+.shell nav button.active{
+  background:#eaf3fb!important;color:var(--pf-erp-blue)!important;
+  border-left-color:var(--pf-erp-blue)!important;font-weight:700!important;
+}
+.nav-icon{width:19px!important;font-size:12px!important;color:#60768c!important}
+.logout{margin:8px 10px!important;min-height:32px!important;border-radius:3px!important;font-size:10px!important}
+
+/* ===== WORKSPACE / HEADERS ===== */
+.dashboard,.dashboard-modern-shell,.modern-dashboard,
+.reports-page,.agent-monitor-page,.control-center-page{
+  background:var(--pf-erp-bg)!important;
+}
+.dashboard{padding:14px 18px 22px!important}
+
+.modern-dashboard-header,
+.printers-workspace-header,
+.reports-header,
+.agent-monitor-header,
+.control-center-header,
+.dashboard>header{
+  min-height:64px!important;
+  margin:-14px -18px 12px!important;
+  padding:10px 18px!important;
+  background:#fff!important;
+  border:0!important;
+  border-bottom:1px solid var(--pf-erp-line)!important;
+  box-shadow:none!important;
+  color:var(--pf-erp-text)!important;
+}
+.modern-dashboard-header h1,
+.printers-workspace-header h1,
+.reports-header h1,
+.agent-monitor-header h1,
+.control-center-header h1,
+.dashboard>header h1{
+  margin:2px 0!important;
+  color:#203348!important;
+  font-size:20px!important;
+  line-height:1.1!important;
+  font-weight:650!important;
+  letter-spacing:-.015em!important;
+}
+.modern-dashboard-header p,
+.printers-workspace-header p,
+.reports-header p,
+.agent-monitor-header p,
+.control-center-header p{
+  color:#708295!important;font-size:10px!important;
+}
+.modern-dashboard-kicker,
+.printers-workspace-header>div:first-child>span,
+.reports-header small,
+.agent-monitor-header>div>span,
+.control-center-header small,
+.dashboard>header small{
+  color:var(--pf-erp-blue)!important;
+  font-size:8px!important;font-weight:800!important;letter-spacing:.11em!important;
+}
+
+/* ===== BOTÕES / CAMPOS ERP ===== */
+button,input,select,textarea{font-family:inherit!important}
+button{transition:background .12s ease,border-color .12s ease,color .12s ease!important}
+.primary,
+.printers-workspace-actions button,
+.reports-downloads button,
+.agent-monitor-header button,
+.control-center-actions button{
+  min-height:30px!important;
+  padding:0 12px!important;
+  border:1px solid var(--pf-erp-blue)!important;
+  border-radius:3px!important;
+  background:var(--pf-erp-blue)!important;
+  color:#fff!important;
+  font-size:10px!important;font-weight:650!important;
+  box-shadow:none!important;
+}
+.primary:hover,
+.printers-workspace-actions button:hover,
+.reports-downloads button:hover,
+.agent-monitor-header button:hover,
+.control-center-actions button:hover{background:var(--pf-erp-blue-strong)!important}
+
+input,select,textarea{
+  border:1px solid #cdd6df!important;
+  border-radius:3px!important;
+  background:#fff!important;color:#273a4e!important;
+  box-shadow:none!important;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--pf-erp-blue)!important;
+  outline:2px solid rgba(10,110,209,.10)!important;
+}
+label{color:#52677b!important;font-size:10px!important;font-weight:600!important}
+
+/* ===== SUPERFÍCIES / CARDS ===== */
+.panel,.hero,.modern-panel,.clean-health-card,.clean-alert-panel,
+.pf-intelligence-panel,.agent-panel,.agent-overview,.reports-intro,
+.reports-period-bar,.reports-filter-card,.reports-kpi,
+.control-center-card,.control-center-panel,
+.printer-organization-catalog{
+  border:1px solid var(--pf-erp-line)!important;
+  border-radius:var(--pf-erp-radius)!important;
+  background:#fff!important;
+  box-shadow:var(--pf-erp-shadow)!important;
+}
+.hero{border-left:3px solid var(--pf-erp-cyan)!important}
+
+/* ===== DASHBOARD ===== */
+.modern-company-bar{
+  min-height:50px!important;margin-bottom:10px!important;padding:7px 10px!important;
+  border:1px solid var(--pf-erp-line)!important;border-left:3px solid var(--pf-erp-cyan)!important;
+  border-radius:3px!important;background:#fff!important;box-shadow:none!important;
+}
+.metrics-grid.modern-kpi-grid{
+  gap:8px!important;border:0!important;background:transparent!important;box-shadow:none!important;
+}
+.modern-dashboard .metric-card{
+  min-height:88px!important;padding:12px 14px!important;
+  border:1px solid var(--pf-erp-line)!important;border-radius:4px!important;
+  background:#fff!important;box-shadow:var(--pf-erp-shadow)!important;
+}
+.modern-dashboard .metric-card-icon{width:28px!important;height:28px!important;border-radius:3px!important}
+.modern-dashboard .metric-card-value{font-size:24px!important;color:#203348!important}
+.pf-intelligence-panel{margin-top:10px!important;padding:12px 14px!important}
+.pf-intelligence-heading h2{font-size:15px!important}
+.pf-intelligence-item{border:1px solid #e6ebef!important;border-radius:3px!important;background:#fafbfc!important}
+.clean-dashboard-main{gap:10px!important}
+.clean-summary-strip{gap:7px!important}
+.clean-summary-item{border-radius:3px!important;box-shadow:none!important}
+
+/* ===== IMPRESSORAS — TABELA ERP ===== */
+.printers-workspace-page{padding:14px 18px 18px!important;background:var(--pf-erp-bg)!important}
+.printers-workspace-header{margin:-14px -18px 12px!important}
+.printers-api-status{
+  min-height:26px!important;padding:0 8px!important;
+  border:1px solid #a9d5b9!important;border-radius:3px!important;
+  background:#eff9f2!important;color:#1d7a43!important;font-size:9px!important;
+}
+.printers-workspace .printer-organization-catalog{
+  margin-bottom:8px!important;border-radius:4px!important;box-shadow:none!important;
+}
+.printers-workspace .printer-clean-catalog-summary{min-height:38px!important;padding:6px 10px!important}
+.printers-workspace .printer-clean-secondary-button{
+  min-height:28px!important;border-radius:3px!important;background:#fff!important;
+  border:1px solid #aebdca!important;color:var(--pf-erp-blue)!important;
+}
+.printers-workspace .printer-filter-bar{
+  min-height:38px!important;margin-bottom:8px!important;
+  border-radius:4px!important;box-shadow:none!important;
+  grid-template-columns:minmax(260px,1.7fr) repeat(3,minmax(120px,.7fr)) 76px!important;
+}
+.printers-workspace .printer-filter-bar input,
+.printers-workspace .printer-filter-bar select{
+  height:36px!important;min-height:36px!important;padding:0 10px!important;font-size:10px!important;
+}
+.printers-workspace .printer-filter-count{min-height:36px!important;font-size:9px!important}
+.printers-workspace .printer-workspace-columns{
+  min-height:34px!important;border-radius:4px 4px 0 0!important;
+  border-color:#b9c8d5!important;background:#e9f2f9!important;color:#405a70!important;
+  font-size:8px!important;letter-spacing:.04em!important;
+}
+.printers-workspace .printer-cards{
+  max-height:560px!important;border-color:#cfd9e2!important;border-radius:0 0 4px 4px!important;
+  box-shadow:none!important;background:#fff!important;
+}
+.printers-workspace .printer-card{border-bottom-color:#e3e8ed!important}
+.printers-workspace .printer-card:hover{background:#f5f9fc!important}
+.printers-workspace .printer-clean-summary{min-height:58px!important}
+.printers-workspace .printer-clean-icon{border-radius:3px!important;background:#eef5fa!important}
+.printers-workspace .printer-clean-name-row>strong{font-size:11.5px!important;color:#1f3448!important}
+.printers-workspace .printer-clean-model{font-size:9px!important}
+.printers-workspace .printer-clean-stat{border-left-color:#e4e9ee!important}
+.printers-workspace .printer-clean-stat>strong{font-size:10.5px!important;color:#20364b!important}
+.printers-workspace .printer-clean-details-button{
+  min-height:27px!important;border-radius:3px!important;background:#fff!important;
+  color:var(--pf-erp-blue)!important;border-color:#b8c6d2!important;
+}
+.printers-workspace .printer-clean-details-button:hover{background:#edf5fb!important}
+.status-pill{border-radius:9px!important}
+
+/* ===== RELATÓRIOS ===== */
+.reports-page{padding:14px 18px 22px!important}
+.reports-header{margin:-14px -18px 12px!important}
+.reports-intro{padding:12px 14px!important;margin-bottom:8px!important;border-left:3px solid var(--pf-erp-cyan)!important}
+.reports-intro h2{font-size:16px!important;color:#203348!important}
+.reports-period-bar{min-height:42px!important;padding:6px 10px!important;margin-bottom:8px!important}
+.reports-period-bar button{min-height:26px!important;border-radius:3px!important}
+.reports-downloads{gap:6px!important}
+.reports-downloads .pdf{background:#fff!important;color:#b42318!important;border-color:#d5a09b!important}
+.reports-filter-card{padding:10px!important}
+.reports-kpis{gap:8px!important}
+.reports-kpi{padding:10px 12px!important;min-height:76px!important}
+.reports-table-wrap{border:1px solid var(--pf-erp-line)!important;border-radius:4px!important;box-shadow:none!important}
+.reports-table th{background:#eaf2f8!important;color:#415b71!important;font-size:8px!important}
+.reports-table td{font-size:9.5px!important;border-color:#e5eaee!important}
+
+/* ===== AGENTES ===== */
+.agent-monitor-page{padding:14px 18px 22px!important}
+.agent-monitor-header{margin:-14px -18px 12px!important}
+.agent-overview{padding:12px 14px!important;border-left:3px solid var(--pf-erp-blue)!important}
+.agent-state-copy h2{font-size:17px!important;color:#203348!important}
+.agent-state-copy p{font-size:10px!important;color:#687c8f!important}
+.agent-metrics{gap:8px!important}
+.agent-metrics article{border:1px solid var(--pf-erp-line)!important;border-radius:4px!important;background:#fff!important;box-shadow:none!important}
+.agent-panel{border-radius:4px!important;box-shadow:none!important}
+
+/* ===== CONTROL CENTER ===== */
+.control-center-page{padding:14px 18px 22px!important}
+.control-center-header{margin:-14px -18px 12px!important}
+.control-center-card,.control-center-panel{border-radius:4px!important;box-shadow:none!important}
+.control-center-table th{background:#eaf2f8!important;color:#405a70!important}
+.control-center-table td{border-color:#e4e9ee!important}
+
+/* ===== EMPRESA E AGENT ===== */
+.dashboard .hero{padding:12px 14px!important;margin-bottom:10px!important}
+.dashboard .hero h2{font-size:17px!important;color:#203348!important}
+.dashboard .hero p{font-size:10px!important;color:#6a7d90!important}
+.dashboard .grid{gap:10px!important}
+.dashboard .panel{padding:12px 14px!important}
+.dashboard .panel h3{font-size:13px!important;color:#203348!important;border-bottom:1px solid #edf0f3!important;padding-bottom:8px!important}
+.dashboard .panel input,.dashboard .panel select{min-height:32px!important}
+
+/* ===== DARK: mantém identidade ERP sem quebrar o tema ===== */
+html[data-theme="dark"]{
+  --pf-erp-bg:#0f1720;
+  --pf-erp-surface:#16212d;
+  --pf-erp-line:#2a3948;
+  --pf-erp-line-soft:#22313e;
+  --pf-erp-text:#e2ebf3;
+  --pf-erp-muted:#91a2b2;
+}
+html[data-theme="dark"] .workspace-topbar,
+html[data-theme="dark"] .shell aside,
+html[data-theme="dark"] .brand,
+html[data-theme="dark"] .modern-dashboard-header,
+html[data-theme="dark"] .printers-workspace-header,
+html[data-theme="dark"] .reports-header,
+html[data-theme="dark"] .agent-monitor-header,
+html[data-theme="dark"] .dashboard>header{background:#16212d!important;border-color:#2a3948!important}
+html[data-theme="dark"] .printers-workspace-header h1,
+html[data-theme="dark"] .reports-header h1,
+html[data-theme="dark"] .agent-monitor-header h1,
+html[data-theme="dark"] .modern-dashboard-header h1{color:#edf4fa!important}
+
+@media(max-width:1180px){
+  .shell{grid-template-columns:190px minmax(0,1fr)!important}
+  .shell aside{width:190px!important}
+  .printers-workspace .printer-filter-bar{grid-template-columns:minmax(210px,1.3fr) repeat(3,minmax(100px,.65fr)) 70px!important}
+}
+
+@media(max-width:760px){
+  .shell{grid-template-columns:1fr!important;grid-template-rows:auto auto!important}
+  .shell aside{width:100%!important;position:relative!important}
+  .dashboard,.reports-page,.agent-monitor-page,.control-center-page{padding:10px!important}
+  .modern-dashboard-header,.printers-workspace-header,.reports-header,.agent-monitor-header,.control-center-header,.dashboard>header{margin:-10px -10px 10px!important;padding:9px 10px!important}
+}
