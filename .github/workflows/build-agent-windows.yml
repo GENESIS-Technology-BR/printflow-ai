@@ -19,7 +19,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Baixar repositÃ³rio
+      - name: Baixar repositório
         uses: actions/checkout@v5
 
       - name: Configurar Python
@@ -35,7 +35,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Instalar dependÃªncias
+      - name: Instalar dependências
         shell: powershell
         run: |
           python -m pip install --upgrade pip
@@ -93,7 +93,7 @@ jobs:
           python -m py_compile agent/python/snmp/engine.py
           python -m py_compile agent/python/api/client.py
 
-      - name: Gerar executÃ¡vel
+      - name: Gerar executável
         shell: powershell
         run: |
           pyinstaller `
@@ -120,12 +120,12 @@ jobs:
             --hidden-import api.client `
             --hidden-import snmp.engine `
             --hidden-import snmp.oids `
-          --hidden-import diagnostic_robot `
-          --hidden-import intelligence `
-          --hidden-import intelligence.printer_v3 `
+            --hidden-import diagnostic_robot `
+            --hidden-import intelligence `
+            --hidden-import intelligence.printer_v3 `
             agent/python/main.py
 
-      - name: Testar executÃ¡vel
+      - name: Testar executável
         shell: powershell
         run: |
           & dist/PRINTFLOW-Agent.exe --help | Tee-Object -FilePath EXE-SMOKE-TEST.txt
@@ -158,17 +158,22 @@ jobs:
             python -c "from version import AGENT_VERSION; print(AGENT_VERSION)"
           ).Trim()
           $exeHash = (Get-FileHash package/PRINTFLOW-Agent.exe -Algorithm SHA256).Hash
-          @"
-          PRINTFLOW BUILD VALIDATION
-          Build: ${{ github.run_number }}
-          Version: $agentVersion
-          Commit: $env:GITHUB_SHA
-          Automated tests: APPROVED
-          Frontend build: APPROVED
-          PowerShell syntax: APPROVED
-          EXE smoke test: APPROVED
-          EXE SHA256: $exeHash
-          "@ | Set-Content package/BUILD-VALIDATION.txt -Encoding UTF8
+          $validationLines = @(
+            "PRINTFLOW BUILD VALIDATION"
+            "Build: ${{ github.run_number }}"
+            "Version: $agentVersion"
+            "Commit: $env:GITHUB_SHA"
+            "Automated tests: APPROVED"
+            "Frontend build: APPROVED"
+            "PowerShell syntax: APPROVED"
+            "EXE smoke test: APPROVED"
+            "EXE SHA256: $exeHash"
+          )
+          $validationLines | Set-Content package/BUILD-VALIDATION.txt -Encoding UTF8
+          $metadata = Get-Content package/BUILD-VALIDATION.txt -Raw
+          if ($metadata -notmatch '(?m)^Version:\s*[0-9]+\.[0-9]+\.[0-9]+\s*$') {
+            throw "BUILD-VALIDATION sem versao valida para o atualizador."
+          }
           Compress-Archive `
             -Path package/* `
             -DestinationPath PRINTFLOW-Agent-Windows-Teste.zip
