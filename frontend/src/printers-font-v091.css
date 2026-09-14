@@ -1,0 +1,23 @@
+/* PRINTFLOW v0.9.1 — legibilidade do editor de impressoras */
+.printers-workspace .printer-clean-name-row>strong{font-size:13px!important}
+.printers-workspace .printer-clean-model{font-size:10px!important}
+.printers-workspace .printer-clean-meta-row{font-size:9.5px!important}
+.printers-workspace .printer-clean-stat>strong{font-size:11.5px!important}
+.printers-workspace .printer-clean-last-seen>strong{font-size:10.5px!important}
+.printers-workspace .printer-clean-section-title>span{font-size:11px!important}
+.printers-workspace .printer-clean-section-title>small{font-size:9px!important}
+.printers-workspace .printer-clean-inline-form label,
+.printers-workspace .printer-clean-location-form label,
+.printers-workspace .printer-clean-cost-form label,
+.printers-workspace .pf-sector-quick-create label{font-size:9.5px!important}
+.printers-workspace .printer-clean-inline-form input,
+.printers-workspace .printer-clean-location-form select,
+.printers-workspace .printer-clean-cost-form input,
+.printers-workspace .pf-sector-quick-create input{font-size:10.5px!important}
+.printers-workspace .printer-clean-inline-form button,
+.printers-workspace .printer-clean-location-form button,
+.printers-workspace .printer-clean-cost-form button,
+.printers-workspace .pf-sector-quick-create button{font-size:10px!important}
+.printers-workspace .printer-clean-technical-grid span{font-size:8px!important}
+.printers-workspace .printer-clean-technical-grid strong{font-size:9px!important}
+.printers-workspace .pf-sector-quick-message{font-size:9px!important}
