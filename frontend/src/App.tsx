@@ -332,7 +332,7 @@ function App() {
         <button className="logout" onClick={logout}>Sair</button>
       </aside>
 
-      <main className={`dashboard ${page === "dashboard" ? "dashboard-modern-shell" : ""} ${page === "printers" ? "printers-workspace" : ""}`}>
+      <main className={`dashboard ${page === "dashboard" ? "dashboard-modern-shell" : ""} ${page === "printers" ? "printers-workspace" : ""} ${page === "reports" ? "reports-workspace" : ""}`}>
         {page === "control" ? (
           <ControlCenter />
         ) : page === "reports" ? (
@@ -411,26 +411,22 @@ function App() {
                 <article className="panel">
                   <h3>Token do Agent (43 caracteres)</h3>
                   <p>Use somente este token para vincular o Agent à empresa. Não copie o token de sessão/login.</p>
-                  <code>{company.agent_token}</code>
-                  <div className="actions">
+                  <code className="token-box">{company.agent_token}</code>
+                  <div className="row-actions">
                     <button onClick={() => navigator.clipboard.writeText(company.agent_token)}>Copiar</button>
-                    <button className="danger" onClick={regenerateToken}>Gerar novo</button>
+                    <button onClick={regenerateToken}>Gerar novo</button>
                   </div>
-                  <div className="status-box">
+                  <div className="tariff-box">
                     <strong>Tarifa padrão atual</strong>
                     <span>R$ {Number(company.default_cost_per_page || 0).toFixed(4).replace(".", ",")} por página.</span>
                   </div>
                 </article>
               </section>
             )}
-            {message && <div className="message success">{message}</div>}
+            {message && <div className="message">{message}</div>}
           </>
         ) : (
-          <Dashboard
-            companyName={company?.name || "Empresa monitorada"}
-            onManageCompany={() => setPage("company")}
-            onOpenPrinters={() => { setPage("printers"); void loadPrinters() }}
-          />
+          <Dashboard companyName={company?.name || "Empresa monitorada"} onOpenPrinters={() => { setPage("printers"); void loadPrinters() }} />
         )}
       </main>
     </div>
