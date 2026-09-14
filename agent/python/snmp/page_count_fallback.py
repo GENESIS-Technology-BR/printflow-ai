@@ -7,13 +7,17 @@ PRT_MARKER_LIFE_COUNT_BASE = "1.3.6.1.2.1.43.10.2.1.4"
 
 
 def install_page_count_fallback() -> None:
-    """Instala fallback para impressoras cujo contador nao esta no indice .1.1.
+    """Valida o contador principal usando a coluna prtMarkerLifeCount.
 
-    Alguns equipamentos implementam prtMarkerLifeCount em outro indice da
-    tabela Printer-MIB. O motor historicamente consulta somente .1.1; quando
-    esse valor nao existe, fazemos um WALK apenas na coluna de life-count e
-    usamos o maior contador positivo encontrado. Valores ja resolvidos pelo
-    motor original nunca sao alterados.
+    Alguns equipamentos implementam o contador fisico em outro indice da
+    Printer-MIB. O motor historicamente consulta primeiro .1.1; esse indice
+    pode nao existir ou pode representar apenas um marcador parcial.
+
+    Regras desta camada:
+    - contadores especificos de fabricante ja validados sao preservados;
+    - para fontes Printer-MIB, fazemos WALK da coluna life-count;
+    - selecionamos o maior contador positivo encontrado;
+    - nunca reduzimos um contador ja obtido pelo motor original.
     """
     from snmp.engine import PrinterIntelligenceEngine
 
@@ -37,7 +41,14 @@ def install_page_count_fallback() -> None:
             raw_data=raw_data,
         )
 
-        if page_count is not None:
+        # Fontes especificas de fabricante ja passaram por regra dedicada.
+        # Nao devemos substitui-las por uma heuristica generica.
+        source_normalized = str(source or "").strip().lower()
+        if source_normalized not in {
+            "printer-mib",
+            "printer-mib-fallback",
+            "printer-mib-walk-fallback",
+        }:
             return page_count, source, candidates
 
         walked = await self.walk_values(
@@ -56,9 +67,8 @@ def install_page_count_fallback() -> None:
         if not walk_candidates:
             return page_count, source, candidates
 
-        # prtMarkerLifeCount pode ter mais de um indice (ex.: motores/markers).
-        # Para inventario, o maior life-count positivo e o fallback mais seguro
-        # para representar o contador acumulado sem somar contadores distintos.
+        # prtMarkerLifeCount pode expor mais de um marcador. Para inventario,
+        # o maior valor acumulado e o melhor representante do contador fisico.
         selected_oid, selected_value = max(
             walk_candidates.items(),
             key=lambda item: item[1],
@@ -68,9 +78,15 @@ def install_page_count_fallback() -> None:
         merged_candidates.update(walk_candidates)
         merged_candidates["selected:" + selected_oid] = selected_value
 
+        # Nunca troca um contador existente por um valor menor. Isso evita que
+        # um subcontador parcial derrube um total ja conhecido.
+        if page_count is not None and page_count >= selected_value:
+            merged_candidates["selected:original"] = page_count
+            return page_count, source, merged_candidates
+
         return (
             selected_value,
-            "printer-mib-walk-fallback",
+            "printer-mib-walk-validated",
             merged_candidates,
         )
 
