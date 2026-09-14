@@ -169,6 +169,12 @@ export default function Dashboard({
 
   const lastUpdate = summary.agent.last_seen || summary.generated_at;
 
+  function openPrinterForEditing(printer: DashboardPrinter): void {
+    const target = String(printer.uuid || printer.id || printer.ip || "");
+    if (target) sessionStorage.setItem("printflow_focus_printer", target);
+    onOpenPrinters();
+  }
+
   return (
     <section className="sap-dashboard-page">
       <div className="sap-page-head">
@@ -266,7 +272,20 @@ export default function Dashboard({
               <thead><tr><th>#</th><th>Impressora</th><th>Modelo</th><th>IP</th><th>Setor</th><th>Páginas</th><th>Status</th></tr></thead>
               <tbody>
                 {topPrinters.map((printer, index) => (
-                  <tr key={printer.uuid || printer.id || index}>
+                  <tr
+                    key={printer.uuid || printer.id || index}
+                    role="button"
+                    tabIndex={0}
+                    title="Abrir esta impressora para edição"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => openPrinterForEditing(printer)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openPrinterForEditing(printer);
+                      }
+                    }}
+                  >
                     <td>{index + 1}</td>
                     <td><strong>{displayPrinterName(printer)}</strong></td>
                     <td>{printer.model || printer.manufacturer || "-"}</td>
