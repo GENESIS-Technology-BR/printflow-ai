@@ -57,12 +57,18 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
     stored_active = bool(getattr(printer, "active", True))
     age_seconds = _age_seconds(last_seen)
 
-    # Uma coleta SNMP/API recente é evidência operacional mais forte que um
-    # flag de inventário eventualmente defasado por ordem de heartbeat.
-    recently_seen = age_seconds is not None and age_seconds <= 600
-    active = stored_active or recently_seen
+    # Só uma coleta recente que também veio explicitamente online pode
+    # reativar visualmente um equipamento cujo heartbeat ficou defasado.
+    # Isso evita transformar registros realmente offline/inativos em ativos
+    # apenas porque possuem last_seen recente (ex.: criação/atualização manual).
+    recently_seen_online = (
+        age_seconds is not None
+        and age_seconds <= 600
+        and status == "online"
+    )
+    active = stored_active or recently_seen_online
 
-    if recently_seen and status != "offline":
+    if recently_seen_online:
         status = "online"
     elif not active:
         status = "inactive"
@@ -72,7 +78,7 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
 
     if not active:
         health_score -= 50
-        health_reasons.append("Equipamento marcado como inativo e sem comunicação recente.")
+        health_reasons.append("Equipamento marcado como inativo e sem comunicação online recente.")
 
     if status == "offline":
         health_score -= 40
@@ -82,7 +88,6 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
         health_reasons.append("Status da impressora não identificado.")
 
     # Contador alto representa uso acumulado, não falha operacional.
-    # Manutenção preventiva deve ser tratada por política/alerta específico.
     if age_seconds is not None:
         if age_seconds > 86400:
             health_score -= 20
