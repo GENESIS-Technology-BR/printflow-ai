@@ -1,0 +1,78 @@
+/* PRINTFLOW v0.8.9 — desbloqueia editor expandido de impressoras */
+
+/* A linha fechada continua compacta; quando expandida, o card precisa crescer
+   junto com os formularios de edicao. */
+.printers-workspace .printer-card.is-expanded{
+  height:auto!important;
+  min-height:64px!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-details{
+  display:grid!important;
+  grid-template-columns:1.08fr 1fr .95fr!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:190px!important;
+  max-height:none!important;
+  overflow:visible!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:relative!important;
+  z-index:1!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-edit-section{
+  display:block!important;
+  height:auto!important;
+  min-height:190px!important;
+  max-height:none!important;
+  overflow:visible!important;
+  padding:13px 14px 14px!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-inline-form,
+.printers-workspace .printer-card.is-expanded .printer-clean-location-form,
+.printers-workspace .printer-card.is-expanded .printer-clean-cost-form,
+.printers-workspace .printer-card.is-expanded .printer-clean-technical-grid{
+  visibility:visible!important;
+  opacity:1!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-inline-form{
+  display:flex!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-location-form{
+  display:grid!important;
+  grid-template-columns:1fr 1fr auto!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-cost-form{
+  display:flex!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-technical-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+
+/* O scroll permanece apenas no parque, mas deve acomodar o card expandido. */
+.printers-workspace .printer-cards{
+  overflow-y:auto!important;
+  overflow-x:auto!important;
+}
+
+@media(max-width:1180px){
+  .printers-workspace .printer-card.is-expanded .printer-clean-details{
+    grid-template-columns:1fr!important;
+  }
+  .printers-workspace .printer-card.is-expanded .printer-clean-edit-section{
+    min-height:0!important;
+    border-right:0!important;
+    border-bottom:1px solid #e8edf3!important;
+  }
+}
