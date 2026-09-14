@@ -29,6 +29,7 @@ import './dark-balance-v067.css'
 import './printers-operational-v068.css'
 import './sector-quick-create-v087.ts'
 import './printer-row-click-v088.ts'
+import './company-agent-v093.ts'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -60,3 +61,4 @@ import './printers-edit-unlock-v089.css'
 import './printers-edit-align-v090.css'
 import './printers-font-v091.css'
 import './enterprise-design-system-v092.css'
+import './company-agent-v093.css'
