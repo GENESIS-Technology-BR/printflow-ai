@@ -21,26 +21,10 @@ router = APIRouter(
 
 def normalize_status(value: Any) -> str:
     normalized = str(value or "").strip().lower()
-
-    if normalized in {
-        "online",
-        "ativo",
-        "active",
-        "idle",
-        "printing",
-        "warmup",
-    }:
+    if normalized in {"online", "ativo", "active", "idle", "printing", "warmup"}:
         return "online"
-
-    if normalized in {
-        "offline",
-        "inativo",
-        "inactive",
-        "error",
-        "critical",
-    }:
+    if normalized in {"offline", "inativo", "inactive", "error", "critical"}:
         return "offline"
-
     return normalized or "unknown"
 
 
@@ -53,14 +37,34 @@ def integer_value(value: Any) -> int | None:
         return None
 
 
+def _age_seconds(last_seen: datetime | None) -> float | None:
+    if last_seen is None:
+        return None
+    try:
+        normalized = last_seen
+        if normalized.tzinfo is None:
+            normalized = normalized.replace(tzinfo=timezone.utc)
+        return max(0.0, (datetime.now(timezone.utc) - normalized).total_seconds())
+    except Exception:
+        return None
+
+
 def serialize_printer(printer: Printer) -> dict[str, Any]:
     status = normalize_status(getattr(printer, "status", None))
     page_count = integer_value(getattr(printer, "page_count", None))
     cost_per_page = getattr(printer, "cost_per_page", None)
     last_seen = getattr(printer, "last_seen", None)
-    active = bool(getattr(printer, "active", True))
+    stored_active = bool(getattr(printer, "active", True))
+    age_seconds = _age_seconds(last_seen)
 
-    if not active:
+    # Uma coleta SNMP/API recente é evidência operacional mais forte que um
+    # flag de inventário eventualmente defasado por ordem de heartbeat.
+    recently_seen = age_seconds is not None and age_seconds <= 600
+    active = stored_active or recently_seen
+
+    if recently_seen and status != "offline":
+        status = "online"
+    elif not active:
         status = "inactive"
 
     health_score = 100
@@ -68,7 +72,7 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
 
     if not active:
         health_score -= 50
-        health_reasons.append("Equipamento marcado como inativo.")
+        health_reasons.append("Equipamento marcado como inativo e sem comunicação recente.")
 
     if status == "offline":
         health_score -= 40
@@ -77,25 +81,15 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
         health_score -= 15
         health_reasons.append("Status da impressora não identificado.")
 
-    if page_count is not None and page_count >= 500000:
-        health_score -= 10
-        health_reasons.append("Contador elevado; avaliar manutenção preventiva.")
-
-    if last_seen is not None:
-        try:
-            now = datetime.now(timezone.utc)
-            normalized_last_seen = last_seen
-            if normalized_last_seen.tzinfo is None:
-                normalized_last_seen = normalized_last_seen.replace(tzinfo=timezone.utc)
-            age_seconds = (now - normalized_last_seen).total_seconds()
-            if age_seconds > 86400:
-                health_score -= 20
-                health_reasons.append("Sem comunicação há mais de 24 horas.")
-            elif age_seconds > 3600:
-                health_score -= 5
-                health_reasons.append("Comunicação atrasada há mais de 1 hora.")
-        except Exception:
-            pass
+    # Contador alto representa uso acumulado, não falha operacional.
+    # Manutenção preventiva deve ser tratada por política/alerta específico.
+    if age_seconds is not None:
+        if age_seconds > 86400:
+            health_score -= 20
+            health_reasons.append("Sem comunicação há mais de 24 horas.")
+        elif age_seconds > 3600:
+            health_score -= 5
+            health_reasons.append("Comunicação atrasada há mais de 1 hora.")
 
     health_score = max(0, min(health_score, 100))
     if health_score >= 85:
@@ -137,11 +131,7 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
         "toner_percent": getattr(printer, "toner_percent", None),
         "active": active,
         "last_seen": last_seen.isoformat() if last_seen is not None else None,
-        "created_at": (
-            getattr(printer, "created_at", None).isoformat()
-            if getattr(printer, "created_at", None)
-            else None
-        ),
+        "created_at": getattr(printer, "created_at", None).isoformat() if getattr(printer, "created_at", None) else None,
         "health_score": health_score,
         "health_status": health_status,
         "health_reasons": health_reasons,
@@ -149,47 +139,21 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
 
 
 @router.get("/summary")
-def dashboard_summary(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> dict[str, Any]:
-    printers = (
-        db.query(Printer)
-        .filter(Printer.company_id == current_user.company_id)
-        .all()
-    )
-    company = (
-        db.query(Company)
-        .filter(Company.id == current_user.company_id)
-        .first()
-    )
-
+def dashboard_summary(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, Any]:
+    printers = db.query(Printer).filter(Printer.company_id == current_user.company_id).all()
+    company = db.query(Company).filter(Company.id == current_user.company_id).first()
     serialized = [serialize_printer(printer) for printer in printers]
     total = len(serialized)
     online = sum(1 for printer in serialized if printer["active"] and printer["status"] == "online")
     offline = sum(1 for printer in serialized if printer["active"] and printer["status"] == "offline")
     active = sum(1 for printer in serialized if printer["active"])
     monitored = [printer for printer in serialized if printer["active"]]
-    total_pages = sum(
-        printer["page_count"]
-        for printer in monitored
-        if printer["page_count"] is not None
-    )
+    total_pages = sum(printer["page_count"] for printer in monitored if printer["page_count"] is not None)
     inactive = total - active
     unknown = active - online - offline
     page_count_known = sum(1 for printer in monitored if printer["page_count"] is not None)
-
-    alerts = sum(
-        1
-        for printer in monitored
-        if printer["health_score"] < 70 or printer["status"] == "offline"
-    )
-
-    health_average = (
-        round(sum(printer["health_score"] for printer in monitored) / active)
-        if active
-        else 100
-    )
+    alerts = sum(1 for printer in monitored if printer["health_score"] < 70 or printer["status"] == "offline")
+    health_average = round(sum(printer["health_score"] for printer in monitored) / active) if active else 100
 
     manufacturers: dict[str, int] = {}
     for printer in monitored:
@@ -201,22 +165,9 @@ def dashboard_summary(
     agent_stale = False
     agent_age_seconds: int | None = None
     agent_communication_state = "never_seen"
-
-    if agent_last_seen is not None:
-        normalized_seen = agent_last_seen
-        if normalized_seen.tzinfo is None:
-            normalized_seen = normalized_seen.replace(tzinfo=timezone.utc)
-
-        agent_age_seconds = max(
-            0,
-            int(
-                (
-                    datetime.now(timezone.utc)
-                    - normalized_seen
-                ).total_seconds()
-            ),
-        )
-
+    age = _age_seconds(agent_last_seen)
+    if age is not None:
+        agent_age_seconds = int(age)
         if agent_age_seconds <= 600:
             agent_online = True
             agent_communication_state = "healthy"
@@ -255,33 +206,14 @@ def dashboard_summary(
 
 
 @router.get("/printers")
-def dashboard_printers(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> list[dict[str, Any]]:
-    printers = (
-        db.query(Printer)
-        .filter(Printer.company_id == current_user.company_id)
-        .order_by(Printer.id.desc())
-        .all()
-    )
+def dashboard_printers(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> list[dict[str, Any]]:
+    printers = db.query(Printer).filter(Printer.company_id == current_user.company_id).order_by(Printer.id.desc()).all()
     return [serialize_printer(printer) for printer in printers]
 
 
 @router.get("/printers/{printer_uuid}")
-def dashboard_printer_detail(
-    printer_uuid: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> dict[str, Any]:
-    printer = (
-        db.query(Printer)
-        .filter(
-            Printer.uuid == printer_uuid,
-            Printer.company_id == current_user.company_id,
-        )
-        .first()
-    )
+def dashboard_printer_detail(printer_uuid: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, Any]:
+    printer = db.query(Printer).filter(Printer.uuid == printer_uuid, Printer.company_id == current_user.company_id).first()
     if not printer:
         raise HTTPException(status_code=404, detail="Impressora não encontrada.")
     return serialize_printer(printer)
