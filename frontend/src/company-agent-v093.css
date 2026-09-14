@@ -1,0 +1,43 @@
+/* PRINTFLOW Empresa e Agent v093 */
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .hero {
+  padding: 14px 18px;
+  min-height: 72px;
+}
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .hero h2 { margin: 3px 0 2px; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .grid {
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, .92fr);
+  gap: 14px;
+}
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .panel { min-height: 0; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) form { display: grid; gap: 9px; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) form .primary { margin-top: 2px; }
+
+.company-agent-link-panel { align-self: start; }
+.company-agent-link-panel > p { margin: 0 0 14px; max-width: 620px; }
+.company-agent-link-panel .token-box {
+  margin: 12px 0 10px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: .035em;
+  user-select: none;
+}
+.company-agent-link-panel .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.company-agent-link-panel .row-actions button { min-width: 88px; background: #fff; border: 1px solid #aebfd1; color: #174f98; font-weight: 600; }
+.company-agent-link-panel .row-actions button:hover { background: #f3f7fc; border-color: #7f9fbe; }
+
+.agent-link-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid #cfe6d7;
+  border-radius: 8px;
+  background: #f4fbf6;
+}
+.agent-link-status > div { display: flex; flex-direction: column; gap: 2px; }
+.agent-link-status strong { font-size: 13px; color: #155f37; }
+.agent-link-status small { font-size: 11px; color: #577263 !important; }
+.agent-link-dot { width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%; background: #20a35a; box-shadow: 0 0 0 4px rgba(32,163,90,.10); }
+
+@media (max-width: 1150px) {
+  .dashboard:not(.printers-workspace):has(.company-agent-link-panel) .grid { grid-template-columns: 1fr; }
+}
