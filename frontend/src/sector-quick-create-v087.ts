@@ -1,41 +1,8 @@
-const API_BASE_URL = (
-  import.meta.env.VITE_API_URL ||
-  "https://printflow-api-genesis.onrender.com"
-).replace(/\/$/, "");
-
-function authHeaders(method: string): Record<string, string> {
-  const previewToken = sessionStorage.getItem("printflow_preview_token");
-  return {
-    Accept: "application/json",
-    ...(method !== "GET" ? { "Content-Type": "application/json", "X-CSRF-Protection": "1" } : {}),
-    ...(previewToken ? { Authorization: `Bearer ${previewToken}` } : {}),
-  };
-}
-
-async function apiRequest<T>(endpoint: string, method = "GET", body?: unknown): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method,
-    credentials: "include",
-    headers: authHeaders(method),
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-  });
-
-  if (!response.ok) {
-    let detail = `HTTP ${response.status}`;
-    try {
-      const payload = await response.json();
-      detail = String(payload?.detail || detail);
-    } catch {
-      // mantém o erro HTTP quando a resposta não for JSON
-    }
-    throw new Error(detail);
-  }
-
-  return response.json() as Promise<T>;
-}
-
-type Unit = { id: number; name: string };
-type Sector = { id: number; unit_id: number; name: string };
+import {
+  createOrganizationSector,
+  getOrganizationSectors,
+  getOrganizationUnits,
+} from "./services/api";
 
 function ensureStyles(): void {
   if (document.getElementById("printflow-sector-quick-create-style")) return;
@@ -105,19 +72,17 @@ function enhanceLocationForm(form: HTMLElement): void {
     button.textContent = "Salvando...";
 
     try {
-      const units = await apiRequest<Unit[]>("/api/v1/organization/units");
+      const units = await getOrganizationUnits();
       const unit = units.find((item) => item.name === unitName);
       if (!unit) throw new Error("Unidade selecionada não encontrada no cadastro.");
 
-      let sector: Sector | undefined;
-      const currentSectors = await apiRequest<Sector[]>(`/api/v1/organization/sectors?unit_id=${unit.id}`);
-      sector = currentSectors.find((item) => item.name.toLocaleLowerCase("pt-BR") === sectorName.toLocaleLowerCase("pt-BR"));
+      const currentSectors = await getOrganizationSectors(unit.id);
+      let sector = currentSectors.find(
+        (item) => item.name.toLocaleLowerCase("pt-BR") === sectorName.toLocaleLowerCase("pt-BR"),
+      );
 
       if (!sector) {
-        sector = await apiRequest<Sector>("/api/v1/organization/sectors", "POST", {
-          unit_id: unit.id,
-          name: sectorName,
-        });
+        sector = await createOrganizationSector(unit.id, sectorName);
       }
 
       const optionExists = Array.from(sectorSelect.options).some((option) => option.value === sector!.name);
@@ -130,7 +95,7 @@ function enhanceLocationForm(form: HTMLElement): void {
       input.value = "";
       message.textContent = `Setor "${sector.name}" cadastrado e selecionado.`;
 
-      window.setTimeout(() => saveButton.click(), 120);
+      window.setTimeout(() => saveButton.click(), 150);
     } catch (error) {
       message.textContent = error instanceof Error ? error.message : "Falha ao cadastrar o setor.";
       message.classList.add("is-error");
