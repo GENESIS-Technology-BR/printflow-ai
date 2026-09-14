@@ -19,6 +19,9 @@ if str(CURRENT_DIR) not in sys.path:
     )
 
 
+from snmp.page_count_fallback import install_page_count_fallback
+install_page_count_fallback()
+
 from config.settings import AgentSettings
 from core.logger import configure_logger
 from core.scheduler import AgentScheduler
