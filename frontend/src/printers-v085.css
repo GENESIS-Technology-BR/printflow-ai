@@ -1,0 +1,171 @@
+/* PRINTFLOW v0.8.5 — Impressoras
+   Corrige compressão visual, sobreposição e leitura dos dados em linha. */
+
+.printers-workspace .printer-cards{
+  max-height:560px!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:auto!important;
+  background:#fff!important;
+}
+
+.printers-workspace .printer-workspace-columns,
+.printers-workspace .printer-clean-summary{
+  grid-template-columns:minmax(360px,2.25fr) 120px 120px 120px 180px 96px!important;
+  min-width:1080px!important;
+}
+
+.printers-workspace .printer-workspace-columns{
+  position:sticky!important;
+  top:0!important;
+  z-index:4!important;
+  min-height:38px!important;
+  padding:0 16px!important;
+  border-radius:6px 6px 0 0!important;
+}
+
+.printers-workspace .printer-card{
+  min-width:1080px!important;
+  min-height:64px!important;
+}
+
+.printers-workspace .printer-clean-summary{
+  min-height:64px!important;
+  height:64px!important;
+  padding:0 16px!important;
+  align-items:center!important;
+}
+
+.printers-workspace .printer-clean-identity{
+  grid-template-columns:36px minmax(0,1fr)!important;
+  gap:10px!important;
+  min-width:0!important;
+}
+
+.printers-workspace .printer-clean-name-row{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  min-width:0!important;
+}
+
+.printers-workspace .printer-clean-name-row>strong{
+  display:block!important;
+  max-width:245px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:12px!important;
+  line-height:1.2!important;
+  color:#172d40!important;
+}
+
+.printers-workspace .printer-clean-model{
+  display:block!important;
+  margin-top:2px!important;
+  font-size:9.5px!important;
+  line-height:1.2!important;
+  color:#5e7488!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+.printers-workspace .printer-clean-meta-row{
+  display:flex!important;
+  gap:8px!important;
+  margin-top:3px!important;
+  font-size:9px!important;
+  line-height:1.15!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+}
+
+.printers-workspace .printer-clean-stat{
+  min-height:64px!important;
+  height:64px!important;
+  padding:0 12px!important;
+  display:flex!important;
+  justify-content:center!important;
+  align-items:flex-start!important;
+  flex-direction:column!important;
+  overflow:hidden!important;
+}
+
+/* O cabeçalho já informa o nome da coluna. Ocultar o rótulo repetido libera espaço para o valor real. */
+.printers-workspace .printer-clean-stat>span{
+  display:none!important;
+}
+
+.printers-workspace .printer-clean-stat>strong{
+  display:block!important;
+  width:100%!important;
+  color:#1d3448!important;
+  font-size:11.5px!important;
+  font-weight:700!important;
+  line-height:1.25!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+.printers-workspace .printer-clean-last-seen>strong{
+  font-size:10.5px!important;
+  font-weight:600!important;
+}
+
+.printers-workspace .printer-clean-mini-track{
+  width:74px!important;
+  height:5px!important;
+  margin-top:6px!important;
+  border-radius:3px!important;
+  overflow:hidden!important;
+}
+
+.printers-workspace .printer-clean-details-button{
+  min-width:76px!important;
+  min-height:30px!important;
+  justify-self:end!important;
+  align-self:center!important;
+}
+
+.printers-workspace .status-pill{
+  flex:0 0 auto!important;
+  min-height:19px!important;
+  line-height:18px!important;
+  padding:0 7px!important;
+}
+
+.printers-workspace .printer-clean-icon{
+  width:34px!important;
+  height:34px!important;
+  border-radius:5px!important;
+}
+
+/* Barra de filtros mais limpa e proporcional */
+.printers-workspace .printer-filter-bar{
+  grid-template-columns:minmax(300px,1.6fr) repeat(3,minmax(135px,.72fr)) 82px!important;
+  min-height:42px!important;
+}
+.printers-workspace .printer-filter-bar input,
+.printers-workspace .printer-filter-bar select{
+  height:40px!important;
+  min-height:40px!important;
+}
+
+/* reduz sensação de "lista infinita" mantendo aproximadamente 8–9 linhas visíveis */
+@media(min-height:850px){
+  .printers-workspace .printer-cards{max-height:540px!important}
+}
+
+@media(max-width:1250px){
+  .printers-workspace .printer-workspace-columns,
+  .printers-workspace .printer-clean-summary,
+  .printers-workspace .printer-card{
+    min-width:1020px!important;
+  }
+  .printers-workspace .printer-workspace-columns,
+  .printers-workspace .printer-clean-summary{
+    grid-template-columns:minmax(320px,2fr) 110px 110px 110px 170px 90px!important;
+  }
+}
