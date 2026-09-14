@@ -1,0 +1,120 @@
+/* PRINTFLOW v0.8.6 — Relatórios sem rolagem externa
+   Mantém filtros, KPIs e tabela no viewport. Apenas a tabela rola internamente. */
+
+.reports-workspace{
+  height:calc(100vh - 62px)!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  padding:10px 18px 12px!important;
+}
+
+.reports-workspace .reports-page{
+  height:100%!important;
+  min-height:0!important;
+  display:grid!important;
+  grid-template-rows:auto auto auto auto auto minmax(0,1fr)!important;
+  gap:7px!important;
+  overflow:hidden!important;
+}
+
+.reports-workspace .reports-header{
+  min-height:50px!important;
+  padding:6px 12px!important;
+  margin:0!important;
+}
+.reports-workspace .reports-header h1{font-size:20px!important;line-height:1.05!important}
+.reports-workspace .reports-header p{margin-top:2px!important;font-size:9px!important}
+
+.reports-workspace .reports-intro{
+  min-height:54px!important;
+  margin:0!important;
+  padding:8px 12px!important;
+}
+.reports-workspace .reports-intro h2{margin:2px 0 3px!important;font-size:15px!important}
+.reports-workspace .reports-intro p{font-size:9px!important}
+.reports-workspace .reports-downloads button{min-height:30px!important;padding:6px 12px!important;font-size:9px!important}
+
+.reports-workspace .reports-period-bar,
+.reports-workspace .reports-scope-bar{
+  min-height:30px!important;
+  margin:0!important;
+  padding:5px 10px!important;
+}
+
+.reports-workspace .reports-filters{
+  min-height:54px!important;
+  margin:0!important;
+  padding:7px 9px!important;
+  gap:8px!important;
+}
+.reports-workspace .reports-filters label{gap:3px!important;font-size:9px!important}
+.reports-workspace .reports-filters input,
+.reports-workspace .reports-filters select{
+  min-height:31px!important;
+  height:31px!important;
+  padding:4px 8px!important;
+  font-size:10px!important;
+}
+
+.reports-workspace .reports-metrics{
+  min-height:60px!important;
+  margin:0!important;
+  gap:0!important;
+}
+.reports-workspace .reports-metrics article{
+  min-height:60px!important;
+  padding:9px 12px!important;
+}
+.reports-workspace .reports-metrics span{margin-bottom:2px!important;font-size:9px!important}
+.reports-workspace .reports-metrics strong{font-size:21px!important;line-height:1.05!important}
+
+.reports-workspace .reports-table-card{
+  min-height:0!important;
+  height:100%!important;
+  max-height:none!important;
+  display:grid!important;
+  grid-template-rows:auto minmax(0,1fr)!important;
+  overflow:hidden!important;
+}
+.reports-workspace .reports-table-title{
+  padding:8px 10px!important;
+  min-height:40px!important;
+}
+.reports-workspace .reports-table-title h3{margin-top:2px!important;font-size:12px!important}
+.reports-workspace .reports-table-title small,
+.reports-workspace .reports-table-title>span{font-size:8px!important}
+
+.reports-workspace .reports-table-scroll{
+  min-height:0!important;
+  height:100%!important;
+  overflow:auto!important;
+  scrollbar-width:thin!important;
+}
+.reports-workspace .reports-table thead{
+  position:sticky!important;
+  top:0!important;
+  z-index:4!important;
+}
+.reports-workspace .reports-table th{
+  padding:8px 10px!important;
+  font-size:9px!important;
+}
+.reports-workspace .reports-table td{
+  padding:8px 10px!important;
+  font-size:10px!important;
+}
+.reports-workspace .reports-table td small{font-size:8px!important;margin-top:1px!important}
+
+@media(max-height:850px){
+  .reports-workspace .reports-header{min-height:44px!important}
+  .reports-workspace .reports-intro{min-height:48px!important}
+  .reports-workspace .reports-metrics,
+  .reports-workspace .reports-metrics article{min-height:54px!important}
+  .reports-workspace .reports-table td{padding:6px 9px!important}
+}
+
+@media(max-width:1180px){
+  .reports-workspace{height:auto!important;overflow:visible!important}
+  .reports-workspace .reports-page{height:auto!important;overflow:visible!important}
+  .reports-workspace .reports-table-card{height:auto!important;max-height:520px!important}
+}
