@@ -1,0 +1,125 @@
+/* PRINTFLOW v0.9.0 — alinhamento final do editor de impressoras */
+
+/* Três blocos com proporção visual equilibrada. */
+.printers-workspace .printer-card.is-expanded .printer-clean-details{
+  grid-template-columns:minmax(0,1fr) minmax(0,.95fr) minmax(0,.95fr)!important;
+  align-items:stretch!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-edit-section{
+  padding:16px 16px 15px!important;
+  min-height:205px!important;
+  box-sizing:border-box!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-section-title{
+  min-height:34px!important;
+  margin-bottom:10px!important;
+}
+
+/* Identidade: campo e botão na mesma linha e com a mesma altura. */
+.printers-workspace .printer-card.is-expanded .printer-clean-inline-form{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:8px!important;
+  align-items:end!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-inline-form input,
+.printers-workspace .printer-card.is-expanded .printer-clean-location-form select,
+.printers-workspace .printer-card.is-expanded .printer-clean-cost-form input,
+.printers-workspace .printer-card.is-expanded .pf-sector-quick-create input{
+  height:38px!important;
+  min-height:38px!important;
+  box-sizing:border-box!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-inline-form button,
+.printers-workspace .printer-card.is-expanded .printer-clean-location-form>button,
+.printers-workspace .printer-card.is-expanded .printer-clean-cost-form button,
+.printers-workspace .printer-card.is-expanded .pf-sector-quick-create button{
+  height:38px!important;
+  min-height:38px!important;
+  box-sizing:border-box!important;
+  white-space:nowrap!important;
+}
+
+/* Localização: Unidade e Setor alinhados; cadastro rápido ocupa uma linha limpa abaixo. */
+.printers-workspace .printer-card.is-expanded .printer-clean-location-form{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:8px!important;
+  align-items:end!important;
+}
+
+.printers-workspace .printer-card.is-expanded .pf-sector-quick-create{
+  grid-column:1 / -1!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:8px!important;
+  align-items:end!important;
+  min-width:0!important;
+  margin-top:2px!important;
+}
+
+.printers-workspace .printer-card.is-expanded .pf-sector-quick-create label{
+  min-width:0!important;
+}
+
+.printers-workspace .printer-card.is-expanded .pf-sector-quick-message{
+  grid-column:1 / -1!important;
+  min-height:14px!important;
+  margin-top:-2px!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-location-form>button{
+  grid-column:1 / -1!important;
+  justify-self:start!important;
+  min-width:125px!important;
+  margin-top:0!important;
+}
+
+/* Custos: mesma hierarquia e espaçamento dos demais blocos. */
+.printers-workspace .printer-card.is-expanded .printer-clean-cost-form{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:8px!important;
+  align-items:end!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-cost-form>small{
+  grid-column:1 / -1!important;
+  margin-top:-2px!important;
+  min-height:14px!important;
+}
+
+/* Cards técnicos com alturas equivalentes. */
+.printers-workspace .printer-card.is-expanded .printer-clean-technical-grid{
+  margin-top:10px!important;
+  gap:8px!important;
+}
+
+.printers-workspace .printer-card.is-expanded .printer-clean-technical-grid>div{
+  min-height:42px!important;
+  padding:7px 9px!important;
+  box-sizing:border-box!important;
+}
+
+@media(max-width:1450px){
+  .printers-workspace .printer-card.is-expanded .printer-clean-details{
+    grid-template-columns:1fr 1fr!important;
+  }
+  .printers-workspace .printer-card.is-expanded .printer-clean-edit-section:last-child{
+    grid-column:1 / -1!important;
+    border-top:1px solid #e8edf3!important;
+  }
+}
+
+@media(max-width:1050px){
+  .printers-workspace .printer-card.is-expanded .printer-clean-details{
+    grid-template-columns:1fr!important;
+  }
+  .printers-workspace .printer-card.is-expanded .printer-clean-edit-section:last-child{
+    grid-column:auto!important;
+  }
+}
