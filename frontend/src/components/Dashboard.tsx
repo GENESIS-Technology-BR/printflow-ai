@@ -22,7 +22,7 @@ const DASHBOARD_REFRESH_MS = 5 * 60 * 1000;
 
 type DashboardProps = {
   companyName: string;
-  onManageCompany: () => void;
+  onManageCompany?: () => void;
   onOpenPrinters: () => void;
 };
 
