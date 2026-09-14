@@ -1,0 +1,78 @@
+/* PRINTFLOW Enterprise Design System v0.92
+   Camada global de refinamento inspirada em padrões ERP enterprise.
+   Mantém a tela de Impressoras homologada sem alterações estruturais. */
+
+:root {
+  --pf-space-1: 4px;
+  --pf-space-2: 8px;
+  --pf-space-3: 12px;
+  --pf-space-4: 16px;
+  --pf-space-6: 24px;
+  --pf-space-8: 32px;
+  --pf-radius-sm: 6px;
+  --pf-radius-md: 8px;
+  --pf-border: #d7e0ea;
+  --pf-text: #10243e;
+  --pf-muted: #60758d;
+  --pf-surface: #fff;
+  --pf-primary: #1769d2;
+  --pf-primary-hover: #0f5dbf;
+  --pf-success: #16834a;
+}
+
+/* Hierarquia tipográfica e superfícies */
+.dashboard:not(.printers-workspace) h1 { font-size: 22px; line-height: 1.15; letter-spacing: -.025em; color: var(--pf-text); }
+.dashboard:not(.printers-workspace) h2 { letter-spacing: -.018em; color: var(--pf-text); }
+.dashboard:not(.printers-workspace) h3 { color: var(--pf-text); }
+.dashboard:not(.printers-workspace) p,
+.dashboard:not(.printers-workspace) small { color: var(--pf-muted); }
+.dashboard:not(.printers-workspace) .panel,
+.dashboard:not(.printers-workspace) .hero { border-color: var(--pf-border); box-shadow: 0 1px 2px rgba(16,36,62,.035); }
+
+/* Controles corporativos consistentes */
+.dashboard:not(.printers-workspace) input,
+.dashboard:not(.printers-workspace) select,
+.dashboard:not(.printers-workspace) button { min-height: 36px; border-radius: var(--pf-radius-sm); }
+.dashboard:not(.printers-workspace) input,
+.dashboard:not(.printers-workspace) select { border-color: #c7d3e0; }
+.dashboard:not(.printers-workspace) input:focus,
+.dashboard:not(.printers-workspace) select:focus { outline: 2px solid rgba(23,105,210,.18); outline-offset: 1px; border-color: var(--pf-primary); }
+.dashboard:not(.printers-workspace) button.primary { background: var(--pf-primary); }
+.dashboard:not(.printers-workspace) button.primary:hover { background: var(--pf-primary-hover); }
+
+/* Empresa e Agent: reduz vazio e transforma em workspace de configuração */
+.dashboard:not(.printers-workspace):has(.hero) .hero { padding: 18px 20px; border-radius: var(--pf-radius-md); }
+.dashboard:not(.printers-workspace):has(.hero) .grid { align-items: stretch; gap: var(--pf-space-4); }
+.dashboard:not(.printers-workspace):has(.hero) .panel { padding: 18px; border-radius: var(--pf-radius-md); }
+.dashboard:not(.printers-workspace):has(.hero) .panel h3 { padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1px solid #e5ebf2; }
+.dashboard:not(.printers-workspace):has(.hero) form { gap: 10px; }
+.dashboard:not(.printers-workspace):has(.hero) label { gap: 5px; }
+.dashboard:not(.printers-workspace):has(.hero) .token-box { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 13px 14px; border: 1px solid #d6e0ea; border-radius: var(--pf-radius-md); background: #f7f9fc; color: #42566e; }
+.dashboard:not(.printers-workspace):has(.hero) .tariff-box { margin-top: 14px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: var(--pf-radius-md); background: #f8fafc; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+
+/* Agentes: maior densidade e leitura operacional */
+.dashboard:not(.printers-workspace) .agent-monitor { max-width: none; }
+.dashboard:not(.printers-workspace) .agent-monitor article,
+.dashboard:not(.printers-workspace) .agent-monitor .panel { border-radius: var(--pf-radius-md); box-shadow: none; }
+
+/* Relatórios: padrão list-report, toolbar/filtros mais claros */
+.reports-workspace { --report-border: #d7e0ea; }
+.reports-workspace input,
+.reports-workspace select { background: #fff; }
+.reports-workspace table thead th { font-size: 11px; font-weight: 700; letter-spacing: .015em; color: #40546b; background: #f4f7fa; border-bottom: 1px solid #cbd6e2; }
+.reports-workspace table tbody tr:hover { background: #f7faff; }
+.reports-workspace table td { border-bottom-color: #e6ebf1; }
+
+/* Topbar: acabamento mais próximo de suíte enterprise */
+.workspace-topbar { border-bottom-color: #dfe6ee; box-shadow: 0 1px 0 rgba(16,36,62,.02); }
+.workspace-product { letter-spacing: .09em; }
+.workspace-environment { border-radius: 999px; }
+
+/* Acessibilidade e feedback */
+button { transition: background-color .14s ease, border-color .14s ease, box-shadow .14s ease, transform .08s ease; }
+button:active { transform: translateY(1px); }
+button:focus-visible, a:focus-visible { outline: 2px solid rgba(23,105,210,.55); outline-offset: 2px; }
+
+@media (max-width: 1100px) {
+  .dashboard:not(.printers-workspace):has(.hero) .grid { grid-template-columns: 1fr; }
+}
