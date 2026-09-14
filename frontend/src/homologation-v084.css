@@ -1,0 +1,52 @@
+/* PRINTFLOW v0.8.4 — refinamento de homologação
+   Ajusta somente composição visual. Agentes permanece intencionalmente sem alterações. */
+
+/* Visão Geral — encaixe dos quadros no viewport */
+.dashboard-modern-shell .modern-dashboard{max-width:none!important}
+.dashboard-modern-shell .metrics-grid.modern-kpi-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+.dashboard-modern-shell .clean-dashboard-main{grid-template-columns:minmax(0,2.35fr) minmax(300px,1fr)!important;gap:10px!important}
+.dashboard-modern-shell .modern-panel,.dashboard-modern-shell .clean-health-card,.dashboard-modern-shell .clean-alert-panel{min-width:0!important}
+.dashboard-modern-shell .modern-dashboard-header{margin-bottom:10px!important}
+.dashboard-modern-shell .metric-card{min-width:0!important;padding:11px 13px!important}
+.dashboard-modern-shell .metric-card-value{font-size:23px!important}
+
+/* Empresa e Agent — melhor ocupação e alinhamento */
+.dashboard:not(.dashboard-modern-shell):not(.printers-workspace) .hero{margin-bottom:10px!important;padding:16px 18px!important;min-height:72px!important}
+.dashboard:not(.dashboard-modern-shell):not(.printers-workspace) .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:12px!important;align-items:stretch!important}
+.dashboard:not(.dashboard-modern-shell):not(.printers-workspace) .panel{min-width:0!important;padding:14px 16px!important}
+.dashboard:not(.dashboard-modern-shell):not(.printers-workspace) .panel form{gap:9px!important}
+.dashboard:not(.dashboard-modern-shell):not(.printers-workspace) .panel input{min-height:36px!important}
+.dashboard:not(.dashboard-modern-shell):not(.printers-workspace) .panel .primary{min-height:36px!important}
+
+/* Impressoras — corrige sobreposição: tabela legível com scroll próprio */
+.printers-workspace .printer-workspace-columns,
+.printers-workspace .printer-clean-summary{grid-template-columns:minmax(330px,2fr) 110px 110px 110px 165px 90px!important;min-width:1010px!important}
+.printers-workspace .printer-cards{max-height:calc(100vh - 300px)!important;min-height:420px!important;overflow:auto!important}
+.printers-workspace .printer-card{min-width:1010px!important}
+.printers-workspace .printer-clean-summary{min-height:58px!important}
+.printers-workspace .printer-clean-stat{min-width:0!important;overflow:hidden!important}
+.printers-workspace .printer-clean-stat>span,.printers-workspace .printer-clean-stat>strong{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.printers-workspace .printer-clean-name-row>strong{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.printers-workspace .printer-filter-bar{grid-template-columns:minmax(260px,1.5fr) repeat(3,minmax(125px,.72fr)) 78px!important}
+
+/* Relatórios — fecha o fluxo principal em uma tela; tabela rola internamente */
+.reports-page{height:calc(100vh - 62px)!important;overflow:hidden!important;padding-bottom:10px!important}
+.reports-header{min-height:62px!important;padding-top:8px!important;padding-bottom:8px!important}
+.reports-intro{margin-top:8px!important;margin-bottom:8px!important;padding:10px 14px!important;min-height:64px!important}
+.reports-period-bar{margin-bottom:8px!important;min-height:38px!important}
+.reports-filters{margin-bottom:8px!important}
+.reports-summary{margin-bottom:8px!important}
+.reports-table-card{max-height:calc(100vh - 430px)!important;min-height:230px!important;overflow:auto!important}
+.reports-table-card table{position:relative!important}
+.reports-table-card thead{position:sticky!important;top:0!important;z-index:3!important;background:#f5f7f9!important}
+
+@media(max-width:1450px){
+ .dashboard-modern-shell .metrics-grid.modern-kpi-grid{grid-template-columns:repeat(5,minmax(145px,1fr))!important;overflow-x:auto!important}
+ .dashboard-modern-shell .clean-dashboard-main{grid-template-columns:minmax(0,2fr) minmax(280px,.9fr)!important}
+}
+@media(max-width:1180px){
+ .dashboard-modern-shell .clean-dashboard-main{grid-template-columns:1fr!important}
+ .dashboard:not(.dashboard-modern-shell):not(.printers-workspace) .grid{grid-template-columns:1fr!important}
+ .reports-page{height:auto!important;overflow:visible!important}
+ .reports-table-card{max-height:520px!important}
+}
