@@ -1,5 +1,5 @@
-/* PRINTFLOW Empresa e Agent v094
-   Protege o token e apresenta o estado operacional real do Agent. */
+/* PRINTFLOW Empresa e Agent v095
+   Protege o token e apresenta comunicação e condição operacional real do Agent. */
 
 const TOKEN_LENGTH_HINT = '43 caracteres'
 const API_URL = (import.meta.env.VITE_API_URL || 'https://printflow-api-genesis.onrender.com').replace(/\/$/, '')
@@ -35,8 +35,46 @@ function statusCopy(data: AgentStatus) {
   return { label: 'Agent Offline', detail: 'Sem comunicação recente', tone: 'offline' }
 }
 
+function cycleCopy(status?: string | null) {
+  const value = (status || '').toLowerCase()
+  if (value === 'healthy') return { label: 'Saudável', tone: 'ok' }
+  if (value === 'slow') return { label: 'Ciclo lento', tone: 'warn' }
+  if (value === 'error') return { label: 'Falha no ciclo', tone: 'error' }
+  if (value === 'running') return { label: 'Em execução', tone: 'running' }
+  return { label: 'Sem diagnóstico', tone: 'neutral' }
+}
+
+function operationalPanel(data: AgentStatus) {
+  const cycle = cycleCopy(data.status)
+  const error = data.last_error
+    ? `<div class="agent-operation-error"><strong>Último erro</strong><span>${data.last_error}</span></div>`
+    : ''
+
+  return `
+    <div class="agent-operation-grid">
+      <div class="agent-operation-item">
+        <span>Condição do ciclo</span>
+        <strong data-cycle-tone="${cycle.tone}">${cycle.label}</strong>
+      </div>
+      <div class="agent-operation-item">
+        <span>Versão</span>
+        <strong>${data.version || 'Não informada'}</strong>
+      </div>
+      <div class="agent-operation-item">
+        <span>Identificação</span>
+        <strong>${data.name || 'PRINTFLOW Agent'}</strong>
+      </div>
+      <div class="agent-operation-item">
+        <span>Última comunicação</span>
+        <strong>${formatLastSeen(data.last_seen)}</strong>
+      </div>
+    </div>
+    ${error}`
+}
+
 async function loadAgentStatus(panel: HTMLElement) {
   const status = panel.querySelector('.agent-link-status') as HTMLElement | null
+  const operation = panel.querySelector('.agent-operation') as HTMLElement | null
   if (!status) return
 
   try {
@@ -55,12 +93,13 @@ async function loadAgentStatus(panel: HTMLElement) {
       <div class="agent-status-copy">
         <strong>${copy.label}</strong>
         <small>${copy.detail}</small>
-        <span class="agent-status-meta">Última comunicação: ${formatLastSeen(data.last_seen)}</span>
-        ${data.version ? `<span class="agent-status-meta">Versão: ${data.version}${data.name ? ` · ${data.name}` : ''}</span>` : ''}
       </div>`
+
+    if (operation) operation.innerHTML = operationalPanel(data)
   } catch {
     status.dataset.tone = 'offline'
     status.innerHTML = '<span class="agent-link-dot"></span><div><strong>Status indisponível</strong><small>Não foi possível consultar o heartbeat agora.</small></div>'
+    if (operation) operation.innerHTML = '<div class="agent-operation-unavailable">Diagnóstico operacional temporariamente indisponível.</div>'
   }
 }
 
@@ -70,7 +109,7 @@ function enhanceCompanyAgent() {
   if (!heading) return
 
   const panel = heading.closest('article.panel') as HTMLElement | null
-  if (!panel || panel.dataset.v094 === 'ready') return
+  if (!panel || panel.dataset.v095 === 'ready') return
 
   const tokenBox = panel.querySelector('.token-box') as HTMLElement | null
   const actions = panel.querySelector('.row-actions') as HTMLElement | null
@@ -79,7 +118,7 @@ function enhanceCompanyAgent() {
   const token = (tokenBox.textContent || '').trim()
   if (!token) return
 
-  panel.dataset.v094 = 'ready'
+  panel.dataset.v095 = 'ready'
   panel.classList.add('company-agent-link-panel')
   heading.textContent = 'Vinculação do Agent'
 
@@ -90,6 +129,12 @@ function enhanceCompanyAgent() {
   status.className = 'agent-link-status'
   status.innerHTML = '<span class="agent-link-dot"></span><div><strong>Consultando Agent...</strong><small>Validando heartbeat operacional</small></div>'
   tokenBox.before(status)
+
+  const operation = document.createElement('section')
+  operation.className = 'agent-operation'
+  operation.setAttribute('aria-label', 'Diagnóstico operacional do Agent')
+  operation.innerHTML = '<div class="agent-operation-unavailable">Carregando diagnóstico operacional...</div>'
+  status.after(operation)
 
   tokenBox.textContent = maskToken(token)
   tokenBox.setAttribute('aria-label', 'Token do Agent mascarado')
