@@ -32,4 +32,9 @@ class CompanyResponse(BaseModel):
     default_cost_per_page: Decimal
     agent_token: str
     active: bool
+    agent_last_seen: datetime | None = None
+    agent_status: str | None = None
+    agent_name: str | None = None
+    agent_version: str | None = None
+    agent_last_error: str | None = None
     created_at: datetime
