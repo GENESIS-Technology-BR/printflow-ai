@@ -34,6 +34,13 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
+      - name: Configurar Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
       - name: Instalar dependências
         shell: powershell
         run: |
@@ -50,6 +57,14 @@ jobs:
       - name: Auditar dependencias Python
         shell: powershell
         run: pip-audit -r requirements.txt
+
+      - name: Gate de seguranca frontend
+        shell: powershell
+        run: |
+          Push-Location frontend
+          npm ci
+          npm audit --audit-level=high
+          Pop-Location
 
       - name: Validar scripts Windows
         shell: powershell
@@ -136,6 +151,21 @@ jobs:
           $env:PYTHONPATH = "${{ github.workspace }}/agent/python"
           $agentVersion = (python -c "from version import AGENT_VERSION; print(AGENT_VERSION)").Trim()
           $exeHash = (Get-FileHash package/PRINTFLOW-Agent.exe -Algorithm SHA256).Hash
+          $required = @(
+            "PRINTFLOW-Agent.exe",
+            "Executar-PRINTFLOW-Agent.bat",
+            "INSTALAR-PRINTFLOW-Agent.bat",
+            "ATUALIZAR-PRINTFLOW-Agent.bat",
+            "Start-PRINTFLOW-Agent.ps1",
+            "Watchdog-PRINTFLOW-Agent.ps1",
+            "Install-PRINTFLOW-Agent.ps1",
+            "Update-PRINTFLOW-Agent.ps1",
+            "Uninstall-PRINTFLOW-Agent.ps1",
+            "VALIDAR-PRINTFLOW-Build.bat",
+            "Validar-PRINTFLOW-Build.ps1",
+            "BUILD-VALIDATION.txt",
+            "README-TESTE.txt"
+          )
           @(
             "PRINTFLOW BUILD VALIDATION"
             "Build: ${{ github.run_number }}"
@@ -146,6 +176,9 @@ jobs:
             "EXE smoke test: APPROVED"
             "EXE SHA256: $exeHash"
           ) | Set-Content package/BUILD-VALIDATION.txt -Encoding UTF8
+          foreach ($file in $required) {
+            if (-not (Test-Path "package/$file")) { throw "Arquivo ausente no pacote: $file" }
+          }
           Compress-Archive -Path package/* -DestinationPath PRINTFLOW-Agent-Windows-Teste.zip
 
       - name: Publicar pacote
