@@ -1,4 +1,4 @@
-/* PRINTFLOW Empresa e Agent v093 */
+/* PRINTFLOW Empresa e Agent v094 */
 .dashboard:not(.printers-workspace):has(.company-agent-link-panel) .hero {
   padding: 14px 18px;
   min-height: 72px;
@@ -37,6 +37,17 @@
 .agent-link-status strong { font-size: 13px; color: #155f37; }
 .agent-link-status small { font-size: 11px; color: #577263 !important; }
 .agent-link-dot { width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%; background: #20a35a; box-shadow: 0 0 0 4px rgba(32,163,90,.10); }
+.agent-status-meta { font-size: 11px; color: #6b7280; }
+
+.agent-link-status[data-tone="stale"] { border-color: #ead7a2; background: #fffaf0; }
+.agent-link-status[data-tone="stale"] strong { color: #8a5b08; }
+.agent-link-status[data-tone="stale"] small { color: #826b3f !important; }
+.agent-link-status[data-tone="stale"] .agent-link-dot { background: #d89b22; box-shadow: 0 0 0 4px rgba(216,155,34,.12); }
+
+.agent-link-status[data-tone="offline"] { border-color: #e8c7c7; background: #fff7f7; }
+.agent-link-status[data-tone="offline"] strong { color: #9b3030; }
+.agent-link-status[data-tone="offline"] small { color: #805959 !important; }
+.agent-link-status[data-tone="offline"] .agent-link-dot { background: #cf4b4b; box-shadow: 0 0 0 4px rgba(207,75,75,.10); }
 
 @media (max-width: 1150px) {
   .dashboard:not(.printers-workspace):has(.company-agent-link-panel) .grid { grid-template-columns: 1fr; }
