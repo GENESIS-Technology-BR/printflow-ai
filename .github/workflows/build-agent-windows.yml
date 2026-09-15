@@ -142,6 +142,7 @@ jobs:
           Copy-Item agent/windows/ATUALIZAR-PRINTFLOW-Agent.bat package/
           Copy-Item agent/windows/Start-PRINTFLOW-Agent.ps1 package/
           Copy-Item agent/windows/Watchdog-PRINTFLOW-Agent.ps1 package/
+          Copy-Item agent/windows/Sync-PRINTFLOW-Watchdog.ps1 package/
           Copy-Item agent/windows/Install-PRINTFLOW-Agent.ps1 package/
           Copy-Item agent/windows/Update-PRINTFLOW-Agent.ps1 package/
           Copy-Item agent/windows/Uninstall-PRINTFLOW-Agent.ps1 package/
@@ -158,6 +159,7 @@ jobs:
             "ATUALIZAR-PRINTFLOW-Agent.bat",
             "Start-PRINTFLOW-Agent.ps1",
             "Watchdog-PRINTFLOW-Agent.ps1",
+            "Sync-PRINTFLOW-Watchdog.ps1",
             "Install-PRINTFLOW-Agent.ps1",
             "Update-PRINTFLOW-Agent.ps1",
             "Uninstall-PRINTFLOW-Agent.ps1",
