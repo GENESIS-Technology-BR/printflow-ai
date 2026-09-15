@@ -11,6 +11,7 @@ on:
   workflow_run:
     workflows:
       - "Build PRINTFLOW Agent Windows"
+      - "PRINTFLOW Web Validation"
     types:
       - completed
 
@@ -54,17 +55,16 @@ jobs:
           fi
 
       - name: Aguardar e validar produção
-        run: |
-          python scripts/production_smoke.py "${PRODUCTION_URL}" --attempts 8 --delay 20
+        run: python scripts/production_smoke.py "${PRODUCTION_URL}" --attempts 8 --delay 15
 
       - name: Registrar evidência no summary
         if: always()
         shell: bash
         run: |
           {
-            echo "## PRINTFLOW Production Smoke"
-            echo ""
-            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "## PRINTFLOW Production Smoke #${{ github.run_number }}"
+            echo "- Status: **${{ job.status }}**"
+            echo "- Commit validado: \`${{ github.event.workflow_run.head_sha || github.sha }}\`"
             echo "- Endpoint: \`${PRODUCTION_URL}\`"
-            echo "- Resultado: **${{ job.status }}**"
+            echo "- Origem: \`${{ github.event.workflow_run.name || 'manual' }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
