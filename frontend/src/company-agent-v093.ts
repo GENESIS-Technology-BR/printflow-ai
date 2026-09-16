@@ -5,6 +5,7 @@
 
 const TOKEN_LENGTH_HINT = '43 caracteres'
 const API_URL = (import.meta.env.VITE_API_URL || 'https://printflow-api-genesis.onrender.com').replace(/\/$/, '')
+const CUSTOMER_TIME_ZONE = 'America/Sao_Paulo'
 
 type AgentStatus = {
   online: boolean
@@ -22,11 +23,27 @@ function maskToken(token: string) {
   return `•••••••••••••••••••••••••••••••••••••••${suffix}`
 }
 
+function parseApiDate(value: string) {
+  // O backend persiste heartbeat em UTC. Registros legados podem chegar sem offset;
+  // nesses casos tratamos explicitamente como UTC antes de converter para o cliente.
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value)
+  return new Date(hasTimezone ? value : `${value}Z`)
+}
+
 function formatLastSeen(value?: string | null) {
   if (!value) return 'Nenhuma comunicação registrada'
-  const date = new Date(value)
+  const date = parseApiDate(value)
   if (Number.isNaN(date.getTime())) return 'Horário indisponível'
-  return date.toLocaleString('pt-BR')
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: CUSTOMER_TIME_ZONE,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(date)
 }
 
 function statusCopy(data: AgentStatus) {
