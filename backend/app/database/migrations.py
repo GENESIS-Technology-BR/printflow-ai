@@ -19,6 +19,8 @@ COMPANY_AGENT_COLUMNS = {
     "agent_last_seen": "TIMESTAMP", "agent_status": "VARCHAR(30)", "agent_name": "VARCHAR(120)",
     "agent_version": "VARCHAR(30)", "agent_last_error": "VARCHAR(500)",
     "default_cost_per_page": "NUMERIC(10,4) DEFAULT 0 NOT NULL",
+    "default_bw_cost_per_page": "NUMERIC(10,4) DEFAULT 0 NOT NULL",
+    "default_color_cost_per_page": "NUMERIC(10,4) DEFAULT 0 NOT NULL",
 }
 OPERATIONAL_ALERT_COLUMNS = {"acknowledged_at": "TIMESTAMP", "acknowledged_by": "INTEGER"}
 USER_SECURITY_COLUMNS = {"session_version": "INTEGER DEFAULT 0 NOT NULL", "password_reset_version": "INTEGER DEFAULT 0 NOT NULL"}
