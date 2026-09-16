@@ -21,7 +21,20 @@ class Company(Base):
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     state: Mapped[str | None] = mapped_column(String(2), nullable=True)
     plan: Mapped[str] = mapped_column(String(30), default="pilot")
+    # Legacy fallback kept for compatibility with existing tenants/reports.
     default_cost_per_page: Mapped[Decimal] = mapped_column(
+        Numeric(10, 4),
+        default=Decimal("0.0000"),
+        server_default=text("0"),
+        nullable=False,
+    )
+    default_bw_cost_per_page: Mapped[Decimal] = mapped_column(
+        Numeric(10, 4),
+        default=Decimal("0.0000"),
+        server_default=text("0"),
+        nullable=False,
+    )
+    default_color_cost_per_page: Mapped[Decimal] = mapped_column(
         Numeric(10, 4),
         default=Decimal("0.0000"),
         server_default=text("0"),
