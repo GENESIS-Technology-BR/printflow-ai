@@ -1,5 +1,7 @@
-/* PRINTFLOW Empresa e Agent v095
-   Protege o token e apresenta comunicação e condição operacional real do Agent. */
+/* PRINTFLOW Empresa e Agent v098
+   Protege o token e apresenta comunicação e condição operacional real do Agent.
+   Security baseline: dados da API são renderizados somente via textContent e o polling
+   é encerrado quando o painel sai do DOM. */
 
 const TOKEN_LENGTH_HINT = '43 caracteres'
 const API_URL = (import.meta.env.VITE_API_URL || 'https://printflow-api-genesis.onrender.com').replace(/\/$/, '')
@@ -44,32 +46,66 @@ function cycleCopy(status?: string | null) {
   return { label: 'Sem diagnóstico', tone: 'neutral' }
 }
 
-function operationalPanel(data: AgentStatus) {
-  const cycle = cycleCopy(data.status)
-  const error = data.last_error
-    ? `<div class="agent-operation-error"><strong>Último erro</strong><span>${data.last_error}</span></div>`
-    : ''
+function replaceChildren(parent: HTMLElement, ...children: Node[]) {
+  parent.replaceChildren(...children)
+}
 
-  return `
-    <div class="agent-operation-grid">
-      <div class="agent-operation-item">
-        <span>Condição do ciclo</span>
-        <strong data-cycle-tone="${cycle.tone}">${cycle.label}</strong>
-      </div>
-      <div class="agent-operation-item">
-        <span>Versão</span>
-        <strong>${data.version || 'Não informada'}</strong>
-      </div>
-      <div class="agent-operation-item">
-        <span>Identificação</span>
-        <strong>${data.name || 'PRINTFLOW Agent'}</strong>
-      </div>
-      <div class="agent-operation-item">
-        <span>Última comunicação</span>
-        <strong>${formatLastSeen(data.last_seen)}</strong>
-      </div>
-    </div>
-    ${error}`
+function buildStatus(copy: { label: string; detail: string }) {
+  const dot = document.createElement('span')
+  dot.className = 'agent-link-dot'
+  const text = document.createElement('div')
+  text.className = 'agent-status-copy'
+  const strong = document.createElement('strong')
+  strong.textContent = copy.label
+  const small = document.createElement('small')
+  small.textContent = copy.detail
+  text.append(strong, small)
+  return [dot, text]
+}
+
+function renderOperation(operation: HTMLElement, data: AgentStatus) {
+  const cycle = cycleCopy(data.status)
+  const grid = document.createElement('div')
+  grid.className = 'agent-operation-grid'
+
+  const values = [
+    ['Condição do ciclo', cycle.label, cycle.tone],
+    ['Versão', data.version || 'Não informada', ''],
+    ['Identificação', data.name || 'PRINTFLOW Agent', ''],
+    ['Última comunicação', formatLastSeen(data.last_seen), ''],
+  ]
+
+  for (const [label, value, tone] of values) {
+    const item = document.createElement('div')
+    item.className = 'agent-operation-item'
+    const caption = document.createElement('span')
+    caption.textContent = label
+    const strong = document.createElement('strong')
+    strong.textContent = value
+    if (tone) strong.dataset.cycleTone = tone
+    item.append(caption, strong)
+    grid.append(item)
+  }
+
+  const children: Node[] = [grid]
+  if (data.last_error) {
+    const error = document.createElement('div')
+    error.className = 'agent-operation-error'
+    const title = document.createElement('strong')
+    title.textContent = 'Último erro'
+    const detail = document.createElement('span')
+    detail.textContent = data.last_error
+    error.append(title, detail)
+    children.push(error)
+  }
+  replaceChildren(operation, ...children)
+}
+
+function renderUnavailable(operation: HTMLElement, text: string) {
+  const unavailable = document.createElement('div')
+  unavailable.className = 'agent-operation-unavailable'
+  unavailable.textContent = text
+  replaceChildren(operation, unavailable)
 }
 
 async function loadAgentStatus(panel: HTMLElement) {
@@ -88,18 +124,12 @@ async function loadAgentStatus(panel: HTMLElement) {
     const copy = statusCopy(data)
 
     status.dataset.tone = copy.tone
-    status.innerHTML = `
-      <span class="agent-link-dot"></span>
-      <div class="agent-status-copy">
-        <strong>${copy.label}</strong>
-        <small>${copy.detail}</small>
-      </div>`
-
-    if (operation) operation.innerHTML = operationalPanel(data)
+    replaceChildren(status, ...buildStatus(copy))
+    if (operation) renderOperation(operation, data)
   } catch {
     status.dataset.tone = 'offline'
-    status.innerHTML = '<span class="agent-link-dot"></span><div><strong>Status indisponível</strong><small>Não foi possível consultar o heartbeat agora.</small></div>'
-    if (operation) operation.innerHTML = '<div class="agent-operation-unavailable">Diagnóstico operacional temporariamente indisponível.</div>'
+    replaceChildren(status, ...buildStatus({ label: 'Status indisponível', detail: 'Não foi possível consultar o heartbeat agora.' }))
+    if (operation) renderUnavailable(operation, 'Diagnóstico operacional temporariamente indisponível.')
   }
 }
 
@@ -109,7 +139,7 @@ function enhanceCompanyAgent() {
   if (!heading) return
 
   const panel = heading.closest('article.panel') as HTMLElement | null
-  if (!panel || panel.dataset.v095 === 'ready') return
+  if (!panel || panel.dataset.v098 === 'ready') return
 
   const tokenBox = panel.querySelector('.token-box') as HTMLElement | null
   const actions = panel.querySelector('.row-actions') as HTMLElement | null
@@ -118,7 +148,7 @@ function enhanceCompanyAgent() {
   const token = (tokenBox.textContent || '').trim()
   if (!token) return
 
-  panel.dataset.v095 = 'ready'
+  panel.dataset.v098 = 'ready'
   panel.classList.add('company-agent-link-panel')
   heading.textContent = 'Vinculação do Agent'
 
@@ -127,13 +157,13 @@ function enhanceCompanyAgent() {
 
   const status = document.createElement('div')
   status.className = 'agent-link-status'
-  status.innerHTML = '<span class="agent-link-dot"></span><div><strong>Consultando Agent...</strong><small>Validando heartbeat operacional</small></div>'
+  replaceChildren(status, ...buildStatus({ label: 'Consultando Agent...', detail: 'Validando heartbeat operacional' }))
   tokenBox.before(status)
 
   const operation = document.createElement('section')
   operation.className = 'agent-operation'
   operation.setAttribute('aria-label', 'Diagnóstico operacional do Agent')
-  operation.innerHTML = '<div class="agent-operation-unavailable">Carregando diagnóstico operacional...</div>'
+  renderUnavailable(operation, 'Carregando diagnóstico operacional...')
   status.after(operation)
 
   tokenBox.textContent = maskToken(token)
@@ -156,14 +186,20 @@ function enhanceCompanyAgent() {
   if (tariff) tariff.remove()
 
   void loadAgentStatus(panel)
-  window.setInterval(() => void loadAgentStatus(panel), 60_000)
+  const intervalId = window.setInterval(() => {
+    if (!panel.isConnected) {
+      window.clearInterval(intervalId)
+      return
+    }
+    void loadAgentStatus(panel)
+  }, 60_000)
 }
 
 const observer = new MutationObserver(enhanceCompanyAgent)
 observer.observe(document.documentElement, { childList: true, subtree: true })
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', enhanceCompanyAgent)
+  document.addEventListener('DOMContentLoaded', enhanceCompanyAgent, { once: true })
 } else {
   enhanceCompanyAgent()
 }
