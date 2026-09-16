@@ -1,45 +1,61 @@
-/* PRINTFLOW Empresa e Agent v095 */
-.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .hero { padding: 14px 18px; min-height: 72px; }
-.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .hero h2 { margin: 3px 0 2px; }
-.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .grid { grid-template-columns: minmax(0, 1.08fr) minmax(390px, .92fr); gap: 14px; }
-.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .panel { min-height: 0; }
-.dashboard:not(.printers-workspace):has(.company-agent-link-panel) form { display: grid; gap: 9px; }
-.dashboard:not(.printers-workspace):has(.company-agent-link-panel) form .primary { margin-top: 2px; }
+/* PRINTFLOW Empresa e Agent v0.99 — Enterprise UI */
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) { background:#f4f6f8; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) > header { min-height:58px; margin-bottom:12px; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) > header h1 { margin:2px 0 0; font-size:22px; letter-spacing:-.025em; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) > header small { color:#55708e; font-size:9px; font-weight:800; letter-spacing:.12em; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .hero { padding:16px 20px; min-height:82px; border:1px solid #dfe5ec; border-radius:12px; background:#fff; color:#172b4d; box-shadow:0 1px 2px rgba(15,23,42,.025); }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .hero small { color:#0b6ed0; font-size:9px; font-weight:800; letter-spacing:.08em; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .hero h2 { margin:4px 0 2px; font-size:20px; letter-spacing:-.02em; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .hero p { color:#60758a; font-size:12px; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .hero .plan { padding:8px 14px; border:1px solid #b9d4ef; border-radius:18px; background:#eef6ff; color:#075cab; font-size:12px; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .grid { grid-template-columns:minmax(0,1.02fr) minmax(440px,.98fr); gap:12px; margin-top:12px; align-items:start; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .panel { min-height:0; padding:16px; border:1px solid #dfe5ec; border-radius:8px; box-shadow:0 1px 2px rgba(15,23,42,.025); }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) .panel h3 { margin:0 0 13px; padding-bottom:10px; border-bottom:1px solid #e7ebf0; color:#172b4d; font-size:14px; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) form { display:grid; gap:8px; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) form label { gap:4px; font-size:11px; color:#30465d; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) form input { min-height:38px; padding:8px 10px; border-radius:5px; border-color:#c8d2dd; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) form input:focus { outline:2px solid rgba(11,110,208,.12); border-color:#0b6ed0; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) form small { color:#73869a; font-size:9px; font-weight:500; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) form .primary { min-height:38px; margin-top:2px; border-radius:5px; background:#0b6ed0; }
+.dashboard:not(.printers-workspace):has(.company-agent-link-panel) form .primary:hover { background:#085caf; }
 
-.company-agent-link-panel { align-self: start; }
-.company-agent-link-panel > p { margin: 0 0 14px; max-width: 620px; }
-.company-agent-link-panel .token-box { margin: 12px 0 10px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .035em; user-select: none; }
-.company-agent-link-panel .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.company-agent-link-panel .row-actions button { min-width: 88px; background: #fff; border: 1px solid #aebfd1; color: #174f98; font-weight: 600; }
-.company-agent-link-panel .row-actions button:hover { background: #f3f7fc; border-color: #7f9fbe; }
+.company-agent-link-panel { align-self:start; }
+.company-agent-link-panel > p { margin:0 0 12px; max-width:620px; color:#60758a; font-size:12px; }
+.company-agent-link-panel .token-box { margin:10px 0 8px; padding:11px 12px; border:1px solid #d8e0e8; border-radius:6px; background:#f8fafc; color:#30465d; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:12px; letter-spacing:.035em; user-select:none; }
+.company-agent-link-panel .row-actions { display:flex; gap:7px; flex-wrap:wrap; }
+.company-agent-link-panel .row-actions button { min-width:82px; min-height:34px; padding:6px 12px; background:#fff; border:1px solid #aebfd1; border-radius:5px; color:#075cab; font-size:12px; font-weight:650; }
+.company-agent-link-panel .row-actions button:hover { background:#f3f7fc; border-color:#7f9fbe; }
 
-.agent-link-status { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid #cfe6d7; border-radius: 8px; background: #f4fbf6; }
-.agent-link-status > div { display: flex; flex-direction: column; gap: 2px; }
-.agent-link-status strong { font-size: 13px; color: #155f37; }
-.agent-link-status small { font-size: 11px; color: #577263 !important; }
-.agent-link-dot { width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%; background: #20a35a; box-shadow: 0 0 0 4px rgba(32,163,90,.10); }
-.agent-link-status[data-tone="stale"] { border-color: #ead7a2; background: #fffaf0; }
-.agent-link-status[data-tone="stale"] strong { color: #8a5b08; }
-.agent-link-status[data-tone="stale"] small { color: #826b3f !important; }
-.agent-link-status[data-tone="stale"] .agent-link-dot { background: #d89b22; box-shadow: 0 0 0 4px rgba(216,155,34,.12); }
-.agent-link-status[data-tone="offline"] { border-color: #e8c7c7; background: #fff7f7; }
-.agent-link-status[data-tone="offline"] strong { color: #9b3030; }
-.agent-link-status[data-tone="offline"] small { color: #805959 !important; }
-.agent-link-status[data-tone="offline"] .agent-link-dot { background: #cf4b4b; box-shadow: 0 0 0 4px rgba(207,75,75,.10); }
+.agent-link-status { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid #bcdcc8; border-radius:6px; background:#f3faf5; }
+.agent-link-status > div { display:flex; flex-direction:column; gap:1px; }
+.agent-link-status strong { font-size:12px; color:#155f37; }
+.agent-link-status small { font-size:10px; color:#577263 !important; }
+.agent-link-dot { width:8px; height:8px; flex:0 0 8px; border-radius:50%; background:#20a35a; box-shadow:0 0 0 3px rgba(32,163,90,.10); }
+.agent-link-status[data-tone="stale"] { border-color:#ead7a2; background:#fffaf0; }
+.agent-link-status[data-tone="stale"] strong { color:#8a5b08; }
+.agent-link-status[data-tone="stale"] small { color:#826b3f !important; }
+.agent-link-status[data-tone="stale"] .agent-link-dot { background:#d89b22; box-shadow:0 0 0 3px rgba(216,155,34,.12); }
+.agent-link-status[data-tone="offline"] { border-color:#e8c7c7; background:#fff7f7; }
+.agent-link-status[data-tone="offline"] strong { color:#9b3030; }
+.agent-link-status[data-tone="offline"] small { color:#805959 !important; }
+.agent-link-status[data-tone="offline"] .agent-link-dot { background:#cf4b4b; box-shadow:0 0 0 3px rgba(207,75,75,.10); }
 
-.agent-operation { margin: 10px 0 12px; }
-.agent-operation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.agent-operation-item { min-width: 0; padding: 9px 10px; border: 1px solid #dbe4ee; border-radius: 7px; background: #fbfcfe; display: flex; flex-direction: column; gap: 3px; }
-.agent-operation-item span { font-size: 10px; text-transform: uppercase; letter-spacing: .035em; color: #748295; }
-.agent-operation-item strong { font-size: 12px; color: #24364b; overflow-wrap: anywhere; }
-.agent-operation-item strong[data-cycle-tone="ok"] { color: #167344; }
-.agent-operation-item strong[data-cycle-tone="warn"] { color: #94630d; }
-.agent-operation-item strong[data-cycle-tone="error"] { color: #a33535; }
-.agent-operation-item strong[data-cycle-tone="running"] { color: #175fa7; }
-.agent-operation-error { margin-top: 8px; padding: 9px 10px; border-left: 3px solid #cf4b4b; background: #fff7f7; display: flex; flex-direction: column; gap: 2px; }
-.agent-operation-error strong { font-size: 11px; color: #9b3030; }
-.agent-operation-error span { font-size: 11px; color: #6d4b4b; overflow-wrap: anywhere; }
-.agent-operation-unavailable { padding: 10px; border: 1px dashed #ccd7e3; border-radius: 7px; color: #718096; font-size: 11px; }
+.agent-operation { margin:8px 0 10px; }
+.agent-operation-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.agent-operation-item { min-width:0; min-height:52px; padding:8px 10px; border:1px solid #dde4eb; border-radius:5px; background:#fafbfc; display:flex; flex-direction:column; justify-content:center; gap:2px; }
+.agent-operation-item span { font-size:9px; text-transform:uppercase; letter-spacing:.045em; color:#748295; }
+.agent-operation-item strong { font-size:11px; color:#24364b; overflow-wrap:anywhere; }
+.agent-operation-item strong[data-cycle-tone="ok"] { color:#167344; }
+.agent-operation-item strong[data-cycle-tone="warn"] { color:#94630d; }
+.agent-operation-item strong[data-cycle-tone="error"] { color:#a33535; }
+.agent-operation-item strong[data-cycle-tone="running"] { color:#175fa7; }
+.agent-operation-error { margin-top:6px; padding:8px 10px; border-left:3px solid #cf4b4b; background:#fff7f7; display:flex; flex-direction:column; gap:2px; }
+.agent-operation-error strong { font-size:10px; color:#9b3030; }
+.agent-operation-error span { font-size:10px; color:#6d4b4b; overflow-wrap:anywhere; }
+.agent-operation-unavailable { padding:9px; border:1px dashed #ccd7e3; border-radius:5px; color:#718096; font-size:10px; }
 
-@media (max-width: 1150px) { .dashboard:not(.printers-workspace):has(.company-agent-link-panel) .grid { grid-template-columns: 1fr; } }
-@media (max-width: 620px) { .agent-operation-grid { grid-template-columns: 1fr; } }
+@media (min-width:1400px) {
+  .dashboard:not(.printers-workspace):has(.company-agent-link-panel) .grid { grid-template-columns:minmax(0,1fr) minmax(520px,1fr); }
+}
+@media (max-width:1150px) { .dashboard:not(.printers-workspace):has(.company-agent-link-panel) .grid { grid-template-columns:1fr; } }
+@media (max-width:620px) { .agent-operation-grid { grid-template-columns:1fr; } }
