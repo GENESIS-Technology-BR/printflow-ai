@@ -11,7 +11,8 @@ from backend.modules.companies.model import Company
 from backend.modules.printers.model import Printer
 
 from .model import PrinterUsageDaily
-from .reporting import build_excel_report, build_pdf_report, consolidate_usage
+from .reporting import build_excel_report, consolidate_usage
+from .pdf_reporting import build_pdf_report
 from .schema import DailyUsageResponse, UsageReportRow
 from .service import reporting_date
 
@@ -62,7 +63,6 @@ def _is_label_printer(printer: Printer) -> bool:
 
 
 def _fixed_cost_for_period(monthly_cost: float, start: date, end: date) -> float:
-    """Prorate a monthly contract across the exact report period."""
     total = 0.0; cursor = start
     while cursor <= end:
         days_in_month = monthrange(cursor.year, cursor.month)[1]
@@ -80,70 +80,51 @@ def _apply_cost_models(rows: list[dict], printers: list[Printer], start: date, e
         printer = printer_map.get(row["printer_uuid"])
         if not printer: continue
         if _is_label_printer(printer):
-            row["cost_per_page"] = 0.0; row["estimated_cost"] = 0.0; row["cost_source"] = "not_applicable"
-            continue
+            row["cost_per_page"] = 0.0; row["estimated_cost"] = 0.0; row["cost_source"] = "not_applicable"; continue
         if (printer.cost_model or "per_page") == "fixed_monthly" and printer.fixed_monthly_cost is not None:
-            row["cost_per_page"] = 0.0
-            row["estimated_cost"] = _fixed_cost_for_period(float(printer.fixed_monthly_cost), start, end)
-            row["cost_source"] = "fixed_monthly"
+            row["cost_per_page"] = 0.0; row["estimated_cost"] = _fixed_cost_for_period(float(printer.fixed_monthly_cost), start, end); row["cost_source"] = "fixed_monthly"
     return rows
 
 
 def _validate_report_filters(db: Session, company_id: int, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None) -> None:
-    if printer_uuid and db.query(Printer.id).filter(Printer.company_id == company_id, Printer.uuid == printer_uuid, Printer.active.is_(True)).first() is None:
-        raise HTTPException(status_code=404, detail="Impressora nao encontrada para esta empresa.")
-    if unit_name and db.query(Printer.id).filter(Printer.company_id == company_id, Printer.unit_name == unit_name, Printer.active.is_(True)).first() is None:
-        raise HTTPException(status_code=404, detail="Unidade nao encontrada para esta empresa.")
-    if sector_name and db.query(Printer.id).filter(Printer.company_id == company_id, Printer.sector_name == sector_name, Printer.active.is_(True)).first() is None:
-        raise HTTPException(status_code=404, detail="Setor nao encontrado para esta empresa.")
+    if printer_uuid and db.query(Printer.id).filter(Printer.company_id == company_id, Printer.uuid == printer_uuid, Printer.active.is_(True)).first() is None: raise HTTPException(status_code=404, detail="Impressora nao encontrada para esta empresa.")
+    if unit_name and db.query(Printer.id).filter(Printer.company_id == company_id, Printer.unit_name == unit_name, Printer.active.is_(True)).first() is None: raise HTTPException(status_code=404, detail="Unidade nao encontrada para esta empresa.")
+    if sector_name and db.query(Printer.id).filter(Printer.company_id == company_id, Printer.sector_name == sector_name, Printer.active.is_(True)).first() is None: raise HTTPException(status_code=404, detail="Setor nao encontrado para esta empresa.")
 
 
 def _report_data(db: Session, current_user: User, start: date, end: date, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None):
     _validate_report_filters(db, current_user.company_id, printer_uuid, unit_name, sector_name)
     printers = _current_printers(db, current_user.company_id, printer_uuid, unit_name, sector_name)
     history = _active_history(_usage_query(db, current_user.company_id, start, end, printer_uuid, unit_name, sector_name).all(), printers)
-    company = db.query(Company).filter(Company.id == current_user.company_id).first()
-    default_cost = 0
-    if company:
-        default_cost = company.default_bw_cost_per_page or company.default_cost_per_page
+    company = db.query(Company).filter(Company.id == current_user.company_id).first(); default_cost = (company.default_bw_cost_per_page or company.default_cost_per_page) if company else 0
     rows = consolidate_usage(history, printers, default_cost)
     return _apply_cost_models(rows, printers, start, end), history
 
 
 def _report_rows(db: Session, current_user: User, start: date, end: date, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None) -> list[dict]:
-    rows, _ = _report_data(db, current_user, start, end, printer_uuid, unit_name, sector_name)
-    return rows
+    rows, _ = _report_data(db, current_user, start, end, printer_uuid, unit_name, sector_name); return rows
 
 
 @router.get("/daily", response_model=list[DailyUsageResponse])
 def list_daily_usage(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    start, end = _resolve_period(start_date, end_date)
-    printers = _current_printers(db, current_user.company_id, printer_uuid, unit_name, sector_name)
-    rows = _active_history(_usage_query(db, current_user.company_id, start, end, printer_uuid, unit_name, sector_name).all(), printers)
+    start, end = _resolve_period(start_date, end_date); printers = _current_printers(db, current_user.company_id, printer_uuid, unit_name, sector_name); rows = _active_history(_usage_query(db, current_user.company_id, start, end, printer_uuid, unit_name, sector_name).all(), printers)
     return [DailyUsageResponse(usage_date=u.usage_date, printer_uuid=u.printer_uuid, ip=u.ip, name=u.name, custom_name=u.custom_name, hostname=u.hostname, manufacturer=u.manufacturer, model=u.model, serial=u.serial, unit_name=u.unit_name, sector_name=u.sector_name, opening_page_count=u.opening_page_count, closing_page_count=u.closing_page_count, pages_printed=u.pages_printed, anomaly_count=u.anomaly_count, last_anomaly_type=u.last_anomaly_type, first_seen_at=u.first_seen_at, last_seen_at=u.last_seen_at) for u in rows]
 
 
 @router.get("/report", response_model=list[UsageReportRow])
 def usage_report(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    start, end = _resolve_period(start_date, end_date)
-    return _report_rows(db, current_user, start, end, printer_uuid, unit_name, sector_name)
+    start, end = _resolve_period(start_date, end_date); return _report_rows(db, current_user, start, end, printer_uuid, unit_name, sector_name)
 
 
 @router.get("/export.xlsx")
 def export_usage_excel(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    start, end = _resolve_period(start_date, end_date)
-    rows, history = _report_data(db, current_user, start, end, printer_uuid, unit_name, sector_name)
-    company = db.query(Company).filter(Company.id == current_user.company_id).first(); company_name = company.name if company else "Empresa"
-    content = build_excel_report(company_name, start, end, rows, history, report_scope=_report_scope_label(rows, printer_uuid, unit_name, sector_name))
-    filename = f"printflow-relatorio-{start.isoformat()}-{end.isoformat()}.xlsx"
+    start, end = _resolve_period(start_date, end_date); rows, history = _report_data(db, current_user, start, end, printer_uuid, unit_name, sector_name); company = db.query(Company).filter(Company.id == current_user.company_id).first(); company_name = company.name if company else "Empresa"
+    content = build_excel_report(company_name, start, end, rows, history, report_scope=_report_scope_label(rows, printer_uuid, unit_name, sector_name)); filename = f"printflow-relatorio-{start.isoformat()}-{end.isoformat()}.xlsx"
     return Response(content=content, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
 @router.get("/export.pdf")
 def export_usage_pdf(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    start, end = _resolve_period(start_date, end_date)
-    rows, _ = _report_data(db, current_user, start, end, printer_uuid, unit_name, sector_name)
-    company = db.query(Company).filter(Company.id == current_user.company_id).first(); company_name = company.name if company else "Empresa"
-    content = build_pdf_report(company_name, start, end, rows, report_scope=_report_scope_label(rows, printer_uuid, unit_name, sector_name))
-    filename = f"printflow-relatorio-{start.isoformat()}-{end.isoformat()}.pdf"
+    start, end = _resolve_period(start_date, end_date); rows, _ = _report_data(db, current_user, start, end, printer_uuid, unit_name, sector_name); company = db.query(Company).filter(Company.id == current_user.company_id).first(); company_name = company.name if company else "Empresa"
+    content = build_pdf_report(company_name, start, end, rows, report_scope=_report_scope_label(rows, printer_uuid, unit_name, sector_name)); filename = f"printflow-relatorio-{start.isoformat()}-{end.isoformat()}.pdf"
     return Response(content=content, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
