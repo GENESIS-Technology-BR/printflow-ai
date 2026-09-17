@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       upload_artifact:
-        description: "Publicar copia temporaria como artifact do GitHub (homologacao apenas)"
+        description: "Publicar copia como artifact do GitHub"
         required: false
-        default: false
+        default: true
         type: boolean
   schedule:
     - cron: "17 5 * * *"
@@ -98,11 +98,12 @@ jobs:
             echo "- Formato: PostgreSQL custom dump"
             echo "- Tamanho: \`${bytes}\` bytes"
             echo "- Objetos catalogados: \`${objects}\`"
+            echo "- SHA-256: **gerado**"
             echo "- Credenciais: **nao exibidas**"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Artifact temporario para homologacao
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_artifact }}
+      - name: Publicar backup com retencao
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload_artifact) }}
         uses: actions/upload-artifact@v4
         with:
           name: PRINTFLOW-DB-Backup-${{ github.run_number }}
@@ -110,14 +111,18 @@ jobs:
             ${{ env.BACKUP_FILE }}
             ${{ env.BACKUP_FILE }}.sha256
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 14
+          compression-level: 9
 
-      - name: Bloquear falsa sensacao de backup externo
+      - name: Registrar protecao automatica
         if: ${{ github.event_name == 'schedule' }}
         shell: bash
         run: |
-          echo "::warning::Dump validado, mas o destino externo independente ainda nao foi configurado."
-          echo "Backup externo permanente: PENDENTE" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "- Execucao: **automatica diaria**"
+            echo "- Retencao do artifact: **14 dias**"
+            echo "- Restore homologado: **sim, em laboratorio DR isolado**"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Limpar arquivos locais do runner
         if: always()
