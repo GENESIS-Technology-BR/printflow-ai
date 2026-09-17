@@ -118,40 +118,15 @@ jobs:
           done
 
           token_body="$(mktemp)"
-          token_http="$(curl --silent --show-error \
-            --output "$token_body" \
-            --write-out '%{http_code}' \
-            -X POST https://oauth2.googleapis.com/token \
-            --data-urlencode "client_id=$GOOGLE_CLIENT_ID" \
-            --data-urlencode "client_secret=$GOOGLE_CLIENT_SECRET" \
-            --data-urlencode "refresh_token=$GOOGLE_REFRESH_TOKEN" \
-            --data-urlencode "grant_type=refresh_token")"
-
+          token_http="$(curl --silent --show-error --output "$token_body" --write-out '%{http_code}' -X POST https://oauth2.googleapis.com/token --data-urlencode "client_id=$GOOGLE_CLIENT_ID" --data-urlencode "client_secret=$GOOGLE_CLIENT_SECRET" --data-urlencode "refresh_token=$GOOGLE_REFRESH_TOKEN" --data-urlencode "grant_type=refresh_token")"
           if [[ "$token_http" != "200" ]]; then
-            oauth_error="$(python3 - "$token_body" <<'PY'
-import json, sys
-try:
-    data = json.load(open(sys.argv[1], encoding='utf-8'))
-except Exception:
-    print('resposta_invalida')
-    raise SystemExit
-error = str(data.get('error', 'erro_desconhecido'))
-description = str(data.get('error_description', '')).replace('\n', ' ').replace('\r', ' ')
-print(error + (': ' + description if description else ''))
-PY
-)"
+            oauth_error="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(str(d.get("error","erro_desconhecido")) + (": " + str(d.get("error_description","")) if d.get("error_description") else ""))' "$token_body" 2>/dev/null || echo resposta_invalida)"
             rm -f "$token_body"
             echo "::error::Google OAuth recusou a renovacao do token (HTTP $token_http): $oauth_error"
-            echo "Nenhum Client ID, Client Secret, Refresh Token ou Access Token foi exibido."
+            echo "Nenhuma credencial OAuth foi exibida."
             exit 1
           fi
-
-          access_token="$(python3 - "$token_body" <<'PY'
-import json, sys
-data = json.load(open(sys.argv[1], encoding='utf-8'))
-print(data.get('access_token', ''))
-PY
-)"
+          access_token="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("access_token", ""))' "$token_body")"
           rm -f "$token_body"
           if [[ -z "$access_token" ]]; then
             echo "::error::Google OAuth respondeu HTTP 200, mas nao retornou access token."
@@ -167,11 +142,7 @@ PY
             name="$(basename "$file")"
             local metadata response id
             metadata="$(python3 -c 'import json,sys; print(json.dumps({"name": sys.argv[1]}))' "$name")"
-            response="$(curl --fail-with-body --silent --show-error \
-              -X POST 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name' \
-              -H "Authorization: Bearer $access_token" \
-              -F "metadata=$metadata;type=application/json;charset=UTF-8" \
-              -F "file=@$file;type=$mime")"
+            response="$(curl --fail-with-body --silent --show-error -X POST 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name' -H "Authorization: Bearer $access_token" -F "metadata=$metadata;type=application/json;charset=UTF-8" -F "file=@$file;type=$mime")"
             id="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("id", ""))' <<< "$response")"
             if [[ -z "$id" ]]; then
               echo "::error::Google Drive nao confirmou upload de $name."
