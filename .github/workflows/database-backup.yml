@@ -47,14 +47,19 @@ jobs:
           esac
           echo "Configuracao de backup presente. Valor protegido e nao exibido."
 
-      - name: Instalar cliente PostgreSQL
+      - name: Instalar cliente PostgreSQL 18
         shell: bash
         run: |
           set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSLo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          . /etc/os-release
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
           sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client
-          pg_dump --version
-          pg_restore --version
+          sudo apt-get install -y -qq postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
+          /usr/lib/postgresql/18/bin/pg_dump --version
+          /usr/lib/postgresql/18/bin/pg_restore --version
 
       - name: Gerar backup logico somente leitura
         shell: bash
@@ -89,6 +94,7 @@ jobs:
             echo "## PRINTFLOW Database Backup #${{ github.run_number }}"
             echo "- Status da geracao: **validado**"
             echo "- Banco: \`neondb\`"
+            echo "- Cliente PostgreSQL: \`18\`"
             echo "- Formato: PostgreSQL custom dump"
             echo "- Tamanho: \`${bytes}\` bytes"
             echo "- Objetos catalogados: \`${objects}\`"
