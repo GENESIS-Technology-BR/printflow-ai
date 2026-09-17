@@ -10,6 +10,7 @@ from backend.app.database.connection import Base, engine
 from backend.app.database import models as database_models
 from backend.app.database.migrations import (
     clean_descriptive_printer_serials,
+    configure_guerra_pilot_financials,
     ensure_printer_columns,
     ensure_printer_company_ip_constraint,
     ensure_company_agent_columns,
@@ -45,6 +46,7 @@ async def lifespan(app: FastAPI):
     ensure_operational_alert_columns(engine)
     ensure_user_security_columns(engine)
     clean_descriptive_printer_serials(engine)
+    configure_guerra_pilot_financials(engine)
     yield
 
 
@@ -60,101 +62,39 @@ app = FastAPI(
     openapi_url=None if production else "/openapi.json",
 )
 
-trusted_hosts = [
-    item.strip()
-    for item in os.getenv(
-        "PRINTFLOW_ALLOWED_HOSTS",
-        "*.onrender.com,localhost,127.0.0.1",
-    ).split(",")
-    if item.strip()
-]
+trusted_hosts = [item.strip() for item in os.getenv("PRINTFLOW_ALLOWED_HOSTS", "*.onrender.com,localhost,127.0.0.1").split(",") if item.strip()]
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
 
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=trusted_hosts,
-)
-
-# Origens oficiais conhecidas. Novas origens podem ser acrescentadas por
-# PRINTFLOW_CORS_ORIGINS sem alterar o código ou abrir CORS globalmente.
-allowed_origins = [
-    "https://printflow-web.onrender.com",
-    "https://printflow-m84u.onrender.com",
-]
-
-configured_origins = [
-    item.strip().rstrip("/")
-    for item in os.getenv("PRINTFLOW_CORS_ORIGINS", "").split(",")
-    if item.strip()
-]
+allowed_origins = ["https://printflow-web.onrender.com", "https://printflow-m84u.onrender.com"]
+configured_origins = [item.strip().rstrip("/") for item in os.getenv("PRINTFLOW_CORS_ORIGINS", "").split(",") if item.strip()]
 for origin in configured_origins:
-    if origin not in allowed_origins:
-        allowed_origins.append(origin)
-
-# Compatibilidade controlada com URLs Render do produto Printflow. Mantemos
-# o escopo restrito a hosts que iniciam com "printflow" em onrender.com.
+    if origin not in allowed_origins: allowed_origins.append(origin)
 allow_origin_regex = r"https://printflow(?:-[a-z0-9]+)*\.onrender\.com"
-
 if not production:
     allowed_origins.append("http://localhost:5173")
-    allow_origin_regex = (
-        r"(?:https://printflow(?:-[a-z0-9]+)*\.onrender\.com|"
-        r"https://.*\.app\.github\.dev)"
-    )
+    allow_origin_regex = r"(?:https://printflow(?:-[a-z0-9]+)*\.onrender\.com|https://.*\.app\.github\.dev)"
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_origin_regex=allow_origin_regex,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=[
-        "Authorization",
-        "Content-Type",
-        "Accept",
-        "X-Recovery-Key",
-        "X-CSRF-Protection",
-        "X-Printflow-Integration-Key",
-    ],
-)
+app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_origin_regex=allow_origin_regex, allow_credentials=True, allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"], allow_headers=["Authorization", "Content-Type", "Accept", "X-Recovery-Key", "X-CSRF-Protection", "X-Printflow-Integration-Key"])
 
 
 @app.middleware("http")
-async def security_headers(
-    request: Request,
-    call_next,
-):
+async def security_headers(request: Request, call_next):
     response = await call_next(request)
-
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "no-referrer"
-    response.headers["Permissions-Policy"] = (
-        "camera=(), microphone=(), geolocation=()"
-    )
-
-    if production:
-        response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains"
-        )
-
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if production: response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     if request.url.path.startswith("/api/v1/auth/"):
-        response.headers["Cache-Control"] = "no-store"
-        response.headers["Pragma"] = "no-cache"
-
-    if request.url.path not in {"/docs", "/redoc", "/openapi.json"}:
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
-        )
-
+        response.headers["Cache-Control"] = "no-store"; response.headers["Pragma"] = "no-cache"
+    if request.url.path not in {"/docs", "/redoc", "/openapi.json"}: response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
     return response
 
 app.include_router(health_router)
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(companies_router, prefix="/api/v1")
 app.include_router(organization_router, prefix="/api/v1")
-
-if printers_router:
-    app.include_router(printers_router, prefix="/api/v1")
+if printers_router: app.include_router(printers_router, prefix="/api/v1")
 app.include_router(usage_router, prefix="/api/v1")
 app.include_router(dashboard_router)
 app.include_router(alerts_router)
@@ -165,8 +105,4 @@ app.include_router(integration_router, prefix="/api/v1")
 
 @app.get("/", tags=["Platform"])
 def root():
-    return {
-        "application": settings.app_name,
-        "status": "online",
-        "version": settings.version,
-    }
+    return {"application": settings.app_name, "status": "online", "version": settings.version}
