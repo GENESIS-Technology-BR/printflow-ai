@@ -8,7 +8,6 @@ on:
     paths:
       - "agent/python/**"
       - "agent/windows/**"
-      - "agent_v2/**"
       - ".github/workflows/build-agent-windows.yml"
       - "requirements.txt"
       - "requirements-dev.txt"
@@ -82,26 +81,19 @@ jobs:
             throw "Foram encontrados erros nos scripts PowerShell."
           }
 
-      - name: Validar compilacao do Agent
+      - name: Validar Agent oficial
         shell: powershell
         run: |
           python -m py_compile agent/python/main.py
           python -m py_compile agent/python/config/settings.py
           python -m py_compile agent/python/core/service.py
+          python -m py_compile agent/python/core/scheduler.py
           python -m py_compile agent/python/network_manager.py
           python -m py_compile agent/python/discovery_runner.py
           python -m py_compile agent/python/snmp/engine.py
           python -m py_compile agent/python/api/client.py
 
-      - name: Validar Agent V2
-        shell: powershell
-        run: |
-          python -m py_compile agent_v2/main.py
-          python -m py_compile agent_v2/config/settings.py
-          python -m py_compile agent_v2/core/api.py
-          python -m py_compile agent_v2/core/discovery.py
-
-      - name: Gerar executável
+      - name: Gerar executável oficial
         shell: powershell
         run: |
           pyinstaller `
@@ -133,7 +125,7 @@ jobs:
             --hidden-import intelligence.printer_v3 `
             agent/python/main.py
 
-      - name: Testar executável
+      - name: Testar executável oficial
         shell: powershell
         run: |
           & dist/PRINTFLOW-Agent.exe --help | Tee-Object -FilePath EXE-SMOKE-TEST.txt
@@ -141,7 +133,7 @@ jobs:
           $help = Get-Content EXE-SMOKE-TEST.txt -Raw
           if ($help -notmatch "--network" -or $help -notmatch "--daemon") { throw "O executavel nao apresentou as opcoes obrigatorias." }
 
-      - name: Montar pacote de teste
+      - name: Montar pacote oficial de teste
         shell: powershell
         run: |
           New-Item -ItemType Directory -Force -Path package
@@ -178,12 +170,13 @@ jobs:
             "README-TESTE.txt"
           )
           @(
-            "PRINTFLOW BUILD VALIDATION"
+            "PRINTFLOW OFFICIAL AGENT BUILD VALIDATION"
             "Build: ${{ github.run_number }}"
             "Version: $agentVersion"
             "Commit: $env:GITHUB_SHA"
+            "Architecture: agent/python (official)"
             "Automated tests: APPROVED"
-            "Agent V2 compile: APPROVED"
+            "Official Agent compile: APPROVED"
             "PowerShell syntax: APPROVED"
             "EXE smoke test: APPROVED"
             "EXE SHA256: $exeHash"
@@ -205,5 +198,6 @@ jobs:
         shell: bash
         run: |
           echo "## PRINTFLOW Agent Build #${{ github.run_number }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Arquitetura: **agent/python (oficial)**" >> "$GITHUB_STEP_SUMMARY"
           echo "- Status: **${{ job.status }}**" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: \`${GITHUB_SHA}\`" >> "$GITHUB_STEP_SUMMARY"
