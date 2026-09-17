@@ -8,6 +8,7 @@ on:
     paths:
       - "agent/python/**"
       - "agent/windows/**"
+      - "agent_v2/**"
       - ".github/workflows/build-agent-windows.yml"
       - "requirements.txt"
       - "requirements-dev.txt"
@@ -92,6 +93,14 @@ jobs:
           python -m py_compile agent/python/snmp/engine.py
           python -m py_compile agent/python/api/client.py
 
+      - name: Validar Agent V2
+        shell: powershell
+        run: |
+          python -m py_compile agent_v2/main.py
+          python -m py_compile agent_v2/config/settings.py
+          python -m py_compile agent_v2/core/api.py
+          python -m py_compile agent_v2/core/discovery.py
+
       - name: Gerar executável
         shell: powershell
         run: |
@@ -174,6 +183,7 @@ jobs:
             "Version: $agentVersion"
             "Commit: $env:GITHUB_SHA"
             "Automated tests: APPROVED"
+            "Agent V2 compile: APPROVED"
             "PowerShell syntax: APPROVED"
             "EXE smoke test: APPROVED"
             "EXE SHA256: $exeHash"
