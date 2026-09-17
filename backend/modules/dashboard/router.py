@@ -57,10 +57,6 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
     stored_active = bool(getattr(printer, "active", True))
     age_seconds = _age_seconds(last_seen)
 
-    # Só uma coleta recente que também veio explicitamente online pode
-    # reativar visualmente um equipamento cujo heartbeat ficou defasado.
-    # Isso evita transformar registros realmente offline/inativos em ativos
-    # apenas porque possuem last_seen recente (ex.: criação/atualização manual).
     recently_seen_online = (
         age_seconds is not None
         and age_seconds <= 600
@@ -87,7 +83,6 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
         health_score -= 15
         health_reasons.append("Status da impressora não identificado.")
 
-    # Contador alto representa uso acumulado, não falha operacional.
     if age_seconds is not None:
         if age_seconds > 86400:
             health_score -= 20
@@ -143,16 +138,22 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
     }
 
 
+def _company_inventory(db: Session, company_id: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Retorna inventário completo e parque atualmente monitorado com a mesma regra."""
+    printers = db.query(Printer).filter(Printer.company_id == company_id).all()
+    serialized = [serialize_printer(printer) for printer in printers]
+    monitored = [printer for printer in serialized if printer["active"]]
+    return serialized, monitored
+
+
 @router.get("/summary")
 def dashboard_summary(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, Any]:
-    printers = db.query(Printer).filter(Printer.company_id == current_user.company_id).all()
+    serialized, monitored = _company_inventory(db, current_user.company_id)
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
-    serialized = [serialize_printer(printer) for printer in printers]
     total = len(serialized)
-    online = sum(1 for printer in serialized if printer["active"] and printer["status"] == "online")
-    offline = sum(1 for printer in serialized if printer["active"] and printer["status"] == "offline")
-    active = sum(1 for printer in serialized if printer["active"])
-    monitored = [printer for printer in serialized if printer["active"]]
+    active = len(monitored)
+    online = sum(1 for printer in monitored if printer["status"] == "online")
+    offline = sum(1 for printer in monitored if printer["status"] == "offline")
     total_pages = sum(printer["page_count"] for printer in monitored if printer["page_count"] is not None)
     inactive = total - active
     unknown = active - online - offline
@@ -212,8 +213,8 @@ def dashboard_summary(db: Session = Depends(get_db), current_user: User = Depend
 
 @router.get("/printers")
 def dashboard_printers(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> list[dict[str, Any]]:
-    printers = db.query(Printer).filter(Printer.company_id == current_user.company_id).order_by(Printer.id.desc()).all()
-    return [serialize_printer(printer) for printer in printers]
+    _, monitored = _company_inventory(db, current_user.company_id)
+    return sorted(monitored, key=lambda printer: int(printer.get("id") or 0), reverse=True)
 
 
 @router.get("/printers/{printer_uuid}")
