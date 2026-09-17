@@ -1,0 +1,137 @@
+name: PRINTFLOW Database Restore Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_run_id:
+        description: "Run ID do PRINTFLOW Database Backup que publicou o artifact"
+        required: true
+        type: string
+      confirmation:
+        description: "Digite RESTORE-DR para confirmar que o destino e somente o laboratorio DR"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  restore-test:
+    name: Restaurar e validar backup em DR
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      RESTORE_DIR: restore-input
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Guardrail de homologacao
+        shell: bash
+        env:
+          DR_DATABASE_URL: ${{ secrets.PRINTFLOW_DR_DATABASE_URL }}
+          PROD_BACKUP_URL: ${{ secrets.PRINTFLOW_BACKUP_DATABASE_URL }}
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          if [[ "$CONFIRMATION" != "RESTORE-DR" ]]; then
+            echo "::error::Confirmacao invalida. Restore bloqueado."
+            exit 1
+          fi
+          if [[ -z "${DR_DATABASE_URL:-}" ]]; then
+            echo "::error::Secret PRINTFLOW_DR_DATABASE_URL nao configurado."
+            exit 1
+          fi
+          case "$DR_DATABASE_URL" in
+            postgresql://*|postgres://*) ;;
+            *) echo "::error::Destino DR nao possui formato PostgreSQL valido."; exit 1 ;;
+          esac
+          if [[ -n "${PROD_BACKUP_URL:-}" && "$DR_DATABASE_URL" == "$PROD_BACKUP_URL" ]]; then
+            echo "::error::Destino DR coincide com a credencial de backup da producao. Restore bloqueado."
+            exit 1
+          fi
+          echo "Guardrails aprovados. Credenciais protegidas e nao exibidas."
+
+      - name: Instalar cliente PostgreSQL 18
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSLo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          . /etc/os-release
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
+          /usr/lib/postgresql/18/bin/pg_restore --version
+
+      - name: Baixar artifact do backup selecionado
+        uses: actions/download-artifact@v4
+        with:
+          pattern: PRINTFLOW-DB-Backup-*
+          path: ${{ env.RESTORE_DIR }}
+          merge-multiple: true
+          run-id: ${{ inputs.backup_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Validar dump e checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          dump="$(find "$RESTORE_DIR" -type f -name '*.dump' -print -quit)"
+          if [[ -z "$dump" ]]; then
+            echo "::error::Nenhum arquivo .dump encontrado no artifact selecionado."
+            exit 1
+          fi
+          checksum="$dump.sha256"
+          test -s "$dump"
+          test -s "$checksum"
+          (cd "$(dirname "$dump")" && sha256sum -c "$(basename "$checksum")")
+          pg_restore --list "$dump" > /tmp/restore-list.txt
+          test -s /tmp/restore-list.txt
+          echo "DUMP_FILE=$dump" >> "$GITHUB_ENV"
+
+      - name: Restaurar somente no laboratorio DR
+        shell: bash
+        env:
+          DR_DATABASE_URL: ${{ secrets.PRINTFLOW_DR_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          pg_restore \
+            --dbname="$DR_DATABASE_URL" \
+            --clean \
+            --if-exists \
+            --no-owner \
+            --no-privileges \
+            --exit-on-error \
+            "$DUMP_FILE"
+
+      - name: Validar restore funcional
+        shell: bash
+        env:
+          DR_DATABASE_URL: ${{ secrets.PRINTFLOW_DR_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          table_count="$(psql "$DR_DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
+          if [[ ! "$table_count" =~ ^[0-9]+$ ]] || (( table_count < 1 )); then
+            echo "::error::Restore sem tabelas de aplicacao no schema public."
+            exit 1
+          fi
+          object_count="$(grep -cv '^;' /tmp/restore-list.txt || true)"
+          {
+            echo "## PRINTFLOW Restore Test"
+            echo "- Resultado: **RESTORE VALIDADO**"
+            echo "- Destino: **laboratorio DR temporario**"
+            echo "- PostgreSQL client: \`18\`"
+            echo "- Tabelas restauradas no schema public: \`${table_count}\`"
+            echo "- Objetos catalogados no dump: \`${object_count}\`"
+            echo "- Credenciais: **nao exibidas**"
+            echo "- Producao: **nao utilizada como destino**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Limpar runner
+        if: always()
+        shell: bash
+        run: rm -rf "$RESTORE_DIR" /tmp/restore-list.txt
