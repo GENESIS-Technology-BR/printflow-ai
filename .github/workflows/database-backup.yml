@@ -102,6 +102,61 @@ jobs:
             echo "- Credenciais: **nao exibidas**"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Copiar backup para Google Drive
+        shell: bash
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.PRINTFLOW_GOOGLE_DRIVE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.PRINTFLOW_GOOGLE_DRIVE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.PRINTFLOW_GOOGLE_DRIVE_REFRESH_TOKEN }}
+        run: |
+          set -euo pipefail
+          for name in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET GOOGLE_REFRESH_TOKEN; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Credencial Google Drive ausente: $name"
+              exit 1
+            fi
+          done
+
+          token_json="$(curl --fail-with-body --silent --show-error \
+            -X POST https://oauth2.googleapis.com/token \
+            --data-urlencode "client_id=$GOOGLE_CLIENT_ID" \
+            --data-urlencode "client_secret=$GOOGLE_CLIENT_SECRET" \
+            --data-urlencode "refresh_token=$GOOGLE_REFRESH_TOKEN" \
+            --data-urlencode "grant_type=refresh_token")"
+          access_token="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("access_token", ""))' <<< "$token_json")"
+          if [[ -z "$access_token" ]]; then
+            echo "::error::Google OAuth nao retornou access token."
+            exit 1
+          fi
+          echo "::add-mask::$access_token"
+
+          upload_drive() {
+            local file="$1"
+            local mime="$2"
+            local name
+            name="$(basename "$file")"
+            local metadata response id
+            metadata="$(python3 -c 'import json,sys; print(json.dumps({"name": sys.argv[1]}))' "$name")"
+            response="$(curl --fail-with-body --silent --show-error \
+              -X POST 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name' \
+              -H "Authorization: Bearer $access_token" \
+              -F "metadata=$metadata;type=application/json;charset=UTF-8" \
+              -F "file=@$file;type=$mime")"
+            id="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("id", ""))' <<< "$response")"
+            if [[ -z "$id" ]]; then
+              echo "::error::Google Drive nao confirmou upload de $name."
+              exit 1
+            fi
+            echo "Google Drive confirmou upload de $name (ID protegido do log operacional)."
+          }
+
+          upload_drive "$BACKUP_FILE" application/octet-stream
+          upload_drive "$BACKUP_FILE.sha256" text/plain
+          {
+            echo "- Copia externa Google Drive: **confirmada**"
+            echo "- Escopo OAuth: \`drive.file\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Publicar backup com retencao
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload_artifact) }}
         uses: actions/upload-artifact@v4
