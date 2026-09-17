@@ -88,7 +88,13 @@ jobs:
           checksum="$dump.sha256"
           test -s "$dump"
           test -s "$checksum"
-          (cd "$(dirname "$dump")" && sha256sum -c "$(basename "$checksum")")
+          expected="$(awk '{print $1}' "$checksum")"
+          actual="$(sha256sum "$dump" | awk '{print $1}')"
+          if [[ -z "$expected" || "$actual" != "$expected" ]]; then
+            echo "::error::Checksum SHA-256 do dump invalido."
+            exit 1
+          fi
+          echo "Checksum SHA-256 validado."
           pg_restore --list "$dump" > /tmp/restore-list.txt
           test -s /tmp/restore-list.txt
           echo "DUMP_FILE=$dump" >> "$GITHUB_ENV"
