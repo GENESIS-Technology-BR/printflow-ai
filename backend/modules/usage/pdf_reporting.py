@@ -52,56 +52,62 @@ def build_pdf_report(company_name: str, start: date, end: date, rows: list[dict]
 
     output = BytesIO()
     page_size = landscape(A4)
-    doc = SimpleDocTemplate(output, pagesize=page_size, leftMargin=6*mm, rightMargin=6*mm, topMargin=4.5*mm, bottomMargin=8*mm, title="Printflow - Relatorio de Impressao")
+    doc = SimpleDocTemplate(output, pagesize=page_size, leftMargin=7*mm, rightMargin=7*mm, topMargin=4.5*mm, bottomMargin=8*mm, title="Printflow - Relatorio de Impressao")
     styles = getSampleStyleSheet()
-    title = ParagraphStyle("pf-premium-title", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=15.5, leading=16, alignment=1, textColor=colors.HexColor(f"#{BRAND_NAVY}"), spaceAfter=0)
-    subtitle = ParagraphStyle("pf-premium-subtitle", parent=styles["Normal"], fontSize=6.8, leading=7.3, alignment=1, textColor=colors.HexColor(f"#{BRAND_MUTED}"))
-    brand = ParagraphStyle("pf-premium-brand", parent=styles["Normal"], fontSize=6.5, leading=7, textColor=colors.HexColor(f"#{BRAND_MUTED}"))
-    meta_right = ParagraphStyle("pf-premium-meta", parent=styles["Normal"], fontSize=6.4, leading=7.1, alignment=2, textColor=colors.HexColor("#24364B"))
-    cell = ParagraphStyle("pf-premium-cell", parent=styles["Normal"], fontSize=5.05, leading=5.4, textColor=colors.HexColor("#142638"), wordWrap="LTR")
-    cell_right = ParagraphStyle("pf-premium-cell-right", parent=cell, alignment=2)
+    title = ParagraphStyle("pf-final-title", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=15.5, leading=16, alignment=1, textColor=colors.HexColor(f"#{BRAND_NAVY}"), spaceAfter=0)
+    brand = ParagraphStyle("pf-final-brand", parent=styles["Normal"], fontSize=6.4, leading=7, textColor=colors.HexColor(f"#{BRAND_MUTED}"))
+    meta_right = ParagraphStyle("pf-final-meta", parent=styles["Normal"], fontSize=6.2, leading=7, alignment=2, textColor=colors.HexColor("#24364B"))
+    cell = ParagraphStyle("pf-final-cell", parent=styles["Normal"], fontSize=5.05, leading=5.4, textColor=colors.HexColor("#142638"), wordWrap="LTR")
+    cell_right = ParagraphStyle("pf-final-cell-right", parent=cell, alignment=2)
 
     header = Table([[
         Paragraph(f'<font color="#{BRAND_BLUE}" size="17"><b>Printflow</b></font><br/><font color="#{BRAND_MUTED}">Gestão inteligente de impressão</font>', brand),
         Paragraph(f"Relatório de Impressão<br/><font size='7' color='#{BRAND_MUTED}'>Período: {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}</font>", title),
-        Paragraph(f'<font color="#{BRAND_MUTED}" size="6"><b>FECHAMENTO COMERCIAL</b></font><br/><br/><b>Empresa:</b> {_short(company_name,32)}<br/><b>Escopo:</b> {_short(report_scope,32)}', meta_right),
-    ]], colWidths=[67*mm,147*mm,71*mm], rowHeights=[15*mm])
-    header.setStyle(TableStyle([("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),1.5*mm),("RIGHTPADDING",(0,0),(-1,-1),1.5*mm),("TOPPADDING",(0,0),(-1,-1),0),("BOTTOMPADDING",(0,0),(-1,-1),0),("LINEBELOW",(0,0),(-1,-1),0.4,colors.HexColor(f"#{BORDER}"))]))
+        Paragraph(f'<font color="#{BRAND_BLUE}" size="6"><b>FECHAMENTO COMERCIAL</b></font><br/><br/><b>Empresa:</b> {_short(company_name,32)}<br/><b>Escopo:</b> {_short(report_scope,32)}', meta_right),
+    ]], colWidths=[67*mm,145*mm,71*mm], rowHeights=[15*mm])
+    header.setStyle(TableStyle([("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),1.5*mm),("RIGHTPADDING",(0,0),(-1,-1),1.5*mm),("TOPPADDING",(0,0),(-1,-1),0),("BOTTOMPADDING",(0,0),(-1,-1),0),("LINEBELOW",(0,0),(-1,-1),0.45,colors.HexColor(f"#{BORDER}"))]))
 
     data = [["#","Impressora","IP / Serial","Unidade / Setor","Modelo","Inicial","Final","Impressões","R$/pág.","Custo"]]
     for idx, item in enumerate(rows, start=1):
         label = _label(item)
-        identity = " / ".join(x for x in (item.get("ip"),item.get("serial")) if x) or "-"
-        org = " / ".join(x for x in (item.get("unit_name"),item.get("sector_name")) if x) or "-"
-        values=[str(idx),_short(item.get("display_name"),21),_short(identity,25),_short(org,24),_short(_model(item),24),"N/A" if label else _num(item.get("opening_page_count")),"N/A" if label else _num(item.get("closing_page_count")),"N/A" if label else _num(item.get("pages_printed")),"N/A" if label else _rate(item.get("cost_per_page")),"N/A" if label else _money(item.get("estimated_cost"))]
-        data.append([Paragraph(str(v), cell_right if i >= 5 else cell) for i,v in enumerate(values)])
+        identity = " / ".join(x for x in (item.get("ip"), item.get("serial")) if x) or "-"
+        org = " / ".join(x for x in (item.get("unit_name"), item.get("sector_name")) if x) or "-"
+        values = [str(idx), _short(item.get("display_name"),22), _short(identity,25), _short(org,25), _short(_model(item),25), "N/A" if label else _num(item.get("opening_page_count")), "N/A" if label else _num(item.get("closing_page_count")), "N/A" if label else _num(item.get("pages_printed")), "N/A" if label else _rate(item.get("cost_per_page")), "N/A" if label else _money(item.get("estimated_cost"))]
+        data.append([Paragraph(str(v), cell_right if i >= 5 else cell) for i, v in enumerate(values)])
 
-    table=Table(data, repeatRows=1, colWidths=[7*mm,32*mm,38*mm,40*mm,39*mm,18*mm,18*mm,24*mm,24*mm,29*mm], rowHeights=[6*mm]+[4.7*mm]*len(rows), hAlign="CENTER")
+    table = Table(data, repeatRows=1, colWidths=[7*mm,32*mm,38*mm,40*mm,39*mm,18*mm,18*mm,24*mm,24*mm,29*mm], rowHeights=[6*mm]+[4.7*mm]*len(rows), hAlign="CENTER")
     table.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),colors.HexColor(f"#{BRAND_BLUE}")),("TEXTCOLOR",(0,0),(-1,0),colors.white),("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("FONTSIZE",(0,0),(-1,0),5.5),("ALIGN",(0,0),(4,0),"LEFT"),("ALIGN",(5,0),(-1,0),"RIGHT"),("ALIGN",(5,1),(-1,-1),"RIGHT"),("ALIGN",(0,1),(0,-1),"CENTER"),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("GRID",(0,0),(-1,-1),0.18,colors.HexColor("#C7D3DE")),("ROWBACKGROUNDS",(0,1),(-1,-1),[colors.white,colors.HexColor("#F7F9FC")]),("LEFTPADDING",(0,0),(-1,-1),2.2),("RIGHTPADDING",(0,0),(-1,-1),2.2),("TOPPADDING",(0,0),(-1,-1),.6),("BOTTOMPADDING",(0,0),(-1,-1),.6)]))
 
-    applicable=[item for item in rows if not _label(item)]
-    total_pages=sum(item.get("pages_printed",0) or 0 for item in applicable)
-    total_cost=sum(float(item.get("estimated_cost",0) or 0) for item in applicable)
-    label_count=len(rows)-len(applicable)
-    kpi_title=ParagraphStyle("pf-kpi-title",parent=styles["Normal"],fontName="Helvetica-Bold",fontSize=7,leading=7.5,textColor=colors.HexColor(f"#{BRAND_NAVY}"),alignment=0)
-    kpi_value=ParagraphStyle("pf-kpi-value",parent=styles["Normal"],fontName="Helvetica-Bold",fontSize=13,leading=13.5,textColor=colors.HexColor(f"#{BRAND_NAVY}"),alignment=0)
-    kpi_hint=ParagraphStyle("pf-kpi-hint",parent=styles["Normal"],fontSize=5.8,leading=6.3,textColor=colors.HexColor(f"#{BRAND_MUTED}"),alignment=0)
-    cards=[
-        Paragraph(f"<b>Equipamentos monitorados</b><br/><font size='13' color='#{BRAND_NAVY}'><b>{len(rows)}</b></font><br/><font size='5.8' color='#{BRAND_MUTED}'>Total de impressoras no parque</font>",kpi_title),
-        Paragraph(f"<b>Impressões aplicáveis</b><br/><font size='13' color='#{BRAND_NAVY}'><b>{_num(total_pages)}</b></font><br/><font size='5.8' color='#{BRAND_MUTED}'>Total de páginas no período</font>",kpi_title),
-        Paragraph(f"<b>Custo estimado</b><br/><font size='13' color='#{BRAND_NAVY}'><b>{_money(total_cost)}</b></font><br/><font size='5.8' color='#{BRAND_MUTED}'>Valor total no período</font>",kpi_title),
-    ]
-    summary=Table([cards],colWidths=[93*mm,95*mm,93*mm],rowHeights=[15*mm])
-    summary.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,-1),colors.HexColor("#F8FAFD")),("BOX",(0,0),(-1,-1),.35,colors.HexColor(f"#{BORDER}")),("INNERGRID",(0,0),(-1,-1),.35,colors.white),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),5*mm),("RIGHTPADDING",(0,0),(-1,-1),5*mm),("TOPPADDING",(0,0),(-1,-1),1.5*mm),("BOTTOMPADDING",(0,0),(-1,-1),1.5*mm)]))
+    applicable = [item for item in rows if not _label(item)]
+    total_pages = sum(item.get("pages_printed",0) or 0 for item in applicable)
+    total_cost = sum(float(item.get("estimated_cost",0) or 0) for item in applicable)
+    label_count = len(rows) - len(applicable)
+    card_title = ParagraphStyle("pf-final-card-title", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=7.2, leading=7.8, textColor=colors.HexColor(f"#{BRAND_NAVY}"), alignment=0)
+    card_value = ParagraphStyle("pf-final-card-value", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=13.5, leading=14, textColor=colors.HexColor(f"#{BRAND_NAVY}"), alignment=0)
+    card_hint = ParagraphStyle("pf-final-card-hint", parent=styles["Normal"], fontSize=5.8, leading=6.2, textColor=colors.HexColor(f"#{BRAND_MUTED}"), alignment=0)
 
-    note_text=f"●  {label_count} impressora(s) de etiquetas são exibidas como N/A, não entram no volume nem no custo por página." if label_count else "●  Fechamento calculado com os equipamentos monitorados no período."
-    note=Table([[Paragraph(note_text,ParagraphStyle("pf-premium-note",parent=styles["Normal"],fontSize=5.8,leading=6.4,textColor=colors.HexColor("#365A7C")))]],colWidths=[281*mm],rowHeights=[7*mm])
+    def metric_card(label: str, value: str, hint: str):
+        return Table([[Paragraph(label, card_title)], [Paragraph(value, card_value)], [Paragraph(hint, card_hint)]], colWidths=[83*mm], rowHeights=[4.5*mm,6.3*mm,4.2*mm])
+
+    summary = Table([[
+        metric_card("Equipamentos monitorados", str(len(rows)), "Total de impressoras no parque"),
+        metric_card("Impressões aplicáveis", _num(total_pages), "Total de páginas no período"),
+        metric_card("Custo estimado", _money(total_cost), "Valor total no período"),
+    ]], colWidths=[93*mm,95*mm,93*mm], rowHeights=[17*mm])
+    summary.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,-1),colors.HexColor("#F8FAFD")),("BOX",(0,0),(-1,-1),.35,colors.HexColor(f"#{BORDER}")),("INNERGRID",(0,0),(-1,-1),.35,colors.white),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),5*mm),("RIGHTPADDING",(0,0),(-1,-1),5*mm),("TOPPADDING",(0,0),(-1,-1),1*mm),("BOTTOMPADDING",(0,0),(-1,-1),1*mm)]))
+
+    note_text = f"●  {label_count} impressora(s) de etiquetas são exibidas como N/A e não entram no volume nem no custo por página." if label_count else "●  Fechamento calculado com os equipamentos monitorados no período."
+    note = Table([[Paragraph(note_text, ParagraphStyle("pf-final-note", parent=styles["Normal"], fontSize=5.8, leading=6.4, textColor=colors.HexColor("#365A7C")))]], colWidths=[281*mm], rowHeights=[7*mm])
     note.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,-1),colors.HexColor(f"#{PALE_BLUE}")),("BOX",(0,0),(-1,-1),.25,colors.HexColor("#D7EAFD")),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),4*mm),("RIGHTPADDING",(0,0),(-1,-1),4*mm),("TOPPADDING",(0,0),(-1,-1),0),("BOTTOMPADDING",(0,0),(-1,-1),0)]))
 
-    story=[header,Spacer(1,2.2*mm),table,Spacer(1,2.3*mm),summary,Spacer(1,1.5*mm),note]
+    story = [header, Spacer(1,2.2*mm), table, Spacer(1,2.5*mm), summary, Spacer(1,1.5*mm), note]
 
-    def footer(canvas,_doc):
-        canvas.saveState();width,_=page_size;canvas.setStrokeColor(colors.HexColor(f"#{BORDER}"));canvas.setLineWidth(.35);canvas.line(6*mm,6.3*mm,width-6*mm,6.3*mm);canvas.setFillColor(colors.HexColor(f"#{BRAND_MUTED}"));canvas.setFont("Helvetica-Bold",5.8);canvas.drawString(6*mm,3.3*mm,"Printflow");canvas.setFont("Helvetica",5.8);canvas.drawString(19*mm,3.3*mm,f"|  {company_name}");canvas.drawRightString(width-6*mm,3.3*mm,f"Relatório gerado em {end.strftime('%d/%m/%Y')}  |  Fechamento comercial");canvas.restoreState()
+    def footer(canvas, _doc):
+        canvas.saveState(); width,_ = page_size
+        canvas.setStrokeColor(colors.HexColor(f"#{BORDER}")); canvas.setLineWidth(.35); canvas.line(7*mm,6.3*mm,width-7*mm,6.3*mm)
+        canvas.setFillColor(colors.HexColor(f"#{BRAND_NAVY}")); canvas.setFont("Helvetica-Bold",5.8); canvas.drawString(7*mm,3.3*mm,"Printflow")
+        canvas.setFillColor(colors.HexColor(f"#{BRAND_MUTED}")); canvas.setFont("Helvetica",5.8); canvas.drawString(20*mm,3.3*mm,f"|  {company_name}"); canvas.drawRightString(width-7*mm,3.3*mm,f"Relatório gerado em {end.strftime('%d/%m/%Y')}  |  Fechamento comercial")
+        canvas.restoreState()
 
-    doc.build([KeepTogether(story)],onFirstPage=footer,onLaterPages=footer)
+    doc.build([KeepTogether(story)], onFirstPage=footer, onLaterPages=footer)
     return output.getvalue()
