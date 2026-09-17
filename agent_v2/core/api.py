@@ -2,19 +2,16 @@ import requests
 
 
 def send_printer(api, token, printer):
+    """Envia telemetria de uma impressora para a API.
 
-    response = requests.post(
-        f"{api}/api/v1/printers/agent",
+    A excecao de rede e propagada para o loop principal, que registra a falha
+    e continua processando os demais equipamentos sem encerrar o Agent.
+    """
+    return requests.post(
+        f"{api.rstrip('/')}/api/v1/printers/agent",
         json={
             "agent_token": token,
-            **printer
+            **printer,
         },
-        timeout=15
+        timeout=15,
     )
-
-    print(
-        response.status_code,
-        response.text
-    )
-
-    return response
