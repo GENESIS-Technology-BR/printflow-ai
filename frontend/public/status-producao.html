@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PRINTFLOW · Status de Produção</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#e8eef5;background:#08111c}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top right,#12304a 0,#08111c 42%);padding:28px}.wrap{max-width:1180px;margin:auto}.top{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:24px}.brand{font-weight:800;letter-spacing:.08em}.muted{color:#8ea0b4}.live{padding:8px 12px;border:1px solid #235f4d;border-radius:999px;background:#0c2c25;color:#75e3b9;font-size:13px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card,.panel{background:rgba(14,27,42,.92);border:1px solid #21364c;border-radius:14px;padding:18px;box-shadow:0 12px 35px rgba(0,0,0,.18)}.label{font-size:12px;color:#8296aa;text-transform:uppercase;letter-spacing:.08em}.value{font-size:22px;font-weight:750;margin-top:8px}.ok{color:#6ee7b7}.bad{color:#fb7185}.run{color:#fbbf24}.panels{display:grid;grid-template-columns:1.3fr .7fr;gap:14px;margin-top:14px}.row{display:flex;justify-content:space-between;gap:18px;padding:12px 0;border-bottom:1px solid #1d3043}.row:last-child{border-bottom:0}.commit{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.foot{margin-top:18px;font-size:12px;color:#708397}@media(max-width:850px){.grid{grid-template-columns:1fr 1fr}.panels{grid-template-columns:1fr}}@media(max-width:520px){body{padding:16px}.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body><div class="wrap">
+<div class="top"><div><div class="brand">PRINTFLOW · PRODUCTION CONTROL</div><div class="muted">Acompanhamento técnico em tempo quase real</div></div><div id="live" class="live">● Atualizando...</div></div>
+<div class="grid">
+<div class="card"><div class="label">Branch</div><div class="value">main</div></div>
+<div class="card"><div class="label">Último commit</div><div id="sha" class="value commit">—</div></div>
+<div class="card"><div class="label">Build / Validação</div><div id="build" class="value">—</div></div>
+<div class="card"><div class="label">Status</div><div id="status" class="value">—</div></div>
+</div>
+<div class="panels"><section class="panel"><div class="label">Pipeline recente</div><div id="runs">Carregando...</div></section><section class="panel"><div class="label">Produção</div><div class="row"><span>Repositório</span><strong>GENESIS-Technology-BR/printflow-ai</strong></div><div class="row"><span>Ambiente</span><strong>Production</strong></div><div class="row"><span>Atualização</span><strong id="updated">—</strong></div><div class="row"><span>Próxima leitura</span><strong>30 s</strong></div></section></div>
+<div class="foot">Fonte: GitHub Actions · Atualização automática a cada 30 segundos. Nenhuma credencial é armazenada nesta página.</div>
+</div>
+<script>
+const API='https://api.github.com/repos/GENESIS-Technology-BR/printflow-ai';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cls=r=>r.status!=='completed'?'run':r.conclusion==='success'?'ok':'bad';
+const label=r=>r.status!=='completed'?'EM EXECUÇÃO':r.conclusion==='success'?'SUCESSO':(r.conclusion||'FALHA').toUpperCase();
+async function refresh(){try{const res=await fetch(API+'/actions/runs?branch=main&per_page=8',{headers:{Accept:'application/vnd.github+json'}});if(!res.ok)throw new Error('GitHub '+res.status);const data=await res.json();const runs=data.workflow_runs||[];const latest=runs[0];if(!latest)throw new Error('Sem execuções');document.getElementById('sha').textContent=latest.head_sha.slice(0,8);document.getElementById('build').textContent='#'+latest.run_number;const st=document.getElementById('status');st.textContent=label(latest);st.className='value '+cls(latest);document.getElementById('runs').innerHTML=runs.map(r=>`<div class="row"><div><strong>${esc(r.name)} #${r.run_number}</strong><div class="muted commit">${esc(r.head_sha.slice(0,8))} · ${esc(r.head_commit?.message||'')}</div></div><strong class="${cls(r)}">${label(r)}</strong></div>`).join('');const now=new Date();document.getElementById('updated').textContent=now.toLocaleString('pt-BR');document.getElementById('live').textContent='● Monitoramento ativo';}catch(e){document.getElementById('live').textContent='● Falha ao consultar GitHub';document.getElementById('live').className='live bad';}}
+refresh();setInterval(refresh,30000);
+</script></body></html>
