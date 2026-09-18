@@ -73,6 +73,37 @@ def _merge_trusted(
     return current_value, current_confidence, False
 
 
+def _merge_page_count(
+    current_value: int | None,
+    current_confidence: int | None,
+    incoming_value: int | None,
+    incoming_confidence: int | None,
+    incoming_confirmed: bool,
+) -> tuple[int | None, int | None, bool]:
+    """Mantem contador monotonicamente crescente sem bloquear total confirmado."""
+    if incoming_value is None:
+        return current_value, current_confidence, False
+
+    if current_value is not None and incoming_value < current_value:
+        return current_value, current_confidence, False
+
+    if current_value is not None and incoming_value == current_value:
+        return current_value, current_confidence, False
+
+    # Um total fisico confirmado pelo Agent pode corrigir um valor historico
+    # menor mesmo quando a confianca antiga era artificialmente mais alta.
+    if incoming_confirmed:
+        return incoming_value, incoming_confidence, True
+
+    value, confidence, updated = _merge_trusted(
+        current_value,
+        current_confidence,
+        incoming_value,
+        incoming_confidence,
+    )
+    return value, confidence, updated
+
+
 def _reconcile_inventory(
     printers: list[Printer], observed_printer_ips: list[str]
 ) -> tuple[int, int]:
@@ -201,11 +232,12 @@ def receive_agent_data(
     )
     printer.status = payload.status
     printer.source = payload.source
-    page_count, page_confidence, page_updated = _merge_trusted(
+    page_count, page_confidence, page_updated = _merge_page_count(
         printer.page_count,
         printer.page_count_confidence,
         payload.page_count,
         payload.page_count_confidence,
+        payload.page_count_confirmed,
     )
     if page_updated:
         printer.page_count = page_count
