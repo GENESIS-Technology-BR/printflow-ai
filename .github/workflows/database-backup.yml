@@ -22,7 +22,7 @@ jobs:
   backup:
     name: Backup logico PostgreSQL
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       PGDATABASE: neondb
       BACKUP_DIR: backup-output
@@ -157,6 +157,66 @@ jobs:
             echo "- Copia externa Google Drive: **confirmada**"
             echo "- Escopo OAuth: \`drive.file\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Provar restaurabilidade no laboratorio DR
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          DR_DATABASE_URL: ${{ secrets.PRINTFLOW_DR_DATABASE_URL }}
+          PROD_BACKUP_URL: ${{ secrets.PRINTFLOW_BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${DR_DATABASE_URL:-}" ]]; then
+            echo "::error::Secret PRINTFLOW_DR_DATABASE_URL nao configurado."
+            exit 1
+          fi
+          case "$DR_DATABASE_URL" in
+            postgresql://*|postgres://*) ;;
+            *) echo "::error::Destino DR nao possui formato PostgreSQL valido."; exit 1 ;;
+          esac
+          if [[ "$DR_DATABASE_URL" == "$PROD_BACKUP_URL" ]]; then
+            echo "::error::Destino DR coincide com producao. Restore bloqueado."
+            exit 1
+          fi
+          pg_restore --dbname="$DR_DATABASE_URL" --clean --if-exists --no-owner --no-privileges --exit-on-error "$BACKUP_FILE"
+          table_count="$(psql "$DR_DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
+          if [[ ! "$table_count" =~ ^[0-9]+$ ]] || (( table_count < 1 )); then
+            echo "::error::Restore DR sem tabelas de aplicacao."
+            exit 1
+          fi
+          checksum="$(awk '{print $1}' "$BACKUP_FILE.sha256")"
+          bytes="$(stat -c%s "$BACKUP_FILE")"
+          now="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          cat > "$BACKUP_DIR/backup-evidence.json" <<EOF
+          {
+            "run_number": ${{ github.run_number }},
+            "run_id": ${{ github.run_id }},
+            "created_utc": "$now",
+            "database": "neondb",
+            "backup_bytes": $bytes,
+            "sha256": "$checksum",
+            "structural_validation": "ok",
+            "google_drive_copy": "ok",
+            "dr_restore": "ok",
+            "dr_public_tables": $table_count,
+            "production_used_as_restore_target": false
+          }
+          EOF
+          {
+            echo "- Restore automatico DR: **VALIDADO**"
+            echo "- Tabelas restauradas: \`$table_count\`"
+            echo "- Evidencia operacional: **gerada**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar evidencia de auditoria
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: PRINTFLOW-DB-Evidence-${{ github.run_number }}
+          path: ${{ env.BACKUP_DIR }}/backup-evidence.json
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
 
       - name: Publicar backup com retencao
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload_artifact) }}
