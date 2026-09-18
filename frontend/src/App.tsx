@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 import type { FormEvent } from "react"
 import "./App.css"
 import Dashboard from "./components/Dashboard"
-import PrinterTable from "./components/PrinterTable"
-import AgentMonitor from "./components/AgentMonitor"
-import ControlCenter from "./components/ControlCenter"
-import Reports from "./components/Reports"
+
+const PrinterTable = lazy(() => import("./components/PrinterTable"))
+const AgentMonitor = lazy(() => import("./components/AgentMonitor"))
+const ControlCenter = lazy(() => import("./components/ControlCenter"))
+const Reports = lazy(() => import("./components/Reports"))
 import ThemeToggle from "./components/ThemeToggle"
 import { getDashboardPrinters, getMe } from "./services/api"
 import type { DashboardPrinter, MeProfile } from "./services/api"
@@ -333,6 +334,7 @@ function App() {
       </aside>
 
       <main className={`dashboard ${page === "dashboard" ? "dashboard-modern-shell" : ""} ${page === "printers" ? "printers-workspace" : ""} ${page === "reports" ? "reports-workspace" : ""}`}>
+        <Suspense fallback={<div className="sap-loading">Carregando módulo...</div>}>
         {page === "control" ? (
           <ControlCenter />
         ) : page === "reports" ? (
@@ -428,6 +430,7 @@ function App() {
         ) : (
           <Dashboard companyName={company?.name || "Empresa monitorada"} onOpenPrinters={() => { setPage("printers"); void loadPrinters() }} />
         )}
+        </Suspense>
       </main>
     </div>
   )
