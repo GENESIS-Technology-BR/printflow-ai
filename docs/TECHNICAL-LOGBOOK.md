@@ -56,5 +56,33 @@
 4. Melhorar observabilidade de backup/DR: último backup OK, último restore OK e idade do ponto de recuperação.
 5. Obter visibilidade administrativa segura do projeto Neon; a conexão Neon disponível na auditoria não listou projetos.
 
+
+## 2026-09-18 — Homologação Agent v1.0.1 e performance
+
+### Agent Windows
+- Build #343 (`v1.0.1`) concluído com sucesso e pacote oficial gerado.
+- Upgrade controlado no piloto Guerra Implementos de `v1.0.0` para `v1.0.1`.
+- Atualizador preservou token e redes, criou backup pré-upgrade e iniciou o Agent como SYSTEM.
+- Portal confirmou Agent `v1.0.1`, estado `healthy`, ciclo automático e 28 impressoras monitoradas.
+
+### Contador de páginas
+- HP Laser MFP 432 (`10.2.0.124`) validada contra a interface web física do equipamento.
+- Contador físico: 24.321 páginas.
+- PRINTFLOW: 24.321 páginas.
+- Fluxo HP -> SNMP -> Agent -> API -> banco -> portal homologado para este equipamento.
+- A correção monotônica do backend permanece ativa para impedir regressão de contadores confirmados.
+
+### Performance do frontend
+- PR #66 integrado à `main`.
+- Módulos secundários passaram a carregar sob demanda.
+- GETs simultâneos idênticos são deduplicados e respostas recentes usam cache curto de 15 segundos.
+- Escritas invalidam o cache.
+- Web Validation #43 e Production Smoke #108 concluídos com sucesso.
+
+### Backup/DR — atualização da evidência
+- Backup #11, tentativa 2, concluído com sucesso.
+- Backup, SHA-256, cópia Google Drive, restore no laboratório DR, validação de tabelas e publicação de evidência concluídos.
+- Regra operacional mantida: backup só é considerado OK quando a restauração é comprovada.
+
 ## Regra de atualização
 Adicionar uma entrada sempre que houver mudança relevante de arquitetura, segurança, deploy, banco, backup/restore, Agent, incidente, homologação ou decisão operacional.
