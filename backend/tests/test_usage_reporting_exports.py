@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 from openpyxl import load_workbook
 
+from backend.modules.usage.router import _fixed_cost_for_period
 from backend.modules.usage.reporting import (
     build_excel_report,
     build_pdf_report,
@@ -148,3 +149,19 @@ def test_pdf_report_accepts_filtered_scope_and_technical_identity() -> None:
 
     assert content.startswith(b"%PDF")
     assert len(content) > 1000
+
+
+def test_fixed_monthly_contract_charges_full_month_without_daily_proration() -> None:
+    assert _fixed_cost_for_period(
+        1500.0,
+        date(2026, 9, 1),
+        date(2026, 9, 30),
+    ) == 1500.0
+
+
+def test_fixed_monthly_contract_counts_each_calendar_month_in_period() -> None:
+    assert _fixed_cost_for_period(
+        1500.0,
+        date(2026, 8, 20),
+        date(2026, 9, 18),
+    ) == 3000.0
