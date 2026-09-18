@@ -63,15 +63,9 @@ def _is_label_printer(printer: Printer) -> bool:
 
 
 def _fixed_cost_for_period(monthly_cost: float, start: date, end: date) -> float:
-    total = 0.0; cursor = start
-    while cursor <= end:
-        days_in_month = monthrange(cursor.year, cursor.month)[1]
-        month_end = date(cursor.year, cursor.month, days_in_month)
-        segment_end = min(end, month_end)
-        days = (segment_end - cursor).days + 1
-        total += monthly_cost * days / days_in_month
-        cursor = segment_end + timedelta(days=1)
-    return round(total, 2)
+    """Cobra o valor contratual fechado uma vez por mes calendario no periodo."""
+    months = (end.year - start.year) * 12 + (end.month - start.month) + 1
+    return round(max(monthly_cost, 0.0) * months, 2)
 
 
 def _apply_cost_models(rows: list[dict], printers: list[Printer], start: date, end: date) -> list[dict]:
