@@ -77,10 +77,32 @@ export type OperationalAlert = {
   acknowledged_by: number | null;
 };
 
+const GET_CACHE_TTL_MS = 15_000;
+const getCache = new Map<string, { expiresAt: number; value: unknown }>();
+const inflightGets = new Map<string, Promise<unknown>>();
+
+function requestCacheKey(endpoint: string): string {
+  return `${sessionStorage.getItem("printflow_preview_token") || "session"}:${endpoint}`;
+}
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const method = (options.method || "GET").toUpperCase();
+  const cacheable = method === "GET";
+  const cacheKey = requestCacheKey(endpoint);
+
+  if (cacheable) {
+    const cached = getCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) return cached.value as T;
+    if (cached) getCache.delete(cacheKey);
+
+    const pending = inflightGets.get(cacheKey);
+    if (pending) return pending as Promise<T>;
+  }
+
+  const execute = async (): Promise<T> => {
   const previewToken = sessionStorage.getItem(
     "printflow_preview_token",
   );
@@ -108,7 +130,20 @@ async function request<T>(
     );
   }
 
-  return response.json() as Promise<T>;
+  const data = await response.json() as T;
+  if (cacheable) {
+    getCache.set(cacheKey, { expiresAt: Date.now() + GET_CACHE_TTL_MS, value: data });
+  } else {
+    getCache.clear();
+  }
+  return data;
+  };
+
+  if (!cacheable) return execute();
+
+  const pending = execute().finally(() => inflightGets.delete(cacheKey));
+  inflightGets.set(cacheKey, pending);
+  return pending;
 }
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
