@@ -8,6 +8,7 @@ from backend.modules.usage.service import (
     calculate_counter_delta,
     reporting_date,
 )
+from backend.modules.printers.router import _merge_page_count
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -59,3 +60,20 @@ def test_daily_usage_endpoint_is_company_scoped():
     assert "current_user.company_id" in router
     assert "PrinterUsageDaily.company_id" in router
     assert '"/daily"' in router
+
+def test_confirmed_higher_counter_corrects_stale_value_even_with_lower_confidence():
+    value, confidence, updated = _merge_page_count(
+        15000, 100, 27344, 95, True
+    )
+    assert value == 27344
+    assert confidence == 95
+    assert updated is True
+
+
+def test_counter_regression_is_blocked_even_when_incoming_is_confirmed():
+    value, confidence, updated = _merge_page_count(
+        27344, 95, 15000, 100, True
+    )
+    assert value == 27344
+    assert confidence == 95
+    assert updated is False
