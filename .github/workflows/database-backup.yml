@@ -175,8 +175,26 @@ jobs:
             postgresql://*|postgres://*) ;;
             *) echo "::error::Destino DR nao possui formato PostgreSQL valido."; exit 1 ;;
           esac
-          if [[ "$DR_DATABASE_URL" == "$PROD_BACKUP_URL" ]]; then
-            echo "::error::Destino DR coincide com producao. Restore bloqueado."
+          normalize_pg_target() {
+            python3 - "$1" <<'PY'
+import sys
+from urllib.parse import urlsplit, unquote
+u = urlsplit(sys.argv[1])
+host = (u.hostname or "").lower()
+port = u.port or 5432
+database = unquote((u.path or "").lstrip("/"))
+user = unquote(u.username or "")
+print(f"{host}:{port}/{database}|{user}")
+PY
+          }
+          dr_target="$(normalize_pg_target "$DR_DATABASE_URL")"
+          prod_target="$(normalize_pg_target "$PROD_BACKUP_URL")"
+          if [[ -z "$dr_target" || -z "$prod_target" || "$dr_target" == ":5432/|" || "$prod_target" == ":5432/|" ]]; then
+            echo "::error::Nao foi possivel validar os destinos PostgreSQL."
+            exit 1
+          fi
+          if [[ "$dr_target" == "$prod_target" ]]; then
+            echo "::error::Destino DR aponta para o mesmo banco/usuario de producao. Restore bloqueado."
             exit 1
           fi
           pg_restore --dbname="$DR_DATABASE_URL" --clean --if-exists --no-owner --no-privileges --exit-on-error "$BACKUP_FILE"
