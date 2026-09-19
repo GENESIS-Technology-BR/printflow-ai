@@ -51,11 +51,24 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/agent/python
         run: python -m pytest -q backend/tests
 
-      - name: Build frontend
+      - name: Gate de seguranca Python
+        run: |
+          python -m pip install pip-audit
+          pip-audit -r requirements.txt
+
+      - name: Gate de seguranca frontend
         working-directory: frontend
         run: |
-          npm ci --prefer-offline --no-audit
-          npm run build
+          npm ci --prefer-offline
+          npm audit --audit-level=high
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
 
       - name: Resumo
         if: always()
