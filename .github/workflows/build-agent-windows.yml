@@ -81,6 +81,14 @@ jobs:
             throw "Foram encontrados erros nos scripts PowerShell."
           }
 
+      - name: Validar contratos operacionais do Agent
+        shell: powershell
+        run: |
+          $env:PYTHONPATH = "${{ github.workspace }};${{ github.workspace }}/agent/python"
+          python -m pytest -q agent/python/tests
+          Select-String -Path agent/python/**/*.py -Pattern "heartbeat|page_count|serial|snmp" -Quiet | Out-Null
+          if (-not $?) { throw "Contratos essenciais do Agent nao foram encontrados." }
+
       - name: Validar Agent oficial
         shell: powershell
         run: |
