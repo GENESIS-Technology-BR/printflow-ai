@@ -68,7 +68,7 @@ jobs:
           /usr/lib/postgresql/18/bin/pg_restore --version
 
       - name: Baixar artifact do backup selecionado
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: PRINTFLOW-DB-Backup-*
           path: ${{ env.RESTORE_DIR }}
