@@ -319,3 +319,24 @@ def test_recovery_confirm_invalidates_token_and_all_sessions():
     assert "user.password_reset_version += 1" in router
     assert "user.session_version += 1" in router
     assert "Token de recuperação inválido ou já utilizado" in router
+
+
+def test_login_rate_limit_is_fail_closed_and_identity_scoped():
+    router = source("backend/modules/auth/router.py")
+
+    assert "LOGIN_ATTEMPT_LIMIT = 5" in router
+    assert "LOGIN_ATTEMPT_WINDOW_SECONDS = 300" in router
+    assert "email.lower().strip()" in router
+    assert "HTTP_429_TOO_MANY_REQUESTS" in router
+    assert "_clear_login_rate_limit" in router
+
+
+def test_tenant_isolation_has_runtime_data_tests():
+    usage_tests = source("backend/tests/test_usage_multitenancy.py")
+
+    assert "Empresa A" in usage_tests
+    assert "Empresa B" in usage_tests
+    assert "test_usage_query_never_crosses_company_boundary" in usage_tests
+    assert "test_report_rows_are_isolated_by_authenticated_company" in usage_tests
+    assert "test_foreign_printer_filter_fails_closed" in usage_tests
+    assert "test_foreign_unit_and_sector_filters_fail_closed" in usage_tests
