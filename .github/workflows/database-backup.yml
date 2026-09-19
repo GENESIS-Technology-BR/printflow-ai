@@ -176,16 +176,7 @@ jobs:
             *) echo "::error::Destino DR nao possui formato PostgreSQL valido."; exit 1 ;;
           esac
           normalize_pg_target() {
-            python3 - "$1" <<'PY'
-import sys
-from urllib.parse import urlsplit, unquote
-u = urlsplit(sys.argv[1])
-host = (u.hostname or "").lower()
-port = u.port or 5432
-database = unquote((u.path or "").lstrip("/"))
-user = unquote(u.username or "")
-print(f"{host}:{port}/{database}|{user}")
-PY
+            python3 -c 'import sys; from urllib.parse import urlsplit, unquote; u=urlsplit(sys.argv[1]); host=(u.hostname or "").lower(); port=u.port or 5432; database=unquote((u.path or "").lstrip("/")); user=unquote(u.username or ""); print(f"{host}:{port}/{database}|{user}")' "$1"
           }
           dr_target="$(normalize_pg_target "$DR_DATABASE_URL")"
           prod_target="$(normalize_pg_target "$PROD_BACKUP_URL")"
