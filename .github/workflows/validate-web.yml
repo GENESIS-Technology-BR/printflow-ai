@@ -10,6 +10,7 @@ on:
     paths:
       - "frontend/**"
       - "backend/**"
+      - "scripts/production_smoke.py"
       - ".github/workflows/validate-web.yml"
       - "requirements.txt"
       - "requirements-dev.txt"
