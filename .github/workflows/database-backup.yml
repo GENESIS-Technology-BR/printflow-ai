@@ -11,6 +11,10 @@ on:
   schedule:
     # 05:00 UTC = 02:00 America/Sao_Paulo (UTC-3)
     - cron: "0 5 * * *"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/database-backup.yml"
 
 permissions:
   contents: read
@@ -31,6 +35,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Validar sintaxe do workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          text = Path(".github/workflows/database-backup.yml").read_text(encoding="utf-8")
+          assert 'cron: "0 5 * * *"' in text
+          assert "actions/upload-artifact@v5" in text
+          assert "normalize_pg_target" in text
+          print("Contrato do workflow de backup validado.")
+          PY
 
       - name: Verificar configuracao segura
         shell: bash
