@@ -62,6 +62,10 @@ jobs:
           npm ci --prefer-offline
           npm audit --audit-level=high
 
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
       - name: Build frontend
         working-directory: frontend
         run: npm run build
