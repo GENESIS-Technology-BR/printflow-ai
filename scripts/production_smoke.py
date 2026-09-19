@@ -24,7 +24,7 @@ class HttpResult:
     payload: dict[str, Any]
 
 
-def _get_json(url: str, timeout: float = 20.0) -> HttpResult:
+def _request_json(url: str, timeout: float = 20.0) -> HttpResult:
     request = Request(
         url,
         headers={
@@ -43,7 +43,16 @@ def _get_json(url: str, timeout: float = 20.0) -> HttpResult:
                 payload=payload,
             )
     except HTTPError as exc:
-        raise RuntimeError(f"HTTP {exc.code} em {url}") from exc
+        body = exc.read().decode("utf-8", errors="replace")
+        try:
+            payload = json.loads(body)
+        except json.JSONDecodeError:
+            payload = {}
+        return HttpResult(
+            status=exc.code,
+            headers={k.lower(): v for k, v in exc.headers.items()},
+            payload=payload,
+        )
     except URLError as exc:
         raise RuntimeError(f"Falha de conexão em {url}: {exc.reason}") from exc
     except json.JSONDecodeError as exc:
@@ -95,6 +104,16 @@ def validate_root(result: HttpResult) -> None:
         raise AssertionError("Content-Security-Policy ausente")
 
 
+def validate_protected_routes(base_url: str) -> None:
+    """Prova que rotas privadas nao aceitam acesso anonimo em producao."""
+    for path in ("/api/v1/auth/me", "/api/v1/dashboard/summary"):
+        result = _request_json(f"{base_url}{path}")
+        if result.status not in {401, 403}:
+            raise AssertionError(
+                f"{path} deveria negar acesso anonimo; HTTP atual={result.status}"
+            )
+
+
 def run(base_url: str, attempts: int, delay_seconds: float) -> None:
     base_url = base_url.rstrip("/")
     last_error: Exception | None = None
@@ -102,10 +121,11 @@ def run(base_url: str, attempts: int, delay_seconds: float) -> None:
     for attempt in range(1, attempts + 1):
         try:
             print(f"[PRINTFLOW] Smoke attempt {attempt}/{attempts}: {base_url}")
-            health = _get_json(f"{base_url}/health")
+            health = _request_json(f"{base_url}/health")
             validate_health(health)
-            root = _get_json(f"{base_url}/")
+            root = _request_json(f"{base_url}/")
             validate_root(root)
+            validate_protected_routes(base_url)
             print(
                 "[PRINTFLOW] PASS "
                 f"version={health.payload.get('version')} "
