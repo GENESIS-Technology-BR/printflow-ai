@@ -18,5 +18,11 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // O carregamento inicial assíncrono é um padrão intencional nestes
+      // componentes. Mantemos exhaustive-deps e as demais regras de hooks
+      // como gates, sem tratar o disparo inicial de loaders como erro.
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])
