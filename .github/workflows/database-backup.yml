@@ -9,7 +9,8 @@ on:
         default: true
         type: boolean
   schedule:
-    - cron: "17 5 * * *"
+    # 05:00 UTC = 02:00 America/Sao_Paulo (UTC-3)
+    - cron: "0 5 * * *"
 
 permissions:
   contents: read
