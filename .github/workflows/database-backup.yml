@@ -210,7 +210,7 @@ jobs:
 
       - name: Publicar evidencia de auditoria
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: PRINTFLOW-DB-Evidence-${{ github.run_number }}
           path: ${{ env.BACKUP_DIR }}/backup-evidence.json
@@ -220,7 +220,7 @@ jobs:
 
       - name: Publicar backup com retencao
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload_artifact) }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: PRINTFLOW-DB-Backup-${{ github.run_number }}
           path: |
