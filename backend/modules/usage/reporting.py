@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 from io import BytesIO
+from ipaddress import ip_address
 from typing import Iterable
 
 from backend.modules.printers.model import Printer
@@ -14,6 +15,14 @@ BRAND_BLUE = "0A6ED1"
 BRAND_TEAL = "25C6B7"
 BRAND_GREEN = "21D89B"
 BRAND_MUTED = "6B7C93"
+
+
+def _ip_sort_key(value: str | None) -> tuple[int, int | str]:
+    try:
+        parsed = ip_address((value or "").strip())
+        return (0, int(parsed))
+    except ValueError:
+        return (1, value or "")
 
 
 def _looks_like_opaque_hex(value: str | None) -> bool:
@@ -217,11 +226,7 @@ def consolidate_usage(
 
     return sorted(
         groups.values(),
-        key=lambda item: (
-            item["unit_name"] or "",
-            item["sector_name"] or "",
-            item["display_name"].lower(),
-        ),
+        key=lambda item: _ip_sort_key(item.get("ip")),
     )
 
 
