@@ -7,6 +7,7 @@ from backend.modules.dashboard.router import serialize_printer
 from backend.modules.printers.model import Printer
 from backend.modules.printers.schema import (
     PrinterCustomNameUpdate,
+    PrinterSerialUpdate,
     PrinterUpsert,
 )
 
@@ -60,3 +61,8 @@ def test_dashboard_exposes_hostname_and_custom_name():
 
     assert result["hostname"] == "PRN-FISCAL-01"
     assert result["custom_name"] == "Fiscal - Administracao"
+
+
+def test_manual_serial_accepts_known_device_serial():
+    payload = PrinterSerialUpdate(serial="BACG3815")
+    assert payload.serial == "BACG3815"
