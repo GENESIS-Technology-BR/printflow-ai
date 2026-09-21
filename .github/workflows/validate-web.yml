@@ -52,6 +52,25 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/agent/python
         run: python -m pytest -q backend/tests
 
+      - name: Homologacao funcional critica
+        env:
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/agent/python
+        run: |
+          python -m pytest -q \
+            backend/tests/test_security_hardening.py \
+            backend/tests/test_tenant_isolation_contract.py \
+            backend/tests/test_usage_multitenancy.py \
+            backend/tests/test_dashboard_executive_clean.py \
+            backend/tests/test_organization_catalog.py \
+            backend/tests/test_organization_crud.py \
+            backend/tests/test_printer_data_policy.py \
+            backend/tests/test_printer_identity_fields.py \
+            backend/tests/test_printer_organization.py \
+            backend/tests/test_printer_organization_links.py \
+            backend/tests/test_printer_usage_history.py \
+            backend/tests/test_usage_report_scope.py \
+            backend/tests/test_usage_reporting_exports.py
+
       - name: Gate de seguranca Python
         run: |
           python -m pip install pip-audit
