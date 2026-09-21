@@ -315,7 +315,8 @@ def update_printer_custom_name(
             detail="Impressora nao encontrada.",
         )
 
-    printer.custom_name = _clean_text(payload.custom_name)
+    custom_name = _clean_text(payload.custom_name)
+    printer.custom_name = custom_name.upper() if custom_name else None
     db.commit()
     db.refresh(printer)
     return printer
