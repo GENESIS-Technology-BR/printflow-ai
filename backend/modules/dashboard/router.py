@@ -138,9 +138,25 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
     }
 
 
+def _is_label_printer(printer: Printer) -> bool:
+    text = " ".join(
+        str(value or "")
+        for value in (
+            getattr(printer, "manufacturer", None),
+            getattr(printer, "model", None),
+            getattr(printer, "name", None),
+            getattr(printer, "custom_name", None),
+        )
+    ).lower()
+    return any(marker in text for marker in ("zebra", "zt230", "zpl", "ztc "))
+
+
 def _company_inventory(db: Session, company_id: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Retorna inventário completo e parque atualmente monitorado com a mesma regra."""
+    """Retorna inventário visível e parque monitorado conforme regra comercial da empresa."""
     printers = db.query(Printer).filter(Printer.company_id == company_id).all()
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if company and "guerra" in (company.name or "").strip().lower():
+        printers = [printer for printer in printers if not _is_label_printer(printer)]
     serialized = [serialize_printer(printer) for printer in printers]
     monitored = [printer for printer in serialized if printer["active"]]
     return serialized, monitored
