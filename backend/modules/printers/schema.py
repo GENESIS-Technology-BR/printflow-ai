@@ -50,6 +50,10 @@ class PrinterCustomNameUpdate(BaseModel):
     custom_name: str | None = Field(default=None, max_length=150)
 
 
+class PrinterSerialUpdate(BaseModel):
+    serial: str = Field(min_length=1, max_length=180)
+
+
 class PrinterOrganizationUpdate(BaseModel):
     unit_name: str | None = Field(default=None, max_length=120)
     sector_name: str | None = Field(default=None, max_length=120)
