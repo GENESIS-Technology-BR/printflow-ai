@@ -62,6 +62,14 @@ def _is_label_printer(printer: Printer) -> bool:
     return any(marker in text for marker in ("zebra", "zt230", "zpl"))
 
 
+def _exclude_label_printers_for_company(company: Company | None, printers: list[Printer]) -> list[Printer]:
+    """Regra comercial temporaria: Guerra nao contabiliza impressoras de etiquetas."""
+    company_name = (company.name if company else "").strip().lower()
+    if "guerra" not in company_name:
+        return printers
+    return [printer for printer in printers if not _is_label_printer(printer)]
+
+
 def _fixed_cost_for_period(monthly_cost: float, start: date, end: date) -> float:
     """Cobra o valor contratual fechado uma vez por mes calendario no periodo."""
     months = (end.year - start.year) * 12 + (end.month - start.month) + 1
@@ -89,8 +97,10 @@ def _validate_report_filters(db: Session, company_id: int, printer_uuid: str | N
 def _report_data(db: Session, current_user: User, start: date, end: date, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None):
     _validate_report_filters(db, current_user.company_id, printer_uuid, unit_name, sector_name)
     printers = _current_printers(db, current_user.company_id, printer_uuid, unit_name, sector_name)
+    company = db.query(Company).filter(Company.id == current_user.company_id).first()
+    printers = _exclude_label_printers_for_company(company, printers)
     history = _active_history(_usage_query(db, current_user.company_id, start, end, printer_uuid, unit_name, sector_name).all(), printers)
-    company = db.query(Company).filter(Company.id == current_user.company_id).first(); default_cost = (company.default_bw_cost_per_page or company.default_cost_per_page) if company else 0
+    default_cost = (company.default_bw_cost_per_page or company.default_cost_per_page) if company else 0
     rows = consolidate_usage(history, printers, default_cost)
     return _apply_cost_models(rows, printers, start, end), history
 
