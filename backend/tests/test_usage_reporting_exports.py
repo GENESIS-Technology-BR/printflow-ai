@@ -165,3 +165,30 @@ def test_fixed_monthly_contract_counts_each_calendar_month_in_period() -> None:
         date(2026, 8, 20),
         date(2026, 9, 18),
     ) == 3000.0
+
+
+def test_consolidated_report_sorts_ipv4_numerically() -> None:
+    def printer(uuid: str, ip: str):
+        return SimpleNamespace(
+            uuid=uuid, custom_name=uuid, hostname=None, name=uuid, ip=ip,
+            manufacturer="HP", model="LaserJet", serial=None,
+            unit_name=None, sector_name=None, page_count=0, cost_per_page=None,
+        )
+
+    rows = consolidate_usage(
+        [],
+        [
+            printer("p100", "10.2.0.100"),
+            printer("p9", "10.2.0.9"),
+            printer("p10", "10.2.0.10"),
+            printer("p124", "10.2.0.124"),
+        ],
+        default_cost_per_page=0.05,
+    )
+
+    assert [row["ip"] for row in rows] == [
+        "10.2.0.9",
+        "10.2.0.10",
+        "10.2.0.100",
+        "10.2.0.124",
+    ]
