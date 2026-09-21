@@ -290,6 +290,38 @@ def receive_agent_data(
     return printer
 
 
+@router.post("/maintenance/uppercase-custom-names")
+def uppercase_custom_names(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Normaliza nomes personalizados somente no tenant autenticado."""
+    if current_user.role not in {"admin", "owner", "superadmin"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operacao restrita a administradores.",
+        )
+
+    printers = (
+        db.query(Printer)
+        .filter(
+            Printer.company_id == current_user.company_id,
+            Printer.custom_name.isnot(None),
+        )
+        .all()
+    )
+    updated = 0
+    for printer in printers:
+        normalized = _clean_text(printer.custom_name)
+        normalized = normalized.upper() if normalized else None
+        if printer.custom_name != normalized:
+            printer.custom_name = normalized
+            updated += 1
+
+    db.commit()
+    return {"status": "ok", "updated": updated}
+
+
 @router.patch(
     "/{printer_uuid}/custom-name",
     response_model=PrinterResponse,
