@@ -15,6 +15,7 @@ from backend.modules.printers.schema import (
     PrinterCustomNameUpdate,
     PrinterOrganizationUpdate,
     PrinterResponse,
+    PrinterSerialUpdate,
     PrinterUpsert,
 )
 from backend.modules.usage.service import record_daily_printer_usage
@@ -315,6 +316,46 @@ def update_printer_custom_name(
         )
 
     printer.custom_name = _clean_text(payload.custom_name)
+    db.commit()
+    db.refresh(printer)
+    return printer
+
+
+@router.patch(
+    "/{printer_uuid}/serial",
+    response_model=PrinterResponse,
+)
+def update_printer_serial(
+    printer_uuid: str,
+    payload: PrinterSerialUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    printer = (
+        db.query(Printer)
+        .filter(
+            Printer.uuid == printer_uuid,
+            Printer.company_id == current_user.company_id,
+        )
+        .first()
+    )
+    if printer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Impressora nao encontrada.",
+        )
+
+    serial = _valid_serial(payload.serial)
+    if serial is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Numero de serie invalido.",
+        )
+
+    printer.serial = serial
+    printer.serial_source = "manual"
+    printer.serial_confidence = 100
+    printer.serial_confirmed = True
     db.commit()
     db.refresh(printer)
     return printer
