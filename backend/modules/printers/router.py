@@ -253,17 +253,25 @@ def receive_agent_data(
         printer.serial_source = None
         printer.serial_confirmed = False
 
-    serial, serial_confidence, serial_updated = _merge_trusted(
-        printer.serial,
-        printer.serial_confidence,
-        _valid_serial(payload.serial),
-        payload.serial_confidence,
+    # Um serial confirmado manualmente e a fonte autoritativa. O Agent pode
+    # continuar reportando candidatos, mas nao deve sobrescrever a confirmacao.
+    manual_serial_locked = (
+        printer.serial_confirmed
+        and printer.serial_source == "manual"
+        and _valid_serial(printer.serial) is not None
     )
-    if serial_updated:
-        printer.serial = serial
-        printer.serial_confidence = serial_confidence
-        printer.serial_source = _clean_text(payload.serial_source)
-        printer.serial_confirmed = payload.serial_confirmed
+    if not manual_serial_locked:
+        serial, serial_confidence, serial_updated = _merge_trusted(
+            printer.serial,
+            printer.serial_confidence,
+            _valid_serial(payload.serial),
+            payload.serial_confidence,
+        )
+        if serial_updated:
+            printer.serial = serial
+            printer.serial_confidence = serial_confidence
+            printer.serial_source = _clean_text(payload.serial_source)
+            printer.serial_confirmed = payload.serial_confirmed
     printer.toner_percent = _merge_optional(
         printer.toner_percent, payload.toner_percent
     )
@@ -418,7 +426,13 @@ def update_printer_cost(
             detail="Impressora nao encontrada.",
         )
 
-    printer.cost_per_page = payload.cost_per_page
+    printer.cost_model = payload.cost_model
+    if payload.cost_model == "fixed_monthly":
+        printer.fixed_monthly_cost = payload.fixed_monthly_cost
+        printer.cost_per_page = None
+    else:
+        printer.cost_per_page = payload.cost_per_page
+        printer.fixed_monthly_cost = None
     db.commit()
     db.refresh(printer)
     return printer
