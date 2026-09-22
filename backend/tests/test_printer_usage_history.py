@@ -77,3 +77,10 @@ def test_counter_regression_is_blocked_even_when_incoming_is_confirmed():
     assert value == 27344
     assert confidence == 95
     assert updated is False
+
+
+def test_free_infra_mode_has_safe_default_budget():
+    assert settings.infra_mode in {"FREE", "PAID"}
+    assert settings.free_quota_warn_percent < settings.free_quota_optimize_percent
+    assert settings.free_quota_optimize_percent < settings.free_quota_preserve_percent
+    assert settings.heartbeat_write_interval_seconds >= 300
