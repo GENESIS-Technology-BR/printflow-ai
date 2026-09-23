@@ -53,6 +53,20 @@ jobs:
           /usr/lib/postgresql/18/bin/psql --version
           echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
 
+      - name: Testar autenticacao Supabase
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          RESULT="$(psql "$SUPABASE_DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT current_database();")"
+
+          if [ "$RESULT" != "postgres" ]; then
+            echo "::error::Conexao Supabase respondeu banco inesperado."
+            exit 1
+          fi
+
+          echo "Autenticacao Supabase validada."
+
       - name: Localizar Backup 16
         id: artifact
         uses: actions/github-script@v8
