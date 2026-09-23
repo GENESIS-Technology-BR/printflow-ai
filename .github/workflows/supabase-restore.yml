@@ -49,8 +49,9 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
 
-          pg_restore --version
-          psql --version
+          /usr/lib/postgresql/18/bin/pg_restore --version
+          /usr/lib/postgresql/18/bin/psql --version
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
 
       - name: Localizar Backup 16
         id: artifact
@@ -84,10 +85,27 @@ jobs:
             core.setOutput("artifact_id", artifact.id);
 
       - name: Baixar Backup 16
-        uses: actions/download-artifact@v5
+        uses: actions/github-script@v8
+        env:
+          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact_id }}
         with:
-          artifact-ids: ${{ steps.artifact.outputs.artifact_id }}
-          path: restore-input
+          script: |
+            const fs = require("fs");
+            const artifactId = Number(process.env.ARTIFACT_ID);
+            const download = await github.rest.actions.downloadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: artifactId,
+              archive_format: "zip"
+            });
+            fs.writeFileSync("backup-16.zip", Buffer.from(download.data));
+
+      - name: Extrair Backup 16
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p restore-input
+          unzip -q backup-16.zip -d restore-input
 
       - name: Validar backup
         shell: bash
