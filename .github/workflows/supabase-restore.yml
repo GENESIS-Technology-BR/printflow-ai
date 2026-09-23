@@ -14,7 +14,12 @@ jobs:
     timeout-minutes: 25
 
     env:
-      SUPABASE_DATABASE_URL: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_URL }}
+      PGHOST: aws-0-ca-central-1.pooler.supabase.com
+      PGPORT: "5432"
+      PGDATABASE: postgres
+      PGUSER: postgres.glnmlfwtuqqngfiqsqow
+      PGPASSWORD: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
+      PGSSLMODE: require
 
     steps:
       - name: Validar configuracao
@@ -22,13 +27,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ -z "${SUPABASE_DATABASE_URL:-}" ]; then
-            echo "::error::Secret PRINTFLOW_SUPABASE_DATABASE_URL ausente."
+          if [ -z "${PGPASSWORD:-}" ]; then
+            echo "::error::Secret PRINTFLOW_SUPABASE_DATABASE_PASSWORD ausente."
             exit 1
           fi
 
-          echo "::add-mask::$SUPABASE_DATABASE_URL"
-          echo "Secret Supabase encontrada."
+          echo "::add-mask::$PGPASSWORD"
+          echo "Configuracao Supabase encontrada."
 
       - name: Instalar PostgreSQL 18
         shell: bash
@@ -58,7 +63,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          RESULT="$(psql "$SUPABASE_DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT current_database();")"
+          RESULT="$(psql -X -A -t -v ON_ERROR_STOP=1 -c "SELECT current_database();")"
 
           if [ "$RESULT" != "postgres" ]; then
             echo "::error::Conexao Supabase respondeu banco inesperado."
@@ -163,7 +168,7 @@ jobs:
           set -euo pipefail
 
           pg_restore \
-            --dbname="$SUPABASE_DATABASE_URL" \
+            --dbname="$PGDATABASE" \
             --clean \
             --if-exists \
             --no-owner \
@@ -179,7 +184,7 @@ jobs:
           set -euo pipefail
 
           TABLES="$(
-            psql "$SUPABASE_DATABASE_URL" \
+            psql \
               -X -A -t \
               -v ON_ERROR_STOP=1 \
               -c "
