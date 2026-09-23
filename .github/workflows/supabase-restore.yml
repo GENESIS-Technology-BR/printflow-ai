@@ -162,21 +162,39 @@ jobs:
 
           echo "Backup 16 validado."
 
-      - name: Restaurar no Supabase
+      - name: Restaurar somente dados no Supabase
         shell: bash
         run: |
           set -euo pipefail
 
+          EXISTING_ROWS="$(
+            psql -X -A -t -v ON_ERROR_STOP=1 -c "
+              SELECT
+                (SELECT count(*) FROM public.companies_v2) +
+                (SELECT count(*) FROM public.users_v2) +
+                (SELECT count(*) FROM public.company_units) +
+                (SELECT count(*) FROM public.company_sectors) +
+                (SELECT count(*) FROM public.printers) +
+                (SELECT count(*) FROM public.printer_usage_daily) +
+                (SELECT count(*) FROM public.operational_alerts);
+            "
+          )"
+
+          if [ "$EXISTING_ROWS" -ne 0 ]; then
+            echo "::error::Supabase nao esta vazio; restore abortado para evitar sobrescrita."
+            exit 1
+          fi
+
           pg_restore \
             --dbname="$PGDATABASE" \
-            --clean \
-            --if-exists \
+            --data-only \
             --no-owner \
             --no-privileges \
+            --disable-triggers \
             --exit-on-error \
             "$DUMP_FILE"
 
-          echo "Restore concluido."
+          echo "Restore de dados concluido sem alterar schema."
 
       - name: Validar tabelas
         shell: bash
@@ -199,6 +217,31 @@ jobs:
 
           if [ "$TABLES" -lt 1 ]; then
             echo "::error::Restore sem tabelas."
+            exit 1
+          fi
+
+          EXPECTED_TABLES=7
+          if [ "$TABLES" -ne "$EXPECTED_TABLES" ]; then
+            echo "::error::Quantidade de tabelas inesperada: $TABLES (esperado $EXPECTED_TABLES)."
+            exit 1
+          fi
+
+          TOTAL_ROWS="$(
+            psql -X -A -t -v ON_ERROR_STOP=1 -c "
+              SELECT
+                (SELECT count(*) FROM public.companies_v2) +
+                (SELECT count(*) FROM public.users_v2) +
+                (SELECT count(*) FROM public.company_units) +
+                (SELECT count(*) FROM public.company_sectors) +
+                (SELECT count(*) FROM public.printers) +
+                (SELECT count(*) FROM public.printer_usage_daily) +
+                (SELECT count(*) FROM public.operational_alerts);
+            "
+          )"
+
+          echo "Registros restaurados: $TOTAL_ROWS"
+          if [ "$TOTAL_ROWS" -lt 1 ]; then
+            echo "::error::Restore terminou sem dados."
             exit 1
           fi
 
