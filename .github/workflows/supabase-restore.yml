@@ -1,0 +1,164 @@
+name: PRINTFLOW Supabase Restore Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  restore:
+    name: Restore Backup 16 no Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    env:
+      SUPABASE_DATABASE_URL: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_URL }}
+
+    steps:
+      - name: Validar configuracao
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_DATABASE_URL:-}" ]; then
+            echo "::error::Secret PRINTFLOW_SUPABASE_DATABASE_URL ausente."
+            exit 1
+          fi
+
+          echo "::add-mask::$SUPABASE_DATABASE_URL"
+          echo "Secret Supabase encontrada."
+
+      - name: Instalar PostgreSQL 18
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sudo install -d /usr/share/postgresql-common/pgdg
+
+          sudo curl -fsSLo \
+            /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+            https://www.postgresql.org/media/keys/ACCC4CF8.asc
+
+          . /etc/os-release
+
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+
+          pg_restore --version
+          psql --version
+
+      - name: Localizar Backup 16
+        id: artifact
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const runId = 35588036106;
+
+            const response =
+              await github.rest.actions.listWorkflowRunArtifacts({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: runId,
+                per_page: 100
+              });
+
+            const artifact =
+              response.data.artifacts.find(
+                a =>
+                  a.name === "PRINTFLOW-DB-Backup-16" &&
+                  !a.expired
+              );
+
+            if (!artifact) {
+              core.setFailed(
+                "Backup 16 nao encontrado ou expirado."
+              );
+              return;
+            }
+
+            core.setOutput("artifact_id", artifact.id);
+
+      - name: Baixar Backup 16
+        uses: actions/download-artifact@v5
+        with:
+          artifact-ids: ${{ steps.artifact.outputs.artifact_id }}
+          path: restore-input
+
+      - name: Validar backup
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          dump="$(find restore-input -type f -name '*.dump' | head -1)"
+
+          if [ -z "$dump" ]; then
+            echo "::error::Arquivo dump nao encontrado."
+            exit 1
+          fi
+
+          checksum="${dump}.sha256"
+
+          test -s "$dump"
+          test -s "$checksum"
+
+          cd "$(dirname "$dump")"
+
+          sha256sum -c "$(basename "$checksum")"
+
+          pg_restore \
+            --list \
+            "$(basename "$dump")" \
+            > restore-list.txt
+
+          test -s restore-list.txt
+
+          echo "DUMP_FILE=$GITHUB_WORKSPACE/$dump" >> "$GITHUB_ENV"
+
+          echo "Backup 16 validado."
+
+      - name: Restaurar no Supabase
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          pg_restore \
+            --dbname="$SUPABASE_DATABASE_URL" \
+            --clean \
+            --if-exists \
+            --no-owner \
+            --no-privileges \
+            --exit-on-error \
+            "$DUMP_FILE"
+
+          echo "Restore concluido."
+
+      - name: Validar tabelas
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TABLES="$(
+            psql "$SUPABASE_DATABASE_URL" \
+              -X -A -t \
+              -v ON_ERROR_STOP=1 \
+              -c "
+                SELECT count(*)
+                FROM information_schema.tables
+                WHERE table_schema='public'
+                  AND table_type='BASE TABLE';
+              "
+          )"
+
+          echo "Tabelas encontradas: $TABLES"
+
+          if [ "$TABLES" -lt 1 ]; then
+            echo "::error::Restore sem tabelas."
+            exit 1
+          fi
+
+          echo "Restore Supabase validado."
