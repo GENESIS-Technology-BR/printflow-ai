@@ -124,13 +124,17 @@ jobs:
           test -s "$dump"
           test -s "$checksum"
 
-          cd "$(dirname "$dump")"
+          expected="$(awk '{print $1}' "$checksum")"
+          actual="$(sha256sum "$dump" | awk '{print $1}')"
 
-          sha256sum -c "$(basename "$checksum")"
+          if [ "$expected" != "$actual" ]; then
+            echo "::error::Checksum do Backup 16 divergente."
+            exit 1
+          fi
 
           pg_restore \
             --list \
-            "$(basename "$dump")" \
+            "$dump" \
             > restore-list.txt
 
           test -s restore-list.txt
