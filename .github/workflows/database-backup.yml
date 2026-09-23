@@ -15,6 +15,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/database-backup.yml"
+      - ".github/workflows/supabase-restore.yml"
 
 permissions:
   contents: read
