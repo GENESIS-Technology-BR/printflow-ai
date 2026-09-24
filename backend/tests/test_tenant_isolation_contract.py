@@ -38,3 +38,17 @@ def test_control_center_cross_tenant_access_is_admin_only():
 
     assert "get_platform_admin" in control_center
     assert 'prefix="/control-center"' in control_center
+
+
+def test_guerra_policy_is_consistent_across_public_application_surfaces():
+    integration = source("backend/modules/integration/router.py")
+    intelligence = source("backend/modules/intelligence/router.py")
+    usage = source("backend/modules/usage/router.py")
+    dashboard = source("backend/modules/dashboard/router.py")
+
+    assert "_exclude_label_printers_for_company" in integration
+    assert "_apply_cost_models" in integration
+    assert "_exclude_label_printers_for_company" in intelligence
+    assert "_active_history" in intelligence
+    assert "_exclude_label_printers_for_company" in usage
+    assert "_is_label_printer" in dashboard
