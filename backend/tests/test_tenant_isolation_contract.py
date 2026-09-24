@@ -52,3 +52,13 @@ def test_guerra_policy_is_consistent_across_public_application_surfaces():
     assert "_active_history" in intelligence
     assert "_exclude_label_printers_for_company" in usage
     assert "_is_label_printer" in dashboard
+
+
+def test_guerra_policy_covers_alerts_control_center_and_integration_snapshots():
+    alerts = source("backend/modules/alerts/service.py")
+    control_center = source("backend/modules/control_center/router.py")
+    integration = source("backend/modules/integration/router.py")
+
+    assert "_exclude_label_printers_for_company(company, printers)" in alerts
+    assert "commercial_printers = _exclude_label_printers_for_company" in control_center
+    assert integration.count("_exclude_label_printers_for_company") >= 4
