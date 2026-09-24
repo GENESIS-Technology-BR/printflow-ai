@@ -70,6 +70,9 @@ def test_printer_list_applies_company_filter():
         def order_by(self, *_args):
             return self
 
+        def first(self):
+            return None
+
         def all(self):
             return []
 
