@@ -1,0 +1,70 @@
+name: PRINTFLOW Extract Backup 16
+
+on:
+  push:
+    paths:
+      - ".github/workflows/extract-backup16.yml"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Install PostgreSQL 18 client
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSLo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          . /etc/os-release
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+
+      - name: Download Backup 16 artifact
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const runId = 35588036106;
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+              per_page: 100
+            });
+            const artifact = artifacts.find(a => a.name === 'PRINTFLOW-DB-Backup-16');
+            if (!artifact) core.setFailed('Backup 16 artifact not found');
+            const zip = await github.rest.actions.downloadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: artifact.id,
+              archive_format: 'zip'
+            });
+            require('fs').writeFileSync('backup16.zip', Buffer.from(zip.data));
+
+      - name: Extract data-only SQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir backup16
+          unzip -q backup16.zip -d backup16
+          DUMP_FILE="$(find backup16 -type f -name '*.dump' -print -quit)"
+          test -n "$DUMP_FILE"
+          /usr/lib/postgresql/18/bin/pg_restore --list "$DUMP_FILE" > backup16/restore-list.txt
+          /usr/lib/postgresql/18/bin/pg_restore --data-only --no-owner --no-privileges --file=backup16/data-only.sql "$DUMP_FILE"
+          sha256sum "$DUMP_FILE" > backup16/local.sha256
+          test -s backup16/data-only.sql
+
+      - name: Upload extracted data
+        uses: actions/upload-artifact@v4
+        with:
+          name: PRINTFLOW-Backup16-Extracted
+          path: |
+            backup16/data-only.sql
+            backup16/restore-list.txt
+            backup16/local.sha256
+          retention-days: 7
