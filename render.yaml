@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: printflow-api-genesis
+    name: printflow-api
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt

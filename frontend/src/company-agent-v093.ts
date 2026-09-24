@@ -4,7 +4,7 @@
    é encerrado quando o painel sai do DOM. */
 
 const TOKEN_LENGTH_HINT = '43 caracteres'
-const API_URL = (import.meta.env.VITE_API_URL || 'https://printflow-api-genesis.onrender.com').replace(/\/$/, '')
+const API_URL = (import.meta.env.VITE_API_URL || 'https://printflow-api-3uwr.onrender.com').replace(/\/$/, '')
 const CUSTOMER_TIME_ZONE = 'America/Sao_Paulo'
 
 type AgentStatus = {
