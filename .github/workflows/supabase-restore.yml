@@ -1,18 +1,19 @@
-name: PRINTFLOW Supabase Restore Test
+name: PRINTFLOW Supabase Backup16 Reconcile
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/supabase-restore.yml"
 
 permissions:
   actions: read
   contents: read
 
 jobs:
-  restore:
-    name: Restore Backup 16 no Supabase
+  reconcile:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-
     env:
       PGHOST: aws-0-ca-central-1.pooler.supabase.com
       PGPORT: "5432"
@@ -20,229 +21,102 @@ jobs:
       PGUSER: postgres.glnmlfwtuqqngfiqsqow
       PGPASSWORD: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
       PGSSLMODE: require
-
     steps:
-      - name: Validar configuracao
+      - name: Validate secret
         shell: bash
         run: |
           set -euo pipefail
-
-          if [ -z "${PGPASSWORD:-}" ]; then
-            echo "::error::Secret PRINTFLOW_SUPABASE_DATABASE_PASSWORD ausente."
-            exit 1
-          fi
-
+          test -n "${PGPASSWORD:-}" || { echo "::error::Missing Supabase DB secret"; exit 1; }
           echo "::add-mask::$PGPASSWORD"
-          echo "Configuracao Supabase encontrada."
 
-      - name: Instalar PostgreSQL 18
+      - name: Install PostgreSQL 18
         shell: bash
         run: |
           set -euo pipefail
-
           sudo install -d /usr/share/postgresql-common/pgdg
-
-          sudo curl -fsSLo \
-            /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
-            https://www.postgresql.org/media/keys/ACCC4CF8.asc
-
+          sudo curl -fsSLo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
           . /etc/os-release
-
-          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" \
-            | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
-
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
-
-          /usr/lib/postgresql/18/bin/pg_restore --version
-          /usr/lib/postgresql/18/bin/psql --version
           echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
 
-      - name: Testar autenticacao Supabase
+      - name: Test Supabase authentication
         shell: bash
         run: |
           set -euo pipefail
+          test "$(psql -X -A -t -v ON_ERROR_STOP=1 -c 'select current_database()')" = "postgres"
 
-          RESULT="$(psql -X -A -t -v ON_ERROR_STOP=1 -c "SELECT current_database();")"
-
-          if [ "$RESULT" != "postgres" ]; then
-            echo "::error::Conexao Supabase respondeu banco inesperado."
-            exit 1
-          fi
-
-          echo "Autenticacao Supabase validada."
-
-      - name: Localizar Backup 16
-        id: artifact
+      - name: Download Backup 16
         uses: actions/github-script@v8
-        with:
-          script: |
-            const runId = 35588036106;
-
-            const response =
-              await github.rest.actions.listWorkflowRunArtifacts({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: runId,
-                per_page: 100
-              });
-
-            const artifact =
-              response.data.artifacts.find(
-                a =>
-                  a.name === "PRINTFLOW-DB-Backup-16" &&
-                  !a.expired
-              );
-
-            if (!artifact) {
-              core.setFailed(
-                "Backup 16 nao encontrado ou expirado."
-              );
-              return;
-            }
-
-            core.setOutput("artifact_id", artifact.id);
-
-      - name: Baixar Backup 16
-        uses: actions/github-script@v8
-        env:
-          ARTIFACT_ID: ${{ steps.artifact.outputs.artifact_id }}
         with:
           script: |
             const fs = require("fs");
-            const artifactId = Number(process.env.ARTIFACT_ID);
-            const download = await github.rest.actions.downloadArtifact({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              artifact_id: artifactId,
-              archive_format: "zip"
+            const run_id = 35588036106;
+            const response = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner, repo: context.repo.repo, run_id, per_page: 100
             });
-            fs.writeFileSync("backup-16.zip", Buffer.from(download.data));
+            const a = response.data.artifacts.find(x => x.name === "PRINTFLOW-DB-Backup-16" && !x.expired);
+            if (!a) { core.setFailed("Backup 16 unavailable"); return; }
+            const d = await github.rest.actions.downloadArtifact({
+              owner: context.repo.owner, repo: context.repo.repo,
+              artifact_id: a.id, archive_format: "zip"
+            });
+            fs.writeFileSync("backup16.zip", Buffer.from(d.data));
 
-      - name: Extrair Backup 16
+      - name: Validate and extract source data
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p restore-input
-          unzip -q backup-16.zip -d restore-input
-
-      - name: Validar backup
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          dump="$(find restore-input -type f -name '*.dump' | head -1)"
-
-          if [ -z "$dump" ]; then
-            echo "::error::Arquivo dump nao encontrado."
-            exit 1
-          fi
-
+          mkdir src
+          unzip -q backup16.zip -d src
+          dump="$(find src -type f -name '*.dump' | head -1)"
           checksum="${dump}.sha256"
+          test -s "$dump" && test -s "$checksum"
+          test "$(awk '{print $1}' "$checksum")" = "$(sha256sum "$dump" | awk '{print $1}')"
+          pg_restore --data-only --no-owner --no-privileges --file=source.sql "$dump"
+          test -s source.sql
 
-          test -s "$dump"
-          test -s "$checksum"
-
-          expected="$(awk '{print $1}' "$checksum")"
-          actual="$(sha256sum "$dump" | awk '{print $1}')"
-
-          if [ "$expected" != "$actual" ]; then
-            echo "::error::Checksum do Backup 16 divergente."
-            exit 1
-          fi
-
-          pg_restore \
-            --list \
-            "$dump" \
-            > restore-list.txt
-
-          test -s restore-list.txt
-
-          echo "DUMP_FILE=$GITHUB_WORKSPACE/$dump" >> "$GITHUB_ENV"
-
-          echo "Backup 16 validado."
-
-      - name: Restaurar somente dados no Supabase
+      - name: Reconcile historical tables exactly from Backup 16
         shell: bash
         run: |
           set -euo pipefail
+          awk '
+            /^COPY public\.printer_usage_daily / {keep=1}
+            /^COPY public\.operational_alerts / {keep=1}
+            keep {print}
+            keep && /^\\\.$/ {keep=0}
+          ' source.sql > historical.sql
+          grep -q '^COPY public.printer_usage_daily ' historical.sql
+          grep -q '^COPY public.operational_alerts ' historical.sql
 
-          EXISTING_ROWS="$(
-            psql -X -A -t -v ON_ERROR_STOP=1 -c "
-              SELECT
-                (SELECT count(*) FROM public.companies_v2) +
-                (SELECT count(*) FROM public.users_v2) +
-                (SELECT count(*) FROM public.company_units) +
-                (SELECT count(*) FROM public.company_sectors) +
-                (SELECT count(*) FROM public.printers) +
-                (SELECT count(*) FROM public.printer_usage_daily) +
-                (SELECT count(*) FROM public.operational_alerts);
-            "
-          )"
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          BEGIN;
+          TRUNCATE TABLE public.operational_alerts, public.printer_usage_daily RESTART IDENTITY;
+          SQL
 
-          if [ "$EXISTING_ROWS" -ne 0 ]; then
-            echo "::error::Supabase nao esta vazio; restore abortado para evitar sobrescrita."
-            exit 1
-          fi
+          psql -X -v ON_ERROR_STOP=1 -f historical.sql
 
-          pg_restore \
-            --dbname="$PGDATABASE" \
-            --data-only \
-            --no-owner \
-            --no-privileges \
-            --disable-triggers \
-            --exit-on-error \
-            "$DUMP_FILE"
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          SELECT setval(pg_get_serial_sequence('public.printer_usage_daily','id'),
+                        (SELECT max(id) FROM public.printer_usage_daily), true);
+          SELECT setval(pg_get_serial_sequence('public.operational_alerts','id'),
+                        (SELECT max(id) FROM public.operational_alerts), true);
+          COMMIT;
+          SQL
 
-          echo "Restore de dados concluido sem alterar schema."
-
-      - name: Validar tabelas
+      - name: Validate exact counts and integrity
         shell: bash
         run: |
           set -euo pipefail
-
-          TABLES="$(
-            psql \
-              -X -A -t \
-              -v ON_ERROR_STOP=1 \
-              -c "
-                SELECT count(*)
-                FROM information_schema.tables
-                WHERE table_schema='public'
-                  AND table_type='BASE TABLE';
-              "
-          )"
-
-          echo "Tabelas encontradas: $TABLES"
-
-          if [ "$TABLES" -lt 1 ]; then
-            echo "::error::Restore sem tabelas."
-            exit 1
-          fi
-
-          EXPECTED_TABLES=7
-          if [ "$TABLES" -ne "$EXPECTED_TABLES" ]; then
-            echo "::error::Quantidade de tabelas inesperada: $TABLES (esperado $EXPECTED_TABLES)."
-            exit 1
-          fi
-
-          TOTAL_ROWS="$(
-            psql -X -A -t -v ON_ERROR_STOP=1 -c "
-              SELECT
-                (SELECT count(*) FROM public.companies_v2) +
-                (SELECT count(*) FROM public.users_v2) +
-                (SELECT count(*) FROM public.company_units) +
-                (SELECT count(*) FROM public.company_sectors) +
-                (SELECT count(*) FROM public.printers) +
-                (SELECT count(*) FROM public.printer_usage_daily) +
-                (SELECT count(*) FROM public.operational_alerts);
-            "
-          )"
-
-          echo "Registros restaurados: $TOTAL_ROWS"
-          if [ "$TOTAL_ROWS" -lt 1 ]; then
-            echo "::error::Restore terminou sem dados."
-            exit 1
-          fi
-
-          echo "Restore Supabase validado."
+          usage="$(psql -X -A -t -v ON_ERROR_STOP=1 -c 'select count(*) from public.printer_usage_daily')"
+          usage_ids="$(psql -X -A -t -v ON_ERROR_STOP=1 -c 'select count(distinct id) from public.printer_usage_daily')"
+          alerts="$(psql -X -A -t -v ON_ERROR_STOP=1 -c 'select count(*) from public.operational_alerts')"
+          orphan_usage="$(psql -X -A -t -v ON_ERROR_STOP=1 -c 'select count(*) from public.printer_usage_daily u left join public.printers p on p.id=u.printer_id where p.id is null')"
+          orphan_alerts="$(psql -X -A -t -v ON_ERROR_STOP=1 -c 'select count(*) from public.operational_alerts a left join public.companies_v2 c on c.id=a.company_id where c.id is null')"
+          echo "usage=$usage ids=$usage_ids alerts=$alerts orphan_usage=$orphan_usage orphan_alerts=$orphan_alerts"
+          test "$usage" = "497"
+          test "$usage_ids" = "497"
+          test "$alerts" = "145"
+          test "$orphan_usage" = "0"
+          test "$orphan_alerts" = "0"
