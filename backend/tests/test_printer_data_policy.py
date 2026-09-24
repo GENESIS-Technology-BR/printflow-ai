@@ -16,6 +16,14 @@ from backend.modules.printers.router import (
 from backend.modules.printers.model import Printer
 from backend.modules.printers.schema import PrinterUpsert
 from backend.modules.printers.schema import AgentHeartbeat
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def source(path: str) -> str:
+    return (ROOT / path).read_text(encoding="utf-8")
 
 
 def test_zebra_description_is_not_accepted_as_serial():
