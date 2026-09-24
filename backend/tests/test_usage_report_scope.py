@@ -29,3 +29,14 @@ def test_report_scope_isolates_selected_filters() -> None:
 
 def test_report_scope_defaults_to_full_fleet() -> None:
     assert _report_scope_label([]) == "Parque completo"
+
+
+def test_label_printer_detection_includes_custom_name() -> None:
+    from types import SimpleNamespace
+    from backend.modules.usage.router import _is_label_printer
+
+    printer = SimpleNamespace(
+        manufacturer=None, model=None, name="Generic Printer",
+        custom_name="ZEBRA EXPEDICAO",
+    )
+    assert _is_label_printer(printer) is True
