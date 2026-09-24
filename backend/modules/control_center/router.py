@@ -11,6 +11,7 @@ from backend.modules.auth.model import User
 from backend.modules.auth.security import create_access_token, hash_password
 from backend.modules.companies.model import Company
 from backend.modules.printers.model import Printer
+from backend.modules.usage.router import _exclude_label_printers_for_company
 
 from .schema import (
     ControlCenterClientCreate,
@@ -270,26 +271,22 @@ def overview(
     companies_commercial_ready = 0
 
     for company in companies:
-        active_query = (
-            db.query(Printer)
-            .filter(
+        commercial_printers = _exclude_label_printers_for_company(
+            company,
+            db.query(Printer).filter(
                 Printer.company_id == company.id,
                 Printer.active.is_(True),
-            )
+            ).all(),
         )
 
-        active_printers = active_query.count()
-
-        online_printers = (
-            active_query
-            .filter(Printer.status == "online")
-            .count()
+        active_printers = len(commercial_printers)
+        online_printers = sum(
+            1 for printer in commercial_printers
+            if printer.status == "online"
         )
-
-        offline_printers = (
-            active_query
-            .filter(Printer.status == "offline")
-            .count()
+        offline_printers = sum(
+            1 for printer in commercial_printers
+            if printer.status == "offline"
         )
 
         alerts = (
