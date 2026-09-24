@@ -123,7 +123,6 @@ jobs:
 
       - name: Copiar backup para Google Drive
         id: google_drive
-        continue-on-error: true
         shell: bash
         env:
           GOOGLE_CLIENT_ID: ${{ secrets.PRINTFLOW_GOOGLE_DRIVE_CLIENT_ID }}
@@ -131,10 +130,12 @@ jobs:
           GOOGLE_REFRESH_TOKEN: ${{ secrets.PRINTFLOW_GOOGLE_DRIVE_REFRESH_TOKEN }}
         run: |
           set -euo pipefail
+          echo "copy_status=not_attempted" >> "$GITHUB_OUTPUT"
           for name in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET GOOGLE_REFRESH_TOKEN; do
             if [[ -z "${!name:-}" ]]; then
-              echo "::error::Credencial Google Drive ausente: $name"
-              exit 1
+              echo "::warning::Credencial Google Drive ausente: $name. Backup local/DR continua."
+              echo "copy_status=unavailable" >> "$GITHUB_OUTPUT"
+              exit 0
             fi
           done
 
@@ -143,15 +144,17 @@ jobs:
           if [[ "$token_http" != "200" ]]; then
             oauth_error="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(str(d.get("error","erro_desconhecido")) + (": " + str(d.get("error_description","")) if d.get("error_description") else ""))' "$token_body" 2>/dev/null || echo resposta_invalida)"
             rm -f "$token_body"
-            echo "::error::Google OAuth recusou a renovacao do token (HTTP $token_http): $oauth_error"
-            echo "Nenhuma credencial OAuth foi exibida."
-            exit 1
+            echo "::warning::Google OAuth recusou a renovacao do token (HTTP $token_http): $oauth_error"
+            echo "Nenhuma credencial OAuth foi exibida. Backup local/DR continua."
+            echo "copy_status=oauth_failed" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           access_token="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("access_token", ""))' "$token_body")"
           rm -f "$token_body"
           if [[ -z "$access_token" ]]; then
-            echo "::error::Google OAuth respondeu HTTP 200, mas nao retornou access token."
-            exit 1
+            echo "::warning::Google OAuth respondeu HTTP 200, mas nao retornou access token. Backup local/DR continua."
+            echo "copy_status=oauth_failed" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           echo "::add-mask::$access_token"
           echo "Google OAuth autenticado com sucesso."
@@ -166,8 +169,9 @@ jobs:
             response="$(curl --fail-with-body --silent --show-error -X POST 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name' -H "Authorization: Bearer $access_token" -F "metadata=$metadata;type=application/json;charset=UTF-8" -F "file=@$file;type=$mime")"
             id="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("id", ""))' <<< "$response")"
             if [[ -z "$id" ]]; then
-              echo "::error::Google Drive nao confirmou upload de $name."
-              exit 1
+              echo "::warning::Google Drive nao confirmou upload de $name. Backup local/DR continua."
+              echo "copy_status=upload_failed" >> "$GITHUB_OUTPUT"
+              return 1
             fi
             echo "Google Drive confirmou upload de $name (ID protegido do log operacional)."
           }
@@ -187,27 +191,61 @@ jobs:
           docker run -d --name printflow-dr \
             -e POSTGRES_PASSWORD=printflow_dr_local \
             -e POSTGRES_DB=printflow_dr \
-            -p 55432:5432 postgres:18-alpine
+            postgres:18-alpine
           trap 'docker rm -f printflow-dr >/dev/null 2>&1 || true' EXIT
-          for i in {1..30}; do
-            if docker exec printflow-dr pg_isready -U postgres -d printflow_dr >/dev/null 2>&1; then break; fi
+
+          ready=0
+          for i in {1..60}; do
+            if [[ "$(docker inspect -f '{{.State.Running}}' printflow-dr 2>/dev/null || true)" != "true" ]]; then
+              echo "::error::Container PostgreSQL DR encerrou antes de ficar pronto."
+              docker logs printflow-dr || true
+              exit 1
+            fi
+            if docker exec printflow-dr pg_isready -U postgres -d printflow_dr >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
             sleep 1
           done
-          export PGPASSWORD=printflow_dr_local
-          DR_URL="postgresql://postgres@127.0.0.1:55432/printflow_dr"
+          if [[ "$ready" != "1" ]]; then
+            echo "::error::PostgreSQL DR nao ficou pronto dentro do prazo."
+            docker logs printflow-dr || true
+            exit 1
+          fi
+
           pg_restore --list "$BACKUP_FILE" | awk '
             /^;/ { print; next }
             / (TABLE|TABLE DATA|SEQUENCE|SEQUENCE SET|CONSTRAINT|INDEX|FK CONSTRAINT|TRIGGER) public / { print }
           ' > /tmp/dr-restore-list.txt
           test -s /tmp/dr-restore-list.txt
-          pg_restore --dbname="$DR_URL" --no-owner --no-privileges --exit-on-error --use-list=/tmp/dr-restore-list.txt "$BACKUP_FILE"
-          table_count="$(psql "$DR_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
+
+          docker cp "$BACKUP_FILE" printflow-dr:/tmp/printflow.dump
+          docker cp /tmp/dr-restore-list.txt printflow-dr:/tmp/dr-restore-list.txt
+
+          docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
+            pg_restore \
+              --username=postgres \
+              --dbname=printflow_dr \
+              --no-owner \
+              --no-privileges \
+              --exit-on-error \
+              --use-list=/tmp/dr-restore-list.txt \
+              /tmp/printflow.dump
+
+          table_count="$(docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
+            psql -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
+            -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
           if [[ ! "$table_count" =~ ^[0-9]+$ ]] || (( table_count < 7 )); then
             echo "::error::Restore DR incompleto: $table_count tabelas publicas."
+            docker logs printflow-dr || true
             exit 1
           fi
-          usage_count="$(psql "$DR_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.printer_usage_daily;")"
-          alert_count="$(psql "$DR_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.operational_alerts;")"
+          usage_count="$(docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
+            psql -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
+            -c "SELECT count(*) FROM public.printer_usage_daily;")"
+          alert_count="$(docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
+            psql -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
+            -c "SELECT count(*) FROM public.operational_alerts;")"
           checksum="$(awk '{print $1}' "$BACKUP_FILE.sha256")"
           bytes="$(stat -c%s "$BACKUP_FILE")"
           now="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
@@ -220,7 +258,7 @@ jobs:
             "backup_bytes": $bytes,
             "sha256": "$checksum",
             "structural_validation": "ok",
-            "google_drive_copy": "${{ steps.google_drive.outcome }}",
+            "google_drive_copy": "${{ steps.google_drive.outputs.copy_status }}",
             "dr_restore": "ok",
             "dr_mode": "ephemeral-postgresql-18",
             "dr_public_tables": $table_count,
