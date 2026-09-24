@@ -94,3 +94,14 @@ def get_platform_admin(
         )
 
     return current_user
+
+
+def get_company_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if current_user.role not in {"admin", "platform_admin"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso restrito ao administrador da empresa",
+        )
+    return current_user
