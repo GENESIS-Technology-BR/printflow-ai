@@ -192,3 +192,20 @@ def test_consolidated_report_sorts_ipv4_numerically() -> None:
         "10.2.0.100",
         "10.2.0.124",
     ]
+
+
+def test_fixed_monthly_printer_never_uses_page_counter_for_cost() -> None:
+    printer = SimpleNamespace(
+        uuid="canon-fixed", custom_name="PLOTTER CANON IPF-770",
+        hostname=None, name="Canon iPF-770", ip="10.2.0.109",
+        manufacturer="Canon", model="iPF-770", serial="BACG3815",
+        unit_name=None, sector_name=None, page_count=99999,
+        cost_per_page=None, cost_model="fixed_monthly", fixed_monthly_cost=1500.0,
+    )
+
+    rows = consolidate_usage([], [printer], default_cost_per_page=0.05)
+
+    assert rows[0]["cost_source"] == "fixed_monthly"
+    assert rows[0]["cost_per_page"] == 0.0
+    assert rows[0]["estimated_cost"] == 1500.0
+    assert rows[0]["fixed_monthly_cost"] == 1500.0
