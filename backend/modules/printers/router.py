@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.app.database.session import get_db
@@ -139,9 +140,9 @@ def list_printers(
     )
     if current_user.company_id == GUERRA_COMPANY_ID:
         query = query.filter(
-            ~Printer.manufacturer.ilike("%zebra%"),
-            ~Printer.model.ilike("%zebra%"),
-            ~Printer.name.ilike("%zebra%"),
+            ~func.coalesce(Printer.manufacturer, "").ilike("%zebra%"),
+            ~func.coalesce(Printer.model, "").ilike("%zebra%"),
+            ~func.coalesce(Printer.name, "").ilike("%zebra%"),
         )
     return query.order_by(Printer.id.desc()).all()
 
