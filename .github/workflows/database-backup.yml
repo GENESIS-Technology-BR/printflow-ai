@@ -60,11 +60,7 @@ jobs:
             echo "::error::Secret PRINTFLOW_SUPABASE_DATABASE_URL ainda nao configurado. Nenhum acesso ao banco foi realizado."
             exit 1
           fi
-          case "$PRINTFLOW_SUPABASE_DATABASE_URL" in
-            postgresql://*|postgres://*) ;;
-            *) echo "::error::A credencial de backup nao possui formato PostgreSQL valido."; exit 1 ;;
-          esac
-          echo "Configuracao de backup presente. Valor protegido e nao exibido."
+          echo "Configuracao segura do Supabase presente. Valor protegido e nao exibido."
 
       - name: Instalar cliente PostgreSQL 18
         shell: bash
@@ -83,14 +79,18 @@ jobs:
       - name: Gerar backup logico somente leitura
         shell: bash
         env:
-          DATABASE_URL: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_URL }}
+          PGPASSWORD: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_URL }}
+          PGHOST: aws-0-ca-central-1.pooler.supabase.com
+          PGPORT: "5432"
+          PGUSER: postgres.glnmlfwtuqqngfiqsqow
+          PGSSLMODE: require
         run: |
           set -euo pipefail
           mkdir -p "$BACKUP_DIR"
           stamp="$(date -u +'%Y%m%dT%H%M%SZ')"
           file="$BACKUP_DIR/printflow-supabase-$stamp.dump"
           pg_dump \
-            --dbname="$DATABASE_URL" \
+            --dbname="$PGDATABASE" \
             --format=custom \
             --compress=9 \
             --no-owner \
