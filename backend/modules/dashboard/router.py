@@ -238,4 +238,9 @@ def dashboard_printer_detail(printer_uuid: str, db: Session = Depends(get_db), c
     printer = db.query(Printer).filter(Printer.uuid == printer_uuid, Printer.company_id == current_user.company_id).first()
     if not printer:
         raise HTTPException(status_code=404, detail="Impressora não encontrada.")
+
+    company = db.query(Company).filter(Company.id == current_user.company_id).first()
+    if company and "guerra" in (company.name or "").strip().lower() and _is_label_printer(printer):
+        raise HTTPException(status_code=404, detail="Impressora não encontrada.")
+
     return serialize_printer(printer)
