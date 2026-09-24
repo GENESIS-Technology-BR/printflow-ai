@@ -219,10 +219,20 @@ def consolidate_usage(
     for printer_uuid, item in groups.items():
         printer = printer_map.get(printer_uuid)
         override = getattr(printer, "cost_per_page", None) if printer else None
-        effective_cost = _cost_value(override) if override is not None else default_cost
-        item["cost_per_page"] = round(effective_cost, 4)
-        item["estimated_cost"] = round(item["pages_printed"] * effective_cost, 2)
-        item["cost_source"] = "printer" if override is not None else "company"
+        cost_model = getattr(printer, "cost_model", "per_page") if printer else "per_page"
+        fixed_monthly_cost = getattr(printer, "fixed_monthly_cost", None) if printer else None
+
+        if cost_model == "fixed_monthly":
+            item["cost_per_page"] = 0.0
+            item["estimated_cost"] = _cost_value(fixed_monthly_cost)
+            item["cost_source"] = "fixed_monthly"
+            item["fixed_monthly_cost"] = _cost_value(fixed_monthly_cost)
+        else:
+            effective_cost = _cost_value(override) if override is not None else default_cost
+            item["cost_per_page"] = round(effective_cost, 4)
+            item["estimated_cost"] = round(item["pages_printed"] * effective_cost, 2)
+            item["cost_source"] = "printer" if override is not None else "company"
+            item["fixed_monthly_cost"] = 0.0
 
     return sorted(
         groups.values(),
