@@ -130,6 +130,7 @@ def _organization_snapshot(db: Session, company: Company) -> dict:
         Printer.company_id == company.id,
         Printer.active.is_(True),
     ).all()
+    printers = _exclude_label_printers_for_company(company, printers)
     units: dict[str, int] = {}
     sectors: dict[str, int] = {}
     unassigned = 0
