@@ -26,9 +26,8 @@ from backend.modules.usage.service import record_daily_printer_usage
 router = APIRouter(prefix="/printers", tags=["Printers"])
 
 
-# Regra comercial temporaria da Guerra: impressoras Zebra permanecem no
-# inventario/Agent, mas nao devem ser expostas no portal do cliente.
-GUERRA_COMPANY_ID = 1
+# A politica comercial da Guerra e resolvida pelo nome da empresa, evitando
+# acoplamento fragil ao ID interno do banco.
 
 
 def _clean_text(value: str | None) -> str | None:
@@ -153,12 +152,21 @@ def list_printers(
     query = db.query(Printer).filter(
         Printer.company_id == current_user.company_id
     )
-    if current_user.company_id == GUERRA_COMPANY_ID:
-        query = query.filter(
-            ~func.coalesce(Printer.manufacturer, "").ilike("%zebra%"),
-            ~func.coalesce(Printer.model, "").ilike("%zebra%"),
-            ~func.coalesce(Printer.name, "").ilike("%zebra%"),
+    company = db.query(Company).filter(
+        Company.id == current_user.company_id
+    ).first()
+    if company and "guerra" in (company.name or "").strip().lower():
+        zebra_match = (
+            func.coalesce(Printer.manufacturer, "").ilike("%zebra%")
+            | func.coalesce(Printer.model, "").ilike("%zebra%")
+            | func.coalesce(Printer.name, "").ilike("%zebra%")
+            | func.coalesce(Printer.custom_name, "").ilike("%zebra%")
+            | func.coalesce(Printer.model, "").ilike("%zt230%")
+            | func.coalesce(Printer.custom_name, "").ilike("%zt230%")
+            | func.coalesce(Printer.model, "").ilike("%zpl%")
+            | func.coalesce(Printer.custom_name, "").ilike("%zpl%")
         )
+        query = query.filter(~zebra_match)
     return query.order_by(Printer.id.desc()).all()
 
 
