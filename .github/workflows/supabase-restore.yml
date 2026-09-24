@@ -3,8 +3,7 @@ name: PRINTFLOW Supabase Backup16 Reconcile
 on:
   workflow_dispatch:
   push:
-    paths:
-      - ".github/workflows/supabase-restore.yml"
+    branches: [main]
 
 permissions:
   actions: read
