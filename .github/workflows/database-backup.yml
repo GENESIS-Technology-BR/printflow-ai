@@ -53,7 +53,7 @@ jobs:
       - name: Verificar configuracao segura
         shell: bash
         env:
-          PRINTFLOW_SUPABASE_DATABASE_URL: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_URL }}
+          PRINTFLOW_SUPABASE_DATABASE_URL: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
         run: |
           set -euo pipefail
           if [[ -z "${PRINTFLOW_SUPABASE_DATABASE_URL:-}" ]]; then
@@ -79,7 +79,7 @@ jobs:
       - name: Gerar backup logico somente leitura
         shell: bash
         env:
-          PGPASSWORD: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_URL }}
+          PGPASSWORD: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
           PGHOST: aws-0-ca-central-1.pooler.supabase.com
           PGPORT: "5432"
           PGUSER: postgres.glnmlfwtuqqngfiqsqow
@@ -182,7 +182,7 @@ jobs:
         shell: bash
         env:
           DR_DATABASE_URL: ${{ secrets.PRINTFLOW_DR_DATABASE_URL }}
-          PROD_BACKUP_URL: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_URL }}
+          PROD_BACKUP_URL: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
         run: |
           set -euo pipefail
           if [[ -z "${DR_DATABASE_URL:-}" ]]; then
