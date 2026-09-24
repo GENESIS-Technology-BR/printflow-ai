@@ -280,3 +280,12 @@ def test_dashboard_serializes_fixed_monthly_cost_without_page_rate():
     assert result["cost_model"] == "fixed_monthly"
     assert result["fixed_monthly_cost"] == 1500.0
     assert result["cost_per_page"] is None
+
+
+def test_guerra_visibility_policy_does_not_depend_on_fixed_company_id():
+    router = source("backend/modules/printers/router.py")
+    assert "GUERRA_COMPANY_ID" not in router
+    assert '"guerra" in (company.name or "").strip().lower()' in router
+    assert "Printer.custom_name" in router
+    assert "%zt230%" in router
+    assert "%zpl%" in router
