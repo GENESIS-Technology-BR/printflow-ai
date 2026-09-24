@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter
 
-from backend.app.config.settings import settings
+from backend.app.config.settings import quota_guard_level, settings
 
 router = APIRouter(tags=["Health"])
 
@@ -14,6 +14,15 @@ def health():
         "version": settings.version,
         "environment": settings.environment,
         "status": "healthy",
+        "infrastructure": {
+            "mode": settings.infra_mode,
+            "quota_guard": {
+                "level": quota_guard_level(None),
+                "warn_percent": settings.free_quota_warn_percent,
+                "optimize_percent": settings.free_quota_optimize_percent,
+                "preserve_percent": settings.free_quota_preserve_percent,
+            },
+        },
         "database": {"status": "waiting"},
         "agent": {
             "status": "waiting",
