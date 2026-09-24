@@ -201,7 +201,9 @@ jobs:
               docker logs printflow-dr || true
               exit 1
             fi
-            if docker exec printflow-dr pg_isready -U postgres -d printflow_dr >/dev/null 2>&1; then
+            if docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
+              psql -h 127.0.0.1 -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
+              -c "select 1" 2>/dev/null | grep -qx "1"; then
               ready=1
               break
             fi
@@ -224,6 +226,7 @@ jobs:
 
           docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
             pg_restore \
+              --host=127.0.0.1 \
               --username=postgres \
               --dbname=printflow_dr \
               --no-owner \
@@ -233,7 +236,7 @@ jobs:
               /tmp/printflow.dump
 
           table_count="$(docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
-            psql -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
+            psql -h 127.0.0.1 -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
             -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
           if [[ ! "$table_count" =~ ^[0-9]+$ ]] || (( table_count < 7 )); then
             echo "::error::Restore DR incompleto: $table_count tabelas publicas."
@@ -241,10 +244,10 @@ jobs:
             exit 1
           fi
           usage_count="$(docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
-            psql -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
+            psql -h 127.0.0.1 -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
             -c "SELECT count(*) FROM public.printer_usage_daily;")"
           alert_count="$(docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
-            psql -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
+            psql -h 127.0.0.1 -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
             -c "SELECT count(*) FROM public.operational_alerts;")"
           checksum="$(awk '{print $1}' "$BACKUP_FILE.sha256")"
           bytes="$(stat -c%s "$BACKUP_FILE")"
