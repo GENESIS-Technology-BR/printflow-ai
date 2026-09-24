@@ -112,6 +112,20 @@ def _merge_page_count(
     return value, confidence, updated
 
 
+def _should_persist_heartbeat(company, payload: AgentHeartbeat, now: datetime) -> bool:
+    previous_seen = company.agent_last_seen
+    return (
+        not settings.free_infra
+        or previous_seen is None
+        or now - previous_seen >= timedelta(seconds=settings.heartbeat_write_interval_seconds)
+        or company.agent_status != payload.status
+        or company.agent_name != payload.agent_name
+        or company.agent_version != payload.agent_version
+        or company.agent_last_error != _clean_text(payload.error)
+        or payload.inventory_complete
+    )
+
+
 def _reconcile_inventory(
     printers: list[Printer], observed_printer_ips: list[str]
 ) -> tuple[int, int]:
@@ -171,17 +185,7 @@ def receive_agent_heartbeat(
         )
 
     now = datetime.now(timezone.utc)
-    previous_seen = company.agent_last_seen
-    write_heartbeat = (
-        not settings.free_infra
-        or previous_seen is None
-        or now - previous_seen >= timedelta(seconds=settings.heartbeat_write_interval_seconds)
-        or company.agent_status != payload.status
-        or company.agent_name != payload.agent_name
-        or company.agent_version != payload.agent_version
-        or company.agent_last_error != _clean_text(payload.error)
-        or payload.inventory_complete
-    )
+    write_heartbeat = _should_persist_heartbeat(company, payload, now)
 
     if not write_heartbeat:
         return {"status": "received", "persisted": False}
