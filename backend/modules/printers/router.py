@@ -24,6 +24,11 @@ from backend.modules.usage.service import record_daily_printer_usage
 router = APIRouter(prefix="/printers", tags=["Printers"])
 
 
+# Regra comercial temporaria da Guerra: impressoras Zebra permanecem no
+# inventario/Agent, mas nao devem ser expostas no portal do cliente.
+GUERRA_COMPANY_ID = 1
+
+
 def _clean_text(value: str | None) -> str | None:
     if value is None:
         return None
@@ -129,12 +134,16 @@ def list_printers(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return (
-        db.query(Printer)
-        .filter(Printer.company_id == current_user.company_id)
-        .order_by(Printer.id.desc())
-        .all()
+    query = db.query(Printer).filter(
+        Printer.company_id == current_user.company_id
     )
+    if current_user.company_id == GUERRA_COMPANY_ID:
+        query = query.filter(
+            ~Printer.manufacturer.ilike("%zebra%"),
+            ~Printer.model.ilike("%zebra%"),
+            ~Printer.name.ilike("%zebra%"),
+        )
+    return query.order_by(Printer.id.desc()).all()
 
 
 @router.post(
