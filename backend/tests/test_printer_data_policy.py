@@ -262,3 +262,21 @@ def test_heartbeat_after_write_interval_is_persisted():
     company = _heartbeat_company(now)
     company.agent_last_seen = now - timedelta(seconds=301)
     assert _should_persist_heartbeat(company, _heartbeat_payload(), now) is True
+
+
+def test_dashboard_serializes_fixed_monthly_cost_without_page_rate():
+    printer = SimpleNamespace(
+        id=109, uuid="canon-fixed", ip="10.2.0.109", name="Canon iPF-770",
+        hostname=None, custom_name="PLOTTER CANON IPF-770",
+        unit_name=None, sector_name=None, unit_id=None, sector_id=None,
+        manufacturer="Canon", model="iPF-770", status="online", source="agent",
+        page_count=99999, page_count_source="snmp", page_count_confidence=100,
+        page_count_confirmed=True, cost_per_page=None, cost_model="fixed_monthly",
+        fixed_monthly_cost=1500.0, serial="BACG3815", serial_source="manual",
+        serial_confidence=100, serial_confirmed=True, toner_percent=None,
+        active=True, last_seen=None, created_at=None,
+    )
+    result = serialize_printer(printer)
+    assert result["cost_model"] == "fixed_monthly"
+    assert result["fixed_monthly_cost"] == 1500.0
+    assert result["cost_per_page"] is None
