@@ -19,7 +19,10 @@ from backend.modules.control_center.router import (
 )
 from backend.modules.integration.openapi_spec import INTEGRATION_OPENAPI
 from backend.modules.usage.router import (
+    _active_history,
+    _apply_cost_models,
     _current_printers,
+    _exclude_label_printers_for_company,
     _resolve_period,
     _usage_query,
     _validate_report_filters,
@@ -184,11 +187,11 @@ def _usage_report_rows(
         unit_name,
         sector_name,
     )
-    rows = consolidate_usage(
-        history,
-        printers,
-        company.default_cost_per_page or 0,
-    )
+    printers = _exclude_label_printers_for_company(company, printers)
+    history = _active_history(history, printers)
+    default_cost = company.default_bw_cost_per_page or company.default_cost_per_page or 0
+    rows = consolidate_usage(history, printers, default_cost)
+    rows = _apply_cost_models(rows, printers, start, end)
     return {
         "company_uuid": company.uuid,
         "start_date": start.isoformat(),
@@ -258,6 +261,7 @@ def list_company_printers(company_uuid: str, db: Session = Depends(get_db)) -> l
     printers = db.query(Printer).filter(
         Printer.company_id == company.id
     ).order_by(Printer.id.desc()).all()
+    printers = _exclude_label_printers_for_company(company, printers)
     return [serialize_printer(printer) for printer in printers]
 
 
@@ -361,6 +365,10 @@ def get_company_daily_usage(
         unit_name,
         sector_name,
     )
+    printers = _current_printers(
+        db, company.id, printer_uuid, unit_name, sector_name
+    )
+    printers = _exclude_label_printers_for_company(company, printers)
     rows = _usage_query(
         db,
         company.id,
@@ -370,6 +378,7 @@ def get_company_daily_usage(
         unit_name,
         sector_name,
     ).all()
+    rows = _active_history(rows, printers)
     return [
         {
             "usage_date": row.usage_date.isoformat(),
