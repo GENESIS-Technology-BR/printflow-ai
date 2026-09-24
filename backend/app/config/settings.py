@@ -48,3 +48,25 @@ class Settings:
 
 
 settings = Settings()
+
+
+def quota_guard_level(usage_percent: float | int | None) -> str:
+    """Classifica consumo de recurso sem depender do provedor de banco."""
+    if usage_percent is None:
+        return "unknown"
+    usage = max(0.0, float(usage_percent))
+    if usage >= settings.free_quota_preserve_percent:
+        return "preserve"
+    if usage >= settings.free_quota_optimize_percent:
+        return "optimize"
+    if usage >= settings.free_quota_warn_percent:
+        return "warn"
+    return "normal"
+
+
+def allow_nonessential_write(usage_percent: float | int | None) -> bool:
+    if not settings.free_infra:
+        return True
+    if quota_guard_level(usage_percent) != "preserve":
+        return True
+    return not settings.free_preserve_nonessential_writes
