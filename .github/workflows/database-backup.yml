@@ -177,41 +177,30 @@ jobs:
             echo "- Escopo OAuth: \`drive.file\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Provar restaurabilidade no laboratorio DR
+      - name: Provar restaurabilidade em PostgreSQL efemero isolado
         if: github.ref == 'refs/heads/main'
         shell: bash
-        env:
-          DR_DATABASE_URL: ${{ secrets.PRINTFLOW_DR_DATABASE_URL }}
-          PROD_BACKUP_URL: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
         run: |
           set -euo pipefail
-          if [[ -z "${DR_DATABASE_URL:-}" ]]; then
-            echo "::error::Secret PRINTFLOW_DR_DATABASE_URL nao configurado."
+          docker run -d --name printflow-dr \
+            -e POSTGRES_PASSWORD=printflow_dr_local \
+            -e POSTGRES_DB=printflow_dr \
+            -p 55432:5432 postgres:18-alpine
+          trap 'docker rm -f printflow-dr >/dev/null 2>&1 || true' EXIT
+          for i in {1..30}; do
+            if docker exec printflow-dr pg_isready -U postgres -d printflow_dr >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+          export PGPASSWORD=printflow_dr_local
+          DR_URL="postgresql://postgres@127.0.0.1:55432/printflow_dr"
+          pg_restore --dbname="$DR_URL" --no-owner --no-privileges --exit-on-error "$BACKUP_FILE"
+          table_count="$(psql "$DR_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
+          if [[ ! "$table_count" =~ ^[0-9]+$ ]] || (( table_count < 7 )); then
+            echo "::error::Restore DR incompleto: $table_count tabelas publicas."
             exit 1
           fi
-          case "$DR_DATABASE_URL" in
-            postgresql://*|postgres://*) ;;
-            *) echo "::error::Destino DR nao possui formato PostgreSQL valido."; exit 1 ;;
-          esac
-          normalize_pg_target() {
-            python3 -c 'import sys; from urllib.parse import urlsplit, unquote; u=urlsplit(sys.argv[1]); host=(u.hostname or "").lower(); port=u.port or 5432; database=unquote((u.path or "").lstrip("/")); user=unquote(u.username or ""); print(f"{host}:{port}/{database}|{user}")' "$1"
-          }
-          dr_target="$(normalize_pg_target "$DR_DATABASE_URL")"
-          prod_target="$(normalize_pg_target "$PROD_BACKUP_URL")"
-          if [[ -z "$dr_target" || -z "$prod_target" || "$dr_target" == ":5432/|" || "$prod_target" == ":5432/|" ]]; then
-            echo "::error::Nao foi possivel validar os destinos PostgreSQL."
-            exit 1
-          fi
-          if [[ "$dr_target" == "$prod_target" ]]; then
-            echo "::error::Destino DR aponta para o mesmo banco/usuario de producao. Restore bloqueado."
-            exit 1
-          fi
-          pg_restore --dbname="$DR_DATABASE_URL" --clean --if-exists --no-owner --no-privileges --exit-on-error "$BACKUP_FILE"
-          table_count="$(psql "$DR_DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
-          if [[ ! "$table_count" =~ ^[0-9]+$ ]] || (( table_count < 1 )); then
-            echo "::error::Restore DR sem tabelas de aplicacao."
-            exit 1
-          fi
+          usage_count="$(psql "$DR_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.printer_usage_daily;")"
+          alert_count="$(psql "$DR_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.operational_alerts;")"
           checksum="$(awk '{print $1}' "$BACKUP_FILE.sha256")"
           bytes="$(stat -c%s "$BACKUP_FILE")"
           now="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
@@ -226,14 +215,19 @@ jobs:
             "structural_validation": "ok",
             "google_drive_copy": "ok",
             "dr_restore": "ok",
+            "dr_mode": "ephemeral-postgresql-18",
             "dr_public_tables": $table_count,
+            "dr_usage_rows": $usage_count,
+            "dr_alert_rows": $alert_count,
             "production_used_as_restore_target": false
           }
           EOF
           {
-            echo "- Restore automatico DR: **VALIDADO**"
-            echo "- Tabelas restauradas: \`$table_count\`"
-            echo "- Evidencia operacional: **gerada**"
+            echo "- Restore automatico DR: **VALIDADO em PostgreSQL 18 efemero**"
+            echo "- Tabelas restauradas: `$table_count`"
+            echo "- Historicos restaurados: `$usage_count`"
+            echo "- Alertas restaurados: `$alert_count`"
+            echo "- Producao usada como destino: **nao**"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publicar evidencia de auditoria
@@ -265,7 +259,7 @@ jobs:
           {
             echo "- Execucao: **automatica diaria**"
             echo "- Retencao do artifact: **14 dias**"
-            echo "- Restore homologado: **sim, em laboratorio DR isolado**"
+            echo "- Restore homologado: **sim, em PostgreSQL efemero isolado**"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Limpar arquivos locais do runner
