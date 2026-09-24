@@ -128,7 +128,7 @@ class AgentSettings:
             logs_directory=BASE_DIR / "logs",
             api_url=os.getenv(
                 "PRINTFLOW_API_URL",
-                "https://printflow-api-genesis.onrender.com",
+                "https://printflow-api-3uwr.onrender.com",
             ).rstrip("/"),
             agent_token=os.getenv(
                 "PRINTFLOW_AGENT_TOKEN",

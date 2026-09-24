@@ -302,7 +302,7 @@ try {
 
     $processInfo.EnvironmentVariables[
         "PRINTFLOW_API_URL"
-    ] = "https://printflow-api-genesis.onrender.com"
+    ] = "https://printflow-api-3uwr.onrender.com"
 
     $processInfo.EnvironmentVariables[
         "PRINTFLOW_AGENT_NAME"

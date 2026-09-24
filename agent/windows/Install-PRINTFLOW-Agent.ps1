@@ -286,7 +286,7 @@ try {
     try {
 
         Invoke-RestMethod `
-            -Uri "https://printflow-api-genesis.onrender.com/api/v1/printers/agent/heartbeat" `
+            -Uri "https://printflow-api-3uwr.onrender.com/api/v1/printers/agent/heartbeat" `
             -Method Post `
             -ContentType "application/json" `
             -Body $validationBody |
