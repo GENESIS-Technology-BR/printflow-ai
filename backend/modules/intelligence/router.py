@@ -10,6 +10,8 @@ from backend.modules.auth.dependencies import get_current_user
 from backend.modules.auth.model import User
 from backend.modules.dashboard.router import serialize_printer
 from backend.modules.printers.model import Printer
+from backend.modules.companies.model import Company
+from backend.modules.usage.router import _active_history, _exclude_label_printers_for_company
 from backend.modules.usage.model import PrinterUsageDaily
 
 from .service import build_intelligence
@@ -31,6 +33,8 @@ def intelligence_overview(
         .filter(Printer.company_id == current_user.company_id)
         .all()
     )
+    company = db.query(Company).filter(Company.id == current_user.company_id).first()
+    printers = _exclude_label_printers_for_company(company, printers)
     start_date = date.today() - timedelta(days=20)
     history = (
         db.query(PrinterUsageDaily)
@@ -41,6 +45,7 @@ def intelligence_overview(
         .order_by(PrinterUsageDaily.usage_date.asc())
         .all()
     )
+    history = _active_history(history, printers)
     return build_intelligence(
         [serialize_printer(printer) for printer in printers],
         history,
