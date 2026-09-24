@@ -58,7 +58,7 @@ def _active_history(history: list[PrinterUsageDaily], printers: list[Printer]) -
 
 
 def _is_label_printer(printer: Printer) -> bool:
-    text = f"{printer.manufacturer or ''} {printer.model or ''} {printer.name or ''}".lower()
+    text = f"{printer.manufacturer or ''} {printer.model or ''} {printer.name or ''} {printer.custom_name or ''}".lower()
     return any(marker in text for marker in ("zebra", "zt230", "zpl"))
 
 
@@ -111,7 +111,12 @@ def _report_rows(db: Session, current_user: User, start: date, end: date, printe
 
 @router.get("/daily", response_model=list[DailyUsageResponse])
 def list_daily_usage(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    start, end = _resolve_period(start_date, end_date); printers = _current_printers(db, current_user.company_id, printer_uuid, unit_name, sector_name); rows = _active_history(_usage_query(db, current_user.company_id, start, end, printer_uuid, unit_name, sector_name).all(), printers)
+    start, end = _resolve_period(start_date, end_date)
+    _validate_report_filters(db, current_user.company_id, printer_uuid, unit_name, sector_name)
+    printers = _current_printers(db, current_user.company_id, printer_uuid, unit_name, sector_name)
+    company = db.query(Company).filter(Company.id == current_user.company_id).first()
+    printers = _exclude_label_printers_for_company(company, printers)
+    rows = _active_history(_usage_query(db, current_user.company_id, start, end, printer_uuid, unit_name, sector_name).all(), printers)
     return [DailyUsageResponse(usage_date=u.usage_date, printer_uuid=u.printer_uuid, ip=u.ip, name=u.name, custom_name=u.custom_name, hostname=u.hostname, manufacturer=u.manufacturer, model=u.model, serial=u.serial, unit_name=u.unit_name, sector_name=u.sector_name, opening_page_count=u.opening_page_count, closing_page_count=u.closing_page_count, pages_printed=u.pages_printed, anomaly_count=u.anomaly_count, last_anomaly_type=u.last_anomaly_type, first_seen_at=u.first_seen_at, last_seen_at=u.last_seen_at) for u in rows]
 
 
