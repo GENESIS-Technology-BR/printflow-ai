@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
 import pytest
@@ -7,6 +8,7 @@ from backend.modules.dashboard.router import serialize_printer
 from backend.modules.printers.router import (
     _merge_optional,
     _reconcile_inventory,
+    _should_persist_heartbeat,
     _merge_trusted,
     _valid_serial,
     list_printers,
@@ -208,3 +210,55 @@ def test_heartbeat_accepts_authoritative_inventory_snapshot():
 
     assert payload.inventory_complete is True
     assert payload.observed_printer_ips == ["10.2.0.122", "10.2.128.27"]
+
+
+def _heartbeat_company(now):
+    return SimpleNamespace(
+        agent_last_seen=now - timedelta(seconds=60),
+        agent_status="healthy",
+        agent_name="Agent",
+        agent_version="0.4.4",
+        agent_last_error=None,
+    )
+
+
+def _heartbeat_payload(**overrides):
+    data = dict(
+        agent_token="A" * 43,
+        agent_name="Agent",
+        agent_version="0.4.4",
+        status="healthy",
+        inventory_complete=False,
+    )
+    data.update(overrides)
+    return AgentHeartbeat(**data)
+
+
+def test_free_mode_suppresses_redundant_heartbeat_write():
+    now = datetime.now(timezone.utc)
+    assert _should_persist_heartbeat(
+        _heartbeat_company(now), _heartbeat_payload(), now
+    ) is False
+
+
+def test_heartbeat_status_change_is_persisted_immediately():
+    now = datetime.now(timezone.utc)
+    assert _should_persist_heartbeat(
+        _heartbeat_company(now), _heartbeat_payload(status="slow"), now
+    ) is True
+
+
+def test_complete_inventory_is_persisted_immediately():
+    now = datetime.now(timezone.utc)
+    assert _should_persist_heartbeat(
+        _heartbeat_company(now),
+        _heartbeat_payload(inventory_complete=True, observed_printer_ips=["10.2.0.122"]),
+        now,
+    ) is True
+
+
+def test_heartbeat_after_write_interval_is_persisted():
+    now = datetime.now(timezone.utc)
+    company = _heartbeat_company(now)
+    company.agent_last_seen = now - timedelta(seconds=301)
+    assert _should_persist_heartbeat(company, _heartbeat_payload(), now) is True
