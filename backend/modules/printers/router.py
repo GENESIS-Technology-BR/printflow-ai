@@ -1,9 +1,10 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from backend.app.config.settings import settings
 from backend.app.database.session import get_db
 from backend.modules.auth.dependencies import get_current_user
 from backend.modules.auth.model import User
@@ -169,7 +170,23 @@ def receive_agent_heartbeat(
             detail="Agent Token inválido.",
         )
 
-    company.agent_last_seen = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    previous_seen = company.agent_last_seen
+    write_heartbeat = (
+        not settings.free_infra
+        or previous_seen is None
+        or now - previous_seen >= timedelta(seconds=settings.heartbeat_write_interval_seconds)
+        or company.agent_status != payload.status
+        or company.agent_name != payload.agent_name
+        or company.agent_version != payload.agent_version
+        or company.agent_last_error != _clean_text(payload.error)
+        or payload.inventory_complete
+    )
+
+    if not write_heartbeat:
+        return {"status": "received", "persisted": False}
+
+    company.agent_last_seen = now
     company.agent_status = payload.status
     company.agent_name = payload.agent_name
     company.agent_version = payload.agent_version
@@ -187,7 +204,7 @@ def receive_agent_heartbeat(
         )
     db.commit()
 
-    return {"status": "received"}
+    return {"status": "received", "persisted": True}
 
 
 @router.post(
