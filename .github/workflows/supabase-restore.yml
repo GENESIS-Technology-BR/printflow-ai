@@ -89,15 +89,19 @@ jobs:
           grep -q '^COPY public.printer_usage_daily ' historical.sql
           grep -q '^COPY public.operational_alerts ' historical.sql
 
-          psql -X -v ON_ERROR_STOP=1 -c "TRUNCATE TABLE public.operational_alerts, public.printer_usage_daily RESTART IDENTITY;"
-          psql -X -v ON_ERROR_STOP=1 -f historical.sql
-
-          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          {
+            echo 'BEGIN;'
+            echo 'TRUNCATE TABLE public.operational_alerts, public.printer_usage_daily RESTART IDENTITY;'
+            cat historical.sql
+            cat <<'SQL'
           SELECT setval(pg_get_serial_sequence('public.printer_usage_daily','id'),
                         (SELECT max(id) FROM public.printer_usage_daily), true);
           SELECT setval(pg_get_serial_sequence('public.operational_alerts','id'),
                         (SELECT max(id) FROM public.operational_alerts), true);
+          COMMIT;
           SQL
+          } > reconcile.sql
+          psql -X -v ON_ERROR_STOP=1 -f reconcile.sql
 
       - name: Validate exact counts and integrity
         shell: bash
