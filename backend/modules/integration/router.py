@@ -64,13 +64,20 @@ def _find_company(db: Session, company_uuid: str) -> Company:
 
 
 def _company_snapshot(db: Session, company: Company) -> dict:
-    active_query = db.query(Printer).filter(
-        Printer.company_id == company.id,
-        Printer.active.is_(True),
+    commercial_printers = _exclude_label_printers_for_company(
+        company,
+        db.query(Printer).filter(
+            Printer.company_id == company.id,
+            Printer.active.is_(True),
+        ).all(),
     )
-    active_printers = active_query.count()
-    online_printers = active_query.filter(Printer.status == "online").count()
-    offline_printers = active_query.filter(Printer.status == "offline").count()
+    active_printers = len(commercial_printers)
+    online_printers = sum(
+        1 for printer in commercial_printers if printer.status == "online"
+    )
+    offline_printers = sum(
+        1 for printer in commercial_printers if printer.status == "offline"
+    )
     alerts = db.query(OperationalAlert).filter(
         OperationalAlert.company_id == company.id,
         OperationalAlert.status.in_(("open", "acknowledged")),
