@@ -193,7 +193,8 @@ jobs:
           done
           export PGPASSWORD=printflow_dr_local
           DR_URL="postgresql://postgres@127.0.0.1:55432/printflow_dr"
-          pg_restore --dbname="$DR_URL" --no-owner --no-privileges --exit-on-error "$BACKUP_FILE"
+          pg_restore --list "$BACKUP_FILE" | grep -Ev 'EXTENSION|COMMENT - EXTENSION|SCHEMA - (auth|extensions|graphql|realtime|storage|supabase_functions|vault)|ACL - (auth|extensions|graphql|realtime|storage|supabase_functions|vault)' > /tmp/dr-restore-list.txt
+          pg_restore --dbname="$DR_URL" --no-owner --no-privileges --exit-on-error --use-list=/tmp/dr-restore-list.txt "$BACKUP_FILE"
           table_count="$(psql "$DR_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
           if [[ ! "$table_count" =~ ^[0-9]+$ ]] || (( table_count < 7 )); then
             echo "::error::Restore DR incompleto: $table_count tabelas publicas."
@@ -265,4 +266,4 @@ jobs:
       - name: Limpar arquivos locais do runner
         if: always()
         shell: bash
-        run: rm -rf "$BACKUP_DIR" /tmp/restore-list.txt
+        run: rm -rf "$BACKUP_DIR" /tmp/restore-list.txt /tmp/dr-restore-list.txt
