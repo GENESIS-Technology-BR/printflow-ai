@@ -124,6 +124,12 @@ def serialize_printer(printer: Printer) -> dict[str, Any]:
         "page_count_confidence": getattr(printer, "page_count_confidence", None),
         "page_count_confirmed": bool(getattr(printer, "page_count_confirmed", False)),
         "cost_per_page": float(cost_per_page) if cost_per_page is not None else None,
+        "cost_model": getattr(printer, "cost_model", "per_page"),
+        "fixed_monthly_cost": (
+            float(getattr(printer, "fixed_monthly_cost", 0) or 0)
+            if getattr(printer, "cost_model", "per_page") == "fixed_monthly"
+            else None
+        ),
         "serial": getattr(printer, "serial", None),
         "serial_source": getattr(printer, "serial_source", None),
         "serial_confidence": getattr(printer, "serial_confidence", None),
