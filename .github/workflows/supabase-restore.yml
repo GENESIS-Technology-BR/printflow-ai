@@ -2,8 +2,6 @@ name: PRINTFLOW Supabase Backup16 Reconcile
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 permissions:
   actions: read
