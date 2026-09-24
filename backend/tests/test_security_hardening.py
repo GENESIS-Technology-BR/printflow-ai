@@ -340,3 +340,17 @@ def test_tenant_isolation_has_runtime_data_tests():
     assert "test_report_rows_are_isolated_by_authenticated_company" in usage_tests
     assert "test_foreign_printer_filter_fails_closed" in usage_tests
     assert "test_foreign_unit_and_sector_filters_fail_closed" in usage_tests
+
+
+def test_free_quota_guard_thresholds_and_preservation():
+    from backend.app.config.settings import quota_guard_level, allow_nonessential_write
+
+    assert quota_guard_level(0) == "normal"
+    assert quota_guard_level(59) == "normal"
+    assert quota_guard_level(60) == "warn"
+    assert quota_guard_level(75) == "optimize"
+    assert quota_guard_level(90) == "preserve"
+    assert quota_guard_level(100) == "preserve"
+    assert quota_guard_level(None) == "unknown"
+    assert allow_nonessential_write(89) is True
+    assert allow_nonessential_write(90) is False
