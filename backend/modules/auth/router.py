@@ -1,5 +1,4 @@
 import hmac
-import logging
 import os
 import time
 from collections import defaultdict, deque
@@ -29,8 +28,6 @@ from backend.modules.auth.security import (
 from backend.modules.companies.model import Company
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-logger = logging.getLogger("printflow.auth")
-
 AUTH_COOKIE_NAME = "printflow_session"
 AUTH_COOKIE_MAX_AGE = 60 * 60
 
@@ -225,22 +222,13 @@ def login(
         .first()
     )
 
-    password_ok = bool(
-        user
-        and verify_password(
+    if (
+        not user
+        or not verify_password(
             payload.password,
             user.password_hash,
         )
-    )
-
-    logger.warning(
-        "PRINTFLOW LOGIN DIAGNOSTIC user_found=%s password_ok=%s active=%s",
-        bool(user),
-        password_ok,
-        bool(user.active) if user else None,
-    )
-
-    if not user or not password_ok:
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="E-mail ou senha inválidos",
