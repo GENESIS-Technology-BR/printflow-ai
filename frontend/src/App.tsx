@@ -250,7 +250,7 @@ function App() {
             <img className="pf-login-brand-mark" src="/brand/printflow-mark.svg" alt="Símbolo Printflow" />
             <strong>Printflow</strong>
           </div>
-          <div className="pf-login-product-name">Gestão inteligente de impressão</div>
+          <div className="pf-login-product-name">Gestão Inteligente de Impressão</div>
           <div className="auth-flow-title">
             {mode === "login" && <strong>Boas-vindas</strong>}
             {mode === "forgot" && <strong>Recuperar senha</strong>}
