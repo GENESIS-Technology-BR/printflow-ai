@@ -47,6 +47,9 @@ class PrintflowApiClient:
         self.heartbeat_endpoint = (
             f"{self.api_url}/api/v1/printers/agent/heartbeat"
         )
+        self.known_printers_endpoint = (
+            f"{self.api_url}/api/v1/printers/agent/known-printer-ips"
+        )
 
         self.queue_directory.mkdir(
             parents=True,
@@ -59,6 +62,42 @@ class PrintflowApiClient:
             self.api_url
             and self.agent_token
         )
+
+    def get_known_printer_ips(self) -> list[str]:
+        if not self.is_configured:
+            return []
+
+        try:
+            response = requests.post(
+                self.known_printers_endpoint,
+                json={"agent_token": self.agent_token},
+                timeout=self.timeout_seconds,
+            )
+        except requests.RequestException as error:
+            self.logger.warning(
+                "Não foi possível consultar IPs conhecidos na API: %s",
+                error,
+            )
+            return []
+
+        if response.status_code != 200:
+            self.logger.warning(
+                "Consulta de IPs conhecidos falhou: HTTP %s.",
+                response.status_code,
+            )
+            return []
+
+        try:
+            payload = response.json()
+        except ValueError:
+            return []
+
+        values = payload.get("ips", []) if isinstance(payload, dict) else []
+        return [
+            str(value).strip()
+            for value in values
+            if str(value).strip()
+        ]
 
     def health_check(self) -> bool:
         try:
