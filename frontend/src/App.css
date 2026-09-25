@@ -1091,3 +1091,182 @@ body {
   }
 }
 
+
+
+
+/* PRINTFLOW_AUTH_TOTVS_COMPOSITION */
+.auth-page{
+  min-height:100vh!important;
+  display:grid!important;
+  place-items:start center!important;
+  padding:10px 24px 56px!important;
+  background:#f3f3f3!important;
+}
+.auth-page > .theme-toggle{
+  display:none!important;
+}
+.auth-card.auth-card-erp{
+  width:min(560px,96vw)!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.pf-login-brand{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+  width:100%!important;
+  margin:0 0 122px!important;
+}
+.pf-login-brand-mark{
+  width:52px!important;
+  height:52px!important;
+  flex:0 0 52px!important;
+}
+.pf-login-brand strong{
+  color:#2d2d2d!important;
+  font-size:34px!important;
+  line-height:1!important;
+  font-weight:800!important;
+  letter-spacing:-.035em!important;
+}
+.pf-login-product-name{
+  margin:0 0 50px!important;
+  text-align:center!important;
+  color:#4d5b67!important;
+  font-size:34px!important;
+  line-height:1.1!important;
+  font-weight:400!important;
+  letter-spacing:-.03em!important;
+}
+.auth-flow-title{
+  margin:0 0 56px!important;
+  text-align:center!important;
+  color:#0067b9!important;
+  font-size:27px!important;
+  line-height:1.2!important;
+}
+.auth-flow-title strong{
+  font-weight:500!important;
+}
+.auth-card.auth-card-erp form{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:20px!important;
+}
+.auth-card.auth-card-erp form label{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:10px!important;
+  color:#141414!important;
+  font-size:17px!important;
+  line-height:1.2!important;
+  font-weight:700!important;
+}
+.auth-input-wrap{
+  position:relative!important;
+}
+.auth-card.auth-card-erp input{
+  min-height:62px!important;
+  padding:0 18px!important;
+  border:1px solid #666!important;
+  border-radius:3px!important;
+  background:#fff!important;
+  color:#222!important;
+  font-size:17px!important;
+  outline:none!important;
+  box-shadow:none!important;
+}
+.auth-card.auth-card-erp input:focus{
+  border-color:#0067b9!important;
+  box-shadow:0 0 0 2px rgba(0,103,185,.09)!important;
+}
+.auth-card.auth-card-erp .primary{
+  min-height:61px!important;
+  margin-top:0!important;
+  border:0!important;
+  border-radius:3px!important;
+  background:#0c67b2!important;
+  color:#fff!important;
+  font-size:18px!important;
+  font-weight:700!important;
+}
+.auth-card.auth-card-erp .primary:disabled{
+  background:#b7b7b7!important;
+  color:#494949!important;
+}
+.auth-forgot-link{
+  align-self:center!important;
+  margin:24px 0 0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#0067b9!important;
+  font-size:14px!important;
+  font-weight:700!important;
+  line-height:1.2!important;
+  box-shadow:none!important;
+}
+.auth-forgot-link:hover{
+  text-decoration:underline!important;
+}
+.auth-link-back{
+  align-self:center!important;
+  margin:8px 0 0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#0067b9!important;
+  font-size:14px!important;
+  font-weight:700!important;
+}
+.auth-helper{
+  margin:-4px 0 6px!important;
+  color:#667085!important;
+  font-size:14px!important;
+  line-height:1.55!important;
+  text-align:center!important;
+}
+.auth-card.auth-card-erp .message{
+  margin-top:20px!important;
+  border-radius:3px!important;
+  text-align:center!important;
+}
+@media(max-width:640px){
+  .auth-page{
+    padding:20px 18px 44px!important;
+  }
+  .pf-login-brand{
+    margin-bottom:64px!important;
+  }
+  .pf-login-brand-mark{
+    width:44px!important;
+    height:44px!important;
+    flex-basis:44px!important;
+  }
+  .pf-login-brand strong{
+    font-size:28px!important;
+  }
+  .pf-login-product-name{
+    margin-bottom:36px!important;
+    font-size:25px!important;
+  }
+  .auth-flow-title{
+    margin-bottom:36px!important;
+    font-size:22px!important;
+  }
+  .auth-card.auth-card-erp form label{
+    font-size:15px!important;
+  }
+  .auth-card.auth-card-erp input,
+  .auth-card.auth-card-erp .primary{
+    min-height:56px!important;
+    font-size:16px!important;
+  }
+}
+
