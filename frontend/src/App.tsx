@@ -285,16 +285,6 @@ function App() {
                     />
                   </div>
                 </label>
-                <button
-                  type="button"
-                  className="auth-link auth-forgot-link"
-                  onClick={() => {
-                    setMode("forgot")
-                    setMessage("")
-                  }}
-                >
-                  Esqueceu sua senha?
-                </button>
               </>
             )}
             {mode === "forgot" && (
@@ -327,6 +317,18 @@ function App() {
                     ? "Enviar instruções"
                     : "Redefinir senha"}
             </button>
+            {mode === "login" && (
+              <button
+                type="button"
+                className="auth-link auth-forgot-link"
+                onClick={() => {
+                  setMode("forgot")
+                  setMessage("")
+                }}
+              >
+                Esqueceu sua senha?
+              </button>
+            )}
             {mode !== "login" && (
               <button
                 type="button"
