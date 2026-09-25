@@ -1,5 +1,4 @@
 from sqlalchemy import create_engine
-from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from backend.app.config.settings import settings
@@ -53,18 +52,6 @@ if is_postgresql:
     )
 
 
-if is_postgresql:
-    _target = make_url(database_url)
-    print(
-        "PRINTFLOW_DB_TARGET",
-        {
-            "driver": _target.drivername,
-            "host": _target.host,
-            "database": _target.database,
-            "username": _target.username,
-        },
-        flush=True,
-    )
 
 engine = create_engine(
     database_url,
