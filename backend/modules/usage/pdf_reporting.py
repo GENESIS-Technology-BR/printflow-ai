@@ -43,7 +43,15 @@ def _short(value, limit: int) -> str:
     return text if len(text) <= limit else text[: max(1, limit - 1)] + "…"
 
 
-def build_pdf_report(company_name: str, start: date, end: date, rows: list[dict], report_scope: str = "Parque completo") -> bytes:
+def build_pdf_report(
+    company_name: str,
+    start: date,
+    end: date,
+    rows: list[dict],
+    report_scope: str = "Parque completo",
+    bw_rate: float = 0.0,
+    color_rate: float = 0.0,
+) -> bytes:
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -80,7 +88,17 @@ def build_pdf_report(company_name: str, start: date, end: date, rows: list[dict]
 
     applicable = [item for item in rows if not _label(item)]
     total_pages = sum(item.get("pages_printed",0) or 0 for item in applicable)
-    total_cost = sum(float(item.get("estimated_cost",0) or 0) for item in applicable)
+    variable_cost = sum(
+        float(item.get("estimated_cost",0) or 0)
+        for item in applicable
+        if item.get("cost_source") != "fixed_monthly"
+    )
+    fixed_cost = sum(
+        float(item.get("estimated_cost",0) or 0)
+        for item in applicable
+        if item.get("cost_source") == "fixed_monthly"
+    )
+    total_cost = variable_cost + fixed_cost
     label_count = len(rows) - len(applicable)
     card_title = ParagraphStyle("pf-final-card-title", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=7.2, leading=7.8, textColor=colors.HexColor(f"#{BRAND_NAVY}"), alignment=0)
     card_value = ParagraphStyle("pf-final-card-value", parent=styles["Normal"], fontName="Helvetica-Bold", fontSize=13.5, leading=14, textColor=colors.HexColor(f"#{BRAND_NAVY}"), alignment=0)
@@ -90,13 +108,22 @@ def build_pdf_report(company_name: str, start: date, end: date, rows: list[dict]
         return Table([[Paragraph(label, card_title)], [Paragraph(value, card_value)], [Paragraph(hint, card_hint)]], colWidths=[83*mm], rowHeights=[4.5*mm,6.3*mm,4.2*mm])
 
     summary = Table([[
-        metric_card("Equipamentos monitorados", str(len(rows)), "Total de impressoras no parque"),
-        metric_card("Impressões aplicáveis", _num(total_pages), "Total de páginas no período"),
-        metric_card("Custo estimado", _money(total_cost), "Valor total no período"),
-    ]], colWidths=[93*mm,95*mm,93*mm], rowHeights=[17*mm])
+        metric_card("Tarifa P&B", _rate(bw_rate), "Tarifa contratual por página"),
+        metric_card("Tarifa colorida", _rate(color_rate), "Aplicada quando houver contador de cor"),
+        metric_card("Custo fixo", _money(fixed_cost), "Equipamentos com cobrança mensal"),
+        metric_card("Total consolidado", _money(total_cost), f"{_num(total_pages)} páginas no período"),
+    ]], colWidths=[70*mm,70*mm,70*mm,71*mm], rowHeights=[17*mm])
     summary.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,-1),colors.HexColor("#F8FAFD")),("BOX",(0,0),(-1,-1),.35,colors.HexColor(f"#{BORDER}")),("INNERGRID",(0,0),(-1,-1),.35,colors.white),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),5*mm),("RIGHTPADDING",(0,0),(-1,-1),5*mm),("TOPPADDING",(0,0),(-1,-1),1*mm),("BOTTOMPADDING",(0,0),(-1,-1),1*mm)]))
 
-    note_text = f"●  {label_count} impressora(s) de etiquetas são exibidas como N/A e não entram no volume nem no custo por página." if label_count else "●  Fechamento calculado com os equipamentos monitorados no período."
+    base_note = (
+        "A tarifa colorida é apresentada como referência contratual e só entra no cálculo automático "
+        "quando houver contador colorido separado."
+    )
+    note_text = (
+        f"●  {label_count} impressora(s) de etiquetas são exibidas como N/A e não entram no fechamento.  ●  {base_note}"
+        if label_count
+        else f"●  {base_note}"
+    )
     note = Table([[Paragraph(note_text, ParagraphStyle("pf-final-note", parent=styles["Normal"], fontSize=5.8, leading=6.4, textColor=colors.HexColor("#365A7C")))]], colWidths=[281*mm], rowHeights=[7*mm])
     note.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,-1),colors.HexColor(f"#{PALE_BLUE}")),("BOX",(0,0),(-1,-1),.25,colors.HexColor("#D7EAFD")),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),4*mm),("RIGHTPADDING",(0,0),(-1,-1),4*mm),("TOPPADDING",(0,0),(-1,-1),0),("BOTTOMPADDING",(0,0),(-1,-1),0)]))
 
