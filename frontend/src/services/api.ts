@@ -48,6 +48,8 @@ export type DashboardPrinter = {
   page_count_confidence: number | null;
   page_count_confirmed: boolean;
   cost_per_page: number | null;
+  cost_model: "per_page" | "fixed_monthly";
+  fixed_monthly_cost: number | null;
   serial: string | null;
   serial_source: string | null;
   serial_confidence: number | null;
@@ -171,13 +173,27 @@ export async function updatePrinterCustomName(
 export async function updatePrinterCost(
   printerUuid: string,
   costPerPage: number | null,
-): Promise<{ cost_per_page: number | null }> {
-  return request<{ cost_per_page: number | null }>(
+  costModel: "per_page" | "fixed_monthly" = "per_page",
+  fixedMonthlyCost: number | null = null,
+): Promise<{
+  cost_per_page: number | null;
+  cost_model: "per_page" | "fixed_monthly";
+  fixed_monthly_cost: number | null;
+}> {
+  return request<{
+    cost_per_page: number | null;
+    cost_model: "per_page" | "fixed_monthly";
+    fixed_monthly_cost: number | null;
+  }>(
     `/api/v1/printers/${printerUuid}/cost`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cost_per_page: costPerPage }),
+      body: JSON.stringify({
+        cost_per_page: costPerPage,
+        cost_model: costModel,
+        fixed_monthly_cost: fixedMonthlyCost,
+      }),
     },
   );
 }
@@ -360,7 +376,7 @@ export type UsageReportRow = {
   last_anomaly_type: string | null;
   cost_per_page: number;
   estimated_cost: number;
-  cost_source: "company" | "printer";
+  cost_source: "company" | "printer" | "fixed_monthly" | "not_applicable";
 };
 
 export type UsageReportFilters = {
