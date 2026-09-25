@@ -448,7 +448,7 @@ def build_pdf_report(
         Paragraph("Relatório de Impressão", styles["Title"]),
         Paragraph(f"<b>Empresa:</b> {company_name}", styles["Normal"]),
         Paragraph(
-            f"<b>Periodo:</b> {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}",
+            f"<b>Período:</b> {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}",
             styles["Normal"],
         ),
         Paragraph(f"<b>Escopo:</b> {report_scope}", styles["Normal"]),
