@@ -65,5 +65,5 @@ def test_public_registration_is_not_exposed_in_login_ui() -> None:
     )[0]
 
     assert "Criar conta" not in login_block
-    assert "Esqueceu a senha?" in login_block
+    assert "Esqueceu sua senha?" in login_block
     assert "reset-password" in app
