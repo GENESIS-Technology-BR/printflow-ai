@@ -1,0 +1,49 @@
+/* PRINTFLOW v0.9.4 — destaque final de alertas na lista de impressoras */
+
+.printers-workspace .printer-card.printer-alert-warning,
+.printers-workspace .printer-card.printer-alert-warning > .printer-clean-summary{
+  background:#fff4c2!important;
+}
+
+.printers-workspace .printer-card.printer-alert-warning .printer-clean-identity,
+.printers-workspace .printer-card.printer-alert-warning .printer-clean-stat,
+.printers-workspace .printer-card.printer-alert-warning .printer-clean-last-seen{
+  background:transparent!important;
+}
+
+.printers-workspace .printer-card.printer-alert-warning{
+  border-color:#efcf66!important;
+  box-shadow:inset 5px 0 0 #e2aa00!important;
+}
+
+.printers-workspace .printer-card.printer-alert-warning:hover,
+.printers-workspace .printer-card.printer-alert-warning:hover > .printer-clean-summary{
+  background:#ffefad!important;
+}
+
+.printers-workspace .printer-card.printer-alert-critical,
+.printers-workspace .printer-card.printer-alert-critical > .printer-clean-summary{
+  background:#ffe1e4!important;
+}
+
+.printers-workspace .printer-card.printer-alert-critical .printer-clean-identity,
+.printers-workspace .printer-card.printer-alert-critical .printer-clean-stat,
+.printers-workspace .printer-card.printer-alert-critical .printer-clean-last-seen{
+  background:transparent!important;
+}
+
+.printers-workspace .printer-card.printer-alert-critical{
+  border-color:#e49aa3!important;
+  box-shadow:inset 5px 0 0 #d73543!important;
+}
+
+.printers-workspace .printer-card.printer-alert-critical:hover,
+.printers-workspace .printer-card.printer-alert-critical:hover > .printer-clean-summary{
+  background:#ffd5da!important;
+}
+
+/* Detalhes continuam neutros para leitura e edição. */
+.printers-workspace .printer-card.printer-alert-warning .printer-clean-details,
+.printers-workspace .printer-card.printer-alert-critical .printer-clean-details{
+  background:#fff!important;
+}
