@@ -48,6 +48,13 @@ function formatRate(value: number): string {
   return `R$ ${Number(value || 0).toFixed(4).replace(".", ",")}`;
 }
 
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(Number(value || 0));
+}
+
 function getStatusLabel(status: string): string {
   const normalized = status.toLowerCase();
   if (normalized === "online") return "Online";
@@ -304,6 +311,10 @@ export default function PrinterTable({
 
   async function saveCost(printer: DashboardPrinter): Promise<void> {
     if (!printer.uuid) return;
+    if (printer.cost_model === "fixed_monthly") {
+      setSaveError("Esta impressora usa valor fixo mensal e não deve receber tarifa por página.");
+      return;
+    }
     const raw = currentCost(printer).trim().replace(",", ".");
     const value = raw === "" ? null : Number(raw);
     if (value !== null && (!Number.isFinite(value) || value < 0 || value > 100)) {
@@ -481,6 +492,7 @@ export default function PrinterTable({
           ])).sort((a, b) => a.localeCompare(b, "pt-BR"));
           const costInput = currentCost(printer);
           const hasSpecificCost = costInput.trim() !== "";
+          const fixedMonthly = printer.cost_model === "fixed_monthly";
           const key = getPrinterKey(printer);
           const expanded = expandedPrinterKey === key;
           const customName = currentCustomName(printer).trim();
@@ -630,40 +642,57 @@ export default function PrinterTable({
                       <span>Custos e telemetria</span>
                       <small>Tarifa e qualidade dos dados</small>
                     </div>
-                    <form
-                      className="printer-clean-cost-form"
-                      onSubmit={(event) => {
-                        event.preventDefault();
-                        void saveCost(printer);
-                      }}
-                    >
-                      <label>
-                        Custo por página
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.0001"
-                          value={costInput}
-                          placeholder={Number(defaultCostPerPage || 0).toFixed(4)}
-                          onChange={(event) => {
-                            if (!printer.uuid) return;
-                            setCostDrafts((current) => ({
-                              ...current,
-                              [printer.uuid as string]: event.target.value,
-                            }));
-                          }}
-                        />
-                      </label>
-                      <button type="submit" disabled={!printer.uuid || savingKey === `cost:${printer.uuid}`}>
-                        {savingKey === `cost:${printer.uuid}` ? "Salvando..." : "Salvar custo"}
-                      </button>
-                      <small>
-                        {hasSpecificCost
-                          ? "Tarifa específica desta impressora"
-                          : `Padrão da empresa: ${formatRate(defaultCostPerPage)}`}
-                      </small>
-                    </form>
+                    {fixedMonthly ? (
+                      <div className="printer-clean-cost-form">
+                        <label>
+                          Modelo de cobrança
+                          <input
+                            type="text"
+                            value="Valor fixo mensal"
+                            readOnly
+                          />
+                        </label>
+                        <strong>
+                          {formatCurrency(Number(printer.fixed_monthly_cost || 0))} / mês
+                        </strong>
+                        <small>Equipamento fora da cobrança por página.</small>
+                      </div>
+                    ) : (
+                      <form
+                        className="printer-clean-cost-form"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          void saveCost(printer);
+                        }}
+                      >
+                        <label>
+                          Custo por página
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.0001"
+                            value={costInput}
+                            placeholder={Number(defaultCostPerPage || 0).toFixed(4)}
+                            onChange={(event) => {
+                              if (!printer.uuid) return;
+                              setCostDrafts((current) => ({
+                                ...current,
+                                [printer.uuid as string]: event.target.value,
+                              }));
+                            }}
+                          />
+                        </label>
+                        <button type="submit" disabled={!printer.uuid || savingKey === `cost:${printer.uuid}`}>
+                          {savingKey === `cost:${printer.uuid}` ? "Salvando..." : "Salvar custo"}
+                        </button>
+                        <small>
+                          {hasSpecificCost
+                            ? "Tarifa específica desta impressora"
+                            : `Padrão da empresa: ${formatRate(defaultCostPerPage)}`}
+                        </small>
+                      </form>
+                    )}
                     <div className="printer-clean-technical-grid printer-clean-confidence-grid">
                       <div><span>Confiança serial</span><strong>{printer.serial_confidence === null ? "—" : `${printer.serial_confidence}%`}</strong></div>
                       <div><span>Confiança contador</span><strong>{printer.page_count_confidence === null ? "—" : `${printer.page_count_confidence}%`}</strong></div>
