@@ -261,12 +261,12 @@ def build_excel_report(
     sheet.title = "Resumo"
     sheet.sheet_view.showGridLines = False
 
-    sheet["A1"] = "Printflow - Relatorio de Impressao"
+    sheet["A1"] = "Printflow - Relatório de Impressão"
     sheet["A1"].font = Font(size=18, bold=True, color=BRAND_NAVY)
     sheet["A2"] = f"Empresa: {company_name}"
     sheet["A2"].font = Font(size=10, color=BRAND_MUTED)
     sheet["A3"] = (
-        f"Periodo: {start.strftime('%d/%m/%Y')} "
+        f"Período: {start.strftime('%d/%m/%Y')} "
         f"a {end.strftime('%d/%m/%Y')}"
     )
     sheet["A3"].font = Font(size=10, color=BRAND_MUTED)
@@ -320,9 +320,9 @@ def build_excel_report(
 
     headers = [
         "Impressora", "IP", "Hostname", "Fabricante", "Modelo", "Serial",
-        "Unidade", "Setor", "Primeira leitura", "Ultima leitura",
-        "Contador inicial", "Contador final", "Impressoes no periodo", "Anomalias",
-        "Custo/pagina (R$)", "Custo estimado (R$)",
+        "Unidade", "Setor", "Primeira leitura", "Última leitura",
+        "Contador inicial", "Contador final", "Impressões no período", "Anomalias",
+        "Custo/página (R$)", "Custo estimado (R$)",
     ]
     header_row = 10
 
@@ -337,8 +337,8 @@ def build_excel_report(
             item["display_name"], item["ip"] or "", item["hostname"] or "",
             item["manufacturer"] or "", item["model"] or "", item["serial"] or "",
             item["unit_name"] or "", item["sector_name"] or "",
-            item["first_usage_date"].strftime("%d/%m/%Y") if item["first_usage_date"] else "Sem historico",
-            item["last_usage_date"].strftime("%d/%m/%Y") if item["last_usage_date"] else "Sem historico",
+            item["first_usage_date"].strftime("%d/%m/%Y") if item["first_usage_date"] else "Sem histórico",
+            item["last_usage_date"].strftime("%d/%m/%Y") if item["last_usage_date"] else "Sem histórico",
             item["opening_page_count"], item["closing_page_count"],
             item["pages_printed"], item["anomaly_count"],
             item["cost_per_page"], item["estimated_cost"],
@@ -356,11 +356,11 @@ def build_excel_report(
     for index, width in enumerate(widths, start=1):
         sheet.column_dimensions[get_column_letter(index)].width = width
 
-    detail = workbook.create_sheet("Historico diario")
+    detail = workbook.create_sheet("Histórico diário")
     detail.sheet_view.showGridLines = False
     detail_headers = [
         "Data", "Impressora", "IP", "Unidade", "Setor",
-        "Contador abertura", "Contador fechamento", "Impressoes", "Anomalias",
+        "Contador abertura", "Contador fechamento", "Impressões", "Anomalias",
     ]
     for column, label in enumerate(detail_headers, start=1):
         cell = detail.cell(row=1, column=column, value=label)
@@ -414,7 +414,7 @@ def build_pdf_report(
         rightMargin=10 * mm,
         topMargin=10 * mm,
         bottomMargin=15 * mm,
-        title="Printflow - Relatorio de Impressao",
+        title="Printflow - Relatório de Impressão",
     )
     styles = getSampleStyleSheet()
 
@@ -429,7 +429,7 @@ def build_pdf_report(
     brand_copy = Paragraph(
         (
             f'<font color="#{BRAND_NAVY}" size="18"><b>Printflow</b></font><br/>'
-            f'<font color="#{BRAND_MUTED}" size="8">Gestão inteligente de impressão</font>'
+            f'<font color="#{BRAND_MUTED}" size="8">Gestão Inteligente de Impressão</font>'
         ),
         styles["Normal"],
     )
@@ -445,7 +445,7 @@ def build_pdf_report(
     story = [
         brand_header,
         Spacer(1, 2.5 * mm),
-        Paragraph("Relatorio de Impressao", styles["Title"]),
+        Paragraph("Relatório de Impressão", styles["Title"]),
         Paragraph(f"<b>Empresa:</b> {company_name}", styles["Normal"]),
         Paragraph(
             f"<b>Periodo:</b> {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}",
@@ -460,8 +460,8 @@ def build_pdf_report(
     ]
 
     table_data = [[
-        "Impressora", "Identificacao", "Unidade / Setor", "Modelo",
-        "Inicial", "Final", "Impressoes", "Anom.", "R$/pag.", "Custo estimado",
+        "Impressora", "Identificação", "Unidade / Setor", "Modelo",
+        "Inicial", "Final", "Impressões", "Anom.", "R$/pág.", "Custo estimado",
     ]]
     for item in rows:
         organization = " / ".join(
@@ -515,7 +515,7 @@ def build_pdf_report(
         Paragraph(
             (
                 f"<b>Total de impressoras:</b> {len(rows)} &nbsp;&nbsp; "
-                f"<b>Total de impressoes:</b> {_format_number(total_pages)} &nbsp;&nbsp; "
+                f"<b>Total de impressões:</b> {_format_number(total_pages)} &nbsp;&nbsp; "
                 f"<b>Custo estimado:</b> {_format_currency(total_cost)}"
             ),
             styles["Normal"],
