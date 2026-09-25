@@ -13,6 +13,7 @@ from backend.modules.organization.model import CompanySector, CompanyUnit
 from backend.modules.printers.model import Printer
 from backend.modules.printers.schema import (
     AgentHeartbeat,
+    AgentKnownPrintersRequest,
     PrinterCostUpdate,
     PrinterCustomNameUpdate,
     PrinterOrganizationUpdate,
@@ -177,6 +178,54 @@ def list_printers(
         )
         query = query.filter(~zebra_match)
     return query.order_by(Printer.id.desc()).all()
+
+
+@router.post(
+    "/agent/known-printer-ips",
+    status_code=status.HTTP_200_OK,
+)
+def agent_known_printer_ips(
+    payload: AgentKnownPrintersRequest,
+    db: Session = Depends(get_db),
+):
+    company = (
+        db.query(Company)
+        .filter(
+            Company.agent_token == payload.agent_token,
+            Company.active.is_(True),
+        )
+        .first()
+    )
+    if company is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Agent Token inválido.",
+        )
+
+    query = db.query(Printer).filter(
+        Printer.company_id == company.id,
+        Printer.ip.isnot(None),
+    )
+
+    if "guerra" in (company.name or "").strip().lower():
+        zebra_match = (
+            func.coalesce(Printer.manufacturer, "").ilike("%zebra%")
+            | func.coalesce(Printer.model, "").ilike("%zebra%")
+            | func.coalesce(Printer.name, "").ilike("%zebra%")
+            | func.coalesce(Printer.custom_name, "").ilike("%zebra%")
+            | func.coalesce(Printer.model, "").ilike("%zt230%")
+            | func.coalesce(Printer.custom_name, "").ilike("%zt230%")
+            | func.coalesce(Printer.model, "").ilike("%zpl%")
+            | func.coalesce(Printer.custom_name, "").ilike("%zpl%")
+        )
+        query = query.filter(~zebra_match)
+
+    ips = sorted({
+        printer.ip.strip()
+        for printer in query.all()
+        if printer.ip and printer.ip.strip()
+    })
+    return {"ips": ips}
 
 
 @router.post(
