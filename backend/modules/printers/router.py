@@ -31,6 +31,42 @@ router = APIRouter(prefix="/printers", tags=["Printers"])
 # acoplamento fragil ao ID interno do banco.
 
 
+def _is_guerra_excluded_printer(printer: Printer) -> bool:
+    ip = (printer.ip or "").strip()
+    text = " ".join(
+        str(value or "")
+        for value in (
+            printer.manufacturer,
+            printer.model,
+            printer.name,
+            printer.custom_name,
+            printer.hostname,
+        )
+    ).lower()
+    return (
+        ip == "10.2.128.31"
+        or "deskjet 2700" in text
+        or any(marker in text for marker in ("zebra", "zt230", "zpl", "ztc "))
+    )
+
+
+def _guerra_excluded_query_match():
+    return (
+        (Printer.ip == "10.2.128.31")
+        | func.coalesce(Printer.model, "").ilike("%deskjet 2700%")
+        | func.coalesce(Printer.name, "").ilike("%deskjet 2700%")
+        | func.coalesce(Printer.hostname, "").ilike("%deskjet 2700%")
+        | func.coalesce(Printer.manufacturer, "").ilike("%zebra%")
+        | func.coalesce(Printer.model, "").ilike("%zebra%")
+        | func.coalesce(Printer.name, "").ilike("%zebra%")
+        | func.coalesce(Printer.custom_name, "").ilike("%zebra%")
+        | func.coalesce(Printer.model, "").ilike("%zt230%")
+        | func.coalesce(Printer.custom_name, "").ilike("%zt230%")
+        | func.coalesce(Printer.model, "").ilike("%zpl%")
+        | func.coalesce(Printer.custom_name, "").ilike("%zpl%")
+    )
+
+
 def _clean_text(value: str | None) -> str | None:
     if value is None:
         return None
@@ -166,17 +202,7 @@ def list_printers(
         Company.id == current_user.company_id
     ).first()
     if company and "guerra" in (company.name or "").strip().lower():
-        zebra_match = (
-            func.coalesce(Printer.manufacturer, "").ilike("%zebra%")
-            | func.coalesce(Printer.model, "").ilike("%zebra%")
-            | func.coalesce(Printer.name, "").ilike("%zebra%")
-            | func.coalesce(Printer.custom_name, "").ilike("%zebra%")
-            | func.coalesce(Printer.model, "").ilike("%zt230%")
-            | func.coalesce(Printer.custom_name, "").ilike("%zt230%")
-            | func.coalesce(Printer.model, "").ilike("%zpl%")
-            | func.coalesce(Printer.custom_name, "").ilike("%zpl%")
-        )
-        query = query.filter(~zebra_match)
+        query = query.filter(~_guerra_excluded_query_match())
     return query.order_by(Printer.id.desc()).all()
 
 
@@ -208,17 +234,7 @@ def agent_known_printer_ips(
     )
 
     if "guerra" in (company.name or "").strip().lower():
-        zebra_match = (
-            func.coalesce(Printer.manufacturer, "").ilike("%zebra%")
-            | func.coalesce(Printer.model, "").ilike("%zebra%")
-            | func.coalesce(Printer.name, "").ilike("%zebra%")
-            | func.coalesce(Printer.custom_name, "").ilike("%zebra%")
-            | func.coalesce(Printer.model, "").ilike("%zt230%")
-            | func.coalesce(Printer.custom_name, "").ilike("%zt230%")
-            | func.coalesce(Printer.model, "").ilike("%zpl%")
-            | func.coalesce(Printer.custom_name, "").ilike("%zpl%")
-        )
-        query = query.filter(~zebra_match)
+        query = query.filter(~_guerra_excluded_query_match())
 
     ips = sorted({
         printer.ip.strip()
@@ -272,6 +288,10 @@ def receive_agent_heartbeat(
             company_printers,
             payload.observed_printer_ips,
         )
+        if "guerra" in (company.name or "").strip().lower():
+            for printer in company_printers:
+                if _is_guerra_excluded_printer(printer):
+                    printer.active = False
     db.commit()
 
     return {"status": "received", "persisted": True}
@@ -316,6 +336,27 @@ def receive_agent_data(
             ip=payload.ip,
         )
         db.add(printer)
+
+    if "guerra" in (company.name or "").strip().lower():
+        candidate = Printer(
+            ip=payload.ip,
+            name=payload.name,
+            hostname=_clean_text(payload.hostname),
+            manufacturer=_clean_text(payload.manufacturer),
+            model=_clean_text(payload.model),
+        )
+        if _is_guerra_excluded_printer(candidate):
+            printer.name = payload.name
+            printer.hostname = _clean_text(payload.hostname)
+            printer.manufacturer = _clean_text(payload.manufacturer)
+            printer.model = _clean_text(payload.model)
+            printer.status = payload.status
+            printer.source = payload.source
+            printer.active = False
+            printer.last_seen = datetime.now(timezone.utc)
+            db.commit()
+            db.refresh(printer)
+            return printer
 
     printer.name = payload.name
     printer.hostname = _merge_optional(
