@@ -245,10 +245,12 @@ function App() {
     return (
       <main className="auth-page">
         <ThemeToggle />
-        <section className="auth-card">
-          <img className="auth-brand-mark" src="/brand/printflow-mark.svg" alt="Símbolo Printflow" />
-          <h1>Printflow</h1>
-          <p>Gestão inteligente de impressão</p>
+        <section className="auth-card auth-card-erp">
+          <div className="auth-brand">
+            <img className="auth-brand-mark" src="/brand/printflow-mark.svg" alt="Símbolo Printflow" />
+            <strong>Printflow</strong>
+          </div>
+          <div className="auth-product-name">Gestão inteligente de impressão</div>
           <div className="auth-flow-title">
             {mode === "login" && <strong>Boas-vindas</strong>}
             {mode === "forgot" && <strong>Recuperar senha</strong>}
@@ -256,20 +258,42 @@ function App() {
           </div>
           <form onSubmit={authenticate}>
             {mode !== "reset" && (
-              <label>E-mail<input name="email" type="email" required /></label>
+              <label>
+                {mode === "login" ? "Insira seu usuário" : "E-mail"}
+                <div className="auth-input-wrap auth-input-user">
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="usuario@empresa.com.br"
+                    autoComplete="username"
+                    required
+                  />
+                </div>
+              </label>
             )}
             {mode === "login" && (
               <>
-                <label>Senha<input name="password" type="password" required minLength={8} /></label>
+                <label>
+                  Insira sua senha
+                  <div className="auth-input-wrap auth-input-password">
+                    <input
+                      name="password"
+                      type="password"
+                      autoComplete="current-password"
+                      required
+                      minLength={8}
+                    />
+                  </div>
+                </label>
                 <button
                   type="button"
-                  className="auth-link"
+                  className="auth-link auth-forgot-link"
                   onClick={() => {
                     setMode("forgot")
                     setMessage("")
                   }}
                 >
-                  Esqueceu a senha?
+                  Esqueceu sua senha?
                 </button>
               </>
             )}
@@ -280,8 +304,18 @@ function App() {
             )}
             {mode === "reset" && (
               <>
-                <label>Nova senha<input name="new_password" type="password" required minLength={8} maxLength={128} /></label>
-                <label>Confirmar nova senha<input name="confirm_password" type="password" required minLength={8} maxLength={128} /></label>
+                <label>
+                  Nova senha
+                  <div className="auth-input-wrap auth-input-password">
+                    <input name="new_password" type="password" autoComplete="new-password" required minLength={8} maxLength={128} />
+                  </div>
+                </label>
+                <label>
+                  Confirmar nova senha
+                  <div className="auth-input-wrap auth-input-password">
+                    <input name="confirm_password" type="password" autoComplete="new-password" required minLength={8} maxLength={128} />
+                  </div>
+                </label>
               </>
             )}
             <button className="primary" disabled={loading}>
