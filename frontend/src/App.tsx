@@ -246,11 +246,11 @@ function App() {
       <main className="auth-page">
         <ThemeToggle />
         <section className="auth-card auth-card-erp">
-          <div className="auth-brand">
-            <img className="auth-brand-mark" src="/brand/printflow-mark.svg" alt="Símbolo Printflow" />
+          <div className="pf-login-brand">
+            <img className="pf-login-brand-mark" src="/brand/printflow-mark.svg" alt="Símbolo Printflow" />
             <strong>Printflow</strong>
           </div>
-          <div className="auth-product-name">Gestão inteligente de impressão</div>
+          <div className="pf-login-product-name">Gestão inteligente de impressão</div>
           <div className="auth-flow-title">
             {mode === "login" && <strong>Boas-vindas</strong>}
             {mode === "forgot" && <strong>Recuperar senha</strong>}
