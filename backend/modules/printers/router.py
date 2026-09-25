@@ -111,12 +111,21 @@ def _merge_page_count(
     return value, confidence, updated
 
 
+def _normalize_utc_naive(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is not None:
+        return value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value
+
+
 def _should_persist_heartbeat(company, payload: AgentHeartbeat, now: datetime) -> bool:
-    previous_seen = company.agent_last_seen
+    previous_seen = _normalize_utc_naive(company.agent_last_seen)
+    current_time = _normalize_utc_naive(now)
     return (
         not settings.free_infra
         or previous_seen is None
-        or now - previous_seen >= timedelta(seconds=settings.heartbeat_write_interval_seconds)
+        or current_time - previous_seen >= timedelta(seconds=settings.heartbeat_write_interval_seconds)
         or company.agent_status != payload.status
         or company.agent_name != payload.agent_name
         or company.agent_version != payload.agent_version
@@ -192,7 +201,7 @@ def receive_agent_heartbeat(
             detail="Agent Token inválido.",
         )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     write_heartbeat = _should_persist_heartbeat(company, payload, now)
 
     if not write_heartbeat:
