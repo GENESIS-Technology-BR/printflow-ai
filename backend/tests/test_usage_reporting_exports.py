@@ -49,16 +49,16 @@ def test_excel_report_generates_valid_workbook():
     assert content.startswith(b"PK")
 
     workbook = load_workbook(BytesIO(content), read_only=True)
-    assert workbook.sheetnames == ["Resumo", "Historico diario"]
+    assert workbook.sheetnames == ["Resumo", "Histórico diário"]
 
     summary = workbook["Resumo"]
-    assert summary["A1"].value == "Printflow - Relatorio de Impressao"
+    assert summary["A1"].value == "Printflow - Relatório de Impressão"
     assert summary["A2"].value == "Empresa: Empresa Teste"
-    assert summary["A4"].value == "Escopo: Parque completo"
-    assert summary["A7"].value == "Impressora Financeiro"
-    assert summary["M7"].value == 125
-    assert summary["O7"].value == 0.12
-    assert summary["P7"].value == 15.0
+    assert summary["A4"].value is None
+    assert summary["A9"].value == "Impressora Financeiro"
+    assert summary["K9"].value == 125
+    assert summary["L9"].value == 0.12
+    assert summary["M9"].value == 15.0
 
 
 def test_pdf_report_generates_valid_pdf():
@@ -122,7 +122,7 @@ def test_printer_specific_cost_overrides_company_default() -> None:
     assert rows[0]["cost_source"] == "printer"
 
 
-def test_excel_report_records_filtered_scope() -> None:
+def test_excel_report_does_not_display_scope_line() -> None:
     content = build_excel_report(
         "Empresa Teste",
         date(2026, 9, 1),
@@ -133,9 +133,7 @@ def test_excel_report_records_filtered_scope() -> None:
     )
 
     workbook = load_workbook(BytesIO(content), read_only=True)
-    assert workbook["Resumo"]["A4"].value == (
-        "Escopo: Unidade: Matriz · Setor: Financeiro"
-    )
+    assert workbook["Resumo"]["A4"].value is None
 
 
 def test_pdf_report_accepts_filtered_scope_and_technical_identity() -> None:
