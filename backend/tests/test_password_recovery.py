@@ -50,7 +50,8 @@ def test_public_recovery_does_not_expose_reset_token() -> None:
         1,
     )[1].split('@router.post("/reset-password")', 1)[0]
 
-    assert "reset_token=" not in public_block.split("return PasswordResetRequestResponse", 1)[-1]
+    assert "return PasswordResetRequestResponse(message=generic_message)" in public_block
+    assert "reset_token=reset_token" not in public_block
     assert "Usuario nao encontrado" not in public_block
     assert "Se o e-mail estiver cadastrado" in public_block
 
