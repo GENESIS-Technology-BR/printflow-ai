@@ -257,9 +257,14 @@ def build_excel_report(
     from openpyxl.utils import get_column_letter
 
     workbook = Workbook()
+    workbook.views[0].showHorizontalScroll = False
+    workbook.views[0].showVerticalScroll = False
+
     sheet = workbook.active
     sheet.title = "Resumo"
     sheet.sheet_view.showGridLines = False
+    sheet.sheet_view.zoomScale = 85
+    sheet.sheet_view.zoomScaleNormal = 85
 
     sheet["A1"] = "Printflow - Relatório de Impressão"
     sheet["A1"].font = Font(size=18, bold=True, color=BRAND_NAVY)
@@ -358,6 +363,8 @@ def build_excel_report(
 
     detail = workbook.create_sheet("Histórico diário")
     detail.sheet_view.showGridLines = False
+    detail.sheet_view.zoomScale = 85
+    detail.sheet_view.zoomScaleNormal = 85
     detail_headers = [
         "Data", "Impressora", "IP", "Unidade", "Setor",
         "Contador abertura", "Contador fechamento", "Impressões",
