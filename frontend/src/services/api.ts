@@ -377,6 +377,8 @@ export type UsageReportRow = {
   cost_per_page: number;
   estimated_cost: number;
   cost_source: "company" | "printer" | "fixed_monthly" | "not_applicable";
+  cost_model: "per_page" | "fixed_monthly";
+  fixed_monthly_cost: number;
 };
 
 export type UsageReportFilters = {
