@@ -284,8 +284,7 @@ def build_excel_report(
 
     sheet.row_dimensions[1].height = 25
     sheet.row_dimensions[2].height = 20
-    sheet.row_dimensions[3].height = 6
-    sheet.row_dimensions[4].height = 6
+    sheet.row_dimensions[3].height = 3
 
     logo_stream = _build_brand_icon_png()
     logo = XLImage(logo_stream)
@@ -322,25 +321,25 @@ def build_excel_report(
         right=Side(style="thin", color=BRAND_BORDER),
     )
     for label, value, start_col, end_col in summary_labels:
+        sheet.merge_cells(f"{start_col}4:{end_col}4")
         sheet.merge_cells(f"{start_col}5:{end_col}5")
-        sheet.merge_cells(f"{start_col}6:{end_col}6")
-        label_cell = sheet[f"{start_col}5"]
-        value_cell = sheet[f"{start_col}6"]
+        label_cell = sheet[f"{start_col}4"]
+        value_cell = sheet[f"{start_col}5"]
         label_cell.value = label
         value_cell.value = value
         label_cell.font = Font(size=8, bold=False, color=BRAND_MUTED)
         value_cell.font = Font(size=12, bold=True, color=BRAND_NAVY)
         label_cell.alignment = Alignment(horizontal="center", vertical="center")
         value_cell.alignment = Alignment(horizontal="center", vertical="center")
-        for row in (5, 6):
+        for row in (4, 5):
             for col in range(label_cell.column, sheet[f"{end_col}{row}"].column + 1):
                 target = sheet.cell(row=row, column=col)
                 target.fill = card_fill
                 target.border = card_border
 
-    sheet.row_dimensions[5].height = 22
-    sheet.row_dimensions[6].height = 28
-    sheet.row_dimensions[7].height = 8
+    sheet.row_dimensions[4].height = 22
+    sheet.row_dimensions[5].height = 28
+    sheet.row_dimensions[6].height = 6
 
     headers = [
         "Impressora", "IP", "Modelo", "Serial",
@@ -348,7 +347,7 @@ def build_excel_report(
         "Inicial", "Final", "Impressões",
         "Custo/pág.", "Custo estimado",
     ]
-    header_row = 8
+    header_row = 7
 
     for column, label in enumerate(headers, start=1):
         cell = sheet.cell(row=header_row, column=column, value=label)
@@ -391,7 +390,7 @@ def build_excel_report(
                 cell.number_format = 'R$ #,##0.00'
         sheet.row_dimensions[row_index].height = 22
 
-    sheet.freeze_panes = "A9"
+    sheet.freeze_panes = "A8"
     sheet.sheet_view.tabSelected = True
     sheet.auto_filter.ref = f"A{header_row}:M{max(header_row, header_row + len(rows))}"
     widths = [24, 12, 22, 18, 15, 22, 16, 16, 13, 13, 18, 15, 18]
