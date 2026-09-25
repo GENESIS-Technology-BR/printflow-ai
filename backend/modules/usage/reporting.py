@@ -275,20 +275,17 @@ def build_excel_report(
     sheet["A1"].alignment = Alignment(vertical="center")
 
     sheet.merge_cells("A2:J2")
-    sheet["A2"] = f"Empresa: {company_name}"
-    sheet["A2"].font = Font(size=9, color=BRAND_MUTED)
-
-    sheet.merge_cells("A3:J3")
-    sheet["A3"] = (
-        f"Período: {start.strftime('%d/%m/%Y')} "
-        f"a {end.strftime('%d/%m/%Y')}"
+    sheet["A2"] = (
+        f"Empresa: {company_name}  —  "
+        f"Período: {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}"
     )
-    sheet["A3"].font = Font(size=9, color=BRAND_MUTED)
+    sheet["A2"].font = Font(size=9, color=BRAND_MUTED)
+    sheet["A2"].alignment = Alignment(vertical="center")
 
     sheet.row_dimensions[1].height = 25
-    sheet.row_dimensions[2].height = 18
-    sheet.row_dimensions[3].height = 18
-    sheet.row_dimensions[4].height = 8
+    sheet.row_dimensions[2].height = 20
+    sheet.row_dimensions[3].height = 6
+    sheet.row_dimensions[4].height = 6
 
     logo_stream = _build_brand_icon_png()
     logo = XLImage(logo_stream)
