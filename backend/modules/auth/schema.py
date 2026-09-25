@@ -27,6 +27,15 @@ class MeResponse(BaseModel):
     company_name: str
 
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetRequestResponse(BaseModel):
+    status: str = "accepted"
+    message: str
+
+
 class PasswordResetIssueRequest(BaseModel):
     email: EmailStr
 
