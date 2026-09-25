@@ -60,7 +60,7 @@ def build_pdf_report(
 
     output = BytesIO()
     page_size = landscape(A4)
-    doc = SimpleDocTemplate(output, pagesize=page_size, leftMargin=7*mm, rightMargin=7*mm, topMargin=4.5*mm, bottomMargin=8*mm, title="Printflow - Relatorio de Impressao")
+    doc = SimpleDocTemplate(output, pagesize=page_size, leftMargin=7*mm, rightMargin=7*mm, topMargin=4.5*mm, bottomMargin=8*mm, title="Printflow - Relatório de Impressão")
     styles = getSampleStyleSheet()
     title = ParagraphStyle("pf-final-title", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=15.5, leading=16, alignment=1, textColor=colors.HexColor(f"#{BRAND_NAVY}"), spaceAfter=0)
     brand = ParagraphStyle("pf-final-brand", parent=styles["Normal"], fontSize=6.4, leading=7, textColor=colors.HexColor(f"#{BRAND_MUTED}"))
@@ -69,7 +69,7 @@ def build_pdf_report(
     cell_right = ParagraphStyle("pf-final-cell-right", parent=cell, alignment=2)
 
     header = Table([[
-        Paragraph(f'<font color="#{BRAND_BLUE}" size="17"><b>Printflow</b></font><br/><font color="#{BRAND_MUTED}">Gestão inteligente de impressão</font>', brand),
+        Paragraph(f'<font color="#{BRAND_BLUE}" size="17"><b>Printflow</b></font><br/><font color="#{BRAND_MUTED}">Gestão Inteligente de Impressão</font>', brand),
         Paragraph(f"Relatório de Impressão<br/><font size='7' color='#{BRAND_MUTED}'>Período: {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}</font>", title),
         Paragraph(f'<font color="#{BRAND_BLUE}" size="6"><b>FECHAMENTO COMERCIAL</b></font><br/><br/><b>Empresa:</b> {_short(company_name,32)}<br/><b>Escopo:</b> {_short(report_scope,32)}', meta_right),
     ]], colWidths=[67*mm,145*mm,71*mm], rowHeights=[15*mm])
