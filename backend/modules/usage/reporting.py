@@ -222,6 +222,7 @@ def consolidate_usage(
         cost_model = getattr(printer, "cost_model", "per_page") if printer else "per_page"
         fixed_monthly_cost = getattr(printer, "fixed_monthly_cost", None) if printer else None
 
+        item["cost_model"] = cost_model or "per_page"
         if cost_model == "fixed_monthly":
             item["cost_per_page"] = 0.0
             item["estimated_cost"] = _cost_value(fixed_monthly_cost)
@@ -247,6 +248,8 @@ def build_excel_report(
     rows: list[dict],
     history: Iterable[PrinterUsageDaily],
     report_scope: str = "Parque completo",
+    bw_rate: float = 0.0,
+    color_rate: float = 0.0,
 ) -> bytes:
     from openpyxl import Workbook
     from openpyxl.drawing.image import Image as XLImage
@@ -276,13 +279,52 @@ def build_excel_report(
     logo.height = 48
     sheet.add_image(logo, "N1")
 
+    per_page_cost = sum(
+        float(item.get("estimated_cost") or 0)
+        for item in rows
+        if item.get("cost_source") not in {"fixed_monthly", "not_applicable"}
+    )
+    fixed_cost = sum(
+        float(item.get("estimated_cost") or 0)
+        for item in rows
+        if item.get("cost_source") == "fixed_monthly"
+    )
+    total_cost = per_page_cost + fixed_cost
+    total_pages = sum(int(item.get("pages_printed") or 0) for item in rows)
+
+    summary_labels = [
+        ("Tarifa P&B", _format_rate(bw_rate)),
+        ("Tarifa colorida", _format_rate(color_rate)),
+        ("Custo variável", _format_currency(per_page_cost)),
+        ("Custo fixo", _format_currency(fixed_cost)),
+        ("Total consolidado", _format_currency(total_cost)),
+        ("Páginas no período", _format_number(total_pages)),
+    ]
+    for idx, (label, value) in enumerate(summary_labels, start=1):
+        col = (idx - 1) * 2 + 1
+        sheet.cell(row=6, column=col, value=label).font = Font(
+            size=9, bold=True, color=BRAND_MUTED
+        )
+        sheet.cell(row=7, column=col, value=value).font = Font(
+            size=13, bold=True, color=BRAND_NAVY
+        )
+        sheet.merge_cells(start_row=6, start_column=col, end_row=6, end_column=col + 1)
+        sheet.merge_cells(start_row=7, start_column=col, end_row=7, end_column=col + 1)
+
+    sheet["A8"] = (
+        "Observação: a tarifa colorida é contratual e só entra no cálculo automático "
+        "quando houver contador colorido separado."
+    )
+    sheet["A8"].font = Font(size=9, italic=True, color=BRAND_MUTED)
+    sheet.merge_cells("A8:P8")
+
     headers = [
         "Impressora", "IP", "Hostname", "Fabricante", "Modelo", "Serial",
         "Unidade", "Setor", "Primeira leitura", "Ultima leitura",
         "Contador inicial", "Contador final", "Impressoes no periodo", "Anomalias",
         "Custo/pagina (R$)", "Custo estimado (R$)",
     ]
-    header_row = 6
+    header_row = 10
 
     for column, label in enumerate(headers, start=1):
         cell = sheet.cell(row=header_row, column=column, value=label)
