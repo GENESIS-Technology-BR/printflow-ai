@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
+import logging
 import os
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.app.config.settings import settings
@@ -30,6 +32,8 @@ from backend.modules.usage.router import router as usage_router
 from backend.modules.intelligence.router import router as intelligence_router
 from backend.modules.integration.router import router as integration_router
 
+logger = logging.getLogger("printflow")
+
 try:
     from backend.modules.printers.model import Printer
     from backend.modules.printers.router import router as printers_router
@@ -47,6 +51,34 @@ async def lifespan(app: FastAPI):
     ensure_user_security_columns(engine)
     clean_descriptive_printer_serials(engine)
     configure_guerra_pilot_financials(engine)
+    try:
+        with engine.connect() as connection:
+            db_info = connection.execute(
+                text("select current_database(), current_user")
+            ).one()
+            admin_seen = connection.execute(
+                text(
+                    "select count(*) from users_v2 "
+                    "where lower(email)=lower(:email)"
+                ),
+                {"email": "administrator@printflow.com.br"},
+            ).scalar_one()
+            company_seen = connection.execute(
+                text(
+                    "select count(*) from companies_v2 "
+                    "where name=:name"
+                ),
+                {"name": "Guerra Implementos"},
+            ).scalar_one()
+            logger.warning(
+                "PRINTFLOW DB DIAGNOSTIC database=%s user=%s admin_seen=%s guerra_seen=%s",
+                db_info[0],
+                db_info[1],
+                admin_seen,
+                company_seen,
+            )
+    except Exception as exc:
+        logger.exception("PRINTFLOW DB DIAGNOSTIC failed: %s", exc)
     yield
 
 
