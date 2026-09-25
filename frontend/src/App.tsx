@@ -38,8 +38,13 @@ function App() {
   const [authReady, setAuthReady] = useState(false)
   const [company, setCompany] = useState<Company | null>(null)
   const [profile, setProfile] = useState<MeProfile | null>(null)
-  const [mode, setMode] = useState<"login" | "register">("login")
+  const initialResetToken = new URLSearchParams(window.location.search).get("reset_token") || ""
+  const [mode, setMode] = useState<"login" | "forgot" | "reset">(
+    initialResetToken ? "reset" : "login",
+  )
+  const [resetToken] = useState(initialResetToken)
   const [message, setMessage] = useState("")
+  const [messageKind, setMessageKind] = useState<"error" | "success">("error")
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState<Page>("dashboard")
   const [printers, setPrinters] = useState<DashboardPrinter[]>([])
@@ -97,20 +102,46 @@ function App() {
     event.preventDefault()
     setLoading(true)
     setMessage("")
+    setMessageKind("error")
     const form = new FormData(event.currentTarget)
-    const body = mode === "login"
-      ? { email: form.get("email"), password: form.get("password") }
-      : {
-          user_name: form.get("user_name"),
-          company_name: form.get("company_name"),
-          email: form.get("email"),
-          password: form.get("password"),
-        }
 
     try {
-      await api(`/api/v1/auth/${mode}`, {
+      if (mode === "forgot") {
+        const result = await api("/api/v1/auth/forgot-password", {
+          method: "POST",
+          body: JSON.stringify({ email: form.get("email") }),
+        })
+        setMessage(result.message || "Se o e-mail estiver cadastrado, enviaremos as instruções.")
+        setMessageKind("success")
+        return
+      }
+
+      if (mode === "reset") {
+        const newPassword = String(form.get("new_password") || "")
+        const confirmPassword = String(form.get("confirm_password") || "")
+        if (newPassword !== confirmPassword) {
+          throw new Error("As senhas informadas não são iguais.")
+        }
+        await api("/api/v1/auth/reset-password", {
+          method: "POST",
+          body: JSON.stringify({
+            reset_token: resetToken,
+            new_password: newPassword,
+          }),
+        })
+        window.history.replaceState({}, "", window.location.pathname)
+        setMode("login")
+        setMessage("Senha redefinida com sucesso. Faça login com a nova senha.")
+        setMessageKind("success")
+        return
+      }
+
+      await api("/api/v1/auth/login", {
         method: "POST",
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          email: form.get("email"),
+          password: form.get("password"),
+        }),
       })
       setAuthenticated(true)
       setAuthReady(true)
@@ -122,6 +153,7 @@ function App() {
       setProfile(profileData)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Falha na autenticação")
+      setMessageKind("error")
     } finally {
       setLoading(false)
     }
@@ -217,24 +249,64 @@ function App() {
           <img className="auth-brand-mark" src="/brand/printflow-mark.svg" alt="Símbolo Printflow" />
           <h1>Printflow</h1>
           <p>Gestão inteligente de impressão</p>
-          <div className="tabs">
-            <button className={mode === "login" ? "active" : ""} onClick={() => setMode("login")}>Entrar</button>
-            <button className={mode === "register" ? "active" : ""} onClick={() => setMode("register")}>Criar conta</button>
+          <div className="auth-flow-title">
+            {mode === "login" && <strong>Boas-vindas</strong>}
+            {mode === "forgot" && <strong>Recuperar senha</strong>}
+            {mode === "reset" && <strong>Definir nova senha</strong>}
           </div>
           <form onSubmit={authenticate}>
-            {mode === "register" && (
+            {mode !== "reset" && (
+              <label>E-mail<input name="email" type="email" required /></label>
+            )}
+            {mode === "login" && (
               <>
-                <label>Seu nome<input name="user_name" required minLength={3} /></label>
-                <label>Empresa<input name="company_name" required minLength={2} /></label>
+                <label>Senha<input name="password" type="password" required minLength={8} /></label>
+                <button
+                  type="button"
+                  className="auth-link"
+                  onClick={() => {
+                    setMode("forgot")
+                    setMessage("")
+                  }}
+                >
+                  Esqueceu a senha?
+                </button>
               </>
             )}
-            <label>E-mail<input name="email" type="email" required /></label>
-            <label>Senha<input name="password" type="password" required minLength={8} /></label>
+            {mode === "forgot" && (
+              <p className="auth-helper">
+                Informe seu e-mail. Se ele estiver cadastrado, enviaremos um link válido por 15 minutos.
+              </p>
+            )}
+            {mode === "reset" && (
+              <>
+                <label>Nova senha<input name="new_password" type="password" required minLength={8} maxLength={128} /></label>
+                <label>Confirmar nova senha<input name="confirm_password" type="password" required minLength={8} maxLength={128} /></label>
+              </>
+            )}
             <button className="primary" disabled={loading}>
-              {loading ? "Processando..." : mode === "login" ? "Entrar" : "Criar conta e empresa"}
+              {loading
+                ? "Processando..."
+                : mode === "login"
+                  ? "Entrar"
+                  : mode === "forgot"
+                    ? "Enviar instruções"
+                    : "Redefinir senha"}
             </button>
+            {mode !== "login" && (
+              <button
+                type="button"
+                className="auth-link auth-link-back"
+                onClick={() => {
+                  setMode("login")
+                  setMessage("")
+                }}
+              >
+                Voltar para o login
+              </button>
+            )}
           </form>
-          {message && <div className="message error">{message}</div>}
+          {message && <div className={`message ${messageKind}`}>{message}</div>}
         </section>
       </main>
     )
