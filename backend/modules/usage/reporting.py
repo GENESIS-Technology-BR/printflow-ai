@@ -11,10 +11,13 @@ from .model import PrinterUsageDaily
 
 
 BRAND_NAVY = "0B2A52"
-BRAND_BLUE = "0A6ED1"
+BRAND_BLUE = "1769AA"
 BRAND_TEAL = "25C6B7"
 BRAND_GREEN = "21D89B"
 BRAND_MUTED = "6B7C93"
+BRAND_LIGHT = "F7F9FC"
+BRAND_BORDER = "D9E2EC"
+BRAND_ROW_ALT = "FBFCFE"
 
 
 def _ip_sort_key(value: str | None) -> tuple[int, int | str]:
@@ -273,14 +276,14 @@ def build_excel_report(
 
     sheet.merge_cells("A2:J2")
     sheet["A2"] = f"Empresa: {company_name}"
-    sheet["A2"].font = Font(size=10, color=BRAND_MUTED)
+    sheet["A2"].font = Font(size=9, color=BRAND_MUTED)
 
     sheet.merge_cells("A3:J3")
     sheet["A3"] = (
         f"Período: {start.strftime('%d/%m/%Y')} "
         f"a {end.strftime('%d/%m/%Y')}"
     )
-    sheet["A3"].font = Font(size=10, color=BRAND_MUTED)
+    sheet["A3"].font = Font(size=9, color=BRAND_MUTED)
 
     sheet.row_dimensions[1].height = 25
     sheet.row_dimensions[2].height = 18
@@ -289,8 +292,8 @@ def build_excel_report(
 
     logo_stream = _build_brand_icon_png()
     logo = XLImage(logo_stream)
-    logo.width = 48
-    logo.height = 48
+    logo.width = 40
+    logo.height = 40
     sheet.add_image(logo, "L1")
 
     per_page_cost = sum(
@@ -314,12 +317,12 @@ def build_excel_report(
         ("Total consolidado", _format_currency(total_cost), "I", "J"),
         ("Páginas no período", _format_number(total_pages), "K", "M"),
     ]
-    card_fill = PatternFill("solid", fgColor="F4F8FC")
+    card_fill = PatternFill("solid", fgColor=BRAND_LIGHT)
     card_border = Border(
-        top=Side(style="thin", color="D7E1EA"),
-        bottom=Side(style="thin", color="D7E1EA"),
-        left=Side(style="thin", color="D7E1EA"),
-        right=Side(style="thin", color="D7E1EA"),
+        top=Side(style="thin", color=BRAND_BORDER),
+        bottom=Side(style="thin", color=BRAND_BORDER),
+        left=Side(style="thin", color=BRAND_BORDER),
+        right=Side(style="thin", color=BRAND_BORDER),
     )
     for label, value, start_col, end_col in summary_labels:
         sheet.merge_cells(f"{start_col}5:{end_col}5")
@@ -328,8 +331,8 @@ def build_excel_report(
         value_cell = sheet[f"{start_col}6"]
         label_cell.value = label
         value_cell.value = value
-        label_cell.font = Font(size=9, bold=True, color=BRAND_MUTED)
-        value_cell.font = Font(size=13, bold=True, color=BRAND_NAVY)
+        label_cell.font = Font(size=8, bold=False, color=BRAND_MUTED)
+        value_cell.font = Font(size=12, bold=True, color=BRAND_NAVY)
         label_cell.alignment = Alignment(horizontal="center", vertical="center")
         value_cell.alignment = Alignment(horizontal="center", vertical="center")
         for row in (5, 6):
@@ -352,7 +355,7 @@ def build_excel_report(
 
     for column, label in enumerate(headers, start=1):
         cell = sheet.cell(row=header_row, column=column, value=label)
-        cell.font = Font(bold=True, color="FFFFFF")
+        cell.font = Font(size=9, bold=True, color="FFFFFF")
         cell.fill = PatternFill("solid", fgColor=BRAND_BLUE)
         cell.alignment = Alignment(
             horizontal="center",
@@ -360,7 +363,7 @@ def build_excel_report(
             wrap_text=True,
             shrink_to_fit=False,
         )
-    sheet.row_dimensions[header_row].height = 34
+    sheet.row_dimensions[header_row].height = 30
 
     for row_index, item in enumerate(rows, start=header_row + 1):
         values = [
@@ -373,11 +376,12 @@ def build_excel_report(
             item["pages_printed"],
             item["cost_per_page"], item["estimated_cost"],
         ]
-        row_fill = PatternFill("solid", fgColor="F8FAFC") if row_index % 2 == 0 else PatternFill(fill_type=None)
+        row_fill = PatternFill("solid", fgColor=BRAND_ROW_ALT) if row_index % 2 == 0 else PatternFill("solid", fgColor="FFFFFF")
         for column, value in enumerate(values, start=1):
             cell = sheet.cell(row=row_index, column=column, value=value)
             cell.fill = row_fill
-            cell.border = Border(bottom=Side(style="hair", color="E5EAF0"))
+            cell.font = Font(size=9, color="1F2937")
+            cell.border = Border(bottom=Side(style="hair", color=BRAND_BORDER))
             if column in {9, 10, 11, 12, 13}:
                 cell.alignment = Alignment(horizontal="right", vertical="center")
             elif column in {2, 7, 8}:
@@ -388,9 +392,10 @@ def build_excel_report(
                 cell.number_format = 'R$ #,##0.0000'
             elif column == 13:
                 cell.number_format = 'R$ #,##0.00'
-        sheet.row_dimensions[row_index].height = 21
+        sheet.row_dimensions[row_index].height = 22
 
     sheet.freeze_panes = "A9"
+    sheet.sheet_view.tabSelected = True
     sheet.auto_filter.ref = f"A{header_row}:M{max(header_row, header_row + len(rows))}"
     widths = [24, 12, 22, 18, 15, 22, 16, 16, 13, 13, 18, 15, 18]
     for index, width in enumerate(widths, start=1):
@@ -412,7 +417,7 @@ def build_excel_report(
     ]
     for column, label in enumerate(detail_headers, start=1):
         cell = detail.cell(row=1, column=column, value=label)
-        cell.font = Font(bold=True, color="FFFFFF")
+        cell.font = Font(size=9, bold=True, color="FFFFFF")
         cell.fill = PatternFill("solid", fgColor=BRAND_BLUE)
 
     for row_index, usage in enumerate(
@@ -426,8 +431,14 @@ def build_excel_report(
             usage.opening_page_count, usage.closing_page_count,
             usage.pages_printed,
         ]
+        detail_fill = PatternFill("solid", fgColor=BRAND_ROW_ALT) if row_index % 2 == 0 else PatternFill("solid", fgColor="FFFFFF")
         for column, value in enumerate(values, start=1):
-            detail.cell(row=row_index, column=column, value=value)
+            cell = detail.cell(row=row_index, column=column, value=value)
+            cell.fill = detail_fill
+            cell.font = Font(size=9, color="1F2937")
+            cell.border = Border(bottom=Side(style="hair", color=BRAND_BORDER))
+            cell.alignment = Alignment(vertical="center")
+        detail.row_dimensions[row_index].height = 21
 
     detail.freeze_panes = "A2"
     detail.auto_filter.ref = f"A1:H{max(1, detail.max_row)}"
