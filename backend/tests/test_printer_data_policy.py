@@ -275,6 +275,20 @@ def test_heartbeat_after_write_interval_is_persisted():
     assert _should_persist_heartbeat(company, _heartbeat_payload(), now) is True
 
 
+def test_heartbeat_handles_naive_postgres_timestamp():
+    now = datetime.now(timezone.utc)
+    company = _heartbeat_company(now)
+    company.agent_last_seen = (
+        now - timedelta(seconds=301)
+    ).replace(tzinfo=None)
+
+    assert _should_persist_heartbeat(
+        company,
+        _heartbeat_payload(),
+        now,
+    ) is True
+
+
 def test_dashboard_serializes_fixed_monthly_cost_without_page_rate():
     printer = SimpleNamespace(
         id=109, uuid="canon-fixed", ip="10.2.0.109", name="Canon iPF-770",
