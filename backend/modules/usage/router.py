@@ -95,17 +95,22 @@ def _merge_historical_printers(
     )
 
 
-def _is_label_printer(printer: Printer) -> bool:
-    text = f"{printer.manufacturer or ''} {printer.model or ''} {printer.name or ''} {printer.custom_name or ''}".lower()
-    return any(marker in text for marker in ("zebra", "zt230", "zpl"))
+def _is_guerra_excluded_printer(printer: Printer) -> bool:
+    ip = (printer.ip or "").strip()
+    text = f"{printer.manufacturer or ''} {printer.model or ''} {printer.name or ''} {printer.custom_name or ''} {printer.hostname or ''}".lower()
+    return (
+        ip == "10.2.128.31"
+        or "deskjet 2700" in text
+        or any(marker in text for marker in ("zebra", "zt230", "zpl"))
+    )
 
 
-def _exclude_label_printers_for_company(company: Company | None, printers: list[Printer]) -> list[Printer]:
-    """Regra comercial temporaria: Guerra nao contabiliza impressoras de etiquetas."""
+def _exclude_commercial_printers_for_company(company: Company | None, printers: list[Printer]) -> list[Printer]:
+    """Aplica exclusoes comerciais especificas do contrato da Guerra."""
     company_name = (company.name if company else "").strip().lower()
     if "guerra" not in company_name:
         return printers
-    return [printer for printer in printers if not _is_label_printer(printer)]
+    return [printer for printer in printers if not _is_guerra_excluded_printer(printer)]
 
 
 def _fixed_cost_for_period(monthly_cost: float, start: date, end: date) -> float:
@@ -119,7 +124,7 @@ def _apply_cost_models(rows: list[dict], printers: list[Printer], start: date, e
     for row in rows:
         printer = printer_map.get(row["printer_uuid"])
         if not printer: continue
-        if _is_label_printer(printer):
+        if _is_guerra_excluded_printer(printer):
             row["cost_per_page"] = 0.0; row["estimated_cost"] = 0.0; row["cost_source"] = "not_applicable"; continue
         if (printer.cost_model or "per_page") == "fixed_monthly" and printer.fixed_monthly_cost is not None:
             row["cost_per_page"] = 0.0; row["estimated_cost"] = _fixed_cost_for_period(float(printer.fixed_monthly_cost), start, end); row["cost_source"] = "fixed_monthly"
@@ -157,7 +162,7 @@ def _report_data(db: Session, current_user: User, start: date, end: date, printe
         history,
     )
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
-    printers = _exclude_label_printers_for_company(company, printers)
+    printers = _exclude_commercial_printers_for_company(company, printers)
     history = _active_history(history, printers)
     default_cost = (company.default_bw_cost_per_page or company.default_cost_per_page) if company else 0
     rows = consolidate_usage(history, printers, default_cost)
@@ -195,7 +200,7 @@ def list_daily_usage(start_date: date | None = None, end_date: date | None = Non
         rows,
     )
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
-    printers = _exclude_label_printers_for_company(company, printers)
+    printers = _exclude_commercial_printers_for_company(company, printers)
     rows = _active_history(rows, printers)
     return [DailyUsageResponse(usage_date=u.usage_date, printer_uuid=u.printer_uuid, ip=u.ip, name=u.name, custom_name=u.custom_name, hostname=u.hostname, manufacturer=u.manufacturer, model=u.model, serial=u.serial, unit_name=u.unit_name, sector_name=u.sector_name, opening_page_count=u.opening_page_count, closing_page_count=u.closing_page_count, pages_printed=u.pages_printed, anomaly_count=u.anomaly_count, last_anomaly_type=u.last_anomaly_type, first_seen_at=u.first_seen_at, last_seen_at=u.last_seen_at) for u in rows]
 
