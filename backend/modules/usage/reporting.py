@@ -263,8 +263,8 @@ def build_excel_report(
     sheet = workbook.active
     sheet.title = "Resumo"
     sheet.sheet_view.showGridLines = False
-    sheet.sheet_view.zoomScale = 85
-    sheet.sheet_view.zoomScaleNormal = 85
+    sheet.sheet_view.zoomScale = 90
+    sheet.sheet_view.zoomScaleNormal = 90
 
     sheet["A1"] = "Printflow - Relatório de Impressão"
     sheet["A1"].font = Font(size=18, bold=True, color=BRAND_NAVY)
@@ -275,8 +275,6 @@ def build_excel_report(
         f"a {end.strftime('%d/%m/%Y')}"
     )
     sheet["A3"].font = Font(size=10, color=BRAND_MUTED)
-    sheet["A4"] = f"Escopo: {report_scope}"
-    sheet["A4"].font = Font(size=10, color=BRAND_MUTED)
 
     logo_stream = _build_brand_icon_png()
     logo = XLImage(logo_stream)
@@ -316,26 +314,20 @@ def build_excel_report(
         sheet.merge_cells(start_row=6, start_column=col, end_row=6, end_column=col + 1)
         sheet.merge_cells(start_row=7, start_column=col, end_row=7, end_column=col + 1)
 
-    sheet["A8"] = (
-        "Observação: a tarifa colorida é contratual e só entra no cálculo automático "
-        "quando houver contador colorido separado."
-    )
-    sheet["A8"].font = Font(size=9, italic=True, color=BRAND_MUTED)
-    sheet.merge_cells("A8:M8")
-
     headers = [
         "Impressora", "IP", "Modelo", "Serial",
         "Unidade", "Setor", "Primeira leitura", "Última leitura",
         "Contador inicial", "Contador final", "Impressões no período",
         "Custo/página (R$)", "Custo estimado (R$)",
     ]
-    header_row = 10
+    header_row = 9
 
     for column, label in enumerate(headers, start=1):
         cell = sheet.cell(row=header_row, column=column, value=label)
         cell.font = Font(bold=True, color="FFFFFF")
         cell.fill = PatternFill("solid", fgColor=BRAND_BLUE)
-        cell.alignment = Alignment(horizontal="center")
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    sheet.row_dimensions[header_row].height = 30
 
     for row_index, item in enumerate(rows, start=header_row + 1):
         values = [
@@ -350,14 +342,15 @@ def build_excel_report(
         ]
         for column, value in enumerate(values, start=1):
             cell = sheet.cell(row=row_index, column=column, value=value)
+            cell.alignment = Alignment(vertical="center", wrap_text=column in {1, 3, 5, 6})
             if column == 12:
                 cell.number_format = 'R$ #,##0.0000'
             elif column == 13:
                 cell.number_format = 'R$ #,##0.00'
 
-    sheet.freeze_panes = "A11"
+    sheet.freeze_panes = "A10"
     sheet.auto_filter.ref = f"A{header_row}:M{max(header_row, header_row + len(rows))}"
-    widths = [30, 16, 28, 22, 20, 20, 16, 16, 16, 16, 20, 18, 20]
+    widths = [26, 14, 26, 20, 18, 24, 17, 17, 16, 16, 22, 19, 22]
     for index, width in enumerate(widths, start=1):
         sheet.column_dimensions[get_column_letter(index)].width = width
 
