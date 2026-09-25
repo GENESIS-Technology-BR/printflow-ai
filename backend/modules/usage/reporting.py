@@ -263,8 +263,8 @@ def build_excel_report(
     sheet = workbook.active
     sheet.title = "Resumo"
     sheet.sheet_view.showGridLines = False
-    sheet.sheet_view.zoomScale = 95
-    sheet.sheet_view.zoomScaleNormal = 95
+    sheet.sheet_view.zoomScale = 92
+    sheet.sheet_view.zoomScaleNormal = 92
 
     sheet.merge_cells("A1:J1")
     sheet["A1"] = "Printflow - Relatório de Impressão"
@@ -344,9 +344,9 @@ def build_excel_report(
 
     headers = [
         "Impressora", "IP", "Modelo", "Serial",
-        "Unidade", "Setor", "Primeira leitura", "Última leitura",
-        "Contador inicial", "Contador final", "Impressões no período",
-        "Custo/página (R$)", "Custo estimado (R$)",
+        "Unidade", "Setor", "Leitura inicial", "Leitura final",
+        "Inicial", "Final", "Impressões",
+        "Custo/pág.", "Custo estimado",
     ]
     header_row = 8
 
@@ -354,8 +354,13 @@ def build_excel_report(
         cell = sheet.cell(row=header_row, column=column, value=label)
         cell.font = Font(bold=True, color="FFFFFF")
         cell.fill = PatternFill("solid", fgColor=BRAND_BLUE)
-        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    sheet.row_dimensions[header_row].height = 30
+        cell.alignment = Alignment(
+            horizontal="center",
+            vertical="center",
+            wrap_text=True,
+            shrink_to_fit=False,
+        )
+    sheet.row_dimensions[header_row].height = 34
 
     for row_index, item in enumerate(rows, start=header_row + 1):
         values = [
@@ -387,7 +392,7 @@ def build_excel_report(
 
     sheet.freeze_panes = "A9"
     sheet.auto_filter.ref = f"A{header_row}:M{max(header_row, header_row + len(rows))}"
-    widths = [25, 13, 24, 19, 16, 23, 16, 16, 15, 15, 20, 18, 21]
+    widths = [24, 12, 22, 18, 15, 22, 16, 16, 13, 13, 18, 15, 18]
     for index, width in enumerate(widths, start=1):
         sheet.column_dimensions[get_column_letter(index)].width = width
 
