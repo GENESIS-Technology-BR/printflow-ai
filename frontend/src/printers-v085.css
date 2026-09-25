@@ -260,3 +260,42 @@
   }
 }
 
+
+
+
+/* PRINTFLOW_PRINTER_ALERT_CARD_BACKGROUND */
+.printers-workspace .printer-card.printer-alert-warning{
+  background:#fff7db!important;
+  border-color:#f0d37a!important;
+  box-shadow:inset 4px 0 0 #e0aa12!important;
+}
+.printers-workspace .printer-card.printer-alert-warning .printer-clean-summary,
+.printers-workspace .printer-card.printer-alert-warning .printer-clean-identity,
+.printers-workspace .printer-card.printer-alert-warning .printer-clean-stat{
+  background:transparent!important;
+}
+.printers-workspace .printer-card.printer-alert-warning:hover,
+.printers-workspace .printer-card.printer-alert-warning:hover .printer-clean-summary{
+  background:#fff2c7!important;
+}
+
+.printers-workspace .printer-card.printer-alert-critical{
+  background:#ffe8ea!important;
+  border-color:#e4a2a9!important;
+  box-shadow:inset 4px 0 0 #d83a45!important;
+}
+.printers-workspace .printer-card.printer-alert-critical .printer-clean-summary,
+.printers-workspace .printer-card.printer-alert-critical .printer-clean-identity,
+.printers-workspace .printer-card.printer-alert-critical .printer-clean-stat{
+  background:transparent!important;
+}
+.printers-workspace .printer-card.printer-alert-critical:hover,
+.printers-workspace .printer-card.printer-alert-critical:hover .printer-clean-summary{
+  background:#ffdfe3!important;
+}
+
+.printers-workspace .printer-card.printer-alert-warning .printer-clean-details,
+.printers-workspace .printer-card.printer-alert-critical .printer-clean-details{
+  background:#fff!important;
+}
+
