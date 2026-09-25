@@ -53,8 +53,46 @@ def _current_printers(db: Session, company_id: int, printer_uuid: str | None = N
 
 
 def _active_history(history: list[PrinterUsageDaily], printers: list[Printer]) -> list[PrinterUsageDaily]:
-    active_uuids = {printer.uuid for printer in printers}
-    return [row for row in history if row.printer_uuid in active_uuids]
+    allowed_uuids = {printer.uuid for printer in printers}
+    return [row for row in history if row.printer_uuid in allowed_uuids]
+
+
+def _merge_historical_printers(
+    db: Session,
+    company_id: int,
+    current_printers: list[Printer],
+    history: list[PrinterUsageDaily],
+) -> list[Printer]:
+    history_uuids = {
+        row.printer_uuid
+        for row in history
+        if row.printer_uuid
+    }
+    if not history_uuids:
+        return current_printers
+
+    historical_printers = (
+        db.query(Printer)
+        .filter(
+            Printer.company_id == company_id,
+            Printer.uuid.in_(history_uuids),
+        )
+        .all()
+    )
+
+    merged = {
+        printer.uuid: printer
+        for printer in current_printers
+        if printer.uuid
+    }
+    for printer in historical_printers:
+        if printer.uuid:
+            merged[printer.uuid] = printer
+
+    return sorted(
+        merged.values(),
+        key=lambda printer: (printer.name or "").lower(),
+    )
 
 
 def _is_label_printer(printer: Printer) -> bool:
@@ -96,10 +134,31 @@ def _validate_report_filters(db: Session, company_id: int, printer_uuid: str | N
 
 def _report_data(db: Session, current_user: User, start: date, end: date, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None):
     _validate_report_filters(db, current_user.company_id, printer_uuid, unit_name, sector_name)
-    printers = _current_printers(db, current_user.company_id, printer_uuid, unit_name, sector_name)
+    history = _usage_query(
+        db,
+        current_user.company_id,
+        start,
+        end,
+        printer_uuid,
+        unit_name,
+        sector_name,
+    ).all()
+    printers = _current_printers(
+        db,
+        current_user.company_id,
+        printer_uuid,
+        unit_name,
+        sector_name,
+    )
+    printers = _merge_historical_printers(
+        db,
+        current_user.company_id,
+        printers,
+        history,
+    )
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
     printers = _exclude_label_printers_for_company(company, printers)
-    history = _active_history(_usage_query(db, current_user.company_id, start, end, printer_uuid, unit_name, sector_name).all(), printers)
+    history = _active_history(history, printers)
     default_cost = (company.default_bw_cost_per_page or company.default_cost_per_page) if company else 0
     rows = consolidate_usage(history, printers, default_cost)
     return _apply_cost_models(rows, printers, start, end), history
@@ -113,10 +172,31 @@ def _report_rows(db: Session, current_user: User, start: date, end: date, printe
 def list_daily_usage(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     start, end = _resolve_period(start_date, end_date)
     _validate_report_filters(db, current_user.company_id, printer_uuid, unit_name, sector_name)
-    printers = _current_printers(db, current_user.company_id, printer_uuid, unit_name, sector_name)
+    rows = _usage_query(
+        db,
+        current_user.company_id,
+        start,
+        end,
+        printer_uuid,
+        unit_name,
+        sector_name,
+    ).all()
+    printers = _current_printers(
+        db,
+        current_user.company_id,
+        printer_uuid,
+        unit_name,
+        sector_name,
+    )
+    printers = _merge_historical_printers(
+        db,
+        current_user.company_id,
+        printers,
+        rows,
+    )
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
     printers = _exclude_label_printers_for_company(company, printers)
-    rows = _active_history(_usage_query(db, current_user.company_id, start, end, printer_uuid, unit_name, sector_name).all(), printers)
+    rows = _active_history(rows, printers)
     return [DailyUsageResponse(usage_date=u.usage_date, printer_uuid=u.printer_uuid, ip=u.ip, name=u.name, custom_name=u.custom_name, hostname=u.hostname, manufacturer=u.manufacturer, model=u.model, serial=u.serial, unit_name=u.unit_name, sector_name=u.sector_name, opening_page_count=u.opening_page_count, closing_page_count=u.closing_page_count, pages_printed=u.pages_printed, anomaly_count=u.anomaly_count, last_anomaly_type=u.last_anomaly_type, first_seen_at=u.first_seen_at, last_seen_at=u.last_seen_at) for u in rows]
 
 
