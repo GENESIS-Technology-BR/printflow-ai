@@ -316,10 +316,10 @@ def build_excel_report(
         "quando houver contador colorido separado."
     )
     sheet["A8"].font = Font(size=9, italic=True, color=BRAND_MUTED)
-    sheet.merge_cells("A8:P8")
+    sheet.merge_cells("A8:M8")
 
     headers = [
-        "Impressora", "IP", "Fabricante", "Modelo", "Serial",
+        "Impressora", "IP", "Modelo", "Serial",
         "Unidade", "Setor", "Primeira leitura", "Última leitura",
         "Contador inicial", "Contador final", "Impressões no período",
         "Custo/página (R$)", "Custo estimado (R$)",
@@ -335,7 +335,7 @@ def build_excel_report(
     for row_index, item in enumerate(rows, start=header_row + 1):
         values = [
             item["display_name"], item["ip"] or "",
-            item["manufacturer"] or "", item["model"] or "", item["serial"] or "",
+            item["model"] or "", item["serial"] or "",
             item["unit_name"] or "", item["sector_name"] or "",
             item["first_usage_date"].strftime("%d/%m/%Y") if item["first_usage_date"] else "Sem histórico",
             item["last_usage_date"].strftime("%d/%m/%Y") if item["last_usage_date"] else "Sem histórico",
@@ -345,14 +345,14 @@ def build_excel_report(
         ]
         for column, value in enumerate(values, start=1):
             cell = sheet.cell(row=row_index, column=column, value=value)
-            if column == 13:
+            if column == 12:
                 cell.number_format = 'R$ #,##0.0000'
-            elif column == 14:
+            elif column == 13:
                 cell.number_format = 'R$ #,##0.00'
 
     sheet.freeze_panes = "A11"
-    sheet.auto_filter.ref = f"A{header_row}:N{max(header_row, header_row + len(rows))}"
-    widths = [30, 16, 18, 28, 22, 20, 20, 16, 16, 16, 16, 20, 18, 20]
+    sheet.auto_filter.ref = f"A{header_row}:M{max(header_row, header_row + len(rows))}"
+    widths = [30, 16, 28, 22, 20, 20, 16, 16, 16, 16, 20, 18, 20]
     for index, width in enumerate(widths, start=1):
         sheet.column_dimensions[get_column_letter(index)].width = width
 
