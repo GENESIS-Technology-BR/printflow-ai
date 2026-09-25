@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import logging
@@ -226,6 +227,63 @@ class PrintflowAgentService:
                 len(discovered_devices),
             )
 
+        known_ips = self.api_client.get_known_printer_ips()
+        valid_known_ips: list[str] = []
+        for raw_ip in known_ips:
+            try:
+                parsed_ip = ipaddress.ip_address(raw_ip)
+            except ValueError:
+                continue
+            if (
+                not isinstance(parsed_ip, ipaddress.IPv4Address)
+                or not parsed_ip.is_private
+                or parsed_ip.is_loopback
+                or parsed_ip.is_link_local
+                or parsed_ip.is_multicast
+            ):
+                continue
+            normalized_ip = str(parsed_ip)
+            if normalized_ip not in discovered_devices:
+                valid_known_ips.append(normalized_ip)
+
+        if valid_known_ips:
+            self.logger.info(
+                "SAFE DISCOVERY: revalidando %s IP(s) conhecido(s) pela API.",
+                len(valid_known_ips),
+            )
+
+            known_workers = min(max(len(valid_known_ips), 1), 16)
+
+            def validate_known_ip(ip_address: str):
+                return scan_network(
+                    cidr=f"{ip_address}/32",
+                    timeout=self.settings.network_timeout,
+                    workers=1,
+                    maximum_hosts=1,
+                    resolve_names=self.settings.resolve_names,
+                )
+
+            with ThreadPoolExecutor(max_workers=known_workers) as executor:
+                futures = {
+                    executor.submit(validate_known_ip, ip_address): ip_address
+                    for ip_address in valid_known_ips
+                }
+                for future in as_completed(futures):
+                    ip_address = futures[future]
+                    try:
+                        for device in future.result():
+                            current = discovered_devices.get(device.ip_address)
+                            if (
+                                current is None
+                                or device.confidence_score > current.confidence_score
+                            ):
+                                discovered_devices[device.ip_address] = device
+                    except Exception as error:
+                        self.logger.warning(
+                            "SAFE DISCOVERY: falha ao revalidar %s: %s",
+                            ip_address,
+                            error,
+                        )
 
         self.logger.info(
             "SAFE DISCOVERY V3.4: complementando candidatos Windows com "
