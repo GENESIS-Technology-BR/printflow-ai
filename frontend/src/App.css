@@ -609,3 +609,209 @@ body {
 .auth-helper{margin:0 0 14px!important;color:#667085!important;font-size:13px;line-height:1.45}
 .auth-card form{display:flex;flex-direction:column}
 .auth-card form label{display:flex;flex-direction:column;gap:6px}
+
+
+
+/* PRINTFLOW_AUTH_ERP_REFINEMENT */
+.auth-page{
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:48px 20px 72px;
+  background:#f4f4f4;
+}
+.auth-card.auth-card-erp{
+  width:min(520px,94vw);
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.auth-brand{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  margin-bottom:38px;
+}
+.auth-brand-mark{
+  width:54px;
+  height:54px;
+}
+.auth-brand strong{
+  color:#25364a;
+  font-size:30px;
+  line-height:1;
+  font-weight:800;
+  letter-spacing:-.03em;
+}
+.auth-product-name{
+  margin-bottom:46px;
+  text-align:center;
+  color:#536579;
+  font-size:28px;
+  font-weight:400;
+  letter-spacing:-.02em;
+}
+.auth-flow-title{
+  margin:0 0 42px;
+  text-align:center;
+  color:#0067b9;
+  font-size:25px;
+  line-height:1.2;
+}
+.auth-flow-title strong{
+  font-weight:500;
+}
+.auth-card.auth-card-erp form{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+.auth-card.auth-card-erp form label{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  color:#111827;
+  font-size:17px;
+  font-weight:750;
+}
+.auth-input-wrap{
+  position:relative;
+}
+.auth-input-wrap::before{
+  position:absolute;
+  top:50%;
+  left:17px;
+  transform:translateY(-50%);
+  display:grid;
+  width:24px;
+  height:24px;
+  place-items:center;
+  color:#0067b9;
+  font-size:21px;
+  line-height:1;
+  pointer-events:none;
+}
+.auth-input-user::before{
+  content:"◯";
+  border:2px solid #0067b9;
+  border-radius:50%;
+  width:17px;
+  height:17px;
+  font-size:0;
+}
+.auth-input-user::after{
+  content:"";
+  position:absolute;
+  left:13px;
+  bottom:13px;
+  width:27px;
+  height:13px;
+  border:2px solid #0067b9;
+  border-top-left-radius:20px;
+  border-top-right-radius:20px;
+  border-bottom:0;
+  pointer-events:none;
+}
+.auth-input-password::before{
+  content:"▢";
+  font-size:27px;
+}
+.auth-card.auth-card-erp input{
+  min-height:62px;
+  padding:0 18px 0 54px;
+  border:1px solid #747474;
+  border-radius:4px;
+  background:#fff;
+  color:#1f2937;
+  font-size:18px;
+  outline:none;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.auth-card.auth-card-erp input::placeholder{
+  color:#a7adb5;
+}
+.auth-card.auth-card-erp input:focus{
+  border-color:#0067b9;
+  box-shadow:0 0 0 2px rgba(0,103,185,.10);
+}
+.auth-card.auth-card-erp .primary{
+  min-height:61px;
+  margin-top:0;
+  border-radius:4px;
+  background:#0b67b2;
+  color:#fff;
+  font-size:18px;
+  font-weight:700;
+}
+.auth-card.auth-card-erp .primary:hover{
+  background:#075a9d;
+}
+.auth-card.auth-card-erp .primary:disabled{
+  background:#b7b7b7;
+  color:#4b4b4b;
+  cursor:not-allowed;
+}
+.auth-forgot-link{
+  align-self:center;
+  margin:10px 0 0;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#0067b9;
+  text-align:center;
+  font-size:14px;
+  font-weight:700;
+}
+.auth-link-back{
+  align-self:center;
+  margin:4px 0 0;
+  color:#0067b9;
+  font-size:14px;
+  font-weight:700;
+}
+.auth-helper{
+  margin:-4px 0 2px!important;
+  color:#667085!important;
+  font-size:14px;
+  line-height:1.55;
+  text-align:center;
+}
+.auth-card.auth-card-erp .message{
+  margin-top:18px;
+  border-radius:4px;
+  text-align:center;
+}
+@media(max-width:640px){
+  .auth-page{
+    padding:34px 18px 56px;
+  }
+  .auth-brand{
+    margin-bottom:28px;
+  }
+  .auth-brand-mark{
+    width:46px;
+    height:46px;
+  }
+  .auth-brand strong{
+    font-size:25px;
+  }
+  .auth-product-name{
+    margin-bottom:34px;
+    font-size:23px;
+  }
+  .auth-flow-title{
+    margin-bottom:30px;
+    font-size:22px;
+  }
+  .auth-card.auth-card-erp form label{
+    font-size:15px;
+  }
+  .auth-card.auth-card-erp input{
+    min-height:56px;
+    font-size:16px;
+  }
+}
+
