@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.app.config.settings import settings
-from backend.app.admin_recovery import apply_admin_recovery_from_env
 from backend.app.database.connection import Base, engine
 from backend.app.database import models as database_models
 from backend.app.database.migrations import (
@@ -48,7 +47,6 @@ async def lifespan(app: FastAPI):
     ensure_user_security_columns(engine)
     clean_descriptive_printer_serials(engine)
     configure_guerra_pilot_financials(engine)
-    apply_admin_recovery_from_env()
     yield
 
 
