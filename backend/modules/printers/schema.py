@@ -79,3 +79,7 @@ class AgentHeartbeat(BaseModel):
     error: str | None = Field(default=None, max_length=500)
     inventory_complete: bool = False
     observed_printer_ips: list[str] = Field(default_factory=list, max_length=4096)
+
+
+class AgentKnownPrintersRequest(BaseModel):
+    agent_token: str = Field(pattern=r"^[A-Za-z0-9_-]{43}$")
