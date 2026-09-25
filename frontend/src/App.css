@@ -1000,3 +1000,94 @@ body {
   }
 }
 
+
+
+
+/* PRINTFLOW_AUTH_ERP_REFINEMENT_V3 */
+.auth-page{
+  place-items:start center!important;
+  padding:72px 24px 48px!important;
+}
+.auth-card.auth-card-erp{
+  width:min(495px,94vw)!important;
+}
+.auth-brand{
+  gap:8px!important;
+  margin:0 0 28px!important;
+}
+.auth-brand-mark{
+  width:44px!important;
+  height:44px!important;
+  flex:0 0 44px!important;
+}
+.auth-brand strong{
+  font-size:29px!important;
+  letter-spacing:-.035em!important;
+}
+.auth-product-name{
+  margin:0 0 28px!important;
+  font-size:20px!important;
+  line-height:1.2!important;
+}
+.auth-flow-title{
+  margin:0 0 30px!important;
+  font-size:22px!important;
+}
+.auth-card.auth-card-erp form{
+  gap:16px!important;
+}
+.auth-card.auth-card-erp form label{
+  gap:7px!important;
+  font-size:14px!important;
+}
+.auth-card.auth-card-erp input{
+  min-height:54px!important;
+  padding:0 16px!important;
+  font-size:16px!important;
+}
+.auth-card.auth-card-erp .primary{
+  min-height:54px!important;
+  margin-top:2px!important;
+  font-size:16px!important;
+}
+.auth-forgot-link{
+  margin:14px 0 0!important;
+  font-size:13px!important;
+}
+.auth-link-back{
+  margin:6px 0 0!important;
+  font-size:13px!important;
+}
+.auth-helper{
+  font-size:13px!important;
+}
+@media(max-width:640px){
+  .auth-page{
+    padding:42px 18px 40px!important;
+  }
+  .auth-brand{
+    margin-bottom:24px!important;
+  }
+  .auth-brand-mark{
+    width:40px!important;
+    height:40px!important;
+    flex-basis:40px!important;
+  }
+  .auth-brand strong{
+    font-size:25px!important;
+  }
+  .auth-product-name{
+    margin-bottom:24px!important;
+    font-size:18px!important;
+    white-space:normal!important;
+  }
+  .auth-flow-title{
+    margin-bottom:26px!important;
+    font-size:20px!important;
+  }
+  .auth-card.auth-card-erp input,
+  .auth-card.auth-card-erp .primary{
+    min-height:52px!important;
+  }
+}
+
