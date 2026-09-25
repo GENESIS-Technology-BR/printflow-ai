@@ -33,6 +33,14 @@ function currency(value: number): string { return new Intl.NumberFormat("pt-BR",
 function rate(value: number): string { return `R$ ${Number(value || 0).toFixed(4).replace(".", ",")}` }
 function modelLabel(manufacturer: string | null, model: string | null): string { const brand=(manufacturer||"").trim(),modelText=(model||"").trim(); if(!modelText)return brand||"-"; if(brand&&modelText.toLowerCase().startsWith(brand.toLowerCase()))return modelText; return[brand,modelText].filter(Boolean).join(" ")||"-" }
 function dateLabel(value:string):string{const[year,month,day]=value.split("-");if(!year||!month||!day)return value;return`${day}/${month}/${year}`}
+
+function reportMonthLabel(value:string):string{
+  const[year,month]=value.split("-");
+  const monthIndex=Number(month)-1;
+  if(!year||Number.isNaN(monthIndex)||monthIndex<0||monthIndex>11)return value;
+  const monthName=new Intl.DateTimeFormat("pt-BR",{month:"long"}).format(new Date(Number(year),monthIndex,1));
+  return `${monthName.charAt(0).toUpperCase()+monthName.slice(1)} ${year}`;
+}
 function isLabelPrinter(row:UsageReportRow):boolean{const text=`${row.manufacturer||""} ${row.model||""} ${row.display_name||""}`.toLowerCase();return text.includes("zebra")||text.includes("zt230")||text.includes("zpl")}
 
 export default function Reports({companyName,bwRate,colorRate}:ReportsProps){
@@ -46,7 +54,7 @@ export default function Reports({companyName,bwRate,colorRate}:ReportsProps){
  const totalPages=rows.reduce((t,r)=>t+r.pages_printed,0),fixedCost=rows.filter(r=>r.cost_source==="fixed_monthly").reduce((t,r)=>t+r.estimated_cost,0),variableCost=rows.filter(r=>r.cost_source!=="fixed_monthly"&&r.cost_source!=="not_applicable").reduce((t,r)=>t+r.estimated_cost,0),totalCost=fixedCost+variableCost;
  const selectedPrinter=printers.find(p=>p.uuid===printerUuid);const activeScope=[unitName?`Unidade: ${unitName}`:null,sectorName?`Setor: ${sectorName}`:null,selectedPrinter?`Impressora: ${selectedPrinter.custom_name||selectedPrinter.hostname||selectedPrinter.name}`:null].filter(Boolean);
  function applyPeriod(days:PeriodPreset){const end=new Date(),start=new Date(end);start.setDate(start.getDate()-(days-1));setStartDate(inputDate(start));setEndDate(inputDate(end))}function clearScope(){setUnitName("");setSectorName("");setPrinterUuid("")}
- async function handleDownload(format:"xlsx"|"pdf"){setDownloading(format);setError(null);try{const blob=await downloadUsageReport(format,filters),objectUrl=URL.createObjectURL(blob),link=document.createElement("a");link.href=objectUrl;link.download=`printflow-${startDate}-${endDate}.${format}`;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(objectUrl)}catch(e){setError(e instanceof Error?e.message:"Não foi possível baixar o relatório.")}finally{setDownloading(null)}}
+ async function handleDownload(format:"xlsx"|"pdf"){setDownloading(format);setError(null);try{const blob=await downloadUsageReport(format,filters),objectUrl=URL.createObjectURL(blob),link=document.createElement("a");link.href=objectUrl;link.download=`Printflow - Relatório - ${reportMonthLabel(endDate)}.${format}`;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(objectUrl)}catch(e){setError(e instanceof Error?e.message:"Não foi possível baixar o relatório.")}finally{setDownloading(null)}}
  return <div className="reports-page">
   <header className="reports-header"><div><small>GESTÃO DE CONSUMO E CUSTOS</small><h1>Relatórios</h1><p>{companyName}</p></div><span className="online">● Histórico ativo</span></header>
   <section className="reports-intro"><div><small>Printflow · FECHAMENTO COMERCIAL</small><h2>Consumo individual do parque</h2><p>Fechamento por equipamento com contadores, tarifas contratuais, custos fixos e total consolidado, pronto para Excel ou PDF.</p></div><div className="reports-downloads"><button type="button" onClick={()=>void handleDownload("xlsx")} disabled={loading||downloading!==null}>{downloading==="xlsx"?"Gerando...":"Exportar Excel"}</button><button type="button" className="pdf" onClick={()=>void handleDownload("pdf")} disabled={loading||downloading!==null}>{downloading==="pdf"?"Gerando...":"Exportar PDF"}</button></div></section>
