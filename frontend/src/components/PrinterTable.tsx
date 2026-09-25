@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import type {
   DashboardPrinter,
+  OperationalAlert,
   OrganizationSector,
   OrganizationUnit,
 } from "../services/api";
@@ -9,6 +10,7 @@ import type {
 import {
   createOrganizationSector,
   createOrganizationUnit,
+  getOperationalAlerts,
   getOrganizationSectors,
   getOrganizationUnits,
   updatePrinterCost,
@@ -113,15 +115,18 @@ export default function PrinterTable({
   const [catalogMessage, setCatalogMessage] = useState<string | null>(null);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [expandedPrinterKey, setExpandedPrinterKey] = useState<string | null>(null);
+  const [operationalAlerts, setOperationalAlerts] = useState<OperationalAlert[]>([]);
 
   async function loadOrganizationCatalog(): Promise<void> {
     try {
-      const [unitsResponse, sectorsResponse] = await Promise.all([
+      const [unitsResponse, sectorsResponse, alertsResponse] = await Promise.all([
         getOrganizationUnits(),
         getOrganizationSectors(),
+        getOperationalAlerts("open"),
       ]);
       setCatalogUnits(unitsResponse);
       setCatalogSectors(sectorsResponse);
+      setOperationalAlerts(alertsResponse);
       if (!newSectorUnitId && unitsResponse.length) {
         setNewSectorUnitId(String(unitsResponse[0].id));
       }
@@ -185,6 +190,29 @@ export default function PrinterTable({
       .map((printer) => currentOrganization(printer).sector_name)
       .filter(Boolean),
   ])).sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+  function printerAlertState(printer: DashboardPrinter): {
+    level: "none" | "warning" | "critical";
+    alerts: OperationalAlert[];
+  } {
+    const related = operationalAlerts.filter(
+      (alert) => printer.id !== null && alert.printer_id === printer.id,
+    );
+    const normalizedStatus = printer.status.toLowerCase();
+    const critical =
+      normalizedStatus === "offline" ||
+      normalizedStatus === "inactive" ||
+      printer.health_status === "critical" ||
+      related.some((alert) => alert.severity === "critical");
+    if (critical) return { level: "critical", alerts: related };
+
+    const warning =
+      printer.health_status === "attention" ||
+      related.some((alert) => alert.severity === "warning");
+    if (warning) return { level: "warning", alerts: related };
+
+    return { level: "none", alerts: related };
+  }
 
   const normalizedSearch = search.trim().toLowerCase();
   const filteredPrinters = printers.filter((printer) => {
@@ -502,15 +530,35 @@ export default function PrinterTable({
           const tonerLabel = printer.toner_percent === null ? "—" : `${printer.toner_percent}%`;
           const manufacturerBadge = getManufacturerBadge(printer);
           const manufacturerTitle = printer.manufacturer || "Fabricante não identificado";
+          const alertState = printerAlertState(printer);
+          const alertLabel = alertState.level === "critical" ? "Crítico" : "Atenção";
+          const alertTitle = alertState.alerts.length
+            ? alertState.alerts.map((alert) => alert.title).join(" · ")
+            : alertState.level === "critical"
+              ? "Impressora offline ou com saúde crítica."
+              : "Impressora requer atenção.";
 
           return (
-            <article className={`printer-card printer-clean-card ${expanded ? "is-expanded" : ""}`} key={key}>
+            <article
+              className={`printer-card printer-clean-card ${expanded ? "is-expanded" : ""} ${alertState.level !== "none" ? `printer-alert-${alertState.level}` : ""}`}
+              key={key}
+            >
               <div className="printer-clean-summary">
                 <div className="printer-clean-identity">
                   <span className="printer-clean-icon" title={manufacturerTitle} aria-label={`Fabricante: ${manufacturerTitle}`}>{manufacturerBadge}</span>
                   <div>
                     <div className="printer-clean-name-row">
                       <strong>{displayName}</strong>
+                      {alertState.level !== "none" && (
+                        <span
+                          className={`printer-attention-badge printer-attention-${alertState.level}`}
+                          title={alertTitle}
+                          aria-label={`${alertLabel}: ${alertTitle}`}
+                        >
+                          <i aria-hidden="true" />
+                          {alertLabel}
+                        </span>
+                      )}
                       <span className={`status-pill status-${printer.status}`}>
                         <i />{getStatusLabel(printer.status)}
                       </span>
