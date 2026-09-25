@@ -1,7 +1,9 @@
 import hmac
+import logging
 import os
 import time
 from collections import defaultdict, deque
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
@@ -14,10 +16,13 @@ from backend.modules.auth.schema import (
     MeResponse,
     RegisterRequest,
     SessionResponse,
+    PasswordResetRequest,
+    PasswordResetRequestResponse,
     PasswordResetIssueRequest,
     PasswordResetIssueResponse,
     PasswordResetConfirmRequest,
 )
+from backend.modules.auth.mailer import send_password_reset_email, smtp_configured
 from backend.modules.auth.security import (
     create_access_token,
     create_password_reset_token,
@@ -28,6 +33,7 @@ from backend.modules.auth.security import (
 from backend.modules.companies.model import Company
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+logger = logging.getLogger("printflow.auth")
 AUTH_COOKIE_NAME = "printflow_session"
 AUTH_COOKIE_MAX_AGE = 60 * 60
 
@@ -90,6 +96,10 @@ def _recovery_key() -> str:
 LOGIN_ATTEMPT_WINDOW_SECONDS = 300
 LOGIN_ATTEMPT_LIMIT = 5
 _login_attempts: dict[str, deque[float]] = defaultdict(deque)
+
+PASSWORD_RESET_REQUEST_WINDOW_SECONDS = 900
+PASSWORD_RESET_REQUEST_LIMIT = 3
+_password_reset_requests: dict[str, deque[float]] = defaultdict(deque)
 
 
 def _login_rate_limit_key(
@@ -198,6 +208,128 @@ def register(
         user_name=user.name,
         company_name=company.name,
     )
+
+
+def _enforce_password_reset_rate_limit(
+    request: Request,
+    email: str,
+) -> None:
+    now = time.monotonic()
+    client_ip = request.client.host if request.client else "unknown"
+    key = f"{client_ip}:{email.lower().strip()}"
+    bucket = _password_reset_requests[key]
+
+    while (
+        bucket
+        and now - bucket[0] > PASSWORD_RESET_REQUEST_WINDOW_SECONDS
+    ):
+        bucket.popleft()
+
+    if len(bucket) >= PASSWORD_RESET_REQUEST_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Muitas solicitações. Tente novamente em alguns minutos.",
+        )
+
+    bucket.append(now)
+
+
+@router.post(
+    "/forgot-password",
+    response_model=PasswordResetRequestResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def forgot_password(
+    payload: PasswordResetRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    normalized_email = str(payload.email).lower().strip()
+    _enforce_password_reset_rate_limit(request, normalized_email)
+
+    generic_message = (
+        "Se o e-mail estiver cadastrado e ativo, enviaremos as instruções "
+        "para redefinição da senha."
+    )
+
+    user = (
+        db.query(User)
+        .filter(
+            User.email == normalized_email,
+            User.active.is_(True),
+        )
+        .first()
+    )
+
+    if user is None:
+        return PasswordResetRequestResponse(message=generic_message)
+
+    reset_token = create_password_reset_token(
+        str(user.id),
+        user.password_reset_version,
+    )
+    public_url = os.getenv(
+        "PRINTFLOW_PUBLIC_URL",
+        "https://printflow-m84u.onrender.com",
+    ).strip().rstrip("/")
+    reset_url = (
+        f"{public_url}/?reset_token={quote(reset_token, safe='')}"
+    )
+
+    try:
+        delivered = send_password_reset_email(
+            recipient=user.email,
+            reset_url=reset_url,
+        )
+        if not delivered:
+            logger.warning(
+                "Recuperação solicitada, mas SMTP não está configurado."
+            )
+    except Exception:
+        logger.exception(
+            "Falha ao enviar e-mail de recuperação de senha."
+        )
+
+    return PasswordResetRequestResponse(message=generic_message)
+
+
+@router.post("/reset-password")
+def reset_password(
+    payload: PasswordResetConfirmRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        token_payload = decode_password_reset_token(
+            payload.reset_token
+        )
+        user_id = int(token_payload["sub"])
+        reset_version = int(token_payload["reset_version"])
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Link de recuperação inválido ou expirado",
+        )
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if (
+        user is None
+        or not user.active
+        or user.password_reset_version != reset_version
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Link de recuperação inválido ou já utilizado",
+        )
+
+    user.password_hash = hash_password(payload.new_password)
+    user.password_reset_version += 1
+    user.session_version += 1
+    db.commit()
+
+    return {
+        "status": "ok",
+        "message": "Senha redefinida com sucesso",
+    }
 
 
 @router.post("/login", response_model=SessionResponse)
