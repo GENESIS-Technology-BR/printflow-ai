@@ -342,7 +342,11 @@ function App() {
         {page === "control" ? (
           <ControlCenter />
         ) : page === "reports" ? (
-          <Reports companyName={company?.name || "Empresa monitorada"} />
+          <Reports
+            companyName={company?.name || "Empresa monitorada"}
+            bwRate={company?.default_bw_cost_per_page || company?.default_cost_per_page || 0}
+            colorRate={company?.default_color_cost_per_page || 0}
+          />
         ) : page === "printers" ? (
           <section className="printers-workspace-page">
             <header className="printers-workspace-header">
