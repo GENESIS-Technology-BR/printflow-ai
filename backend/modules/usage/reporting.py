@@ -350,7 +350,7 @@ def build_excel_report(
             elif column == 16:
                 cell.number_format = 'R$ #,##0.00'
 
-    sheet.freeze_panes = "A7"
+    sheet.freeze_panes = "A11"
     sheet.auto_filter.ref = f"A{header_row}:P{max(header_row, header_row + len(rows))}"
     widths = [30, 16, 24, 18, 28, 22, 20, 20, 16, 16, 16, 16, 20, 12, 18, 20]
     for index, width in enumerate(widths, start=1):
