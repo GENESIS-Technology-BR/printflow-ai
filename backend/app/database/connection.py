@@ -5,6 +5,12 @@ from backend.app.config.settings import settings
 
 
 database_url = settings.database_url
+if database_url.startswith("postgresql://"):
+    database_url = database_url.replace(
+        "postgresql://",
+        "postgresql+psycopg2://",
+        1,
+    )
 is_sqlite = database_url.startswith("sqlite")
 is_postgresql = database_url.startswith("postgresql")
 
