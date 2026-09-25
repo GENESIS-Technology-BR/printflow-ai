@@ -44,3 +44,5 @@ class UsageReportRow(BaseModel):
     cost_per_page: float = 0.0
     estimated_cost: float = 0.0
     cost_source: str = "company"
+    cost_model: str = "per_page"
+    fixed_monthly_cost: float = 0.0
