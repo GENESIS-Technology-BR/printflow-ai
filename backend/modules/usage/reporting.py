@@ -319,9 +319,9 @@ def build_excel_report(
     sheet.merge_cells("A8:P8")
 
     headers = [
-        "Impressora", "IP", "Hostname", "Fabricante", "Modelo", "Serial",
+        "Impressora", "IP", "Fabricante", "Modelo", "Serial",
         "Unidade", "Setor", "Primeira leitura", "Última leitura",
-        "Contador inicial", "Contador final", "Impressões no período", "Anomalias",
+        "Contador inicial", "Contador final", "Impressões no período",
         "Custo/página (R$)", "Custo estimado (R$)",
     ]
     header_row = 10
@@ -334,25 +334,25 @@ def build_excel_report(
 
     for row_index, item in enumerate(rows, start=header_row + 1):
         values = [
-            item["display_name"], item["ip"] or "", item["hostname"] or "",
+            item["display_name"], item["ip"] or "",
             item["manufacturer"] or "", item["model"] or "", item["serial"] or "",
             item["unit_name"] or "", item["sector_name"] or "",
             item["first_usage_date"].strftime("%d/%m/%Y") if item["first_usage_date"] else "Sem histórico",
             item["last_usage_date"].strftime("%d/%m/%Y") if item["last_usage_date"] else "Sem histórico",
             item["opening_page_count"], item["closing_page_count"],
-            item["pages_printed"], item["anomaly_count"],
+            item["pages_printed"],
             item["cost_per_page"], item["estimated_cost"],
         ]
         for column, value in enumerate(values, start=1):
             cell = sheet.cell(row=row_index, column=column, value=value)
-            if column == 15:
+            if column == 13:
                 cell.number_format = 'R$ #,##0.0000'
-            elif column == 16:
+            elif column == 14:
                 cell.number_format = 'R$ #,##0.00'
 
     sheet.freeze_panes = "A11"
-    sheet.auto_filter.ref = f"A{header_row}:P{max(header_row, header_row + len(rows))}"
-    widths = [30, 16, 24, 18, 28, 22, 20, 20, 16, 16, 16, 16, 20, 12, 18, 20]
+    sheet.auto_filter.ref = f"A{header_row}:N{max(header_row, header_row + len(rows))}"
+    widths = [30, 16, 18, 28, 22, 20, 20, 16, 16, 16, 16, 20, 18, 20]
     for index, width in enumerate(widths, start=1):
         sheet.column_dimensions[get_column_letter(index)].width = width
 
@@ -360,7 +360,7 @@ def build_excel_report(
     detail.sheet_view.showGridLines = False
     detail_headers = [
         "Data", "Impressora", "IP", "Unidade", "Setor",
-        "Contador abertura", "Contador fechamento", "Impressões", "Anomalias",
+        "Contador abertura", "Contador fechamento", "Impressões",
     ]
     for column, label in enumerate(detail_headers, start=1):
         cell = detail.cell(row=1, column=column, value=label)
@@ -376,14 +376,14 @@ def build_excel_report(
             _display_name(usage.custom_name, usage.hostname, usage.name, usage.ip),
             usage.ip, usage.unit_name or "", usage.sector_name or "",
             usage.opening_page_count, usage.closing_page_count,
-            usage.pages_printed, usage.anomaly_count,
+            usage.pages_printed,
         ]
         for column, value in enumerate(values, start=1):
             detail.cell(row=row_index, column=column, value=value)
 
     detail.freeze_panes = "A2"
-    detail.auto_filter.ref = f"A1:I{max(1, detail.max_row)}"
-    for index, width in enumerate([14, 30, 16, 20, 20, 18, 18, 14, 12], start=1):
+    detail.auto_filter.ref = f"A1:H{max(1, detail.max_row)}"
+    for index, width in enumerate([14, 30, 16, 20, 20, 18, 18, 14], start=1):
         detail.column_dimensions[get_column_letter(index)].width = width
 
     output = BytesIO()
@@ -461,7 +461,7 @@ def build_pdf_report(
 
     table_data = [[
         "Impressora", "Identificação", "Unidade / Setor", "Modelo",
-        "Inicial", "Final", "Impressões", "Anom.", "R$/pág.", "Custo estimado",
+        "Inicial", "Final", "Impressões", "R$/pág.", "Custo estimado",
     ]]
     for item in rows:
         organization = " / ".join(
@@ -472,7 +472,6 @@ def build_pdf_report(
             part for part in (
                 item["ip"],
                 item["serial"],
-                item["hostname"],
             ) if part
         ) or "-"
         table_data.append([
@@ -483,7 +482,6 @@ def build_pdf_report(
             _format_number(item["opening_page_count"]),
             _format_number(item["closing_page_count"]),
             _format_number(item["pages_printed"]),
-            _format_number(item["anomaly_count"]),
             _format_rate(item["cost_per_page"]),
             _format_currency(item["estimated_cost"]),
         ])
@@ -491,7 +489,7 @@ def build_pdf_report(
     table = Table(
         table_data,
         repeatRows=1,
-        colWidths=[38 * mm, 35 * mm, 34 * mm, 40 * mm, 18 * mm, 18 * mm, 20 * mm, 13 * mm, 20 * mm, 25 * mm],
+        colWidths=[40 * mm, 40 * mm, 38 * mm, 43 * mm, 19 * mm, 19 * mm, 22 * mm, 22 * mm, 27 * mm],
     )
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor(f"#{BRAND_BLUE}")),
