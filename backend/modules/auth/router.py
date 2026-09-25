@@ -22,7 +22,7 @@ from backend.modules.auth.schema import (
     PasswordResetIssueResponse,
     PasswordResetConfirmRequest,
 )
-from backend.modules.auth.mailer import send_password_reset_email, smtp_configured
+from backend.modules.auth.mailer import send_password_reset_email
 from backend.modules.auth.security import (
     create_access_token,
     create_password_reset_token,
