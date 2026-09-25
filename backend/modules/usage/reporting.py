@@ -253,7 +253,7 @@ def build_excel_report(
 ) -> bytes:
     from openpyxl import Workbook
     from openpyxl.drawing.image import Image as XLImage
-    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
     from openpyxl.utils import get_column_letter
 
     workbook = Workbook()
@@ -263,24 +263,35 @@ def build_excel_report(
     sheet = workbook.active
     sheet.title = "Resumo"
     sheet.sheet_view.showGridLines = False
-    sheet.sheet_view.zoomScale = 90
-    sheet.sheet_view.zoomScaleNormal = 90
+    sheet.sheet_view.zoomScale = 95
+    sheet.sheet_view.zoomScaleNormal = 95
 
+    sheet.merge_cells("A1:J1")
     sheet["A1"] = "Printflow - Relatório de Impressão"
     sheet["A1"].font = Font(size=18, bold=True, color=BRAND_NAVY)
+    sheet["A1"].alignment = Alignment(vertical="center")
+
+    sheet.merge_cells("A2:J2")
     sheet["A2"] = f"Empresa: {company_name}"
     sheet["A2"].font = Font(size=10, color=BRAND_MUTED)
+
+    sheet.merge_cells("A3:J3")
     sheet["A3"] = (
         f"Período: {start.strftime('%d/%m/%Y')} "
         f"a {end.strftime('%d/%m/%Y')}"
     )
     sheet["A3"].font = Font(size=10, color=BRAND_MUTED)
 
+    sheet.row_dimensions[1].height = 25
+    sheet.row_dimensions[2].height = 18
+    sheet.row_dimensions[3].height = 18
+    sheet.row_dimensions[4].height = 8
+
     logo_stream = _build_brand_icon_png()
     logo = XLImage(logo_stream)
     logo.width = 48
     logo.height = 48
-    sheet.add_image(logo, "N1")
+    sheet.add_image(logo, "L1")
 
     per_page_cost = sum(
         float(item.get("estimated_cost") or 0)
@@ -296,23 +307,40 @@ def build_excel_report(
     total_pages = sum(int(item.get("pages_printed") or 0) for item in rows)
 
     summary_labels = [
-        ("Tarifa P&B", _format_rate(bw_rate)),
-        ("Tarifa colorida", _format_rate(color_rate)),
-        ("Custo variável", _format_currency(per_page_cost)),
-        ("Custo fixo", _format_currency(fixed_cost)),
-        ("Total consolidado", _format_currency(total_cost)),
-        ("Páginas no período", _format_number(total_pages)),
+        ("Tarifa P&B", _format_rate(bw_rate), "A", "B"),
+        ("Tarifa colorida", _format_rate(color_rate), "C", "D"),
+        ("Custo variável", _format_currency(per_page_cost), "E", "F"),
+        ("Custo fixo", _format_currency(fixed_cost), "G", "H"),
+        ("Total consolidado", _format_currency(total_cost), "I", "J"),
+        ("Páginas no período", _format_number(total_pages), "K", "M"),
     ]
-    for idx, (label, value) in enumerate(summary_labels, start=1):
-        col = (idx - 1) * 2 + 1
-        sheet.cell(row=6, column=col, value=label).font = Font(
-            size=9, bold=True, color=BRAND_MUTED
-        )
-        sheet.cell(row=7, column=col, value=value).font = Font(
-            size=13, bold=True, color=BRAND_NAVY
-        )
-        sheet.merge_cells(start_row=6, start_column=col, end_row=6, end_column=col + 1)
-        sheet.merge_cells(start_row=7, start_column=col, end_row=7, end_column=col + 1)
+    card_fill = PatternFill("solid", fgColor="F4F8FC")
+    card_border = Border(
+        top=Side(style="thin", color="D7E1EA"),
+        bottom=Side(style="thin", color="D7E1EA"),
+        left=Side(style="thin", color="D7E1EA"),
+        right=Side(style="thin", color="D7E1EA"),
+    )
+    for label, value, start_col, end_col in summary_labels:
+        sheet.merge_cells(f"{start_col}5:{end_col}5")
+        sheet.merge_cells(f"{start_col}6:{end_col}6")
+        label_cell = sheet[f"{start_col}5"]
+        value_cell = sheet[f"{start_col}6"]
+        label_cell.value = label
+        value_cell.value = value
+        label_cell.font = Font(size=9, bold=True, color=BRAND_MUTED)
+        value_cell.font = Font(size=13, bold=True, color=BRAND_NAVY)
+        label_cell.alignment = Alignment(horizontal="center", vertical="center")
+        value_cell.alignment = Alignment(horizontal="center", vertical="center")
+        for row in (5, 6):
+            for col in range(label_cell.column, sheet[f"{end_col}{row}"].column + 1):
+                target = sheet.cell(row=row, column=col)
+                target.fill = card_fill
+                target.border = card_border
+
+    sheet.row_dimensions[5].height = 22
+    sheet.row_dimensions[6].height = 28
+    sheet.row_dimensions[7].height = 8
 
     headers = [
         "Impressora", "IP", "Modelo", "Serial",
@@ -320,7 +348,7 @@ def build_excel_report(
         "Contador inicial", "Contador final", "Impressões no período",
         "Custo/página (R$)", "Custo estimado (R$)",
     ]
-    header_row = 9
+    header_row = 8
 
     for column, label in enumerate(headers, start=1):
         cell = sheet.cell(row=header_row, column=column, value=label)
@@ -340,19 +368,34 @@ def build_excel_report(
             item["pages_printed"],
             item["cost_per_page"], item["estimated_cost"],
         ]
+        row_fill = PatternFill("solid", fgColor="F8FAFC") if row_index % 2 == 0 else PatternFill(fill_type=None)
         for column, value in enumerate(values, start=1):
             cell = sheet.cell(row=row_index, column=column, value=value)
-            cell.alignment = Alignment(vertical="center", wrap_text=column in {1, 3, 5, 6})
+            cell.fill = row_fill
+            cell.border = Border(bottom=Side(style="hair", color="E5EAF0"))
+            if column in {9, 10, 11, 12, 13}:
+                cell.alignment = Alignment(horizontal="right", vertical="center")
+            elif column in {2, 7, 8}:
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                cell.alignment = Alignment(vertical="center", wrap_text=column in {1, 3, 5, 6})
             if column == 12:
                 cell.number_format = 'R$ #,##0.0000'
             elif column == 13:
                 cell.number_format = 'R$ #,##0.00'
+        sheet.row_dimensions[row_index].height = 21
 
-    sheet.freeze_panes = "A10"
+    sheet.freeze_panes = "A9"
     sheet.auto_filter.ref = f"A{header_row}:M{max(header_row, header_row + len(rows))}"
-    widths = [26, 14, 26, 20, 18, 24, 17, 17, 16, 16, 22, 19, 22]
+    widths = [25, 13, 24, 19, 16, 23, 16, 16, 15, 15, 20, 18, 21]
     for index, width in enumerate(widths, start=1):
         sheet.column_dimensions[get_column_letter(index)].width = width
+
+    sheet.sheet_properties.pageSetUpPr.fitToPage = True
+    sheet.page_setup.orientation = "landscape"
+    sheet.page_setup.fitToWidth = 1
+    sheet.page_setup.fitToHeight = 0
+    sheet.print_area = f"A1:M{max(header_row + len(rows), header_row)}"
 
     detail = workbook.create_sheet("Histórico diário")
     detail.sheet_view.showGridLines = False
