@@ -25,6 +25,8 @@ type Company = {
   state?: string | null
   plan: string
   default_cost_per_page: number
+  default_bw_cost_per_page: number
+  default_color_cost_per_page: number
   agent_token: string
   active: boolean
 }
@@ -136,7 +138,9 @@ function App() {
           document: form.get("document") || null,
           city: form.get("city") || null,
           state: form.get("state") || null,
-          default_cost_per_page: Number(form.get("default_cost_per_page") || 0),
+          default_cost_per_page: Number(form.get("default_bw_cost_per_page") || 0),
+          default_bw_cost_per_page: Number(form.get("default_bw_cost_per_page") || 0),
+          default_color_cost_per_page: Number(form.get("default_color_cost_per_page") || 0),
         }),
       })
       setCompany(updated)
@@ -365,7 +369,7 @@ function App() {
 
             <PrinterTable
               printers={printers}
-              defaultCostPerPage={company?.default_cost_per_page || 0}
+              defaultCostPerPage={company?.default_bw_cost_per_page || company?.default_cost_per_page || 0}
             />
           </section>
         ) : page === "agents" ? (
@@ -395,18 +399,31 @@ function App() {
                       <label>Cidade<input name="city" defaultValue={company.city || ""} /></label>
                       <label>UF<input name="state" maxLength={2} defaultValue={company.state || ""} /></label>
                     </div>
-                    <label>
-                      Custo padrão por página (R$)
-                      <input
-                        name="default_cost_per_page"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.0001"
-                        defaultValue={Number(company.default_cost_per_page || 0).toFixed(4)}
-                      />
-                      <small>Usado no relatório quando a impressora não possui tarifa específica.</small>
-                    </label>
+                    <div className="row">
+                      <label>
+                        Tarifa P&B por página (R$)
+                        <input
+                          name="default_bw_cost_per_page"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.0001"
+                          defaultValue={Number(company.default_bw_cost_per_page || company.default_cost_per_page || 0).toFixed(4)}
+                        />
+                      </label>
+                      <label>
+                        Tarifa colorida por página (R$)
+                        <input
+                          name="default_color_cost_per_page"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.0001"
+                          defaultValue={Number(company.default_color_cost_per_page || 0).toFixed(4)}
+                        />
+                      </label>
+                    </div>
+                    <small>Tarifas contratuais usadas nos relatórios conforme o tipo de contador disponível.</small>
                     <button className="primary">Salvar empresa</button>
                   </form>
                 </article>
@@ -419,8 +436,9 @@ function App() {
                     <button onClick={regenerateToken}>Gerar novo</button>
                   </div>
                   <div className="tariff-box">
-                    <strong>Tarifa padrão atual</strong>
-                    <span>R$ {Number(company.default_cost_per_page || 0).toFixed(4).replace(".", ",")} por página.</span>
+                    <strong>Tarifas contratuais</strong>
+                    <span>P&B: R$ {Number(company.default_bw_cost_per_page || company.default_cost_per_page || 0).toFixed(4).replace(".", ",")} por página</span>
+                    <span>Cor: R$ {Number(company.default_color_cost_per_page || 0).toFixed(4).replace(".", ",")} por página</span>
                   </div>
                 </article>
               </section>
