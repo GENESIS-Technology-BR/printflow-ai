@@ -34,7 +34,7 @@ def _model(item: dict) -> str:
 
 
 def _label(item: dict) -> bool:
-    text = " ".join(str(item.get(k) or "") for k in ("manufacturer", "model", "display_name", "hostname", "serial")).lower()
+    text = " ".join(str(item.get(k) or "") for k in ("manufacturer", "model", "display_name", "serial")).lower()
     return any(x in text for x in ("zebra", "zt230", "zpl", "ztc ", "zbr"))
 
 
