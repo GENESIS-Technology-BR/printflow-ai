@@ -53,12 +53,13 @@ def test_excel_report_generates_valid_workbook():
 
     summary = workbook["Resumo"]
     assert summary["A1"].value == "Printflow - Relatório de Impressão"
-    assert summary["A2"].value == "Empresa: Empresa Teste"
-    assert summary["A4"].value is None
-    assert summary["A9"].value == "Impressora Financeiro"
-    assert summary["K9"].value == 125
-    assert summary["L9"].value == 0.12
-    assert summary["M9"].value == 15.0
+    assert summary["A2"].value == (
+        "Empresa: Empresa Teste  —  Período: 01/09/2026 a 02/09/2026"
+    )
+    assert summary["A8"].value == "Impressora Financeiro"
+    assert summary["K8"].value == 125
+    assert summary["L8"].value == 0.12
+    assert summary["M8"].value == 15.0
 
 
 def test_pdf_report_generates_valid_pdf():
@@ -133,7 +134,13 @@ def test_excel_report_does_not_display_scope_line() -> None:
     )
 
     workbook = load_workbook(BytesIO(content), read_only=True)
-    assert workbook["Resumo"]["A4"].value is None
+    summary = workbook["Resumo"]
+    visible_top = " ".join(
+        str(summary.cell(row=row, column=column).value or "")
+        for row in range(1, 8)
+        for column in range(1, 14)
+    )
+    assert "Escopo" not in visible_top
 
 
 def test_pdf_report_accepts_filtered_scope_and_technical_identity() -> None:
