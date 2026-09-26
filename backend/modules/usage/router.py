@@ -96,8 +96,11 @@ def _merge_historical_printers(
 
 
 def _is_guerra_excluded_printer(printer: Printer) -> bool:
-    ip = (printer.ip or "").strip()
-    text = f"{printer.manufacturer or ''} {printer.model or ''} {printer.name or ''} {printer.custom_name or ''} {printer.hostname or ''}".lower()
+    ip = str(getattr(printer, "ip", "") or "").strip()
+    text = " ".join(
+        str(getattr(printer, field, "") or "")
+        for field in ("manufacturer", "model", "name", "custom_name", "hostname")
+    ).lower()
     return (
         ip == "10.2.128.31"
         or "deskjet 2700" in text
