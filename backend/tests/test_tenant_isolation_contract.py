@@ -50,8 +50,8 @@ def test_guerra_policy_is_consistent_across_public_application_surfaces():
     assert "_apply_cost_models" in integration
     assert "_exclude_label_printers_for_company" in intelligence
     assert "_active_history" in intelligence
-    assert "_exclude_label_printers_for_company" in usage
-    assert "_is_label_printer" in dashboard
+    assert "_exclude_commercial_printers_for_company" in usage
+    assert "_is_guerra_excluded_printer" in dashboard
 
 
 def test_guerra_policy_covers_alerts_control_center_and_integration_snapshots():
