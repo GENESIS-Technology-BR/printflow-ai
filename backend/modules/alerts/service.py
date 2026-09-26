@@ -9,7 +9,7 @@ from backend.modules.alerts.model import OperationalAlert
 from backend.modules.auth.model import User
 from backend.modules.companies.model import Company
 from backend.modules.printers.model import Printer
-from backend.modules.usage.router import _exclude_label_printers_for_company
+from backend.modules.usage.router import _exclude_commercial_printers_for_company
 
 
 def _normalized_seen(value: datetime | None) -> datetime | None:
@@ -85,7 +85,7 @@ def reconcile_company_alerts(
     desired: dict[str, tuple[Printer | None, dict[str, str]]] = {}
 
     company = db.query(Company).filter(Company.id == company_id).first()
-    printers = _exclude_label_printers_for_company(company, printers)
+    printers = _exclude_commercial_printers_for_company(company, printers)
     if company is not None and company.active and company.agent_last_seen is not None:
         last_agent_seen = _normalized_seen(company.agent_last_seen)
         elapsed = now - last_agent_seen
