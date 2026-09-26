@@ -113,6 +113,12 @@ def _exclude_commercial_printers_for_company(company: Company | None, printers: 
     return [printer for printer in printers if not _is_guerra_excluded_printer(printer)]
 
 
+# Compatibilidade com modulos/testes legados. A regra agora cobre tanto
+# impressoras de etiqueta quanto equipamentos particulares fora do outsourcing.
+_is_label_printer = _is_guerra_excluded_printer
+_exclude_label_printers_for_company = _exclude_commercial_printers_for_company
+
+
 def _fixed_cost_for_period(monthly_cost: float, start: date, end: date) -> float:
     """Cobra o valor contratual fechado uma vez por mes calendario no periodo."""
     months = (end.year - start.year) * 12 + (end.month - start.month) + 1
