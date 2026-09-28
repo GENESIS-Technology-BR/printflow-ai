@@ -16,7 +16,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     email: Mapped[str] = mapped_column(String(180), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(500), nullable=False)
-    role: Mapped[str] = mapped_column(String(30), default="admin")
+    role: Mapped[str] = mapped_column(String(30), default="client", nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     session_version: Mapped[int] = mapped_column(
         Integer,
