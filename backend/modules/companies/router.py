@@ -69,7 +69,7 @@ def update_current_company(
 
 @router.post("/current/regenerate-agent-token", response_model=CompanyResponse)
 def regenerate_agent_token(
-    current_user: User = Depends(get_company_admin),
+    current_user: User = Depends(get_platform_admin),
     db: Session = Depends(get_db),
 ):
     company = _current_user_company(current_user, db)
