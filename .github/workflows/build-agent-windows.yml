@@ -1,4 +1,4 @@
-name: Build PRINTFLOW Agent Windows
+name: Build TALVOA Agent Windows
 
 on:
   workflow_dispatch:
@@ -110,7 +110,7 @@ jobs:
             --clean `
             --onefile `
             --console `
-            --name PRINTFLOW-Agent `
+            --name TALVOA-Agent `
             --paths agent/python `
             --hidden-import pysnmp `
             --hidden-import pysnmp.hlapi `
@@ -137,7 +137,7 @@ jobs:
       - name: Testar executável oficial
         shell: powershell
         run: |
-          & dist/PRINTFLOW-Agent.exe --help | Tee-Object -FilePath EXE-SMOKE-TEST.txt
+          & dist/TALVOA-Agent.exe --help | Tee-Object -FilePath EXE-SMOKE-TEST.txt
           if ($LASTEXITCODE -ne 0) { throw "O executavel falhou no teste --help. Codigo: $LASTEXITCODE" }
           $help = Get-Content EXE-SMOKE-TEST.txt -Raw
           if ($help -notmatch "--network" -or $help -notmatch "--daemon") { throw "O executavel nao apresentou as opcoes obrigatorias." }
@@ -146,40 +146,40 @@ jobs:
         shell: powershell
         run: |
           New-Item -ItemType Directory -Force -Path package
-          Copy-Item dist/PRINTFLOW-Agent.exe package/
-          Copy-Item agent/windows/Executar-PRINTFLOW-Agent.bat package/
-          Copy-Item agent/windows/INSTALAR-PRINTFLOW-Agent.bat package/
-          Copy-Item agent/windows/ATUALIZAR-PRINTFLOW-Agent.bat package/
-          Copy-Item agent/windows/Start-PRINTFLOW-Agent.ps1 package/
-          Copy-Item agent/windows/Watchdog-PRINTFLOW-Agent.ps1 package/
-          Copy-Item agent/windows/Sync-PRINTFLOW-Watchdog.ps1 package/
-          Copy-Item agent/windows/Install-PRINTFLOW-Agent.ps1 package/
-          Copy-Item agent/windows/Update-PRINTFLOW-Agent.ps1 package/
-          Copy-Item agent/windows/Uninstall-PRINTFLOW-Agent.ps1 package/
-          Copy-Item agent/windows/VALIDAR-PRINTFLOW-Build.bat package/
-          Copy-Item agent/windows/Validar-PRINTFLOW-Build.ps1 package/
-          Copy-Item agent/windows/README-TESTE.txt package/
+          Copy-Item dist/TALVOA-Agent.exe package/
+          Copy-Item agent/windows/Executar-TALVOA-Agent.bat package/
+          Copy-Item agent/windows/INSTALAR-TALVOA-Agent.bat package/
+          Copy-Item agent/windows/ATUALIZAR-TALVOA-Agent.bat package/
+          Copy-Item agent/windows/Start-TALVOA-Agent.ps1 package/
+          Copy-Item agent/windows/Watchdog-TALVOA-Agent.ps1 package/
+          Copy-Item agent/windows/Sync-TALVOA-Watchdog.ps1 package/
+          Copy-Item agent/windows/Install-TALVOA-Agent.ps1 package/
+          Copy-Item agent/windows/Update-TALVOA-Agent.ps1 package/
+          Copy-Item agent/windows/Uninstall-TALVOA-Agent.ps1 package/
+          Copy-Item agent/windows/VALIDAR-TALVOA-Build.bat package/
+          Copy-Item agent/windows/Validar-TALVOA-Build.ps1 package/
+          Copy-Item agent/windows/README-TALVOA.txt package/
           $env:PYTHONPATH = "${{ github.workspace }}/agent/python"
           $agentVersion = (python -c "from version import AGENT_VERSION; print(AGENT_VERSION)").Trim()
-          $exeHash = (Get-FileHash package/PRINTFLOW-Agent.exe -Algorithm SHA256).Hash
+          $exeHash = (Get-FileHash package/TALVOA-Agent.exe -Algorithm SHA256).Hash
           $required = @(
-            "PRINTFLOW-Agent.exe",
-            "Executar-PRINTFLOW-Agent.bat",
-            "INSTALAR-PRINTFLOW-Agent.bat",
-            "ATUALIZAR-PRINTFLOW-Agent.bat",
-            "Start-PRINTFLOW-Agent.ps1",
-            "Watchdog-PRINTFLOW-Agent.ps1",
-            "Sync-PRINTFLOW-Watchdog.ps1",
-            "Install-PRINTFLOW-Agent.ps1",
-            "Update-PRINTFLOW-Agent.ps1",
-            "Uninstall-PRINTFLOW-Agent.ps1",
-            "VALIDAR-PRINTFLOW-Build.bat",
-            "Validar-PRINTFLOW-Build.ps1",
+            "TALVOA-Agent.exe",
+            "Executar-TALVOA-Agent.bat",
+            "INSTALAR-TALVOA-Agent.bat",
+            "ATUALIZAR-TALVOA-Agent.bat",
+            "Start-TALVOA-Agent.ps1",
+            "Watchdog-TALVOA-Agent.ps1",
+            "Sync-TALVOA-Watchdog.ps1",
+            "Install-TALVOA-Agent.ps1",
+            "Update-TALVOA-Agent.ps1",
+            "Uninstall-TALVOA-Agent.ps1",
+            "VALIDAR-TALVOA-Build.bat",
+            "Validar-TALVOA-Build.ps1",
             "BUILD-VALIDATION.txt",
-            "README-TESTE.txt"
+            "README-TALVOA.txt"
           )
           @(
-            "PRINTFLOW OFFICIAL AGENT BUILD VALIDATION"
+            "TALVOA OFFICIAL AGENT BUILD VALIDATION"
             "Build: ${{ github.run_number }}"
             "Version: $agentVersion"
             "Commit: $env:GITHUB_SHA"
@@ -193,20 +193,20 @@ jobs:
           foreach ($file in $required) {
             if (-not (Test-Path "package/$file")) { throw "Arquivo ausente no pacote: $file" }
           }
-          Compress-Archive -Path package/* -DestinationPath PRINTFLOW-Agent-Windows-Teste.zip
+          Compress-Archive -Path package/* -DestinationPath TALVOA-Agent-Windows-Teste.zip
 
       - name: Publicar pacote
         uses: actions/upload-artifact@v5
         with:
-          name: PRINTFLOW-Agent-Windows-Build-${{ github.run_number }}
-          path: PRINTFLOW-Agent-Windows-Teste.zip
+          name: TALVOA-Agent-Windows-Build-${{ github.run_number }}
+          path: TALVOA-Agent-Windows-Teste.zip
           retention-days: 15
 
       - name: Resumo visível do build
         if: always()
         shell: bash
         run: |
-          echo "## PRINTFLOW Agent Build #${{ github.run_number }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "## TALVOA Agent Build #${{ github.run_number }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Arquitetura: **agent/python (oficial)**" >> "$GITHUB_STEP_SUMMARY"
           echo "- Status: **${{ job.status }}**" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: \`${GITHUB_SHA}\`" >> "$GITHUB_STEP_SUMMARY"
