@@ -36,11 +36,19 @@ function formatElapsed(value: string | null): string {
 function formatTechnicalStatus(value: string | null | undefined): string {
   const normalized = String(value || "").toLowerCase();
   if (normalized === "running") return "Em execução";
+  if (normalized === "healthy") return "Saudável";
   if (normalized === "error") return "Com erro";
   if (normalized === "slow") return "Ciclo lento";
   if (normalized === "offline") return "Offline";
   if (normalized === "online") return "Online";
   return value || "Aguardando";
+}
+
+function formatAgentName(value: string | null | undefined): string {
+  const name = String(value || "").trim();
+  if (!name) return "TALVOA Agent";
+  if (name.toLowerCase().includes("printflow")) return "TALVOA Agent Windows";
+  return name;
 }
 
 export default function AgentMonitor({
@@ -154,7 +162,7 @@ export default function AgentMonitor({
       <div className="agent-metrics">
         <article>
           <span>Nome</span>
-          <strong>{agent?.name || "TALVOA Agent"}</strong>
+          <strong>{formatAgentName(agent?.name)}</strong>
           <small>Identificação registrada</small>
         </article>
         <article>
