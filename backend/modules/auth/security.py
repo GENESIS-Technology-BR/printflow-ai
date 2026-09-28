@@ -10,7 +10,7 @@ from jwt import InvalidTokenError
 
 INSECURE_JWT_SECRET = "CHANGE-ME-IN-RENDER"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_MINUTES = 60
+DEFAULT_SESSION_MINUTES = 480
 PASSWORD_RESET_TOKEN_MINUTES = 15
 
 
@@ -52,15 +52,28 @@ def verify_password(password: str, encoded: str) -> bool:
         return False
 
 
+def session_minutes() -> int:
+    raw = (
+        os.getenv("TALVOA_SESSION_MINUTES", "").strip()
+        or os.getenv("ACCESS_TOKEN_MINUTES", "").strip()
+    )
+    try:
+        value = int(raw) if raw else DEFAULT_SESSION_MINUTES
+    except ValueError:
+        value = DEFAULT_SESSION_MINUTES
+    return min(max(value, 15), 1440)
+
+
 def create_access_token(
     subject: str,
     company_id: int,
     session_version: int = 0,
-    expires_minutes: int = ACCESS_TOKEN_MINUTES,
+    expires_minutes: int | None = None,
 ) -> str:
     issued_at = datetime.now(timezone.utc)
+    ttl_minutes = session_minutes() if expires_minutes is None else max(int(expires_minutes), 1)
     expires = issued_at + timedelta(
-        minutes=max(int(expires_minutes), 1)
+        minutes=ttl_minutes
     )
     payload = {
         "sub": subject,
