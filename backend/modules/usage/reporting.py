@@ -342,7 +342,7 @@ def build_excel_report(
     sheet.row_dimensions[6].height = 6
 
     headers = [
-        "Impressora", "IP", "Modelo", "Serial",
+        "Nomenclatura", "IP", "Modelo", "Serial",
         "Unidade", "Setor", "Leitura inicial", "Leitura final",
         "Inicial", "Final", "Impressões",
         "Custo/pág.", "Custo estimado",
