@@ -75,16 +75,17 @@ def build_pdf_report(
     ]], colWidths=[67*mm,145*mm,71*mm], rowHeights=[15*mm])
     header.setStyle(TableStyle([("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),1.5*mm),("RIGHTPADDING",(0,0),(-1,-1),1.5*mm),("TOPPADDING",(0,0),(-1,-1),0),("BOTTOMPADDING",(0,0),(-1,-1),0),("LINEBELOW",(0,0),(-1,-1),0.45,colors.HexColor(f"#{BORDER}"))]))
 
-    data = [["#","Impressora","IP / Serial","Unidade / Setor","Modelo","Inicial","Final","Impressões","R$/pág.","Custo"]]
+    data = [["#","Nomenclatura","IP","Nº de série","Setor","Modelo","Inicial","Final","Impressões","R$/pág.","Custo"]]
     for idx, item in enumerate(rows, start=1):
         label = _label(item)
-        identity = " / ".join(x for x in (item.get("ip"), item.get("serial")) if x) or "-"
-        org = " / ".join(x for x in (item.get("unit_name"), item.get("sector_name")) if x) or "-"
-        values = [str(idx), _short(item.get("display_name"),22), _short(identity,25), _short(org,25), _short(_model(item),25), "N/A" if label else _num(item.get("opening_page_count")), "N/A" if label else _num(item.get("closing_page_count")), "N/A" if label else _num(item.get("pages_printed")), "N/A" if label else _rate(item.get("cost_per_page")), "N/A" if label else _money(item.get("estimated_cost"))]
-        data.append([Paragraph(str(v), cell_right if i >= 5 else cell) for i, v in enumerate(values)])
+        ip = item.get("ip") or "-"
+        serial = item.get("serial") or "-"
+        sector = item.get("sector_name") or "-"
+        values = [str(idx), _short(item.get("display_name"),22), _short(ip,18), _short(serial,20), _short(sector,22), _short(_model(item),25), "N/A" if label else _num(item.get("opening_page_count")), "N/A" if label else _num(item.get("closing_page_count")), "N/A" if label else _num(item.get("pages_printed")), "N/A" if label else _rate(item.get("cost_per_page")), "N/A" if label else _money(item.get("estimated_cost"))]
+        data.append([Paragraph(str(v), cell_right if i >= 6 else cell) for i, v in enumerate(values)])
 
-    table = Table(data, repeatRows=1, colWidths=[7*mm,32*mm,38*mm,40*mm,39*mm,18*mm,18*mm,24*mm,24*mm,29*mm], rowHeights=[6*mm]+[4.7*mm]*len(rows), hAlign="CENTER")
-    table.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),colors.HexColor(f"#{BRAND_BLUE}")),("TEXTCOLOR",(0,0),(-1,0),colors.white),("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("FONTSIZE",(0,0),(-1,0),5.5),("ALIGN",(0,0),(4,0),"LEFT"),("ALIGN",(5,0),(-1,0),"RIGHT"),("ALIGN",(5,1),(-1,-1),"RIGHT"),("ALIGN",(0,1),(0,-1),"CENTER"),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("GRID",(0,0),(-1,-1),0.18,colors.HexColor("#C7D3DE")),("ROWBACKGROUNDS",(0,1),(-1,-1),[colors.white,colors.HexColor("#F7F9FC")]),("LEFTPADDING",(0,0),(-1,-1),2.2),("RIGHTPADDING",(0,0),(-1,-1),2.2),("TOPPADDING",(0,0),(-1,-1),.6),("BOTTOMPADDING",(0,0),(-1,-1),.6)]))
+    table = Table(data, repeatRows=1, colWidths=[6*mm,29*mm,24*mm,27*mm,28*mm,36*mm,17*mm,17*mm,22*mm,22*mm,28*mm], rowHeights=[6*mm]+[4.7*mm]*len(rows), hAlign="CENTER")
+    table.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),colors.HexColor(f"#{BRAND_BLUE}")),("TEXTCOLOR",(0,0),(-1,0),colors.white),("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("FONTSIZE",(0,0),(-1,0),5.5),("ALIGN",(0,0),(5,0),"LEFT"),("ALIGN",(6,0),(-1,0),"RIGHT"),("ALIGN",(6,1),(-1,-1),"RIGHT"),("ALIGN",(0,1),(0,-1),"CENTER"),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("GRID",(0,0),(-1,-1),0.18,colors.HexColor("#C7D3DE")),("ROWBACKGROUNDS",(0,1),(-1,-1),[colors.white,colors.HexColor("#F7F9FC")]),("LEFTPADDING",(0,0),(-1,-1),2.2),("RIGHTPADDING",(0,0),(-1,-1),2.2),("TOPPADDING",(0,0),(-1,-1),.6),("BOTTOMPADDING",(0,0),(-1,-1),.6)]))
 
     applicable = [item for item in rows if not _label(item)]
     total_pages = sum(item.get("pages_printed",0) or 0 for item in applicable)
