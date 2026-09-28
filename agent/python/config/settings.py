@@ -80,14 +80,8 @@ class AgentSettings:
     @classmethod
     def load(cls) -> "AgentSettings":
         return cls(
-            agent_name=os.getenv(
-                "PRINTFLOW_AGENT_NAME",
-                "PRINTFLOW Agent",
-            ),
-            agent_version=os.getenv(
-                "PRINTFLOW_AGENT_VERSION",
-                AGENT_VERSION,
-            ),
+            agent_name=os.getenv("TALVOA_AGENT_NAME") or os.getenv("PRINTFLOW_AGENT_NAME") or "TALVOA Agent",
+            agent_version=os.getenv("TALVOA_AGENT_VERSION") or os.getenv("PRINTFLOW_AGENT_VERSION") or AGENT_VERSION,
             scan_interval_seconds=env_int(
                 "PRINTFLOW_SCAN_INTERVAL",
                 300,
@@ -126,14 +120,8 @@ class AgentSettings:
             ),
             output_directory=BASE_DIR / "output",
             logs_directory=BASE_DIR / "logs",
-            api_url=os.getenv(
-                "PRINTFLOW_API_URL",
-                "https://printflow-api-3uwr.onrender.com",
-            ).rstrip("/"),
-            agent_token=os.getenv(
-                "PRINTFLOW_AGENT_TOKEN",
-                "",
-            ),
+            api_url=os.getenv("TALVOA_API_URL") or os.getenv("PRINTFLOW_API_URL") or "https://printflow-api-3uwr.onrender.com".rstrip("/"),
+            agent_token=os.getenv("TALVOA_AGENT_TOKEN") or os.getenv("PRINTFLOW_AGENT_TOKEN") or "",
             heartbeat_retries=env_int(
                 "PRINTFLOW_HEARTBEAT_RETRIES",
                 2,
