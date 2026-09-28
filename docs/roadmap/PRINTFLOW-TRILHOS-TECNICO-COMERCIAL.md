@@ -1,7 +1,7 @@
-# PRINTFLOW — Trilhos Técnico e Comercial
+# TALVOA — Trilhos Técnico e Comercial
 
 ## 1. Objetivo do produto
-PRINTFLOW deve ser apresentado ao mercado como **Gestão Inteligente do Parque de Impressão**, não apenas como monitoramento de impressoras.
+TALVOA deve ser apresentado ao mercado como **Gestão Inteligente do Parque de Impressão**, não apenas como monitoramento de impressoras.
 
 Proposta de valor central:
 > Controle, visibilidade e previsibilidade sobre todo o parque de impressão em uma única plataforma.
@@ -34,7 +34,7 @@ Proposta de valor central:
 
 ## 3. Regra de separação de acesso
 
-### Administração PRINTFLOW
+### Administração TALVOA
 Pode:
 - cadastrar empresas;
 - configurar Agent;
@@ -55,7 +55,7 @@ Pode somente consultar:
 - relatórios;
 - histórico e custos permitidos.
 
-O cliente não deve alterar configurações diretamente. Solicitações de mudança devem ser encaminhadas à equipe PRINTFLOW.
+O cliente não deve alterar configurações diretamente. Solicitações de mudança devem ser encaminhadas à equipe TALVOA.
 
 ---
 
@@ -128,7 +128,7 @@ Objetivo: permitir demonstrações comerciais sem depender de Agent ou rede de c
 ## 7. Apresentação comercial
 Estrutura recomendada:
 1. O desafio do cliente
-2. A solução PRINTFLOW
+2. A solução TALVOA
 3. Como funciona
 4. Visão Geral
 5. Parque e alertas
@@ -167,7 +167,7 @@ Preços permanecem sob consulta até definição da estratégia comercial.
 ---
 
 ## 9. Critério de evolução
-O PRINTFLOW evolui em dois trilhos paralelos:
+O TALVOA evolui em dois trilhos paralelos:
 
 **Técnico:** estabilidade, segurança, homologação e qualidade.
 
