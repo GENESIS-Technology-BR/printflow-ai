@@ -270,7 +270,7 @@ def build_excel_report(
     sheet.sheet_view.zoomScaleNormal = 92
 
     sheet.merge_cells("A1:J1")
-    sheet["A1"] = "Printflow - Relatório de Impressão"
+    sheet["A1"] = "TALVOA - Relatório de Impressão"
     sheet["A1"].font = Font(size=18, bold=True, color=BRAND_NAVY)
     sheet["A1"].alignment = Alignment(vertical="center")
 
@@ -469,7 +469,7 @@ def build_pdf_report(
         rightMargin=10 * mm,
         topMargin=10 * mm,
         bottomMargin=15 * mm,
-        title="Printflow - Relatório de Impressão",
+        title="TALVOA - Relatório de Impressão",
     )
     styles = getSampleStyleSheet()
 
@@ -483,7 +483,7 @@ def build_pdf_report(
 
     brand_copy = Paragraph(
         (
-            f'<font color="#{BRAND_NAVY}" size="18"><b>Printflow</b></font><br/>'
+            f'<font color="#{BRAND_NAVY}" size="18"><b>TALVOA</b></font><br/>'
             f'<font color="#{BRAND_MUTED}" size="8">Gestão Inteligente de Impressão</font>'
         ),
         styles["Normal"],
@@ -576,7 +576,7 @@ def build_pdf_report(
         canvas.line(10 * mm, 9 * mm, width - 10 * mm, 9 * mm)
         canvas.setFillColor(colors.HexColor(f"#{BRAND_MUTED}"))
         canvas.setFont("Helvetica", 7)
-        canvas.drawString(10 * mm, 5 * mm, f"Printflow · {company_name}")
+        canvas.drawString(10 * mm, 5 * mm, f"TALVOA · {company_name}")
         canvas.drawRightString(
             width - 10 * mm,
             5 * mm,
