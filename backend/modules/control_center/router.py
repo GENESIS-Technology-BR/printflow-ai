@@ -218,7 +218,7 @@ def create_control_center_client(
             password_hash=hash_password(
                 temporary_password
             ),
-            role="admin",
+            role="client",
             active=True,
         )
 
@@ -454,7 +454,7 @@ def create_client_user(
         name=payload.name.strip(),
         email=email,
         password_hash=hash_password(payload.password),
-        role="admin",
+        role="client",
         active=True,
     )
 
