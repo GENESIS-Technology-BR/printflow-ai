@@ -1,17 +1,17 @@
-# PRINTFLOW — Arquitetura de Produção
+# TALVOA — Arquitetura de Produção
 
 ## Serviços homologados
 
 - Frontend principal: Render `printflow` (`frontend/`).
 - API produtiva: Render `printflow-api` — `https://printflow-api-3uwr.onrender.com`.
-- Banco de produção: Supabase PostgreSQL — projeto `Printflow-Production`.
+- Banco de produção: Supabase PostgreSQL — projeto `TALVOA-Production`.
 - Agent: envia coleta e heartbeat para a API produtiva.
 - Serviço `printflow-api-genesis`: legado, ainda configurado com Neon e atualmente bloqueado por cota do provedor. Não usar como rota padrão.
 
 ## Fluxo produtivo
 
 ```text
-PRINTFLOW-Agent -> printflow-api -> Supabase PostgreSQL
+TALVOA-Agent -> printflow-api -> Supabase PostgreSQL
 Frontend        -> printflow-api -> Supabase PostgreSQL
 ```
 
