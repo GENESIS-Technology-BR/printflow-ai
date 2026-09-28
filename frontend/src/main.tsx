@@ -63,3 +63,5 @@ import './printers-font-v091.css'
 import './enterprise-design-system-v092.css'
 import './company-agent-v093.css'
 import './printer-alert-card-v094.css'
+
+import './talvoa-executive-v095.css'
