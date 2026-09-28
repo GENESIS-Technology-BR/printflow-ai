@@ -123,7 +123,7 @@ def build_intelligence(
                     category="availability",
                     severity="critical",
                     title=f"{name} está offline",
-                    problem="O equipamento está sem comunicação com o Printflow.",
+                    problem="O equipamento está sem comunicação com a TALVOA.",
                     impact="Pode interromper o atendimento do setor e ocultar novas leituras de contador.",
                     recommendation="Validar energia, rede e acesso SNMP. Se o equipamento foi retirado, marque-o como inativo.",
                     printer=printer,
