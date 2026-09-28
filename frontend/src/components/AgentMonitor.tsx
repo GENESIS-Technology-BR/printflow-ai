@@ -154,7 +154,7 @@ export default function AgentMonitor({
       <div className="agent-metrics">
         <article>
           <span>Nome</span>
-          <strong>{agent?.name || "Printflow Agent"}</strong>
+          <strong>{agent?.name || "TALVOA Agent"}</strong>
           <small>Identificação registrada</small>
         </article>
         <article>
