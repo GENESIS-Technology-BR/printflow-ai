@@ -231,7 +231,7 @@ def export_usage_excel(start_date: date | None = None, end_date: date | None = N
         report_scope=_report_scope_label(rows, printer_uuid, unit_name, sector_name),
         bw_rate=float(company.default_bw_cost_per_page or company.default_cost_per_page or 0) if company else 0.0,
         color_rate=float(company.default_color_cost_per_page or 0) if company else 0.0,
-    ); filename = f"printflow-relatorio-{start.isoformat()}-{end.isoformat()}.xlsx"
+    ); filename = f"talvoa-relatorio-{start.isoformat()}-{end.isoformat()}.xlsx"
     return Response(content=content, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
@@ -246,5 +246,5 @@ def export_usage_pdf(start_date: date | None = None, end_date: date | None = Non
         report_scope=_report_scope_label(rows, printer_uuid, unit_name, sector_name),
         bw_rate=float(company.default_bw_cost_per_page or company.default_cost_per_page or 0) if company else 0.0,
         color_rate=float(company.default_color_cost_per_page or 0) if company else 0.0,
-    ); filename = f"printflow-relatorio-{start.isoformat()}-{end.isoformat()}.pdf"
+    ); filename = f"talvoa-relatorio-{start.isoformat()}-{end.isoformat()}.pdf"
     return Response(content=content, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
