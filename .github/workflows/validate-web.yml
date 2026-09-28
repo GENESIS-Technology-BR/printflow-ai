@@ -1,4 +1,4 @@
-name: PRINTFLOW Web Validation
+name: TALVOA Web Validation
 
 on:
   workflow_dispatch:
@@ -94,7 +94,7 @@ jobs:
         if: always()
         run: |
           {
-            echo "## PRINTFLOW Web Validation #${{ github.run_number }}"
+            echo "## TALVOA Web Validation #${{ github.run_number }}"
             echo "- Status: **${{ job.status }}**"
             echo "- Commit: \`${GITHUB_SHA}\`"
             echo "- Branch: \`${GITHUB_REF_NAME}\`"
