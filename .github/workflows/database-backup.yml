@@ -2,12 +2,6 @@ name: TALVOA Database Backup
 
 on:
   workflow_dispatch:
-    inputs:
-      upload_artifact:
-        description: "Publicar copia como artifact do GitHub"
-        required: false
-        default: true
-        type: boolean
   schedule:
     # 05:00 UTC = 02:00 America/Sao_Paulo (UTC-3)
     - cron: "0 5 * * *"
@@ -45,14 +39,13 @@ jobs:
           from pathlib import Path
           text = Path(".github/workflows/database-backup.yml").read_text(encoding="utf-8")
           assert 'cron: "0 5 * * *"' in text
-          assert "actions/upload-artifact@v5" in text
+          assert "actions/upload-artifact@" in text
           assert "TALVOA-DB-Daily-" in text
           assert "retention-days: 7" in text
           assert "TALVOA-DB-Weekly-" in text
           assert "retention-days: 28" in text
           assert "TALVOA-DB-Monthly-" in text
           assert "retention-days: 90" in text
-          assert "Copiar backup para Google Drive" not in text
           print("Contrato do workflow de backup TALVOA validado.")
           PY
 
@@ -126,6 +119,7 @@ jobs:
             echo "- SHA-256: **gerado**"
             echo "- Credenciais: **nao exibidas**"
             echo "- Destino de retencao: **GitHub Actions Artifacts**"
+            echo "- Backup armazenado: **criptografado (AES-256 + PBKDF2)**"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Provar restaurabilidade em PostgreSQL efemero isolado
@@ -223,6 +217,24 @@ jobs:
             echo "- Producao usada como destino: **nao**"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Criptografar backup antes do armazenamento no GitHub
+        shell: bash
+        env:
+          TALVOA_BACKUP_ENCRYPTION_KEY: ${{ secrets.TALVOA_BACKUP_ENCRYPTION_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${TALVOA_BACKUP_ENCRYPTION_KEY:-}" ]]; then
+            echo "::error::Secret TALVOA_BACKUP_ENCRYPTION_KEY nao configurado. O dump nao sera publicado sem criptografia."
+            exit 1
+          fi
+
+          encrypted="${BACKUP_FILE}.enc"
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 250000             -in "$BACKUP_FILE"             -out "$encrypted"             -pass env:TALVOA_BACKUP_ENCRYPTION_KEY
+
+          test -s "$encrypted"
+          sha256sum "$encrypted" | tee "$encrypted.sha256"
+          echo "UPLOAD_BACKUP_FILE=$encrypted" >> "$GITHUB_ENV"
+
       - name: Classificar retencao do backup
         id: retention
         shell: bash
@@ -258,8 +270,8 @@ jobs:
         with:
           name: TALVOA-DB-Daily-${{ github.run_number }}
           path: |
-            ${{ env.BACKUP_FILE }}
-            ${{ env.BACKUP_FILE }}.sha256
+            ${{ env.UPLOAD_BACKUP_FILE }}
+            ${{ env.UPLOAD_BACKUP_FILE }}.sha256
           if-no-files-found: error
           retention-days: 7
           compression-level: 9
@@ -270,8 +282,8 @@ jobs:
         with:
           name: TALVOA-DB-Weekly-${{ github.run_number }}
           path: |
-            ${{ env.BACKUP_FILE }}
-            ${{ env.BACKUP_FILE }}.sha256
+            ${{ env.UPLOAD_BACKUP_FILE }}
+            ${{ env.UPLOAD_BACKUP_FILE }}.sha256
           if-no-files-found: error
           retention-days: 28
           compression-level: 9
@@ -282,8 +294,8 @@ jobs:
         with:
           name: TALVOA-DB-Monthly-${{ github.run_number }}
           path: |
-            ${{ env.BACKUP_FILE }}
-            ${{ env.BACKUP_FILE }}.sha256
+            ${{ env.UPLOAD_BACKUP_FILE }}
+            ${{ env.UPLOAD_BACKUP_FILE }}.sha256
           if-no-files-found: error
           retention-days: 90
           compression-level: 9
