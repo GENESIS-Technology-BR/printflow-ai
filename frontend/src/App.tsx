@@ -14,7 +14,7 @@ import type { DashboardPrinter, MeProfile } from "./services/api"
 
 const API_URL = (
   import.meta.env.VITE_API_URL ||
-  "https://printflow-api-3uwr.onrender.com"
+  "https://printflow-api-genesis.onrender.com"
 ).replace(/\/$/, "")
 
 type Company = {
