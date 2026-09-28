@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def test_launcher_uses_hidden_token_prompt():
     launcher = (
-        ROOT / "agent" / "windows" / "Start-PRINTFLOW-Agent.ps1"
+        ROOT / "agent" / "windows" / "Start-TALVOA-Agent.ps1"
     ).read_text(encoding="utf-8")
 
     assert 'Read-Host' in launcher
@@ -18,16 +18,16 @@ def test_launcher_uses_hidden_token_prompt():
 
 def test_batch_file_does_not_echo_or_read_token():
     batch = (
-        ROOT / "agent" / "windows" / "Executar-PRINTFLOW-Agent.bat"
+        ROOT / "agent" / "windows" / "Executar-TALVOA-Agent.bat"
     ).read_text(encoding="utf-8")
 
-    assert "set /p PRINTFLOW_AGENT_TOKEN" not in batch
-    assert "Start-PRINTFLOW-Agent.ps1" in batch
+    assert "set /p TALVOA_AGENT_TOKEN" not in batch
+    assert "Start-TALVOA-Agent.ps1" in batch
 
 
 def test_installer_reads_clipboard_and_validates_token():
     installer = (
-        ROOT / "agent" / "windows" / "Install-PRINTFLOW-Agent.ps1"
+        ROOT / "agent" / "windows" / "Install-TALVOA-Agent.ps1"
     ).read_text(encoding="utf-8")
 
     assert "Get-Clipboard -Raw" in installer
@@ -35,10 +35,10 @@ def test_installer_reads_clipboard_and_validates_token():
     assert "printers/agent/heartbeat" in installer
     assert "agent_version = $agentVersion" in installer
     assert "BUILD-VALIDATION.txt" in installer
-    assert '[PRINTFLOW token protegido]' in installer
+    assert '[TALVOA token protegido]' in installer
 
     assert '$env:ProgramData' in installer
-    assert '"PRINTFLOW\\Agent"' in installer
+    assert '"TALVOA\\Agent"' in installer
 
     assert "encrypted_token_machine" in installer
     assert "DataProtectionScope]::LocalMachine" in installer
@@ -53,7 +53,7 @@ def test_installer_reads_clipboard_and_validates_token():
 
     assert "-Daemon" in installer
     assert "-AtLogOn" not in installer
-    assert "PRINTFLOW Agent Watchdog" in installer
+    assert "TALVOA Agent Watchdog" in installer
     assert "-RepetitionInterval (New-TimeSpan -Minutes 15)" in installer
 
     assert "-MultipleInstances IgnoreNew" in installer
@@ -77,7 +77,7 @@ def test_installer_reads_clipboard_and_validates_token():
 
 def test_launcher_accepts_machine_protected_token():
     launcher = (
-        ROOT / "agent" / "windows" / "Start-PRINTFLOW-Agent.ps1"
+        ROOT / "agent" / "windows" / "Start-TALVOA-Agent.ps1"
     ).read_text(encoding="utf-8")
 
     assert "^[A-Za-z0-9_-]{43}$" in launcher
@@ -89,40 +89,40 @@ def test_launcher_accepts_machine_protected_token():
 
 def test_two_click_installer_keeps_window_open():
     batch = (
-        ROOT / "agent" / "windows" / "INSTALAR-PRINTFLOW-Agent.bat"
+        ROOT / "agent" / "windows" / "INSTALAR-TALVOA-Agent.bat"
     ).read_text(encoding="utf-8")
 
     installer = (
-        ROOT / "agent" / "windows" / "Install-PRINTFLOW-Agent.ps1"
+        ROOT / "agent" / "windows" / "Install-TALVOA-Agent.ps1"
     ).read_text(encoding="utf-8")
 
     assert "%~dp0" in batch
     assert "-NoExit" in batch
     assert "-Verb RunAs" in batch
     assert "-Verb RunAs" in installer
-    assert "Install-PRINTFLOW-Agent.ps1" in batch
+    assert "Install-TALVOA-Agent.ps1" in batch
     assert "set /p" not in batch.lower()
 
 
 def test_build_validation_is_available_in_two_click_mode():
     batch = (
-        ROOT / "agent" / "windows" / "VALIDAR-PRINTFLOW-Build.bat"
+        ROOT / "agent" / "windows" / "VALIDAR-TALVOA-Build.bat"
     ).read_text(encoding="utf-8")
 
     validator = (
-        ROOT / "agent" / "windows" / "Validar-PRINTFLOW-Build.ps1"
+        ROOT / "agent" / "windows" / "Validar-TALVOA-Build.ps1"
     ).read_text(encoding="utf-8")
 
     assert "%~dp0" in batch
     assert "-NoExit" in batch
-    assert "Validar-PRINTFLOW-Build.ps1" in batch
+    assert "Validar-TALVOA-Build.ps1" in batch
 
     assert "RESULTADO-VALIDACAO.txt" in validator
     assert "Get-FileHash" in validator
-    assert "PRINTFLOW-Agent.exe" in validator
+    assert "TALVOA-Agent.exe" in validator
     assert "--help" in validator
 
-    assert 'Get-ScheduledTask -TaskName "PRINTFLOW Agent"' in validator
+    assert 'Get-ScheduledTask -TaskName "TALVOA Agent"' in validator
     assert '$task.State -ne "Queued"' in validator
     assert '$lastResult -eq 0 -or $taskIsRunning' in validator
     assert '$lastResult -eq 267009' in validator
@@ -136,12 +136,12 @@ def test_build_validation_is_available_in_two_click_mode():
 
 def test_uninstaller_removes_resident_agent():
     uninstaller = (
-        ROOT / "agent" / "windows" / "Uninstall-PRINTFLOW-Agent.ps1"
+        ROOT / "agent" / "windows" / "Uninstall-TALVOA-Agent.ps1"
     ).read_text(encoding="utf-8")
 
     assert '$env:ProgramData' in uninstaller
-    assert '"PRINTFLOW\\Agent"' in uninstaller
+    assert '"TALVOA\\Agent"' in uninstaller
     assert "Stop-ScheduledTask" in uninstaller
     assert "Unregister-ScheduledTask" in uninstaller
-    assert "PRINTFLOW-Agent.exe" in uninstaller
+    assert "TALVOA-Agent.exe" in uninstaller
     assert "agent-config.json" in uninstaller
