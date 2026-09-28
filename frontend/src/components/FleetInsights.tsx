@@ -80,7 +80,7 @@ export default function FleetInsights({
       <article className="executive-panel fleet-index-panel">
         <div className="executive-panel-header">
           <div>
-            <span>PRINTFLOW INDEX</span>
+            <span>TALVOA INDEX</span>
             <h3>Condição operacional</h3>
           </div>
 
