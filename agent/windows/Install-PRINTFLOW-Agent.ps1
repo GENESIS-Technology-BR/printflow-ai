@@ -250,7 +250,7 @@ function Write-InstallDiagnostic {
 try {
 
     Write-Host ""
-    Write-Host "PRINTFLOW Agent Windows v$agentVersion"
+    Write-Host "TALVOA Agent Windows v$agentVersion"
     Write-Host "Instalacao residente em:"
     Write-Host $installRoot
     Write-Host ""
@@ -277,7 +277,7 @@ try {
 
     $validationBody = @{
         agent_token = $plainToken
-        agent_name = "PRINTFLOW Agent Windows Installer"
+        agent_name = "TALVOA Agent Windows Installer"
         agent_version = $agentVersion
         status = "starting"
     } |
@@ -286,7 +286,7 @@ try {
     try {
 
         Invoke-RestMethod `
-            -Uri "https://printflow-api-3uwr.onrender.com/api/v1/printers/agent/heartbeat" `
+            -Uri "https://printflow-api-genesis.onrender.com/api/v1/printers/agent/heartbeat" `
             -Method Post `
             -ContentType "application/json" `
             -Body $validationBody |
@@ -644,7 +644,7 @@ try {
 
     Write-Host ""
     Write-Host "============================================================"
-    Write-Host " PRINTFLOW AGENT INSTALADO COM SUCESSO" -ForegroundColor Green
+    Write-Host " TALVOA AGENT INSTALADO COM SUCESSO" -ForegroundColor Green
     Write-Host "============================================================"
     Write-Host "Versao :" $agentVersion
     Write-Host "Pasta  :" $installRoot
@@ -663,7 +663,7 @@ catch {
     $message = $_.Exception.Message
 
     Write-Host ""
-    Write-Host "NAO FOI POSSIVEL INSTALAR O PRINTFLOW AGENT" `
+    Write-Host "NAO FOI POSSIVEL INSTALAR O TALVOA AGENT" `
         -ForegroundColor Red
 
     Write-Host $message `
