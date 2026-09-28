@@ -7,7 +7,7 @@ from backend.modules.alerts.service import (
     reconcile_company_alerts,
     serialize_alert,
 )
-from backend.modules.auth.dependencies import get_current_user
+from backend.modules.auth.dependencies import get_current_user, get_platform_admin
 from backend.modules.auth.model import User
 from backend.modules.dashboard.router import serialize_printer
 
@@ -36,7 +36,7 @@ def list_alerts(
 def acknowledge_operational_alert(
     alert_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_platform_admin),
 ):
     alert = acknowledge_alert(
         db, current_user.company_id, alert_id, current_user.id
