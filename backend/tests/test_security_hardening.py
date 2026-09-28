@@ -273,7 +273,8 @@ def test_production_hardening_disables_docs_and_trusts_hosts():
     main = source("backend/main.py")
 
     assert "TrustedHostMiddleware" in main
-    assert "TALVOA_ALLOWED_HOSTS" in main\n    assert "PRINTFLOW_ALLOWED_HOSTS" in main
+    assert "TALVOA_ALLOWED_HOSTS" in main
+    assert "PRINTFLOW_ALLOWED_HOSTS" in main
     assert 'docs_url=None if production else "/docs"' in main
     assert 'redoc_url=None if production else "/redoc"' in main
     assert 'openapi_url=None if production else "/openapi.json"' in main
