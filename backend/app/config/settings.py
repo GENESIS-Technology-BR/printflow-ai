@@ -19,15 +19,34 @@ def _env_bool_compat(primary: str, legacy: str, default: bool) -> bool:
     return _env_bool(legacy, default)
 
 
+def _database_url() -> str:
+    environment = os.getenv("ENVIRONMENT", "development").strip().lower()
+    value = os.getenv("DATABASE_URL", "").strip()
+
+    if environment == "production":
+        if not value:
+            raise RuntimeError(
+                "TALVOA production requires DATABASE_URL; SQLite fallback is disabled."
+            )
+        if value.lower().startswith("sqlite"):
+            raise RuntimeError(
+                "TALVOA production cannot use SQLite; configure PostgreSQL/Supabase DATABASE_URL."
+            )
+        if not value.lower().startswith(("postgresql://", "postgres://")):
+            raise RuntimeError(
+                "TALVOA production DATABASE_URL must point to PostgreSQL/Supabase."
+            )
+        return value
+
+    return value or "sqlite:///./talvoa.db"
+
+
 @dataclass(frozen=True)
 class Settings:
     app_name: str = os.getenv("APP_NAME", "TALVOA")
     version: str = os.getenv("APP_VERSION", "0.6.0")
     environment: str = os.getenv("ENVIRONMENT", "development")
-    database_url: str = os.getenv(
-        "DATABASE_URL",
-        "sqlite:///./printflow.db",
-    )
+    database_url: str = _database_url()
     report_utc_offset_hours: int = int(
         _env_first("TALVOA_REPORT_UTC_OFFSET_HOURS", "PRINTFLOW_REPORT_UTC_OFFSET_HOURS", "-3")
     )
