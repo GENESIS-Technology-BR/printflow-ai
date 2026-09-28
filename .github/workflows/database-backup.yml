@@ -1,4 +1,5 @@
 name: TALVOA Database Backup
+# TALVOA backup trigger: connection-string mode
 
 on:
   workflow_dispatch:
