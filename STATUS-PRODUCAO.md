@@ -1,4 +1,4 @@
-# PRINTFLOW — STATUS DE PRODUÇÃO
+# TALVOA — STATUS DE PRODUÇÃO
 
 > Quadro operacional atualizado em 2026-09-24.
 
@@ -9,7 +9,7 @@
 | Versão alvo | v1.0 |
 | Estado | 🟡 HOMOLOGAÇÃO FINAL |
 | API oficial | `printflow-api` — LIVE |
-| Banco oficial | Supabase `Printflow-Production` — ACTIVE_HEALTHY |
+| Banco oficial | Supabase `TALVOA-Production` — ACTIVE_HEALTHY |
 | Frontend | Render `printflow` — rota atualizada para API oficial |
 | Agent | v1.0.1 homologado anteriormente; heartbeat atual precisa nova confirmação |
 | DR | backup/restore automatizado existe; restore recente no novo banco ainda precisa ser fechado |
