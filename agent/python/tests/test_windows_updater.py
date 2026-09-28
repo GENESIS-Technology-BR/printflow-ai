@@ -27,7 +27,7 @@ def test_updater_has_backup_and_rollback():
     ).read_text(encoding="utf-8")
 
     assert '"TALVOA\\Backups"' in updater
-    assert "Restore-TalvoaBackup" in updater
+    assert "Restore-TALVOABackup" in updater
     assert "$backupReady" in updater
     assert "ROLLBACK TALVOA" in updater
     assert "A versao anterior foi restaurada" in updater
@@ -38,14 +38,14 @@ def test_updater_restores_system_resident_agent():
         ROOT / "agent" / "windows" / "Update-TALVOA-Agent.ps1"
     ).read_text(encoding="utf-8")
 
-    assert "Register-TalvoaTask" in updater
+    assert "Register-TALVOATask" in updater
     assert "New-ScheduledTaskPrincipal" in updater
     assert '-UserId "SYSTEM"' in updater
     assert "-LogonType ServiceAccount" in updater
     assert "-RunLevel Highest" in updater
     assert "New-ScheduledTaskTrigger" in updater
     assert "-AtStartup" in updater
-    assert "Start-AndValidateTalvoaAgent" in updater
+    assert "Start-AndValidateTALVOAAgent" in updater
     assert "-RestartCount 10" in updater
     assert "-RestartInterval (New-TimeSpan -Minutes 1)" in updater
 
