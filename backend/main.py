@@ -55,18 +55,18 @@ production = settings.environment.lower() == "production"
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,
-    description="Plataforma GENESIS para gestão inteligente de impressão",
+    description="TALVOA — Gestão inteligente do parque de impressão",
     lifespan=lifespan,
     docs_url=None if production else "/docs",
     redoc_url=None if production else "/redoc",
     openapi_url=None if production else "/openapi.json",
 )
 
-trusted_hosts = [item.strip() for item in os.getenv("TALVOA_ALLOWED_HOSTS", "*.onrender.com,localhost,127.0.0.1").split(",") if item.strip()]
+trusted_hosts = [item.strip() for item in (os.getenv("TALVOA_ALLOWED_HOSTS") or os.getenv("PRINTFLOW_ALLOWED_HOSTS") or "*.onrender.com,localhost,127.0.0.1").split(",") if item.strip()]
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
 
 allowed_origins = ["https://printflow-web.onrender.com", "https://printflow-m84u.onrender.com"]
-configured_origins = [item.strip().rstrip("/") for item in os.getenv("TALVOA_CORS_ORIGINS", "").split(",") if item.strip()]
+configured_origins = [item.strip().rstrip("/") for item in (os.getenv("TALVOA_CORS_ORIGINS") or os.getenv("PRINTFLOW_CORS_ORIGINS") or "").split(",") if item.strip()]
 for origin in configured_origins:
     if origin not in allowed_origins: allowed_origins.append(origin)
 allow_origin_regex = r"https://printflow(?:-[a-z0-9]+)*\.onrender\.com"
@@ -74,7 +74,7 @@ if not production:
     allowed_origins.append("http://localhost:5173")
     allow_origin_regex = r"(?:https://printflow(?:-[a-z0-9]+)*\.onrender\.com|https://.*\.app\.github\.dev)"
 
-app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_origin_regex=allow_origin_regex, allow_credentials=True, allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"], allow_headers=["Authorization", "Content-Type", "Accept", "X-Recovery-Key", "X-CSRF-Protection", "X-TALVOA-Integration-Key"])
+app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_origin_regex=allow_origin_regex, allow_credentials=True, allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"], allow_headers=["Authorization", "Content-Type", "Accept", "X-Recovery-Key", "X-CSRF-Protection", "X-TALVOA-Integration-Key", "X-PRINTFLOW-Integration-Key"])
 
 
 @app.middleware("http")
