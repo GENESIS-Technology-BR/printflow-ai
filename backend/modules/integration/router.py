@@ -33,7 +33,7 @@ router = APIRouter(prefix="/integration", tags=["Integration"])
 
 
 def _integration_key() -> str:
-    key = os.getenv("PRINTFLOW_INTEGRATION_KEY", "").strip()
+    key = (os.getenv("TALVOA_INTEGRATION_KEY") or os.getenv("PRINTFLOW_INTEGRATION_KEY") or "").strip()
     if len(key) < 32:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -49,7 +49,8 @@ def require_integration_key(
     ),
 ) -> None:
     expected = _integration_key()
-    if not hmac.compare_digest(x_printflow_integration_key, expected):
+    provided = (x_talvoa_integration_key or x_printflow_integration_key or "").strip()
+    if not hmac.compare_digest(provided, expected):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credencial de integração inválida",
@@ -238,7 +239,7 @@ def integration_status(db: Session = Depends(get_db)) -> dict:
     agents_online = sum(1 for company in companies if _agent_communication(company)[0])
 
     return {
-        "application": "Printflow Integration API",
+        "application": "TALVOA Integration API",
         "mode": "read_only",
         "status": "healthy",
         "generated_at": datetime.now(timezone.utc).isoformat(),
