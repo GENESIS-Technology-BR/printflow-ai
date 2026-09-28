@@ -1,10 +1,10 @@
 param(
     [string]$PrinterIP = "10.2.0.124",
-    [string]$ApiUrl = "https://printflow-api-3uwr.onrender.com"
+    [string]$ApiUrl = "https://printflow-api-genesis.onrender.com"
 )
 
 $ErrorActionPreference = "Stop"
-Write-Host "PRINTFLOW Agent v0.1" -ForegroundColor Cyan
+Write-Host "TALVOA Agent v0.1" -ForegroundColor Cyan
 Write-Host "Testando impressora $PrinterIP..."
 
 $online = Test-Connection -ComputerName $PrinterIP -Count 2 -Quiet
