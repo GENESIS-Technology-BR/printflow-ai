@@ -52,7 +52,7 @@ def test_excel_report_generates_valid_workbook():
     assert workbook.sheetnames == ["Resumo", "Histórico diário"]
 
     summary = workbook["Resumo"]
-    assert summary["A1"].value == "Printflow - Relatório de Impressão"
+    assert summary["A1"].value == "TALVOA - Relatório de Impressão"
     assert summary["A2"].value == (
         "Empresa: Empresa Teste  —  Período: 01/09/2026 a 02/09/2026"
     )
