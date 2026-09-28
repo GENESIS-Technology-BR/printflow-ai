@@ -1,4 +1,4 @@
-# PRINTFLOW — Diário de Bordo Técnico
+# TALVOA — Diário de Bordo Técnico
 
 > Registro operacional do projeto. Não registrar senhas, tokens, URLs de banco ou outros secrets neste arquivo.
 
@@ -68,7 +68,7 @@
 ### Contador de páginas
 - HP Laser MFP 432 (`10.2.0.124`) validada contra a interface web física do equipamento.
 - Contador físico: 24.321 páginas.
-- PRINTFLOW: 24.321 páginas.
+- TALVOA: 24.321 páginas.
 - Fluxo HP -> SNMP -> Agent -> API -> banco -> portal homologado para este equipamento.
 - A correção monotônica do backend permanece ativa para impedir regressão de contadores confirmados.
 
