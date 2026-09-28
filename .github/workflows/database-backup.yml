@@ -52,14 +52,19 @@ jobs:
       - name: Verificar configuracao segura
         shell: bash
         env:
+          TALVOA_DATABASE_URL: ${{ secrets.TALVOA_SUPABASE_DATABASE_URL }}
           TALVOA_DB_PASSWORD: ${{ secrets.TALVOA_SUPABASE_DATABASE_PASSWORD || secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
         run: |
           set -euo pipefail
-          if [[ -z "${TALVOA_DB_PASSWORD:-}" ]]; then
-            echo "::error::Senha do banco TALVOA ainda nao configurada no GitHub Secrets. Nenhum acesso ao banco foi realizado."
+          if [[ -z "${TALVOA_DATABASE_URL:-}" && -z "${TALVOA_DB_PASSWORD:-}" ]]; then
+            echo "::error::Configure TALVOA_SUPABASE_DATABASE_URL (preferencial) ou TALVOA_SUPABASE_DATABASE_PASSWORD no GitHub Secrets."
             exit 1
           fi
-          echo "Configuracao segura do Supabase presente. Valor protegido e nao exibido."
+          if [[ -n "${TALVOA_DATABASE_URL:-}" ]]; then
+            echo "Connection string completa do Supabase presente. Valor protegido e nao exibido."
+          else
+            echo "Senha do Supabase presente via modo legado. Valor protegido e nao exibido."
+          fi
 
       - name: Instalar cliente PostgreSQL 18
         shell: bash
@@ -78,6 +83,7 @@ jobs:
       - name: Gerar backup logico somente leitura
         shell: bash
         env:
+          TALVOA_DATABASE_URL: ${{ secrets.TALVOA_SUPABASE_DATABASE_URL }}
           PGPASSWORD: ${{ secrets.TALVOA_SUPABASE_DATABASE_PASSWORD || secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
           PGHOST: aws-0-ca-central-1.pooler.supabase.com
           PGPORT: "5432"
@@ -88,13 +94,27 @@ jobs:
           mkdir -p "$BACKUP_DIR"
           stamp="$(date -u +'%Y%m%dT%H%M%SZ')"
           file="$BACKUP_DIR/talvoa-supabase-$stamp.dump"
-          pg_dump \
-            --dbname="$PGDATABASE" \
-            --format=custom \
-            --compress=9 \
-            --no-owner \
-            --no-privileges \
-            --file="$file"
+
+          if [[ -n "${TALVOA_DATABASE_URL:-}" ]]; then
+            echo "Backup usando connection string TALVOA_SUPABASE_DATABASE_URL."
+            pg_dump \
+              --dbname="$TALVOA_DATABASE_URL" \
+              --format=custom \
+              --compress=9 \
+              --no-owner \
+              --no-privileges \
+              --file="$file"
+          else
+            echo "Backup usando configuracao legada por PGPASSWORD."
+            pg_dump \
+              --dbname="$PGDATABASE" \
+              --format=custom \
+              --compress=9 \
+              --no-owner \
+              --no-privileges \
+              --file="$file"
+          fi
+
           test -s "$file"
           echo "BACKUP_FILE=$file" >> "$GITHUB_ENV"
 
