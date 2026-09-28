@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-# PRINTFLOW_C1_PRINTER_INTELLIGENCE_HOOK
+# TALVOA_C1_PRINTER_INTELLIGENCE_HOOK
 from intelligence.agent_cycle_integration import install_agent_cycle_hook
 install_agent_cycle_hook()
 
@@ -25,13 +25,13 @@ install_page_count_fallback()
 from config.settings import AgentSettings
 from core.logger import configure_logger
 from core.scheduler import AgentScheduler
-from core.service import PrintflowAgentService
+from core.service import TalvoaAgentService
 
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "PRINTFLOW Agent Core — "
+            "TALVOA Agent Core — "
             "Discovery, SNMP e Inventário"
         )
     )
@@ -85,7 +85,7 @@ def main() -> int:
         settings.logs_directory
     )
 
-    service = PrintflowAgentService(
+    service = TalvoaAgentService(
         settings=settings,
         logger=logger,
         manual_networks=arguments.network,
