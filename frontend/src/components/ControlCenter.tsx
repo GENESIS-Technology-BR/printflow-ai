@@ -295,7 +295,7 @@ export default function ControlCenter() {
       <header className="control-center-header">
         <div>
           <span>
-            Printflow · OPERAÇÕES
+            TALVOA · OPERAÇÕES
           </span>
 
           <h1>Control Center</h1>
@@ -600,7 +600,7 @@ export default function ControlCenter() {
             </span>
 
             <h2>
-              Ambientes Printflow
+              Ambientes TALVOA
             </h2>
           </div>
 
