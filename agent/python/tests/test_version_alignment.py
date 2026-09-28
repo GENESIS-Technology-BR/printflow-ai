@@ -20,7 +20,7 @@ def test_version_has_single_source():
 
 def test_installer_reads_version_from_build_metadata():
     installer = (
-        ROOT / "agent" / "windows" / "Install-PRINTFLOW-Agent.ps1"
+        ROOT / "agent" / "windows" / "Install-TALVOA-Agent.ps1"
     ).read_text(encoding="utf-8")
 
     assert 'BUILD-VALIDATION.txt' in installer
@@ -34,7 +34,7 @@ def test_workflow_does_not_have_manual_build_number():
         ROOT / ".github" / "workflows" / "build-agent-windows.yml"
     ).read_text(encoding="utf-8")
 
-    assert 'PRINTFLOW_BUILD_NUMBER:' not in workflow
+    assert 'TALVOA_BUILD_NUMBER:' not in workflow
     assert 'Build: ${{ github.run_number }}' in workflow
     assert 'Build-${{ github.run_number }}' in workflow
 
@@ -46,12 +46,12 @@ def test_workflow_reads_agent_version_from_version_module():
 
     assert "from version import AGENT_VERSION" in workflow
     assert "Version: $agentVersion" in workflow
-    assert "PRINTFLOW_AGENT_VERSION:" not in workflow
+    assert "TALVOA_AGENT_VERSION:" not in workflow
 
 
 def test_validator_is_dynamic():
     validator = (
-        ROOT / "agent" / "windows" / "Validar-PRINTFLOW-Build.ps1"
+        ROOT / "agent" / "windows" / "Validar-TALVOA-Build.ps1"
     ).read_text(encoding="utf-8")
 
     assert "$buildNumber" in validator
@@ -61,7 +61,7 @@ def test_validator_is_dynamic():
 
 def test_validator_accepts_dynamic_installer_version():
     validator = (
-        ROOT / "agent" / "windows" / "Validar-PRINTFLOW-Build.ps1"
+        ROOT / "agent" / "windows" / "Validar-TALVOA-Build.ps1"
     ).read_text(encoding="utf-8")
 
     assert "$usesDynamicVersion" in validator
