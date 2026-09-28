@@ -32,7 +32,7 @@ def send_password_reset_email(
     username = _env("SMTP_USERNAME")
     password = _env("SMTP_PASSWORD")
     from_email = _env("SMTP_FROM_EMAIL")
-    from_name = _env("SMTP_FROM_NAME", "Printflow")
+    from_name = _env("SMTP_FROM_NAME", "TALVOA")
     port = int(_env("SMTP_PORT", "587") or "587")
     use_ssl = _env("SMTP_USE_SSL", "false").lower() in {"1", "true", "yes", "on"}
 
@@ -40,11 +40,11 @@ def send_password_reset_email(
         return False
 
     message = EmailMessage()
-    message["Subject"] = "Redefinição de senha - Printflow"
+    message["Subject"] = "Redefinição de senha - TALVOA"
     message["From"] = f"{from_name} <{from_email}>"
     message["To"] = recipient
     message.set_content(
-        "Recebemos uma solicitação para redefinir sua senha no Printflow.\n\n"
+        "Recebemos uma solicitação para redefinir sua senha no TALVOA.\n\n"
         "Use o link abaixo em até 15 minutos:\n"
         f"{reset_url}\n\n"
         "Se você não solicitou esta alteração, ignore esta mensagem."
