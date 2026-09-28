@@ -1,4 +1,4 @@
-/* PRINTFLOW Empresa e Agent v098
+/* TALVOA Empresa e Agent v098
    Protege o token e apresenta comunicação e condição operacional real do Agent.
    Security baseline: dados da API são renderizados somente via textContent e o polling
    é encerrado quando o painel sai do DOM. */
@@ -88,7 +88,7 @@ function renderOperation(operation: HTMLElement, data: AgentStatus) {
   const values = [
     ['Condição do ciclo', cycle.label, cycle.tone],
     ['Versão', data.version || 'Não informada', ''],
-    ['Identificação', data.name || 'PRINTFLOW Agent', ''],
+    ['Identificação', data.name || 'TALVOA Agent', ''],
     ['Última comunicação', formatLastSeen(data.last_seen), ''],
   ]
 
