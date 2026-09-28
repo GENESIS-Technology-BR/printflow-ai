@@ -302,11 +302,11 @@ try {
 
     $processInfo.EnvironmentVariables[
         "PRINTFLOW_API_URL"
-    ] = "https://printflow-api-3uwr.onrender.com"
+    ] = "https://printflow-api-genesis.onrender.com"
 
     $processInfo.EnvironmentVariables[
         "PRINTFLOW_AGENT_NAME"
-    ] = "PRINTFLOW Agent Windows"
+    ] = "TALVOA Agent Windows"
 
     $processInfo.EnvironmentVariables[
         "PRINTFLOW_SCAN_INTERVAL"
@@ -384,7 +384,7 @@ finally {
 if (-not $Daemon) {
 
     Write-Host ""
-    Write-Host "PRINTFLOW AGENT FINALIZADO"
+    Write-Host "TALVOA AGENT FINALIZADO"
     Write-Host "Codigo de saida: $agentExitCode"
     Write-Host "Verifique output, logs e o Dashboard."
 
