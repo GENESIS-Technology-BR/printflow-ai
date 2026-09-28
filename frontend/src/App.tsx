@@ -4,6 +4,7 @@ import "./App.css"
 import Dashboard from "./components/Dashboard"
 
 const PrinterTable = lazy(() => import("./components/PrinterTable"))
+const ClientPrinterTable = lazy(() => import("./components/ClientPrinterTable"))
 const AgentMonitor = lazy(() => import("./components/AgentMonitor"))
 const ControlCenter = lazy(() => import("./components/ControlCenter"))
 const Reports = lazy(() => import("./components/Reports"))
@@ -359,8 +360,15 @@ function App() {
     ),
   );
 
+  const isPlatformAdmin = profile?.role === "platform_admin";
+  const isClientView = isClientPreview || !isPlatformAdmin;
+
+  if (isClientView && !["dashboard", "printers", "reports"].includes(page)) {
+    setPage("dashboard");
+  }
+
   return (
-    <div className="shell">
+    <div className={`shell ${isClientView ? "client-shell" : "admin-shell"}`}>
       <ThemeToggle />
       {isClientPreview && (
         <div
@@ -412,9 +420,9 @@ function App() {
           <div className="workspace-user-copy">
             <strong>{profile?.name || "Usuário"}</strong>
             <span>
-              {profile?.role === "platform_admin"
-                ? "Administrador da plataforma"
-                : "Usuário da empresa"}
+              {isClientView
+                ? "Portal do cliente"
+                : "Administrador da plataforma"}
             </span>
           </div>
           <div className="workspace-avatar">
@@ -428,19 +436,23 @@ function App() {
           <img src="/brand/printflow-mark.svg" alt="" aria-hidden="true" />
           <div className="brand-copy">
             <strong>Printflow</strong>
-            <span>Operations Platform</span>
+            <span>{isClientView ? "Portal do Cliente" : "Operations Platform"}</span>
           </div>
         </div>
         <nav>
           <small className="nav-section-title">MENU PRINCIPAL</small>
           <button className={page === "dashboard" ? "active" : ""} onClick={() => setPage("dashboard")}><span className="nav-icon">⌂</span>Visão Geral</button>
-          {profile?.role === "platform_admin" && (
+          {!isClientView && (
             <button className={page === "control" ? "active" : ""} onClick={() => setPage("control")}><span className="nav-icon">▦</span>Control Center</button>
           )}
-          <button className={page === "company" ? "active" : ""} onClick={() => setPage("company")}><span className="nav-icon">⌘</span>Empresa e Agent</button>
+          {!isClientView && (
+            <button className={page === "company" ? "active" : ""} onClick={() => setPage("company")}><span className="nav-icon">⌘</span>Empresa e Agent</button>
+          )}
           <button className={page === "printers" ? "active" : ""} onClick={() => { setPage("printers"); void loadPrinters() }}><span className="nav-icon">▣</span>Impressoras</button>
           <button className={page === "reports" ? "active" : ""} onClick={() => setPage("reports")}><span className="nav-icon">≡</span>Relatórios</button>
-          <button className={page === "agents" ? "active" : ""} onClick={() => setPage("agents")}><span className="nav-icon">◉</span>Agentes</button>
+          {!isClientView && (
+            <button className={page === "agents" ? "active" : ""} onClick={() => setPage("agents")}><span className="nav-icon">◉</span>Agentes</button>
+          )}
         </nav>
         <button className="logout" onClick={logout}>Sair</button>
       </aside>
@@ -479,10 +491,14 @@ function App() {
               </div>
             </header>
 
-            <PrinterTable
-              printers={printers}
-              defaultCostPerPage={company?.default_bw_cost_per_page || company?.default_cost_per_page || 0}
-            />
+            {isClientView ? (
+              <ClientPrinterTable printers={printers} />
+            ) : (
+              <PrinterTable
+                printers={printers}
+                defaultCostPerPage={company?.default_bw_cost_per_page || company?.default_cost_per_page || 0}
+              />
+            )}
           </section>
         ) : page === "agents" ? (
           <AgentMonitor agentToken={company?.agent_token || null} onRegenerateToken={regenerateToken} />
