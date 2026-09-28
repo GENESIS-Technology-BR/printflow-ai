@@ -248,8 +248,8 @@ function App() {
         <ThemeToggle />
         <section className="auth-card auth-card-erp">
           <div className="pf-login-brand">
-            <img className="pf-login-brand-mark" src="/brand/printflow-mark.svg" alt="Símbolo Printflow" />
-            <strong>Printflow</strong>
+            <img className="pf-login-brand-mark" src="/brand/printflow-mark.svg" alt="Símbolo TALVOA" />
+            <strong>TALVOA</strong>
           </div>
           <div className="pf-login-product-name">Gestão Inteligente de Impressão</div>
           <div className="auth-flow-title">
@@ -401,7 +401,7 @@ function App() {
       <div className="workspace-topbar">
         <div className="workspace-context">
           <span className="workspace-product">
-            PRINTFLOW
+            TALVOA
           </span>
           <span className="workspace-divider">/</span>
           <strong>
@@ -431,7 +431,7 @@ function App() {
         <div className="brand">
           <img src="/brand/printflow-mark.svg" alt="" aria-hidden="true" />
           <div className="brand-copy">
-            <strong>Printflow</strong>
+            <strong>TALVOA</strong>
             <span>{isClientView ? "Portal do Cliente" : "Operations Platform"}</span>
           </div>
         </div>
@@ -506,7 +506,7 @@ function App() {
             </header>
             <section className="hero">
               <div>
-                <small>Printflow · AMBIENTE DO CLIENTE</small>
+                <small>TALVOA · AMBIENTE DO CLIENTE</small>
                 <h2>{company?.name || "Carregando empresa..."}</h2>
                 <p>Dados corporativos, tarifa padrão e vínculo seguro do Agent.</p>
               </div>
