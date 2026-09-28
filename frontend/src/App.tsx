@@ -363,10 +363,6 @@ function App() {
   const isPlatformAdmin = profile?.role === "platform_admin";
   const isClientView = isClientPreview || !isPlatformAdmin;
 
-  if (isClientView && !["dashboard", "printers", "reports"].includes(page)) {
-    setPage("dashboard");
-  }
-
   return (
     <div className={`shell ${isClientView ? "client-shell" : "admin-shell"}`}>
       <ThemeToggle />
