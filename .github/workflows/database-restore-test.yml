@@ -1,10 +1,10 @@
-name: PRINTFLOW Database Restore Test
+name: TALVOA Database Restore Test
 
 on:
   workflow_dispatch:
     inputs:
       backup_run_id:
-        description: "Run ID do PRINTFLOW Database Backup que publicou o artifact"
+        description: "Run ID do TALVOA Database Backup que publicou o artifact"
         required: true
         type: string
       confirmation:
@@ -127,7 +127,7 @@ jobs:
           fi
           object_count="$(grep -cv '^;' /tmp/restore-list.txt || true)"
           {
-            echo "## PRINTFLOW Restore Test"
+            echo "## TALVOA Restore Test"
             echo "- Resultado: **RESTORE VALIDADO**"
             echo "- Destino: **laboratorio DR temporario**"
             echo "- PostgreSQL client: \`18\`"
