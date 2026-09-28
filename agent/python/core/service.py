@@ -22,7 +22,7 @@ def _monotonic() -> float:
     return time.monotonic()
 
 
-class PrintflowAgentService:
+class TalvoaAgentService:
     def __init__(
         self,
         settings: AgentSettings,
@@ -668,3 +668,7 @@ class PrintflowAgentService:
         )
 
         return 0
+
+
+# Compatibilidade temporaria para instalacoes e testes legados.
+PrintflowAgentService = TalvoaAgentService
