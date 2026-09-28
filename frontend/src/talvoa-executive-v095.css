@@ -1,0 +1,80 @@
+/* TALVOA Executive Polish v0.95 */
+:root{
+  --tv-bg:#f4f6f8;--tv-surface:#fff;--tv-border:#d9e0e7;--tv-border-soft:#e8edf2;
+  --tv-text:#10233b;--tv-muted:#687a8d;--tv-blue:#0a6ed1;--tv-blue-strong:#075cab;
+  --tv-blue-soft:#eef6fd;--tv-success:#16854b;--tv-warning:#a86508;--tv-danger:#bb2b3b;
+  --tv-radius:10px;--tv-shadow:0 1px 2px rgba(15,35,55,.04),0 8px 28px rgba(15,35,55,.035)
+}
+body,#root,.shell,.dashboard{background:var(--tv-bg)!important;color:var(--tv-text)!important}
+.dashboard{padding-bottom:38px!important}
+.workspace-topbar{min-height:60px!important;border-bottom:1px solid var(--tv-border-soft)!important;background:rgba(255,255,255,.985)!important;box-shadow:0 1px 4px rgba(16,35,59,.025)!important}
+.workspace-context strong,.workspace-user-copy strong{color:var(--tv-text)!important}
+.workspace-environment{border-color:#bdd9f3!important;background:#f3f8fd!important;color:#25689c!important;font-weight:700!important}
+.shell aside{border-right:1px solid var(--tv-border-soft)!important;background:#fff!important;box-shadow:1px 0 6px rgba(16,35,59,.025)!important}
+.brand{padding-top:2px!important;padding-bottom:16px!important}
+.brand-copy strong{color:#10233b!important;font-size:16px!important;letter-spacing:.01em!important}
+.brand-copy span{color:#8796a6!important;font-size:9px!important;font-weight:700!important}
+.shell nav button{min-height:40px!important;margin:1px 0!important;border-radius:7px!important;color:#41566d!important;font-weight:600!important}
+.shell nav button:hover{background:#f6f9fb!important;color:#17324f!important}
+.shell nav button.active{background:linear-gradient(90deg,#eef6fd,#f8fbfe)!important;color:var(--tv-blue)!important;box-shadow:inset 3px 0 0 var(--tv-blue)!important}
+.shell nav button.active::after{display:none!important}
+.nav-section-title{color:#95a2af!important}
+.dashboard>header,.modern-dashboard-header,.control-center-header,.agent-monitor-header,.reports-header{min-height:72px!important;padding-top:16px!important;padding-bottom:16px!important;border-bottom:1px solid var(--tv-border-soft)!important;background:#fff!important}
+.dashboard h1,.modern-dashboard-header h1,.control-center-header h1,.agent-monitor-header h1,.reports-header h1{color:#10233b!important;font-weight:760!important;letter-spacing:-.025em!important}
+.panel,.hero,.control-center-kpis article,.control-center-panel,.control-center-onboarding,.control-center-created,.control-center-users,.agent-overview,.agent-metrics article,.agent-panel,.reports-intro,.reports-filters,.reports-metrics article,.reports-table-card,.printers-workspace-header{border:1px solid var(--tv-border)!important;border-radius:var(--tv-radius)!important;background:var(--tv-surface)!important;box-shadow:var(--tv-shadow)!important}
+button{transition:border-color .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease,transform .08s ease!important}
+button:active:not(:disabled){transform:translateY(1px)}
+.primary,.cc-primary,.cc-create-button,.reports-downloads button:not(.pdf),.printers-workspace-actions button,.agent-monitor-header button{border-color:var(--tv-blue)!important;background:var(--tv-blue)!important;color:#fff!important;box-shadow:0 1px 2px rgba(10,110,209,.16)!important}
+.primary:hover,.cc-primary:hover,.cc-create-button:hover,.reports-downloads button:not(.pdf):hover,.printers-workspace-actions button:hover,.agent-monitor-header button:hover{border-color:var(--tv-blue-strong)!important;background:var(--tv-blue-strong)!important}
+.reports-downloads button.pdf,.actions button,.cc-row-actions button,.agent-actions button{border:1px solid #c8d3de!important;background:#fff!important;color:#34506d!important;box-shadow:none!important}
+input,select,textarea,.reports-filters input,.reports-filters select,.printer-filter-bar input,.printer-filter-bar select,.cc-onboarding-form input,.cc-user-form input{min-height:42px!important;border:1px solid #cbd5df!important;border-radius:7px!important;background:#fff!important;color:#17324f!important}
+input:focus,select:focus,textarea:focus,.reports-filters input:focus,.reports-filters select:focus{border-color:#78aee0!important;outline:none!important;box-shadow:0 0 0 3px rgba(10,110,209,.08)!important}
+.modern-dashboard-kpis,.dashboard-kpis,.control-center-kpis{gap:12px!important}
+.modern-dashboard-kpis article,.dashboard-kpis article,.control-center-kpis article{position:relative;min-height:98px!important;padding:16px 17px!important;overflow:hidden}
+.modern-dashboard-kpis article::before,.dashboard-kpis article::before,.control-center-kpis article::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:#dbe8f4}
+.modern-dashboard-kpis strong,.dashboard-kpis strong,.control-center-kpis strong{color:#10233b!important;font-weight:760!important;letter-spacing:-.02em!important}
+.modern-dashboard-kpis span,.dashboard-kpis span,.control-center-kpis span,.modern-dashboard-kpis small,.dashboard-kpis small,.control-center-kpis small{color:#738397!important}
+table{border-collapse:separate!important;border-spacing:0!important}
+th{background:#f6f8fa!important;color:#5b6d80!important;font-size:10px!important;font-weight:800!important;letter-spacing:.055em!important;text-transform:uppercase!important}
+td{color:#263b52!important}
+tbody tr:hover td{background:#f9fbfd!important}
+.reports-page{gap:15px!important}
+.reports-intro{border-left:3px solid var(--tv-blue)!important;padding:22px!important}
+.reports-intro small,.reports-table-title small{color:#2f6fa8!important}
+.reports-intro h2,.reports-table-title h3{color:#10233b!important}
+.reports-intro p{color:#6e8092!important}
+.reports-filters{gap:12px!important;padding:16px!important}
+.reports-filters label{color:#52677d!important}
+.reports-metrics{gap:10px!important}
+.reports-metrics article{min-height:92px!important;padding:15px 16px!important}
+.reports-metrics span,.reports-metrics small{color:#748599!important}
+.reports-metrics strong{color:#10233b!important;font-size:25px!important;letter-spacing:-.025em!important}
+.reports-table th,.reports-table td{border-bottom:1px solid var(--tv-border-soft)!important}
+.reports-table td strong{color:#17324f!important}.reports-table td small{color:#8290a0!important}
+.reports-table td.pages,.reports-table td.cost,.reports-table td.rate{color:#0b67b2!important}
+.control-center-page{color:var(--tv-text)!important}
+.control-center-panel{overflow:hidden!important}
+.control-center-title{padding:16px 18px!important;background:#fff!important}
+.control-center-row{border-bottom:1px solid var(--tv-border-soft)!important;background:#fff!important}
+.control-center-row.header{background:#f7f9fb!important}
+.cc-online{color:var(--tv-success)!important}.cc-warning{color:var(--tv-warning)!important}.cc-offline{color:var(--tv-danger)!important}
+.cc-row-actions .cc-preview-button{border-color:#b9d3eb!important;background:#f4f9fd!important;color:#1e659d!important}
+.agent-monitor-page{background:transparent!important;color:var(--tv-text)!important}
+.agent-overview{border-left:4px solid var(--tv-success)!important;padding:21px 22px!important}
+.agent-state-icon{background:#eef9f2!important}
+.agent-state-copy>span,.agent-panel-title span{color:#2f6fa8!important}
+.agent-state-copy h2,.agent-state-time strong,.agent-metrics strong,.agent-panel-title h3{color:#10233b!important}
+.agent-state-copy p,.agent-state-time span,.agent-token-help,.agent-metrics span,.agent-metrics small,.agent-alert p{color:#748599!important}
+.agent-metrics{gap:10px!important}.agent-metrics article{min-height:108px!important;padding:16px!important}
+.agent-monitor-grid{gap:12px!important}
+.agent-alert{border:1px solid #dce8e1!important;background:#f7fbf8!important}
+.agent-token{border:1px solid #d8e1ea!important;background:#f7f9fb!important;color:#294867!important}
+.printers-workspace-header{padding:18px 20px!important}
+.printers-workspace-header h1{color:#10233b!important}.printers-workspace-header p{color:#718397!important}
+.printers-api-status,.online{border:1px solid #bfe0cc!important;background:#f2faf5!important;color:var(--tv-success)!important}
+.printer-filter-bar{gap:0!important;overflow:hidden;border:1px solid var(--tv-border)!important;border-radius:8px!important;background:#fff!important}
+.printer-filter-bar input,.printer-filter-bar select{border:0!important;border-right:1px solid var(--tv-border-soft)!important;border-radius:0!important;min-height:46px!important}
+.printer-filter-count{padding:0 14px!important;color:#607488!important}
+@media(min-width:1280px){.dashboard{padding-left:30px!important;padding-right:30px!important}}
+@media(max-width:900px){.modern-dashboard-kpis,.dashboard-kpis,.control-center-kpis,.agent-metrics,.reports-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:640px){.modern-dashboard-kpis,.dashboard-kpis,.control-center-kpis,.agent-metrics,.reports-metrics{grid-template-columns:1fr!important}}
