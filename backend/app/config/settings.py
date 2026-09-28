@@ -11,7 +11,7 @@ def _env_bool(name: str, default: bool) -> bool:
 
 @dataclass(frozen=True)
 class Settings:
-    app_name: str = os.getenv("APP_NAME", "Printflow")
+    app_name: str = os.getenv("APP_NAME", "TALVOA")
     version: str = os.getenv("APP_VERSION", "0.6.0")
     environment: str = os.getenv("ENVIRONMENT", "development")
     database_url: str = os.getenv(
@@ -19,27 +19,27 @@ class Settings:
         "sqlite:///./printflow.db",
     )
     report_utc_offset_hours: int = int(
-        os.getenv("PRINTFLOW_REPORT_UTC_OFFSET_HOURS", "-3")
+        os.getenv("TALVOA_REPORT_UTC_OFFSET_HOURS", "-3")
     )
 
     # FREE keeps the application conservative with database writes and makes
     # the resource budget explicit. PAID keeps the same data model and can
     # relax these controls through environment variables.
-    infra_mode: str = os.getenv("PRINTFLOW_INFRA_MODE", "FREE").strip().upper()
+    infra_mode: str = os.getenv("TALVOA_INFRA_MODE", "FREE").strip().upper()
     heartbeat_write_interval_seconds: int = int(
-        os.getenv("PRINTFLOW_HEARTBEAT_WRITE_INTERVAL_SECONDS", "300")
+        os.getenv("TALVOA_HEARTBEAT_WRITE_INTERVAL_SECONDS", "300")
     )
     free_quota_warn_percent: int = int(
-        os.getenv("PRINTFLOW_FREE_QUOTA_WARN_PERCENT", "60")
+        os.getenv("TALVOA_FREE_QUOTA_WARN_PERCENT", "60")
     )
     free_quota_optimize_percent: int = int(
-        os.getenv("PRINTFLOW_FREE_QUOTA_OPTIMIZE_PERCENT", "75")
+        os.getenv("TALVOA_FREE_QUOTA_OPTIMIZE_PERCENT", "75")
     )
     free_quota_preserve_percent: int = int(
-        os.getenv("PRINTFLOW_FREE_QUOTA_PRESERVE_PERCENT", "90")
+        os.getenv("TALVOA_FREE_QUOTA_PRESERVE_PERCENT", "90")
     )
     free_preserve_nonessential_writes: bool = _env_bool(
-        "PRINTFLOW_FREE_PRESERVE_NONESSENTIAL_WRITES", True
+        "TALVOA_FREE_PRESERVE_NONESSENTIAL_WRITES", True
     )
 
     @property
