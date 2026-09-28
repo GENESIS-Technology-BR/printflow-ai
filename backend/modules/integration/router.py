@@ -43,8 +43,12 @@ def _integration_key() -> str:
 
 
 def require_integration_key(
-    x_printflow_integration_key: str = Header(
-        ...,
+    x_talvoa_integration_key: str | None = Header(
+        None,
+        alias="X-Talvoa-Integration-Key",
+    ),
+    x_printflow_integration_key: str | None = Header(
+        None,
         alias="X-Printflow-Integration-Key",
     ),
 ) -> None:
