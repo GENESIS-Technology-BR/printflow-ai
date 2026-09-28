@@ -9,7 +9,7 @@ def test_launcher_supports_multiple_manual_networks():
         ROOT
         / "agent"
         / "windows"
-        / "Start-PRINTFLOW-Agent.ps1"
+        / "Start-TALVOA-Agent.ps1"
     ).read_text(encoding="utf-8")
 
     assert "extra_networks" in launcher
@@ -23,7 +23,7 @@ def test_launcher_keeps_legacy_network_compatibility():
         ROOT
         / "agent"
         / "windows"
-        / "Start-PRINTFLOW-Agent.ps1"
+        / "Start-TALVOA-Agent.ps1"
     ).read_text(encoding="utf-8")
 
     assert '"extra_network"' in launcher
@@ -35,7 +35,7 @@ def test_installer_saves_multiple_networks():
         ROOT
         / "agent"
         / "windows"
-        / "Install-PRINTFLOW-Agent.ps1"
+        / "Install-TALVOA-Agent.ps1"
     ).read_text(encoding="utf-8")
 
     assert "extra_networks = $extraNetworks" in installer
