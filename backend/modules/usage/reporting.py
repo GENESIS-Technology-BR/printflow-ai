@@ -342,8 +342,8 @@ def build_excel_report(
     sheet.row_dimensions[6].height = 6
 
     headers = [
-        "Nomenclatura", "IP", "Modelo", "Serial",
-        "Unidade", "Setor", "Leitura inicial", "Leitura final",
+        "Nomenclatura", "IP", "Nº de série", "Modelo",
+        "Setor", "Leitura inicial", "Leitura final",
         "Inicial", "Final", "Impressões",
         "Custo/pág.", "Custo estimado",
     ]
@@ -364,8 +364,8 @@ def build_excel_report(
     for row_index, item in enumerate(rows, start=header_row + 1):
         values = [
             item["display_name"], item["ip"] or "",
-            item["model"] or "", item["serial"] or "",
-            item["unit_name"] or "", item["sector_name"] or "",
+            item["serial"] or "", item["model"] or "",
+            item["sector_name"] or "",
             item["first_usage_date"].strftime("%d/%m/%Y") if item["first_usage_date"] else "Sem histórico",
             item["last_usage_date"].strftime("%d/%m/%Y") if item["last_usage_date"] else "Sem histórico",
             item["opening_page_count"], item["closing_page_count"],
@@ -378,22 +378,22 @@ def build_excel_report(
             cell.fill = row_fill
             cell.font = Font(size=9, color="1F2937")
             cell.border = Border(bottom=Side(style="hair", color=BRAND_BORDER))
-            if column in {9, 10, 11, 12, 13}:
+            if column in {8, 9, 10, 11, 12}:
                 cell.alignment = Alignment(horizontal="right", vertical="center")
-            elif column in {2, 7, 8}:
+            elif column in {2, 3, 6, 7}:
                 cell.alignment = Alignment(horizontal="center", vertical="center")
             else:
-                cell.alignment = Alignment(vertical="center", wrap_text=column in {1, 3, 5, 6})
-            if column == 12:
+                cell.alignment = Alignment(vertical="center", wrap_text=column in {1, 4, 5})
+            if column == 11:
                 cell.number_format = 'R$ #,##0.0000'
-            elif column == 13:
+            elif column == 12:
                 cell.number_format = 'R$ #,##0.00'
         sheet.row_dimensions[row_index].height = 22
 
     sheet.freeze_panes = "A8"
     sheet.sheet_view.tabSelected = True
-    sheet.auto_filter.ref = f"A{header_row}:M{max(header_row, header_row + len(rows))}"
-    widths = [24, 12, 22, 18, 15, 22, 16, 16, 13, 13, 18, 15, 18]
+    sheet.auto_filter.ref = f"A{header_row}:L{max(header_row, header_row + len(rows))}"
+    widths = [24, 13, 18, 22, 22, 16, 16, 13, 13, 18, 15, 18]
     for index, width in enumerate(widths, start=1):
         sheet.column_dimensions[get_column_letter(index)].width = width
 
@@ -401,14 +401,14 @@ def build_excel_report(
     sheet.page_setup.orientation = "landscape"
     sheet.page_setup.fitToWidth = 1
     sheet.page_setup.fitToHeight = 0
-    sheet.print_area = f"A1:M{max(header_row + len(rows), header_row)}"
+    sheet.print_area = f"A1:L{max(header_row + len(rows), header_row)}"
 
     detail = workbook.create_sheet("Histórico diário")
     detail.sheet_view.showGridLines = False
     detail.sheet_view.zoomScale = 85
     detail.sheet_view.zoomScaleNormal = 85
     detail_headers = [
-        "Data", "Impressora", "IP", "Unidade", "Setor",
+        "Data", "Nomenclatura", "IP", "Nº de série", "Setor",
         "Contador abertura", "Contador fechamento", "Impressões",
     ]
     for column, label in enumerate(detail_headers, start=1):
@@ -423,7 +423,7 @@ def build_excel_report(
         values = [
             usage.usage_date.strftime("%d/%m/%Y"),
             _display_name(usage.custom_name, usage.hostname, usage.name, usage.ip),
-            usage.ip, usage.unit_name or "", usage.sector_name or "",
+            usage.ip, _clean_identity(usage.serial) or "", usage.sector_name or "",
             usage.opening_page_count, usage.closing_page_count,
             usage.pages_printed,
         ]
@@ -438,7 +438,7 @@ def build_excel_report(
 
     detail.freeze_panes = "A2"
     detail.auto_filter.ref = f"A1:H{max(1, detail.max_row)}"
-    for index, width in enumerate([14, 30, 16, 20, 20, 18, 18, 14], start=1):
+    for index, width in enumerate([14, 30, 16, 20, 22, 18, 18, 14], start=1):
         detail.column_dimensions[get_column_letter(index)].width = width
 
     output = BytesIO()
@@ -515,24 +515,17 @@ def build_pdf_report(
     ]
 
     table_data = [[
-        "Impressora", "Identificação", "Unidade / Setor", "Modelo",
+        "Nomenclatura", "IP", "Nº de série", "Setor", "Modelo",
         "Inicial", "Final", "Impressões", "R$/pág.", "Custo estimado",
     ]]
     for item in rows:
-        organization = " / ".join(
-            part for part in (item["unit_name"], item["sector_name"]) if part
-        ) or "-"
+        sector = item["sector_name"] or "-"
         model = _model_label(item["manufacturer"], item["model"])
-        technical_identity = " | ".join(
-            part for part in (
-                item["ip"],
-                item["serial"],
-            ) if part
-        ) or "-"
         table_data.append([
             item["display_name"],
-            technical_identity,
-            organization,
+            item["ip"] or "-",
+            item["serial"] or "-",
+            sector,
             model,
             _format_number(item["opening_page_count"]),
             _format_number(item["closing_page_count"]),
@@ -544,7 +537,7 @@ def build_pdf_report(
     table = Table(
         table_data,
         repeatRows=1,
-        colWidths=[40 * mm, 40 * mm, 38 * mm, 43 * mm, 19 * mm, 19 * mm, 22 * mm, 22 * mm, 27 * mm],
+        colWidths=[34 * mm, 25 * mm, 28 * mm, 30 * mm, 39 * mm, 18 * mm, 18 * mm, 22 * mm, 22 * mm, 26 * mm],
     )
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor(f"#{BRAND_BLUE}")),
@@ -552,7 +545,7 @@ def build_pdf_report(
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
         ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
         ("FONTSIZE", (0, 0), (-1, -1), 6.6),
-        ("ALIGN", (4, 1), (-1, -1), "RIGHT"),
+        ("ALIGN", (5, 1), (-1, -1), "RIGHT"),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#A8B8C7")),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F4F8FC")]),
