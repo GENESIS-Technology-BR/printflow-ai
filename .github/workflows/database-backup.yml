@@ -1,4 +1,4 @@
-name: PRINTFLOW Database Backup
+name: TALVOA Database Backup
 
 on:
   workflow_dispatch:
@@ -110,7 +110,7 @@ jobs:
           bytes="$(stat -c%s "$BACKUP_FILE")"
           objects="$(grep -cv '^;' /tmp/restore-list.txt || true)"
           {
-            echo "## PRINTFLOW Database Backup #${{ github.run_number }}"
+            echo "## TALVOA Database Backup #${{ github.run_number }}"
             echo "- Status da geracao: **validado**"
             echo "- Banco: \`Supabase PostgreSQL\`"
             echo "- Cliente PostgreSQL: \`18\`"
