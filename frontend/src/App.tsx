@@ -83,6 +83,20 @@ function App() {
   }
 
   useEffect(() => {
+    const handleUnauthorized = () => {
+      sessionStorage.removeItem("printflow_preview_token")
+      sessionStorage.removeItem("printflow_preview_company")
+      setAuthenticated(false)
+      setCompany(null)
+      setProfile(null)
+      setPage("dashboard")
+      setMessage("Sua sessão expirou. Faça login novamente.")
+      setMessageKind("error")
+      setAuthReady(true)
+    }
+
+    window.addEventListener("talvoa:unauthorized", handleUnauthorized)
+
     Promise.all([api("/api/v1/companies/current"), getMe()])
       .then(([companyData, profileData]) => {
         setCompany(companyData)
@@ -96,6 +110,10 @@ function App() {
         setProfile(null)
       })
       .finally(() => setAuthReady(true))
+
+    return () => {
+      window.removeEventListener("talvoa:unauthorized", handleUnauthorized)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
