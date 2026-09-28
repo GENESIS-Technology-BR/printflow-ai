@@ -1,4 +1,4 @@
-name: PRINTFLOW Production Smoke
+name: TALVOA Production Smoke
 
 on:
   workflow_dispatch:
@@ -16,8 +16,8 @@ on:
       - "scripts/production_smoke.py"
   workflow_run:
     workflows:
-      - "Build PRINTFLOW Agent Windows"
-      - "PRINTFLOW Web Validation"
+      - "Build TALVOA Agent Windows"
+      - "TALVOA Web Validation"
     types:
       - completed
 
@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo "## PRINTFLOW Production Smoke #${{ github.run_number }}"
+            echo "## TALVOA Production Smoke #${{ github.run_number }}"
             echo "- Status: **${{ job.status }}**"
             echo "- Commit validado: \`${{ github.event.workflow_run.head_sha || github.sha }}\`"
             echo "- Endpoint: \`${PRODUCTION_URL}\`"
