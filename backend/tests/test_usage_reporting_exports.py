@@ -56,10 +56,14 @@ def test_excel_report_generates_valid_workbook():
     assert summary["A2"].value == (
         "Empresa: Empresa Teste  —  Período: 01/09/2026 a 02/09/2026"
     )
+    assert summary["A7"].value == "Nomenclatura"
+    assert summary["B7"].value == "IP"
+    assert summary["C7"].value == "Nº de série"
+    assert summary["E7"].value == "Setor"
     assert summary["A8"].value == "Impressora Financeiro"
-    assert summary["K8"].value == 125
-    assert summary["L8"].value == 0.12
-    assert summary["M8"].value == 15.0
+    assert summary["J8"].value == 125
+    assert summary["K8"].value == 0.12
+    assert summary["L8"].value == 15.0
 
 
 def test_pdf_report_generates_valid_pdf():
