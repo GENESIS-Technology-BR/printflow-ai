@@ -21,7 +21,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: printflow-database-backup
+  group: talvoa-database-backup
   cancel-in-progress: false
 
 jobs:
@@ -46,18 +46,24 @@ jobs:
           text = Path(".github/workflows/database-backup.yml").read_text(encoding="utf-8")
           assert 'cron: "0 5 * * *"' in text
           assert "actions/upload-artifact@v5" in text
-          assert "normalize_pg_target" in text
-          print("Contrato do workflow de backup validado.")
+          assert "TALVOA-DB-Daily-" in text
+          assert "retention-days: 7" in text
+          assert "TALVOA-DB-Weekly-" in text
+          assert "retention-days: 28" in text
+          assert "TALVOA-DB-Monthly-" in text
+          assert "retention-days: 183" in text
+          assert "Copiar backup para Google Drive" not in text
+          print("Contrato do workflow de backup TALVOA validado.")
           PY
 
       - name: Verificar configuracao segura
         shell: bash
         env:
-          PRINTFLOW_SUPABASE_DATABASE_URL: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
+          TALVOA_DB_PASSWORD: ${{ secrets.TALVOA_SUPABASE_DATABASE_PASSWORD || secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
         run: |
           set -euo pipefail
-          if [[ -z "${PRINTFLOW_SUPABASE_DATABASE_URL:-}" ]]; then
-            echo "::error::Secret PRINTFLOW_SUPABASE_DATABASE_URL ainda nao configurado. Nenhum acesso ao banco foi realizado."
+          if [[ -z "${TALVOA_DB_PASSWORD:-}" ]]; then
+            echo "::error::Senha do banco TALVOA ainda nao configurada no GitHub Secrets. Nenhum acesso ao banco foi realizado."
             exit 1
           fi
           echo "Configuracao segura do Supabase presente. Valor protegido e nao exibido."
@@ -79,7 +85,7 @@ jobs:
       - name: Gerar backup logico somente leitura
         shell: bash
         env:
-          PGPASSWORD: ${{ secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
+          PGPASSWORD: ${{ secrets.TALVOA_SUPABASE_DATABASE_PASSWORD || secrets.PRINTFLOW_SUPABASE_DATABASE_PASSWORD }}
           PGHOST: aws-0-ca-central-1.pooler.supabase.com
           PGPORT: "5432"
           PGUSER: postgres.glnmlfwtuqqngfiqsqow
@@ -88,7 +94,7 @@ jobs:
           set -euo pipefail
           mkdir -p "$BACKUP_DIR"
           stamp="$(date -u +'%Y%m%dT%H%M%SZ')"
-          file="$BACKUP_DIR/printflow-supabase-$stamp.dump"
+          file="$BACKUP_DIR/talvoa-supabase-$stamp.dump"
           pg_dump \
             --dbname="$PGDATABASE" \
             --format=custom \
@@ -119,68 +125,7 @@ jobs:
             echo "- Objetos catalogados: \`${objects}\`"
             echo "- SHA-256: **gerado**"
             echo "- Credenciais: **nao exibidas**"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Copiar backup para Google Drive
-        id: google_drive
-        shell: bash
-        env:
-          GOOGLE_CLIENT_ID: ${{ secrets.PRINTFLOW_GOOGLE_DRIVE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.PRINTFLOW_GOOGLE_DRIVE_CLIENT_SECRET }}
-          GOOGLE_REFRESH_TOKEN: ${{ secrets.PRINTFLOW_GOOGLE_DRIVE_REFRESH_TOKEN }}
-        run: |
-          set -euo pipefail
-          echo "copy_status=not_attempted" >> "$GITHUB_OUTPUT"
-          for name in GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET GOOGLE_REFRESH_TOKEN; do
-            if [[ -z "${!name:-}" ]]; then
-              echo "::warning::Credencial Google Drive ausente: $name. Backup local/DR continua."
-              echo "copy_status=unavailable" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-          done
-
-          token_body="$(mktemp)"
-          token_http="$(curl --silent --show-error --output "$token_body" --write-out '%{http_code}' -X POST https://oauth2.googleapis.com/token --data-urlencode "client_id=$GOOGLE_CLIENT_ID" --data-urlencode "client_secret=$GOOGLE_CLIENT_SECRET" --data-urlencode "refresh_token=$GOOGLE_REFRESH_TOKEN" --data-urlencode "grant_type=refresh_token")"
-          if [[ "$token_http" != "200" ]]; then
-            oauth_error="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(str(d.get("error","erro_desconhecido")) + (": " + str(d.get("error_description","")) if d.get("error_description") else ""))' "$token_body" 2>/dev/null || echo resposta_invalida)"
-            rm -f "$token_body"
-            echo "::warning::Google OAuth recusou a renovacao do token (HTTP $token_http): $oauth_error"
-            echo "Nenhuma credencial OAuth foi exibida. Backup local/DR continua."
-            echo "copy_status=oauth_failed" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          access_token="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("access_token", ""))' "$token_body")"
-          rm -f "$token_body"
-          if [[ -z "$access_token" ]]; then
-            echo "::warning::Google OAuth respondeu HTTP 200, mas nao retornou access token. Backup local/DR continua."
-            echo "copy_status=oauth_failed" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "::add-mask::$access_token"
-          echo "Google OAuth autenticado com sucesso."
-
-          upload_drive() {
-            local file="$1"
-            local mime="$2"
-            local name
-            name="$(basename "$file")"
-            local metadata response id
-            metadata="$(python3 -c 'import json,sys; print(json.dumps({"name": sys.argv[1]}))' "$name")"
-            response="$(curl --fail-with-body --silent --show-error -X POST 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name' -H "Authorization: Bearer $access_token" -F "metadata=$metadata;type=application/json;charset=UTF-8" -F "file=@$file;type=$mime")"
-            id="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("id", ""))' <<< "$response")"
-            if [[ -z "$id" ]]; then
-              echo "::warning::Google Drive nao confirmou upload de $name. Backup local/DR continua."
-              echo "copy_status=upload_failed" >> "$GITHUB_OUTPUT"
-              return 1
-            fi
-            echo "Google Drive confirmou upload de $name (ID protegido do log operacional)."
-          }
-
-          upload_drive "$BACKUP_FILE" application/octet-stream
-          upload_drive "$BACKUP_FILE.sha256" text/plain
-          {
-            echo "- Copia externa Google Drive: **confirmada**"
-            echo "- Escopo OAuth: \`drive.file\`"
+            echo "- Destino de retencao: **GitHub Actions Artifacts**"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Provar restaurabilidade em PostgreSQL efemero isolado
@@ -188,21 +133,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker run -d --name printflow-dr \
-            -e POSTGRES_PASSWORD=printflow_dr_local \
-            -e POSTGRES_DB=printflow_dr \
+          docker run -d --name talvoa-dr \
+            -e POSTGRES_PASSWORD=talvoa_dr_local \
+            -e POSTGRES_DB=talvoa_dr \
             postgres:18-alpine
-          trap 'docker rm -f printflow-dr >/dev/null 2>&1 || true' EXIT
+          trap 'docker rm -f talvoa-dr >/dev/null 2>&1 || true' EXIT
 
           ready=0
           for i in {1..60}; do
-            if [[ "$(docker inspect -f '{{.State.Running}}' printflow-dr 2>/dev/null || true)" != "true" ]]; then
+            if [[ "$(docker inspect -f '{{.State.Running}}' talvoa-dr 2>/dev/null || true)" != "true" ]]; then
               echo "::error::Container PostgreSQL DR encerrou antes de ficar pronto."
-              docker logs printflow-dr || true
+              docker logs talvoa-dr || true
               exit 1
             fi
-            if docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
-              psql -h 127.0.0.1 -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
+            if docker exec -e PGPASSWORD=talvoa_dr_local talvoa-dr \
+              psql -h 127.0.0.1 -U postgres -d talvoa_dr -X -A -t -v ON_ERROR_STOP=1 \
               -c "select 1" 2>/dev/null | grep -qx "1"; then
               ready=1
               break
@@ -211,7 +156,7 @@ jobs:
           done
           if [[ "$ready" != "1" ]]; then
             echo "::error::PostgreSQL DR nao ficou pronto dentro do prazo."
-            docker logs printflow-dr || true
+            docker logs talvoa-dr || true
             exit 1
           fi
 
@@ -221,33 +166,33 @@ jobs:
           ' > /tmp/dr-restore-list.txt
           test -s /tmp/dr-restore-list.txt
 
-          docker cp "$BACKUP_FILE" printflow-dr:/tmp/printflow.dump
-          docker cp /tmp/dr-restore-list.txt printflow-dr:/tmp/dr-restore-list.txt
+          docker cp "$BACKUP_FILE" talvoa-dr:/tmp/talvoa.dump
+          docker cp /tmp/dr-restore-list.txt talvoa-dr:/tmp/dr-restore-list.txt
 
-          docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
+          docker exec -e PGPASSWORD=talvoa_dr_local talvoa-dr \
             pg_restore \
               --host=127.0.0.1 \
               --username=postgres \
-              --dbname=printflow_dr \
+              --dbname=talvoa_dr \
               --no-owner \
               --no-privileges \
               --exit-on-error \
               --use-list=/tmp/dr-restore-list.txt \
-              /tmp/printflow.dump
+              /tmp/talvoa.dump
 
-          table_count="$(docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
-            psql -h 127.0.0.1 -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
+          table_count="$(docker exec -e PGPASSWORD=talvoa_dr_local talvoa-dr \
+            psql -h 127.0.0.1 -U postgres -d talvoa_dr -X -A -t -v ON_ERROR_STOP=1 \
             -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
           if [[ ! "$table_count" =~ ^[0-9]+$ ]] || (( table_count < 7 )); then
             echo "::error::Restore DR incompleto: $table_count tabelas publicas."
-            docker logs printflow-dr || true
+            docker logs talvoa-dr || true
             exit 1
           fi
-          usage_count="$(docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
-            psql -h 127.0.0.1 -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
+          usage_count="$(docker exec -e PGPASSWORD=talvoa_dr_local talvoa-dr \
+            psql -h 127.0.0.1 -U postgres -d talvoa_dr -X -A -t -v ON_ERROR_STOP=1 \
             -c "SELECT count(*) FROM public.printer_usage_daily;")"
-          alert_count="$(docker exec -e PGPASSWORD=printflow_dr_local printflow-dr \
-            psql -h 127.0.0.1 -U postgres -d printflow_dr -X -A -t -v ON_ERROR_STOP=1 \
+          alert_count="$(docker exec -e PGPASSWORD=talvoa_dr_local talvoa-dr \
+            psql -h 127.0.0.1 -U postgres -d talvoa_dr -X -A -t -v ON_ERROR_STOP=1 \
             -c "SELECT count(*) FROM public.operational_alerts;")"
           checksum="$(awk '{print $1}' "$BACKUP_FILE.sha256")"
           bytes="$(stat -c%s "$BACKUP_FILE")"
@@ -261,7 +206,7 @@ jobs:
             "backup_bytes": $bytes,
             "sha256": "$checksum",
             "structural_validation": "ok",
-            "google_drive_copy": "${{ steps.google_drive.outputs.copy_status }}",
+            "storage": "github-actions-artifacts",
             "dr_restore": "ok",
             "dr_mode": "ephemeral-postgresql-18",
             "dr_public_tables": $table_count,
@@ -278,36 +223,82 @@ jobs:
             echo "- Producao usada como destino: **nao**"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Classificar retencao do backup
+        id: retention
+        shell: bash
+        run: |
+          set -euo pipefail
+          day_of_week="$(date -u +'%u')"
+          day_of_month="$(date -u +'%d')"
+
+          echo "is_weekly=false" >> "$GITHUB_OUTPUT"
+          echo "is_monthly=false" >> "$GITHUB_OUTPUT"
+
+          if [[ "$day_of_week" == "7" ]]; then
+            echo "is_weekly=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [[ "$day_of_month" == "01" ]]; then
+            echo "is_monthly=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publicar evidencia de auditoria
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v5
         with:
-          name: PRINTFLOW-DB-Evidence-${{ github.run_number }}
+          name: TALVOA-DB-Evidence-${{ github.run_number }}
           path: ${{ env.BACKUP_DIR }}/backup-evidence.json
           if-no-files-found: error
           retention-days: 90
           compression-level: 0
 
-      - name: Publicar backup com retencao
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.upload_artifact) }}
+      - name: Publicar backup diario
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
         uses: actions/upload-artifact@v5
         with:
-          name: PRINTFLOW-DB-Backup-${{ github.run_number }}
+          name: TALVOA-DB-Daily-${{ github.run_number }}
           path: |
             ${{ env.BACKUP_FILE }}
             ${{ env.BACKUP_FILE }}.sha256
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
           compression-level: 9
 
-      - name: Registrar protecao automatica
+      - name: Publicar backup semanal
+        if: ${{ steps.retention.outputs.is_weekly == 'true' }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: TALVOA-DB-Weekly-${{ github.run_number }}
+          path: |
+            ${{ env.BACKUP_FILE }}
+            ${{ env.BACKUP_FILE }}.sha256
+          if-no-files-found: error
+          retention-days: 28
+          compression-level: 9
+
+      - name: Publicar backup mensal
+        if: ${{ steps.retention.outputs.is_monthly == 'true' }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: TALVOA-DB-Monthly-${{ github.run_number }}
+          path: |
+            ${{ env.BACKUP_FILE }}
+            ${{ env.BACKUP_FILE }}.sha256
+          if-no-files-found: error
+          retention-days: 183
+          compression-level: 9
+
+      - name: Registrar politica de retencao
         if: ${{ github.event_name == 'schedule' }}
         shell: bash
         run: |
           {
-            echo "- Execucao: **automatica diaria**"
-            echo "- Retencao do artifact: **14 dias**"
+            echo "- Destino: **GitHub Actions Artifacts**"
+            echo "- Backup diario: **7 dias**"
+            echo "- Backup semanal (domingo): **28 dias**"
+            echo "- Backup mensal (dia 1): **183 dias**"
             echo "- Restore homologado: **sim, em PostgreSQL efemero isolado**"
+            echo "- Armazenamento externo adicional: **nao utilizado nesta fase**"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Limpar arquivos locais do runner
