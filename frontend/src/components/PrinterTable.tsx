@@ -388,7 +388,7 @@ export default function PrinterTable({
       <div className="dashboard-empty">
         <span>🖨️</span>
         <h3>Nenhuma impressora cadastrada</h3>
-        <p>Instale o PRINTFLOW Agent na rede para iniciar a descoberta dos equipamentos.</p>
+        <p>Instale o TALVOA Agent na rede para iniciar a descoberta dos equipamentos.</p>
       </div>
     );
   }
