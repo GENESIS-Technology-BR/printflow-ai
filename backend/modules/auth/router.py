@@ -33,7 +33,7 @@ from backend.modules.auth.security import (
 from backend.modules.companies.model import Company
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-logger = logging.getLogger("printflow.auth")
+logger = logging.getLogger("talvoa.auth")
 AUTH_COOKIE_NAME = "printflow_session"
 AUTH_COOKIE_MAX_AGE = 60 * 60
 
@@ -79,9 +79,10 @@ def _clear_auth_cookie(
 
 
 def _recovery_key() -> str:
-    key = os.getenv(
-        "PRINTFLOW_RECOVERY_KEY",
-        "",
+    key = (
+        os.getenv("TALVOA_RECOVERY_KEY")
+        or os.getenv("PRINTFLOW_RECOVERY_KEY")
+        or ""
     ).strip()
 
     if len(key) < 32:
@@ -154,9 +155,10 @@ def register(
     response: Response,
     db: Session = Depends(get_db),
 ):
-    allow_public_registration = os.getenv(
-        "PRINTFLOW_ALLOW_PUBLIC_REGISTRATION",
-        "false",
+    allow_public_registration = (
+        os.getenv("TALVOA_ALLOW_PUBLIC_REGISTRATION")
+        or os.getenv("PRINTFLOW_ALLOW_PUBLIC_REGISTRATION")
+        or "false"
     ).strip().lower() in {"1", "true", "yes"}
 
     if not allow_public_registration:
@@ -185,7 +187,7 @@ def register(
         name=payload.user_name.strip(),
         email=email,
         password_hash=hash_password(payload.password),
-        role="admin",
+        role="client",
     )
 
     db.add(user)
@@ -268,9 +270,10 @@ def forgot_password(
         str(user.id),
         user.password_reset_version,
     )
-    public_url = os.getenv(
-        "PRINTFLOW_PUBLIC_URL",
-        "https://printflow-m84u.onrender.com",
+    public_url = (
+        os.getenv("TALVOA_PUBLIC_URL")
+        or os.getenv("PRINTFLOW_PUBLIC_URL")
+        or "https://printflow-m84u.onrender.com"
     ).strip().rstrip("/")
     reset_url = (
         f"{public_url}/?reset_token={quote(reset_token, safe='')}"
@@ -516,9 +519,10 @@ def recovery_users(
     db: Session = Depends(get_db),
 ):
 
-    allow_user_listing = os.getenv(
-        "PRINTFLOW_ALLOW_RECOVERY_USER_LIST",
-        "false",
+    allow_user_listing = (
+        os.getenv("TALVOA_ALLOW_RECOVERY_USER_LIST")
+        or os.getenv("PRINTFLOW_ALLOW_RECOVERY_USER_LIST")
+        or "false"
     ).strip().lower() in {"1", "true", "yes"}
 
     if not allow_user_listing:
