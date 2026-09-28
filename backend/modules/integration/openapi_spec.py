@@ -1,7 +1,7 @@
 INTEGRATION_OPENAPI = {
     "openapi": "3.1.0",
     "info": {
-        "title": "PRINTFLOW Integration API",
+        "title": "TALVOA Integration API",
         "version": "1.1.0",
         "description": (
             "API read-only para integração segura com assistentes e ferramentas externas. "
@@ -17,7 +17,7 @@ INTEGRATION_OPENAPI = {
             "IntegrationKey": {
                 "type": "apiKey",
                 "in": "header",
-                "name": "X-Printflow-Integration-Key",
+                "name": "X-TALVOA-Integration-Key",
             }
         },
         "schemas": {
@@ -208,7 +208,7 @@ INTEGRATION_OPENAPI = {
     },
     "security": [{"IntegrationKey": []}],
     "paths": {
-        "/status": {"get": {"operationId": "getIntegrationStatus", "summary": "Obtém o status geral do PRINTFLOW", "responses": {"200": {"description": "Status geral"}}}},
+        "/status": {"get": {"operationId": "getIntegrationStatus", "summary": "Obtém o status geral da TALVOA", "responses": {"200": {"description": "Status geral"}}}},
         "/companies": {"get": {"operationId": "listCompanies", "summary": "Lista empresas monitoradas", "responses": {"200": {"description": "Empresas", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/CompanySnapshot"}}}}}}}},
         "/companies/{company_uuid}": {"get": {"operationId": "getCompany", "summary": "Obtém o estado de uma empresa", "parameters": [{"name": "company_uuid", "in": "path", "required": True, "schema": {"type": "string"}}], "responses": {"200": {"description": "Empresa", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CompanySnapshot"}}}}}}},
         "/companies/{company_uuid}/printers": {"get": {"operationId": "listCompanyPrinters", "summary": "Lista impressoras de uma empresa", "parameters": [{"name": "company_uuid", "in": "path", "required": True, "schema": {"type": "string"}}], "responses": {"200": {"description": "Impressoras", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/Printer"}}}}}}}},
