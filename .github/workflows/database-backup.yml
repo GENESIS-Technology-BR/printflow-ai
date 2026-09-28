@@ -51,7 +51,7 @@ jobs:
           assert "TALVOA-DB-Weekly-" in text
           assert "retention-days: 28" in text
           assert "TALVOA-DB-Monthly-" in text
-          assert "retention-days: 183" in text
+          assert "retention-days: 90" in text
           assert "Copiar backup para Google Drive" not in text
           print("Contrato do workflow de backup TALVOA validado.")
           PY
@@ -285,7 +285,7 @@ jobs:
             ${{ env.BACKUP_FILE }}
             ${{ env.BACKUP_FILE }}.sha256
           if-no-files-found: error
-          retention-days: 183
+          retention-days: 90
           compression-level: 9
 
       - name: Registrar politica de retencao
@@ -296,9 +296,10 @@ jobs:
             echo "- Destino: **GitHub Actions Artifacts**"
             echo "- Backup diario: **7 dias**"
             echo "- Backup semanal (domingo): **28 dias**"
-            echo "- Backup mensal (dia 1): **183 dias**"
+            echo "- Backup mensal (dia 1): **90 dias (limite do repositório público)**"
             echo "- Restore homologado: **sim, em PostgreSQL efemero isolado**"
             echo "- Armazenamento externo adicional: **nao utilizado nesta fase**"
+            echo "- Observacao: **6 meses exigem repositorio privado de backup ou outro destino seguro**"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Limpar arquivos locais do runner
