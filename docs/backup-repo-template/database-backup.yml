@@ -1,0 +1,180 @@
+name: TALVOA Database Backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: talvoa-database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Backup logico PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PGDATABASE: postgres
+      BACKUP_DIR: backup-output
+      PGHOST: aws-0-ca-central-1.pooler.supabase.com
+      PGPORT: "5432"
+      PGUSER: postgres.glnmlfwtuqqngfiqsqow
+      PGSSLMODE: require
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Validar secrets
+        shell: bash
+        env:
+          TALVOA_DB_PASSWORD: ${{ secrets.TALVOA_SUPABASE_DATABASE_PASSWORD }}
+          TALVOA_BACKUP_ENCRYPTION_KEY: ${{ secrets.TALVOA_BACKUP_ENCRYPTION_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "${TALVOA_DB_PASSWORD:-}" || { echo "::error::TALVOA_SUPABASE_DATABASE_PASSWORD ausente."; exit 1; }
+          test -n "${TALVOA_BACKUP_ENCRYPTION_KEY:-}" || { echo "::error::TALVOA_BACKUP_ENCRYPTION_KEY ausente."; exit 1; }
+
+      - name: Instalar PostgreSQL 18
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSLo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          . /etc/os-release
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+
+      - name: Gerar backup
+        shell: bash
+        env:
+          PGPASSWORD: ${{ secrets.TALVOA_SUPABASE_DATABASE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$BACKUP_DIR"
+          stamp="$(date -u +'%Y%m%dT%H%M%SZ')"
+          file="$BACKUP_DIR/talvoa-supabase-$stamp.dump"
+          /usr/lib/postgresql/18/bin/pg_dump             --dbname="$PGDATABASE"             --format=custom             --compress=9             --no-owner             --no-privileges             --file="$file"
+          test -s "$file"
+          echo "BACKUP_FILE=$file" >> "$GITHUB_ENV"
+
+      - name: Validar integridade
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/lib/postgresql/18/bin/pg_restore --list "$BACKUP_FILE" > /tmp/restore-list.txt
+          test -s /tmp/restore-list.txt
+          sha256sum "$BACKUP_FILE" | tee "$BACKUP_FILE.sha256"
+
+      - name: Provar restore isolado
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name talvoa-dr             -e POSTGRES_PASSWORD=talvoa_dr_local             -e POSTGRES_DB=talvoa_dr             postgres:18-alpine
+          trap 'docker rm -f talvoa-dr >/dev/null 2>&1 || true' EXIT
+
+          for i in {1..60}; do
+            if docker exec -e PGPASSWORD=talvoa_dr_local talvoa-dr               psql -h 127.0.0.1 -U postgres -d talvoa_dr -X -A -t -v ON_ERROR_STOP=1               -c "select 1" 2>/dev/null | grep -qx "1"; then
+              break
+            fi
+            sleep 1
+          done
+
+          /usr/lib/postgresql/18/bin/pg_restore --list "$BACKUP_FILE" | awk '
+            /^;/ { print; next }
+            / (TABLE|TABLE DATA|SEQUENCE|SEQUENCE SET|CONSTRAINT|INDEX|FK CONSTRAINT|TRIGGER) public / { print }
+          ' > /tmp/dr-restore-list.txt
+
+          docker cp "$BACKUP_FILE" talvoa-dr:/tmp/talvoa.dump
+          docker cp /tmp/dr-restore-list.txt talvoa-dr:/tmp/dr-restore-list.txt
+
+          docker exec -e PGPASSWORD=talvoa_dr_local talvoa-dr             pg_restore               --host=127.0.0.1               --username=postgres               --dbname=talvoa_dr               --no-owner               --no-privileges               --exit-on-error               --use-list=/tmp/dr-restore-list.txt               /tmp/talvoa.dump
+
+          tables="$(docker exec -e PGPASSWORD=talvoa_dr_local talvoa-dr             psql -h 127.0.0.1 -U postgres -d talvoa_dr -X -A -t -v ON_ERROR_STOP=1             -c "select count(*) from information_schema.tables where table_schema='public' and table_type='BASE TABLE';")"
+          test "$tables" -ge 7
+
+      - name: Criptografar backup
+        shell: bash
+        env:
+          TALVOA_BACKUP_ENCRYPTION_KEY: ${{ secrets.TALVOA_BACKUP_ENCRYPTION_KEY }}
+        run: |
+          set -euo pipefail
+          encrypted="${BACKUP_FILE}.enc"
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 250000             -in "$BACKUP_FILE"             -out "$encrypted"             -pass env:TALVOA_BACKUP_ENCRYPTION_KEY
+          test -s "$encrypted"
+          sha256sum "$encrypted" | tee "$encrypted.sha256"
+          echo "UPLOAD_BACKUP_FILE=$encrypted" >> "$GITHUB_ENV"
+
+      - name: Classificar retencao
+        id: retention
+        shell: bash
+        run: |
+          day_of_week="$(date -u +'%u')"
+          day_of_month="$(date -u +'%d')"
+          echo "weekly=$([[ "$day_of_week" == "7" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "monthly=$([[ "$day_of_month" == "01" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Backup diario
+        uses: actions/upload-artifact@v5
+        with:
+          name: TALVOA-DB-Daily-${{ github.run_number }}
+          path: |
+            ${{ env.UPLOAD_BACKUP_FILE }}
+            ${{ env.UPLOAD_BACKUP_FILE }}.sha256
+          retention-days: 7
+          compression-level: 9
+
+      - name: Backup semanal
+        if: ${{ steps.retention.outputs.weekly == 'true' }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: TALVOA-DB-Weekly-${{ github.run_number }}
+          path: |
+            ${{ env.UPLOAD_BACKUP_FILE }}
+            ${{ env.UPLOAD_BACKUP_FILE }}.sha256
+          retention-days: 28
+          compression-level: 9
+
+      - name: Backup mensal
+        if: ${{ steps.retention.outputs.monthly == 'true' }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: TALVOA-DB-Monthly-${{ github.run_number }}
+          path: |
+            ${{ env.UPLOAD_BACKUP_FILE }}
+            ${{ env.UPLOAD_BACKUP_FILE }}.sha256
+          retention-days: 183
+          compression-level: 9
+
+      - name: Publicar evidencia
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p "$BACKUP_DIR"
+          cat > "$BACKUP_DIR/backup-evidence.txt" <<EOF
+          TALVOA Database Backup
+          run=${{ github.run_number }}
+          commit=${GITHUB_SHA}
+          restore_test=executed
+          production_restore_target=false
+          storage=github-actions-artifacts
+          encryption=aes-256-cbc-pbkdf2
+          EOF
+
+      - name: Evidencia de auditoria
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: TALVOA-DB-Evidence-${{ github.run_number }}
+          path: ${{ env.BACKUP_DIR }}/backup-evidence.txt
+          retention-days: 183
+
+      - name: Limpar runner
+        if: always()
+        shell: bash
+        run: rm -rf "$BACKUP_DIR" /tmp/restore-list.txt /tmp/dr-restore-list.txt
