@@ -156,6 +156,13 @@ def _normalize_utc_naive(value: datetime | None) -> datetime | None:
     return value
 
 
+def _display_agent_name(value: str | None) -> str:
+    name = (value or "").strip()
+    if not name or "printflow" in name.lower():
+        return "TALVOA Agent Windows"
+    return name
+
+
 def _should_persist_heartbeat(company, payload: AgentHeartbeat, now: datetime) -> bool:
     previous_seen = _normalize_utc_naive(company.agent_last_seen)
     current_time = _normalize_utc_naive(now)
@@ -164,7 +171,7 @@ def _should_persist_heartbeat(company, payload: AgentHeartbeat, now: datetime) -
         or previous_seen is None
         or current_time - previous_seen >= timedelta(seconds=settings.heartbeat_write_interval_seconds)
         or company.agent_status != payload.status
-        or company.agent_name != payload.agent_name
+        or company.agent_name != _display_agent_name(payload.agent_name)
         or company.agent_version != payload.agent_version
         or company.agent_last_error != _clean_text(payload.error)
         or payload.inventory_complete
@@ -274,7 +281,7 @@ def receive_agent_heartbeat(
 
     company.agent_last_seen = now
     company.agent_status = payload.status
-    company.agent_name = payload.agent_name
+    company.agent_name = _display_agent_name(payload.agent_name)
     company.agent_version = payload.agent_version
     company.agent_last_error = _clean_text(payload.error)
 
