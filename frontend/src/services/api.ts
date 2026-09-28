@@ -127,6 +127,11 @@ async function request<T>(
   );
 
   if (!response.ok) {
+    if (response.status === 401) {
+      sessionStorage.removeItem("printflow_preview_token");
+      sessionStorage.removeItem("printflow_preview_company");
+      window.dispatchEvent(new Event("talvoa:unauthorized"));
+    }
     throw new Error(
       `A API respondeu com HTTP ${response.status}.`,
     );
