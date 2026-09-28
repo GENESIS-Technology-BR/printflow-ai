@@ -80,7 +80,7 @@ export default function IntelligencePanel({
   if (loading && !overview) {
     return (
       <section className="pf-intelligence-panel pf-intelligence-loading">
-        <strong>Printflow Intelligence</strong>
+        <strong>TALVOA Intelligence</strong>
         <span>Analisando o parque e procurando desvios...</span>
       </section>
     );
@@ -89,7 +89,7 @@ export default function IntelligencePanel({
   if (error && !overview) {
     return (
       <section className="pf-intelligence-panel pf-intelligence-error">
-        <strong>Printflow Intelligence</strong>
+        <strong>TALVOA Intelligence</strong>
         <span>{error}</span>
       </section>
     );
@@ -103,15 +103,15 @@ export default function IntelligencePanel({
     <section className="pf-intelligence-panel">
       <header className="pf-intelligence-header">
         <div className="pf-intelligence-heading">
-          <img src="/brand/printflow-mark.svg" alt="" aria-hidden="true" />
+          <img src="/brand/talvoa-mark.svg" alt="" aria-hidden="true" />
           <div>
-            <span>PRINTFLOW INTELLIGENCE · v0.5.0</span>
+            <span>TALVOA INTELLIGENCE · v0.5.0</span>
             <h2>O que precisa da sua atenção hoje?</h2>
             <p>{overview.headline}</p>
           </div>
         </div>
 
-        <div className="pf-intelligence-score" title="Índice calculado por regras operacionais do Printflow">
+        <div className="pf-intelligence-score" title="Índice calculado por regras operacionais da TALVOA">
           <span>Índice</span>
           <strong>{overview.score}</strong>
           <small>/100</small>
@@ -151,7 +151,7 @@ export default function IntelligencePanel({
       ) : (
         <div className="pf-intelligence-clear">
           <strong>✓ Ambiente sem desvios relevantes</strong>
-          <span>O Printflow continuará analisando saúde, comunicação, contadores e comportamento de volume.</span>
+          <span>A TALVOA continuará analisando saúde, comunicação, contadores e comportamento de volume.</span>
         </div>
       )}
 
