@@ -7,7 +7,7 @@ from pathlib import Path
 
 def configure_logger(
     logs_directory: Path,
-    logger_name: str = "printflow_agent",
+    logger_name: str = "talvoa_agent",
 ) -> logging.Logger:
     logs_directory.mkdir(
         parents=True,
@@ -30,7 +30,7 @@ def configure_logger(
     console_handler.setFormatter(formatter)
 
     file_handler = RotatingFileHandler(
-        logs_directory / "printflow-agent.log",
+        logs_directory / "talvoa-agent.log",
         maxBytes=5 * 1024 * 1024,
         backupCount=5,
         encoding="utf-8",
