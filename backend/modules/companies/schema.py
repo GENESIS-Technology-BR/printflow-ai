@@ -38,7 +38,7 @@ class CompanyResponse(BaseModel):
     default_cost_per_page: Decimal
     default_bw_cost_per_page: Decimal
     default_color_cost_per_page: Decimal
-    agent_token: str
+    agent_token: str | None = None
     active: bool
     agent_last_seen: datetime | None = None
     agent_status: str | None = None
