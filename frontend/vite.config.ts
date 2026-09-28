@@ -5,7 +5,6 @@ export default defineConfig({
   plugins: [react()],
   build: {
     sourcemap: false,
-    minify: "esbuild",
   },
   server: {
     host: "0.0.0.0",
