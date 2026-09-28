@@ -1,8 +1,8 @@
-# PRINTFLOW v1.0 — Homologação Guerra
+# TALVOA v1.0 — Homologação Guerra
 
 ## Build oficial do Agent
 - Build: 355
-- Artefato: PRINTFLOW-Agent-Windows-Build-355
+- Artefato: TALVOA-Agent-Windows-Build-355
 - Status GitHub Actions: SUCCESS
 - Commit do Agent: aaff4c55a27f19fed7589e26ed638e565144632d
 
