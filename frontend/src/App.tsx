@@ -248,7 +248,7 @@ function App() {
         <ThemeToggle />
         <section className="auth-card auth-card-erp">
           <div className="pf-login-brand">
-            <img className="pf-login-brand-mark" src="/brand/printflow-mark.svg" alt="Símbolo TALVOA" />
+            <img className="pf-login-brand-mark" src="/brand/talvoa-mark.svg" alt="Símbolo TALVOA" />
             <strong>TALVOA</strong>
           </div>
           <div className="pf-login-product-name">Gestão Inteligente de Impressão</div>
@@ -429,7 +429,7 @@ function App() {
 
       <aside>
         <div className="brand">
-          <img src="/brand/printflow-mark.svg" alt="" aria-hidden="true" />
+          <img src="/brand/talvoa-mark.svg" alt="" aria-hidden="true" />
           <div className="brand-copy">
             <strong>TALVOA</strong>
             <span>{isClientView ? "Portal do Cliente" : "Operations Platform"}</span>
