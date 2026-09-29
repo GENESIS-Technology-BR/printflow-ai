@@ -391,3 +391,67 @@
 .client-shell .reports-metrics article{
   box-shadow:0 2px 10px rgba(20,40,63,.025)!important;
 }
+
+
+/* TALVOA shared navigation palette — client v0.96.2 */
+.client-shell{
+  --client-nav-top:#0E6B8C!important;
+  --client-nav-side:#0D627F!important;
+}
+.client-shell .workspace-topbar{
+  background:var(--client-nav-top)!important;
+  border-bottom:0!important;
+  color:#fff!important;
+}
+.client-shell .workspace-product,
+.client-shell .workspace-context strong,
+.client-shell .workspace-divider,
+.client-shell .workspace-user-copy strong,
+.client-shell .workspace-user-copy span{
+  color:#fff!important;
+}
+.client-shell .workspace-avatar{
+  border-color:rgba(255,255,255,.35)!important;
+  background:rgba(255,255,255,.12)!important;
+  color:#fff!important;
+}
+.client-shell aside{
+  background:linear-gradient(180deg,#0F708F 0%,var(--client-nav-side) 100%)!important;
+  border-right:1px solid #0A536B!important;
+}
+.client-shell .brand{
+  background:#0F708F!important;
+  border-bottom:1px solid rgba(255,255,255,.12)!important;
+}
+.client-shell .brand-copy strong{
+  color:#fff!important;
+}
+.client-shell .brand-copy span{
+  color:#C0DDE6!important;
+}
+.client-shell nav button{
+  color:#D8EAF0!important;
+}
+.client-shell nav button:hover{
+  background:#177894!important;
+  color:#fff!important;
+}
+.client-shell nav button.active{
+  background:#F4F9FB!important;
+  color:#0A617D!important;
+  box-shadow:inset 3px 0 0 #20A7C4!important;
+}
+.client-shell .nav-icon{
+  color:#BDE0EA!important;
+}
+.client-shell nav button.active .nav-icon{
+  color:#0A6C8B!important;
+}
+.client-shell .logout{
+  background:#0A5872!important;
+  border-color:rgba(255,255,255,.16)!important;
+  color:#EAF4F8!important;
+}
+.client-shell .logout:hover{
+  background:#084A61!important;
+}
