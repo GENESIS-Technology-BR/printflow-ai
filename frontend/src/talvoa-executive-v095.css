@@ -664,3 +664,203 @@ tbody tr:hover td{background:#f9fbfd!important}
   .admin-shell aside{width:188px!important}
   .admin-shell .dashboard{padding:14px!important}
 }
+
+
+/* TALVOA ERP Corporate Admin v0.98.1 — fine polish */
+.admin-shell .dashboard{
+  max-width:none!important;
+}
+
+.admin-shell .sap-page-head,
+.admin-shell .dashboard>header,
+.admin-shell .control-center-header,
+.admin-shell .agent-monitor-header,
+.admin-shell .reports-header,
+.admin-shell .printers-workspace-header{
+  position:relative!important;
+}
+
+.admin-shell .sap-page-head::after,
+.admin-shell .dashboard>header::after,
+.admin-shell .control-center-header::after,
+.admin-shell .agent-monitor-header::after,
+.admin-shell .reports-header::after,
+.admin-shell .printers-workspace-header::after{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;
+  right:0!important;
+  bottom:-1px!important;
+  height:2px!important;
+  background:linear-gradient(90deg,#0E789A 0,#20A7C4 18%,transparent 42%)!important;
+  opacity:.72!important;
+}
+
+/* Stronger KPI hierarchy */
+.admin-shell .sap-kpi-card small,
+.admin-shell .control-center-kpis article>span:first-child,
+.admin-shell .modern-dashboard-kpis article>span:first-child{
+  color:#70818E!important;
+  font-size:9px!important;
+  font-weight:700!important;
+  text-transform:uppercase!important;
+  letter-spacing:.055em!important;
+}
+
+.admin-shell .sap-kpi-card strong,
+.admin-shell .control-center-kpis article strong,
+.admin-shell .modern-dashboard-kpis article strong{
+  font-size:22px!important;
+  line-height:1!important;
+  color:#15384C!important;
+}
+
+.admin-shell .sap-kpi-card em,
+.admin-shell .control-center-kpis article small,
+.admin-shell .modern-dashboard-kpis article small{
+  color:#7F8E99!important;
+  font-size:9px!important;
+}
+
+/* Toolbar / filter treatment */
+.admin-shell .printer-filter-bar,
+.admin-shell .reports-filters,
+.admin-shell .control-center-title{
+  background:#F4F6F8!important;
+}
+
+.admin-shell .printer-filter-bar input,
+.admin-shell .printer-filter-bar select,
+.admin-shell .reports-filters input,
+.admin-shell .reports-filters select{
+  background:#FFF!important;
+  border-color:#BBC6CE!important;
+}
+
+.admin-shell .printer-filter-bar input::placeholder,
+.admin-shell .reports-filters input::placeholder{
+  color:#93A0AA!important;
+}
+
+/* Sticky table headers */
+.admin-shell .sap-table-wrap,
+.admin-shell .reports-table-card,
+.admin-shell .printer-cards{
+  scrollbar-color:#9FAEB9 #EDF1F3!important;
+}
+
+.admin-shell .sap-table thead th,
+.admin-shell .reports-table thead th,
+.admin-shell .printer-workspace-columns{
+  position:sticky!important;
+  top:0!important;
+  z-index:3!important;
+}
+
+.admin-shell .sap-table thead th,
+.admin-shell .reports-table thead th{
+  background:#E7EDF1!important;
+  color:#4D6574!important;
+}
+
+.admin-shell tbody tr:nth-child(even) td{
+  background:#FBFCFD!important;
+}
+.admin-shell tbody tr:nth-child(even):hover td,
+.admin-shell tbody tr:hover td{
+  background:#EEF7FA!important;
+}
+
+/* Section title bars */
+.admin-shell .sap-panel header,
+.admin-shell .control-center-title,
+.admin-shell .agent-panel-title,
+.admin-shell .reports-table-title{
+  background:#F2F5F7!important;
+  border-bottom:1px solid #CCD5DC!important;
+}
+
+.admin-shell .sap-panel header h2,
+.admin-shell .control-center-title h2,
+.admin-shell .agent-panel-title h3,
+.admin-shell .reports-table-title h3{
+  color:#25485A!important;
+  font-weight:700!important;
+}
+
+/* Sidebar refinement */
+.admin-shell aside{
+  box-shadow:inset -1px 0 0 rgba(255,255,255,.03)!important;
+}
+.admin-shell nav button{
+  letter-spacing:.005em!important;
+}
+.admin-shell nav button.active{
+  background:linear-gradient(90deg,#0F6B88,#155A70)!important;
+}
+.admin-shell nav button.active .nav-icon{
+  color:#D8F6FC!important;
+}
+
+/* Secondary actions */
+.admin-shell .actions button,
+.admin-shell .cc-row-actions button,
+.admin-shell .agent-actions button,
+.admin-shell .reports-downloads button.pdf{
+  min-height:29px!important;
+  padding:0 10px!important;
+  border-color:#B9C5CE!important;
+  background:#F8FAFB!important;
+  color:#3B5667!important;
+}
+.admin-shell .actions button:hover,
+.admin-shell .cc-row-actions button:hover,
+.admin-shell .agent-actions button:hover,
+.admin-shell .reports-downloads button.pdf:hover{
+  background:#EEF3F6!important;
+  border-color:#97A8B4!important;
+}
+
+/* Compact details and metadata */
+.admin-shell code{
+  color:#3A718B!important;
+  background:transparent!important;
+}
+.admin-shell .printer-clean-model,
+.admin-shell .printer-clean-meta-row,
+.admin-shell .sap-table td,
+.admin-shell .reports-table td{
+  letter-spacing:0!important;
+}
+
+/* Better vertical rhythm */
+.admin-shell .sap-dashboard-page,
+.admin-shell .control-center-page,
+.admin-shell .reports-page,
+.admin-shell .agent-monitor-page,
+.admin-shell .printers-workspace-page{
+  row-gap:8px!important;
+}
+
+.admin-shell .sap-health-strip{
+  min-height:48px!important;
+  padding:8px 12px!important;
+}
+
+.admin-shell .sap-health-strip p small{
+  margin-top:1px!important;
+}
+
+/* More compact desktop tables */
+@media(min-width:1400px){
+  .admin-shell .dashboard{
+    padding-left:18px!important;
+    padding-right:18px!important;
+  }
+  .admin-shell td{
+    height:33px!important;
+  }
+  .admin-shell th{
+    height:32px!important;
+  }
+}
