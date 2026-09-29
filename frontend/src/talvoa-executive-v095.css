@@ -212,3 +212,455 @@ tbody tr:hover td{background:#f9fbfd!important}
 .admin-shell .reports-loading{
   background:transparent!important;
 }
+
+
+/* TALVOA ERP Corporate Admin v0.98
+   Dense, aligned enterprise administration layout.
+   Scope: admin only. Client portal remains unchanged. */
+
+.admin-shell{
+  --erp-bg:#DDE2E7;
+  --erp-surface:#FFFFFF;
+  --erp-border:#C5CDD6;
+  --erp-sidebar:#263944;
+  --erp-sidebar-2:#2D4652;
+  --erp-top:#0E6B8C;
+  --erp-top-strong:#0A5873;
+  --erp-accent:#14A4C7;
+  --erp-text:#173042;
+  --erp-muted:#697B89;
+  background:var(--erp-bg)!important;
+}
+
+/* Frame */
+.admin-shell .workspace-topbar{
+  min-height:46px!important;
+  height:46px!important;
+  padding:0 18px!important;
+  background:var(--erp-top)!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:#fff!important;
+}
+.admin-shell .workspace-context,
+.admin-shell .workspace-user{
+  height:46px!important;
+  align-items:center!important;
+}
+.admin-shell .workspace-product,
+.admin-shell .workspace-context strong,
+.admin-shell .workspace-divider,
+.admin-shell .workspace-user-copy strong,
+.admin-shell .workspace-user-copy span{
+  color:#fff!important;
+}
+.admin-shell .workspace-product{
+  font-size:11px!important;
+  letter-spacing:.11em!important;
+}
+.admin-shell .workspace-user-copy span{
+  opacity:.78!important;
+}
+.admin-shell .workspace-avatar{
+  width:28px!important;
+  height:28px!important;
+  border-color:rgba(255,255,255,.38)!important;
+  background:rgba(255,255,255,.12)!important;
+  color:#fff!important;
+}
+.admin-shell .workspace-environment{
+  min-height:20px!important;
+  padding:0 8px!important;
+  border-color:rgba(255,255,255,.35)!important;
+  background:rgba(255,255,255,.12)!important;
+  color:#fff!important;
+}
+
+/* Sidebar ERP */
+.admin-shell aside{
+  width:205px!important;
+  background:var(--erp-sidebar)!important;
+  border-right:1px solid #1d303a!important;
+  box-shadow:none!important;
+  color:#dce7ed!important;
+}
+.admin-shell .brand{
+  min-height:74px!important;
+  padding:15px 14px!important;
+  border-bottom:1px solid rgba(255,255,255,.09)!important;
+  background:var(--erp-sidebar-2)!important;
+}
+.admin-shell .brand img{
+  width:32px!important;
+  height:32px!important;
+}
+.admin-shell .brand-copy strong{
+  color:#fff!important;
+  font-size:16px!important;
+}
+.admin-shell .brand-copy span{
+  color:#a9bec9!important;
+  font-size:8px!important;
+  letter-spacing:.08em!important;
+}
+.admin-shell .nav-section-title{
+  margin:14px 16px 7px!important;
+  color:#829ba8!important;
+  font-size:8px!important;
+  letter-spacing:.13em!important;
+}
+.admin-shell nav{
+  padding:0 8px!important;
+}
+.admin-shell nav button{
+  min-height:36px!important;
+  margin:1px 0!important;
+  padding:0 11px!important;
+  border:0!important;
+  border-radius:3px!important;
+  background:transparent!important;
+  color:#c9d7de!important;
+  font-size:11px!important;
+  font-weight:600!important;
+  box-shadow:none!important;
+}
+.admin-shell nav button:hover{
+  background:#304b58!important;
+  color:#fff!important;
+}
+.admin-shell nav button.active{
+  background:#0E6785!important;
+  color:#fff!important;
+  box-shadow:inset 3px 0 0 #55c5dd!important;
+}
+.admin-shell .nav-icon{
+  color:#8fc4d2!important;
+}
+.admin-shell .logout{
+  margin:0 9px 10px!important;
+  min-height:34px!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  border-radius:3px!important;
+  background:#22353f!important;
+  color:#d6e2e8!important;
+}
+
+/* Workspace */
+.admin-shell .dashboard{
+  padding:16px 20px 28px!important;
+  background:var(--erp-bg)!important;
+}
+.admin-shell .dashboard>header,
+.admin-shell .modern-dashboard-header,
+.admin-shell .control-center-header,
+.admin-shell .agent-monitor-header,
+.admin-shell .reports-header,
+.admin-shell .printers-workspace-header{
+  min-height:58px!important;
+  margin:0 0 10px!important;
+  padding:10px 14px!important;
+  border:1px solid var(--erp-border)!important;
+  border-radius:2px!important;
+  background:var(--erp-surface)!important;
+  box-shadow:none!important;
+}
+.admin-shell .dashboard h1,
+.admin-shell .modern-dashboard-header h1,
+.admin-shell .control-center-header h1,
+.admin-shell .agent-monitor-header h1,
+.admin-shell .reports-header h1,
+.admin-shell .printers-workspace-header h1{
+  margin:0!important;
+  color:var(--erp-text)!important;
+  font-size:23px!important;
+  line-height:1.1!important;
+  font-weight:700!important;
+  letter-spacing:-.02em!important;
+}
+.admin-shell .dashboard header small,
+.admin-shell .modern-dashboard-header small,
+.admin-shell .control-center-header small,
+.admin-shell .agent-monitor-header small,
+.admin-shell .reports-header small,
+.admin-shell .printers-workspace-header>div>span{
+  color:#557c92!important;
+  font-size:9px!important;
+  font-weight:800!important;
+  letter-spacing:.09em!important;
+}
+
+/* Buttons ERP */
+.admin-shell button,
+.admin-shell .primary,
+.admin-shell .cc-primary,
+.admin-shell .cc-create-button,
+.admin-shell .reports-downloads button,
+.admin-shell .printers-workspace-actions button,
+.admin-shell .agent-monitor-header button{
+  border-radius:2px!important;
+}
+.admin-shell .primary,
+.admin-shell .cc-primary,
+.admin-shell .cc-create-button,
+.admin-shell .reports-downloads button:not(.pdf),
+.admin-shell .printers-workspace-actions button,
+.admin-shell .agent-monitor-header button{
+  background:#0D79A0!important;
+  border-color:#0D6E90!important;
+  box-shadow:none!important;
+}
+.admin-shell .primary:hover,
+.admin-shell .cc-primary:hover,
+.admin-shell .cc-create-button:hover,
+.admin-shell .reports-downloads button:not(.pdf):hover,
+.admin-shell .printers-workspace-actions button:hover,
+.admin-shell .agent-monitor-header button:hover{
+  background:#096785!important;
+}
+
+/* Shared panels */
+.admin-shell .panel,
+.admin-shell .hero,
+.admin-shell .control-center-kpis article,
+.admin-shell .control-center-panel,
+.admin-shell .control-center-onboarding,
+.admin-shell .control-center-created,
+.admin-shell .control-center-users,
+.admin-shell .agent-overview,
+.admin-shell .agent-metrics article,
+.admin-shell .agent-panel,
+.admin-shell .reports-intro,
+.admin-shell .reports-filters,
+.admin-shell .reports-metrics article,
+.admin-shell .reports-table-card,
+.admin-shell .sap-kpi-card,
+.admin-shell .sap-panel,
+.admin-shell .sap-health-strip,
+.admin-shell .printer-clean-card,
+.admin-shell .printer-filter-bar{
+  border:1px solid var(--erp-border)!important;
+  border-radius:2px!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+
+/* KPI alignment */
+.admin-shell .modern-dashboard-kpis,
+.admin-shell .dashboard-kpis,
+.admin-shell .control-center-kpis,
+.admin-shell .sap-kpi-grid{
+  gap:8px!important;
+}
+.admin-shell .modern-dashboard-kpis article,
+.admin-shell .dashboard-kpis article,
+.admin-shell .control-center-kpis article,
+.admin-shell .sap-kpi-card{
+  min-height:86px!important;
+  padding:12px 14px!important;
+}
+.admin-shell .modern-dashboard-kpis article::before,
+.admin-shell .dashboard-kpis article::before,
+.admin-shell .control-center-kpis article::before{
+  width:2px!important;
+  background:#57b9cf!important;
+}
+.admin-shell .sap-kpi-card{
+  border-top:2px solid #dce5ea!important;
+}
+.admin-shell .sap-kpi-card strong{
+  color:#15364b!important;
+}
+
+/* SAP overview sections */
+.admin-shell .sap-page-head{
+  min-height:58px!important;
+  margin-bottom:9px!important;
+  padding:9px 12px!important;
+  border:1px solid var(--erp-border)!important;
+  border-radius:2px!important;
+  background:#fff!important;
+}
+.admin-shell .sap-page-head h1{
+  font-size:23px!important;
+}
+.admin-shell .sap-dashboard-grid,
+.admin-shell .sap-dashboard-grid-overview{
+  gap:8px!important;
+}
+.admin-shell .sap-panel header{
+  min-height:44px!important;
+  padding:9px 11px!important;
+  border-bottom:1px solid #D7DEE4!important;
+  background:#F7F9FA!important;
+}
+.admin-shell .sap-panel header h2{
+  font-size:13px!important;
+  color:#29495b!important;
+}
+.admin-shell .sap-panel header>div>span{
+  font-size:8px!important;
+  color:#6b8796!important;
+}
+
+/* Dense tables */
+.admin-shell table{
+  border-collapse:collapse!important;
+}
+.admin-shell th{
+  height:34px!important;
+  padding:7px 9px!important;
+  border-bottom:1px solid #B8C4CC!important;
+  background:#EDF1F4!important;
+  color:#536978!important;
+  font-size:9px!important;
+  font-weight:800!important;
+  letter-spacing:.035em!important;
+}
+.admin-shell td{
+  height:35px!important;
+  padding:6px 9px!important;
+  border-bottom:1px solid #E1E6EA!important;
+  background:#fff!important;
+  color:#304858!important;
+  font-size:10px!important;
+}
+.admin-shell tbody tr:hover td{
+  background:#F2F8FA!important;
+}
+
+/* Control Center */
+.admin-shell .control-center-page{
+  gap:9px!important;
+}
+.admin-shell .control-center-title{
+  padding:11px 13px!important;
+  background:#F6F8F9!important;
+}
+.admin-shell .control-center-row{
+  min-height:58px!important;
+  padding:9px 12px!important;
+  border-bottom:1px solid #DDE3E7!important;
+}
+.admin-shell .control-center-row.header{
+  min-height:36px!important;
+  background:#EBF0F3!important;
+  color:#586D7B!important;
+}
+.admin-shell .cc-row-actions button{
+  min-height:29px!important;
+  padding:0 10px!important;
+  border-radius:2px!important;
+}
+
+/* Printer workspace ERP */
+.admin-shell .printers-workspace-page{
+  gap:9px!important;
+}
+.admin-shell .printer-clean-catalog-summary{
+  border-radius:2px!important;
+}
+.admin-shell .printer-filter-bar{
+  min-height:40px!important;
+  border-radius:2px!important;
+}
+.admin-shell .printer-filter-bar input,
+.admin-shell .printer-filter-bar select{
+  min-height:40px!important;
+  border-radius:0!important;
+}
+.admin-shell .printer-workspace-columns{
+  min-height:34px!important;
+  border-radius:2px 2px 0 0!important;
+  background:#173B50!important;
+  color:#EAF2F6!important;
+}
+.admin-shell .printer-clean-card{
+  border-radius:0!important;
+  border-top:0!important;
+}
+.admin-shell .printer-clean-card:last-child{
+  border-radius:0 0 2px 2px!important;
+}
+.admin-shell .printer-clean-summary{
+  min-height:58px!important;
+}
+.admin-shell .printer-clean-details-button{
+  border-radius:2px!important;
+}
+
+/* Reports ERP */
+.admin-shell .reports-page{
+  gap:9px!important;
+}
+.admin-shell .reports-intro{
+  padding:13px 15px!important;
+  border-left:3px solid #0C8EB4!important;
+}
+.admin-shell .reports-intro h2{
+  font-size:18px!important;
+}
+.admin-shell .reports-filters{
+  padding:10px!important;
+  gap:8px!important;
+}
+.admin-shell .reports-filters input,
+.admin-shell .reports-filters select{
+  min-height:38px!important;
+  border-radius:2px!important;
+}
+.admin-shell .reports-metrics{
+  gap:7px!important;
+}
+.admin-shell .reports-metrics article{
+  min-height:75px!important;
+  padding:10px 12px!important;
+}
+.admin-shell .reports-metrics strong{
+  font-size:21px!important;
+}
+.admin-shell .reports-table-card{
+  overflow:hidden!important;
+}
+
+/* Agent */
+.admin-shell .agent-overview{
+  padding:14px 16px!important;
+  border-left:3px solid #31A56A!important;
+}
+.admin-shell .agent-metrics{
+  gap:8px!important;
+}
+.admin-shell .agent-metrics article{
+  min-height:88px!important;
+  padding:12px!important;
+}
+.admin-shell .agent-monitor-grid{
+  gap:8px!important;
+}
+
+/* Form density */
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea{
+  min-height:38px!important;
+  border-radius:2px!important;
+  border-color:#BFCAD2!important;
+}
+.admin-shell input:focus,
+.admin-shell select:focus,
+.admin-shell textarea:focus{
+  border-color:#2796B7!important;
+  box-shadow:0 0 0 2px rgba(39,150,183,.10)!important;
+}
+
+/* Desktop alignment rails */
+@media(min-width:1280px){
+  .admin-shell .dashboard{
+    padding-left:20px!important;
+    padding-right:20px!important;
+  }
+}
+@media(max-width:1100px){
+  .admin-shell aside{width:188px!important}
+  .admin-shell .dashboard{padding:14px!important}
+}
