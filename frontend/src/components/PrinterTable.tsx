@@ -115,6 +115,7 @@ export default function PrinterTable({
   const [catalogMessage, setCatalogMessage] = useState<string | null>(null);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [expandedPrinterKey, setExpandedPrinterKey] = useState<string | null>(null);
+  const [alertPrinterKey, setAlertPrinterKey] = useState<string | null>(null);
   const [operationalAlerts, setOperationalAlerts] = useState<OperationalAlert[]>([]);
 
   async function loadOrganizationCatalog(): Promise<void> {
@@ -537,6 +538,45 @@ export default function PrinterTable({
             : alertState.level === "critical"
               ? "Impressora offline ou com saúde crítica."
               : "Impressora requer atenção.";
+          const alertOpen = alertPrinterKey === key;
+          const alertReasons = [
+            ...alertState.alerts.map((alert) => ({
+              title: alert.title,
+              description: alert.description,
+            })),
+            ...((printer.health_reasons || []).map((reason) => ({
+              title: reason,
+              description: "",
+            }))),
+          ];
+          if (!alertReasons.length) {
+            if (printer.toner_percent !== null && printer.toner_percent <= 5) {
+              alertReasons.push({
+                title: `Toner crítico: ${printer.toner_percent}%`,
+                description: "Recomenda-se programar a substituição do suprimento.",
+              });
+            } else if (printer.toner_percent !== null && printer.toner_percent <= 20) {
+              alertReasons.push({
+                title: `Toner baixo: ${printer.toner_percent}%`,
+                description: "O suprimento está abaixo do nível de atenção.",
+              });
+            } else if (printer.status.toLowerCase() === "offline") {
+              alertReasons.push({
+                title: "Impressora offline",
+                description: "O equipamento não está respondendo à comunicação do Agent.",
+              });
+            } else if (printer.health_status === "critical") {
+              alertReasons.push({
+                title: "Saúde crítica",
+                description: "O equipamento atingiu condição crítica de saúde.",
+              });
+            } else {
+              alertReasons.push({
+                title: "Atenção operacional",
+                description: "Consulte os detalhes técnicos da impressora.",
+              });
+            }
+          }
 
           return (
             <article
@@ -550,20 +590,34 @@ export default function PrinterTable({
                     <div className="printer-clean-name-row">
                       <strong>{displayName}</strong>
                       {alertState.level !== "none" && (
-                        <span
+                        <button
+                          type="button"
                           className={`printer-attention-badge printer-attention-${alertState.level}`}
                           title={alertTitle}
                           aria-label={`${alertLabel}: ${alertTitle}`}
+                          aria-expanded={alertOpen}
+                          onClick={() => setAlertPrinterKey(alertOpen ? null : key)}
                         >
                           <i aria-hidden="true" />
                           {alertLabel}
-                        </span>
+                        </button>
                       )}
                       <span className={`status-pill status-${printer.status}`}>
                         <i />{getStatusLabel(printer.status)}
                       </span>
                     </div>
                     <span className="printer-clean-model">{modelLabel}</span>
+                    {alertOpen && (
+                      <div className={`printer-alert-popover printer-alert-popover-${alertState.level}`}>
+                        <strong>Motivo do alerta</strong>
+                        {alertReasons.map((reason, index) => (
+                          <div className="printer-alert-reason" key={`${key}-alert-${index}`}>
+                            <span>{reason.title}</span>
+                            {reason.description && <small>{reason.description}</small>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className="printer-clean-meta-row">
                       <code>{printer.ip || "IP não informado"}</code>
                       <span>{locationLabel}</span>
