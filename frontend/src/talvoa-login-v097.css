@@ -10,25 +10,16 @@
   letter-spacing:.01em!important;
 }
 .pf-login-product-name{
-  margin:0 0 8px!important;
+  margin:0 0 44px!important;
   color:#233d57!important;
-  font-size:29px!important;
+  font-size:27px!important;
   line-height:1.15!important;
   font-weight:650!important;
-  letter-spacing:-.025em!important;
-}
-.pf-login-product-subtitle{
-  margin:0 0 42px!important;
-  text-align:center!important;
-  color:#7a8998!important;
-  font-size:14px!important;
-  line-height:1.4!important;
-  font-weight:400!important;
+  letter-spacing:.01em!important;
 }
 .auth-flow-title{
   margin-bottom:42px!important;
 }
 @media(max-width:640px){
-  .pf-login-product-name{font-size:23px!important}
-  .pf-login-product-subtitle{margin-bottom:32px!important;font-size:13px!important}
+  .pf-login-product-name{margin-bottom:34px!important;font-size:22px!important}
 }
