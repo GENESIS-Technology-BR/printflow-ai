@@ -60,7 +60,7 @@ def build_pdf_report(
 
     output = BytesIO()
     page_size = landscape(A4)
-    doc = SimpleDocTemplate(output, pagesize=page_size, leftMargin=7*mm, rightMargin=7*mm, topMargin=4.5*mm, bottomMargin=8*mm, title="TALVOA - Relatório de Impressão")
+    doc = SimpleDocTemplate(output, pagesize=page_size, leftMargin=10*mm, rightMargin=10*mm, topMargin=5.5*mm, bottomMargin=9*mm, title="TALVOA - Relatório de Impressão")
     styles = getSampleStyleSheet()
     title = ParagraphStyle("pf-final-title", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=15.5, leading=16, alignment=1, textColor=colors.HexColor(f"#{BRAND_NAVY}"), spaceAfter=0)
     brand = ParagraphStyle("pf-final-brand", parent=styles["Normal"], fontSize=6.4, leading=7, textColor=colors.HexColor(f"#{BRAND_MUTED}"))
@@ -72,7 +72,7 @@ def build_pdf_report(
         Paragraph(f'<font color="#{BRAND_BLUE}" size="17"><b>TALVOA</b></font><br/><font color="#{BRAND_MUTED}">Gestão Inteligente de Impressão</font>', brand),
         Paragraph(f"Relatório de Impressão<br/><font size='7' color='#{BRAND_MUTED}'>Período: {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}</font>", title),
         Paragraph(f'<font color="#{BRAND_BLUE}" size="6"><b>FECHAMENTO COMERCIAL</b></font><br/><br/><b>Empresa:</b> {_short(company_name,32)}<br/><b>Escopo:</b> {_short(report_scope,32)}', meta_right),
-    ]], colWidths=[67*mm,145*mm,71*mm], rowHeights=[15*mm])
+    ]], colWidths=[64*mm,143*mm,70*mm], rowHeights=[15*mm], hAlign="CENTER")
     header.setStyle(TableStyle([("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),1.5*mm),("RIGHTPADDING",(0,0),(-1,-1),1.5*mm),("TOPPADDING",(0,0),(-1,-1),0),("BOTTOMPADDING",(0,0),(-1,-1),0),("LINEBELOW",(0,0),(-1,-1),0.45,colors.HexColor(f"#{BORDER}"))]))
 
     data = [["#","Nomenclatura","IP","Nº de série","Setor","Modelo","Inicial","Final","Impressões","R$/pág.","Custo"]]
@@ -113,7 +113,7 @@ def build_pdf_report(
         metric_card("Tarifa colorida", _rate(color_rate), "Aplicada quando houver contador de cor"),
         metric_card("Custo fixo", _money(fixed_cost), "Equipamentos com cobrança mensal"),
         metric_card("Total consolidado", _money(total_cost), f"{_num(total_pages)} páginas no período"),
-    ]], colWidths=[70*mm,70*mm,70*mm,71*mm], rowHeights=[17*mm])
+    ]], colWidths=[68.5*mm,68.5*mm,68.5*mm,68.5*mm], rowHeights=[17*mm], hAlign="CENTER")
     summary.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,-1),colors.HexColor("#F8FAFD")),("BOX",(0,0),(-1,-1),.35,colors.HexColor(f"#{BORDER}")),("INNERGRID",(0,0),(-1,-1),.35,colors.white),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),5*mm),("RIGHTPADDING",(0,0),(-1,-1),5*mm),("TOPPADDING",(0,0),(-1,-1),1*mm),("BOTTOMPADDING",(0,0),(-1,-1),1*mm)]))
 
     base_note = (
@@ -125,16 +125,16 @@ def build_pdf_report(
         if label_count
         else f"●  {base_note}"
     )
-    note = Table([[Paragraph(note_text, ParagraphStyle("pf-final-note", parent=styles["Normal"], fontSize=5.8, leading=6.4, textColor=colors.HexColor("#365A7C")))]], colWidths=[281*mm], rowHeights=[7*mm])
+    note = Table([[Paragraph(note_text, ParagraphStyle("pf-final-note", parent=styles["Normal"], fontSize=5.8, leading=6.4, alignment=1, textColor=colors.HexColor("#365A7C")))]], colWidths=[274*mm], rowHeights=[7*mm], hAlign="CENTER")
     note.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,-1),colors.HexColor(f"#{PALE_BLUE}")),("BOX",(0,0),(-1,-1),.25,colors.HexColor("#D7EAFD")),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),4*mm),("RIGHTPADDING",(0,0),(-1,-1),4*mm),("TOPPADDING",(0,0),(-1,-1),0),("BOTTOMPADDING",(0,0),(-1,-1),0)]))
 
     story = [header, Spacer(1,2.2*mm), table, Spacer(1,2.5*mm), summary, Spacer(1,1.5*mm), note]
 
     def footer(canvas, _doc):
         canvas.saveState(); width,_ = page_size
-        canvas.setStrokeColor(colors.HexColor(f"#{BORDER}")); canvas.setLineWidth(.35); canvas.line(7*mm,6.3*mm,width-7*mm,6.3*mm)
-        canvas.setFillColor(colors.HexColor(f"#{BRAND_NAVY}")); canvas.setFont("Helvetica-Bold",5.8); canvas.drawString(7*mm,3.3*mm,"TALVOA")
-        canvas.setFillColor(colors.HexColor(f"#{BRAND_MUTED}")); canvas.setFont("Helvetica",5.8); canvas.drawString(20*mm,3.3*mm,f"|  {company_name}"); canvas.drawRightString(width-7*mm,3.3*mm,f"Relatório gerado em {end.strftime('%d/%m/%Y')}  |  Fechamento comercial")
+        canvas.setStrokeColor(colors.HexColor(f"#{BORDER}")); canvas.setLineWidth(.35); canvas.line(10*mm,7.2*mm,width-10*mm,7.2*mm)
+        canvas.setFillColor(colors.HexColor(f"#{BRAND_NAVY}")); canvas.setFont("Helvetica-Bold",5.8); canvas.drawString(10*mm,4.0*mm,"TALVOA")
+        canvas.setFillColor(colors.HexColor(f"#{BRAND_MUTED}")); canvas.setFont("Helvetica",5.8); canvas.drawString(23*mm,4.0*mm,f"|  {company_name}"); canvas.drawRightString(width-10*mm,4.0*mm,f"Relatório gerado em {end.strftime('%d/%m/%Y')}  |  Fechamento comercial")
         canvas.restoreState()
 
     doc.build([KeepTogether(story)], onFirstPage=footer, onLaterPages=footer)
