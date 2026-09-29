@@ -1,7 +1,7 @@
 /* PRINTFLOW Login V6 — corporate ERP / Protheus-inspired, ultra compact */
 .auth-page{position:relative;min-height:100vh;width:100%;display:grid;place-items:center;padding:42px 24px 68px;overflow:hidden;background:#f7f8fa;color:#172a43}
-.auth-page::before{content:"";position:absolute;z-index:0;width:min(38vw,560px);aspect-ratio:1;right:-7vw;top:52%;transform:translateY(-42%) rotate(-8deg);background:url('/brand/printflow-mark.svg') center/contain no-repeat;opacity:.032;filter:grayscale(1);pointer-events:none}
-.auth-page::after{content:"© 2026 PrintFlow. Todos os direitos reservados.";position:absolute;z-index:2;left:50%;bottom:22px;transform:translateX(-50%);color:#7f8da0;font-size:11px;white-space:nowrap}
+.auth-page::before{content:"";position:absolute;z-index:0;width:min(38vw,560px);aspect-ratio:1;right:-7vw;top:52%;transform:translateY(-42%) rotate(-8deg);background:url('/brand/talvoa-mark.svg') center/contain no-repeat;opacity:.032;filter:grayscale(1);pointer-events:none}
+.auth-page::after{content:"© 2026 TALVOA. Todos os direitos reservados.";position:absolute;z-index:2;left:50%;bottom:22px;transform:translateX(-50%);color:#7f8da0;font-size:11px;white-space:nowrap}
 .auth-card{position:relative;z-index:2;width:min(360px,calc(100vw - 34px));margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;display:flex;flex-direction:column;align-items:stretch}
 .auth-card::before,.auth-card::after{display:none!important;content:none!important}
 .auth-brand-mark{display:block;width:48px;height:48px;margin:0 auto 5px;object-fit:contain}
