@@ -4,18 +4,18 @@
 
 .admin-shell,
 .client-shell{
-  --tv-top:#0D6683;
-  --tv-top-2:#0A5872;
-  --tv-side:#0A5872;
-  --tv-side-2:#084A61;
-  --tv-bg:#E9EEF2;
+  --tv-top:#23485A;
+  --tv-top-2:#23485A;
+  --tv-side:#23485A;
+  --tv-side-2:#1C3A49;
+  --tv-bg:#F3F5F7;
   --tv-surface:#FFFFFF;
-  --tv-surface-soft:#F6F9FB;
-  --tv-border:#D5DEE5;
-  --tv-border-strong:#C3CFD8;
-  --tv-text:#0F2E46;
-  --tv-muted:#6E8190;
-  --tv-blue:#0B73C9;
+  --tv-surface-soft:#F7F9FB;
+  --tv-border:#D7DEE6;
+  --tv-border-strong:#C8D1DA;
+  --tv-text:#17324D;
+  --tv-muted:#6F7F8D;
+  --tv-blue:#0F6CBD;
   --tv-cyan:#1DA8C9;
   --tv-green:#16A466;
   --tv-red:#E74747;
@@ -155,14 +155,14 @@
 }
 .admin-shell nav button:hover,
 .client-shell nav button:hover{
-  background:rgba(255,255,255,.08)!important;
+  background:#2E617A!important;
   color:#fff!important;
 }
 .admin-shell nav button.active,
 .client-shell nav button.active{
-  background:linear-gradient(90deg,#1291C0,#11759A)!important;
+  background:#2E617A!important;
   color:#fff!important;
-  box-shadow:inset 3px 0 0 #63D6F1!important;
+  box-shadow:inset 3px 0 0 #7FB7CF!important;
 }
 .admin-shell .nav-icon,
 .client-shell .nav-icon{
@@ -456,9 +456,9 @@
 .client-shell .agent-monitor-header button{
   min-height:38px!important;
   padding:0 14px!important;
-  border:1px solid #075FAE!important;
+  border:1px solid #0D5FA8!important;
   border-radius:7px!important;
-  background:linear-gradient(180deg,#1684DC,#0B70C6)!important;
+  background:#0F6CBD!important;
   color:#fff!important;
   font-size:10px!important;
   font-weight:800!important;
@@ -476,7 +476,7 @@
 .client-shell .reports-downloads button:not(.pdf):hover,
 .client-shell .printers-workspace-actions button:hover,
 .client-shell .agent-monitor-header button:hover{
-  background:linear-gradient(180deg,#1076C7,#075FAE)!important;
+  background:#0D5FA8!important;
 }
 
 /* ===== Dashboard grids ===== */
