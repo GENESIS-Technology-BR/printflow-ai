@@ -1,6 +1,6 @@
-/* TALVOA Continuous Canvas v1.00
+/* TALVOA Continuous Canvas v1.01
    Apple-inspired information architecture for Visão Geral.
-   Goal: one continuous surface, almost no gaps between boxes. */
+   Goal: one continuous surface from header to alerts, with no floating-card gaps. */
 
 .admin-shell .sap-dashboard-page,
 .client-shell .sap-dashboard-page{
@@ -20,13 +20,14 @@
 /* Header: independent, light and calm */
 .admin-shell .sap-dashboard-page>.sap-page-head,
 .client-shell .sap-dashboard-page>.sap-page-head{
-  margin:0 0 12px!important;
-  min-height:84px!important;
-  padding:16px 18px!important;
+  margin:0!important;
+  min-height:88px!important;
+  padding:18px 20px!important;
   border:1px solid var(--canvas-border)!important;
-  border-radius:var(--canvas-radius)!important;
-  background:rgba(255,255,255,.94)!important;
-  box-shadow:0 1px 2px rgba(15,23,42,.025)!important;
+  border-bottom:0!important;
+  border-radius:var(--canvas-radius) var(--canvas-radius) 0 0!important;
+  background:rgba(255,255,255,.96)!important;
+  box-shadow:0 1px 2px rgba(15,23,42,.018)!important;
 }
 .admin-shell .sap-dashboard-page>.sap-page-head::after,
 .client-shell .sap-dashboard-page>.sap-page-head::after{
@@ -268,5 +269,142 @@
   .admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel:last-child,
   .client-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel:last-child{
     border-bottom:0!important;
+  }
+}
+
+
+/* ===== v1.01 final continuity refinements ===== */
+.admin-shell .sap-dashboard-page>.sap-page-head,
+.client-shell .sap-dashboard-page>.sap-page-head,
+.admin-shell .sap-dashboard-page>.sap-kpi-grid,
+.client-shell .sap-dashboard-page>.sap-kpi-grid,
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview,
+.admin-shell .sap-dashboard-page>.sap-printer-ranking,
+.client-shell .sap-dashboard-page>.sap-printer-ranking,
+.admin-shell .sap-dashboard-page>.sap-health-strip,
+.client-shell .sap-dashboard-page>.sap-health-strip{
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+
+.admin-shell .sap-dashboard-page>.sap-kpi-grid,
+.client-shell .sap-dashboard-page>.sap-kpi-grid,
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview,
+.admin-shell .sap-dashboard-page>.sap-printer-ranking,
+.client-shell .sap-dashboard-page>.sap-printer-ranking{
+  box-shadow:none!important;
+}
+
+.admin-shell .sap-dashboard-page>.sap-kpi-grid{
+  border-top:1px solid var(--canvas-divider)!important;
+}
+.client-shell .sap-dashboard-page>.sap-kpi-grid{
+  border-top:1px solid var(--canvas-divider)!important;
+}
+
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview,
+.admin-shell .sap-dashboard-page>.sap-printer-ranking,
+.client-shell .sap-dashboard-page>.sap-printer-ranking{
+  border-top-color:var(--canvas-divider)!important;
+}
+
+.admin-shell .sap-dashboard-page>.sap-health-strip,
+.client-shell .sap-dashboard-page>.sap-health-strip{
+  border-top-color:var(--canvas-divider)!important;
+}
+
+/* Apple-like content hierarchy: fewer decorative edges, stronger spacing inside */
+.admin-shell .sap-dashboard-page>.sap-page-head h1,
+.client-shell .sap-dashboard-page>.sap-page-head h1{
+  font-size:30px!important;
+  letter-spacing:-.035em!important;
+  color:#1D1D1F!important;
+}
+.admin-shell .sap-dashboard-page>.sap-page-head p,
+.client-shell .sap-dashboard-page>.sap-page-head p{
+  color:#6E6E73!important;
+}
+.admin-shell .sap-dashboard-page .sap-breadcrumb,
+.client-shell .sap-dashboard-page .sap-breadcrumb{
+  display:none!important;
+}
+
+/* Header controls lighter, less like cards */
+.admin-shell .sap-dashboard-page .sap-company-chip,
+.client-shell .sap-dashboard-page .sap-company-chip{
+  border-color:#E1E5E9!important;
+  background:#FAFAFB!important;
+  box-shadow:none!important;
+}
+.admin-shell .sap-dashboard-page .sap-refresh,
+.client-shell .sap-dashboard-page .sap-refresh{
+  border-radius:9px!important;
+  box-shadow:none!important;
+}
+
+/* KPI rail behaves as one object */
+.admin-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-card,
+.client-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-card{
+  min-height:98px!important;
+  padding:16px 17px!important;
+}
+.admin-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-icon,
+.client-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-icon{
+  background:#F3F6FA!important;
+  color:#0F6CBD!important;
+}
+.admin-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-icon.green,
+.client-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-icon.green{
+  background:#EEF8F2!important;
+  color:#14945B!important;
+}
+.admin-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-icon.red,
+.client-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-icon.red{
+  background:#FFF1F1!important;
+  color:#D93E3E!important;
+}
+
+/* Analytics: remove internal card headers feeling */
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel>header,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel>header{
+  min-height:54px!important;
+  padding:14px 18px 9px!important;
+}
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel>header h2,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel>header h2{
+  font-size:15px!important;
+  letter-spacing:-.01em!important;
+}
+
+/* Table visually belongs to same canvas */
+.admin-shell .sap-dashboard-page>.sap-printer-ranking>header,
+.client-shell .sap-dashboard-page>.sap-printer-ranking>header{
+  min-height:56px!important;
+}
+.admin-shell .sap-dashboard-page>.sap-printer-ranking .sap-table tbody tr:last-child td,
+.client-shell .sap-dashboard-page>.sap-printer-ranking .sap-table tbody tr:last-child td{
+  border-bottom:0!important;
+}
+
+/* Alert footer: integrated strip, not a separate warning card */
+.admin-shell .sap-dashboard-page>.sap-health-strip,
+.client-shell .sap-dashboard-page>.sap-health-strip{
+  background:#FFFCF7!important;
+}
+.admin-shell .sap-dashboard-page>.sap-health-strip .sap-health-icon,
+.client-shell .sap-dashboard-page>.sap-health-strip .sap-health-icon{
+  width:34px!important;
+  height:34px!important;
+  border-radius:9px!important;
+}
+
+/* Page itself should feel like one object surrounded by calm whitespace */
+@media(min-width:1100px){
+  .admin-shell .sap-dashboard-page,
+  .client-shell .sap-dashboard-page{
+    max-width:none!important;
   }
 }
