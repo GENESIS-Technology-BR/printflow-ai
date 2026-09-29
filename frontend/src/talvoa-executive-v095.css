@@ -147,3 +147,68 @@ tbody tr:hover td{background:#f9fbfd!important}
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
+
+
+/* TALVOA Admin Corporate Gray v0.95.2 */
+.admin-shell{
+  --tv-bg:#E3E6EA!important;
+  background:#E3E6EA!important;
+}
+
+.admin-shell .dashboard,
+.admin-shell .shell,
+.admin-shell #root{
+  background:#E3E6EA!important;
+}
+
+.admin-shell .workspace-topbar,
+.admin-shell aside{
+  background:#F8FAFC!important;
+}
+
+.admin-shell .panel,
+.admin-shell .hero,
+.admin-shell .control-center-kpis article,
+.admin-shell .control-center-panel,
+.admin-shell .control-center-onboarding,
+.admin-shell .control-center-created,
+.admin-shell .control-center-users,
+.admin-shell .agent-overview,
+.admin-shell .agent-metrics article,
+.admin-shell .agent-panel,
+.admin-shell .reports-intro,
+.admin-shell .reports-filters,
+.admin-shell .reports-metrics article,
+.admin-shell .reports-table-card,
+.admin-shell .printers-workspace-header{
+  background:#FFFFFF!important;
+  border-color:#C8D0D8!important;
+  box-shadow:0 3px 14px rgba(24,44,64,.055)!important;
+}
+
+.admin-shell .printer-clean-card,
+.admin-shell .printer-filter-bar,
+.admin-shell .printer-clean-catalog{
+  background:#FFFFFF!important;
+  border-color:#C8D0D8!important;
+  box-shadow:0 3px 12px rgba(24,44,64,.05)!important;
+}
+
+.admin-shell .sap-kpi-card,
+.admin-shell .sap-panel,
+.admin-shell .sap-health-strip{
+  background:#FFFFFF!important;
+  border-color:#C8D0D8!important;
+  box-shadow:0 3px 12px rgba(24,44,64,.045)!important;
+}
+
+.admin-shell .printer-workspace-columns,
+.admin-shell th{
+  border-color:#BCC6D0!important;
+}
+
+.admin-shell .dashboard-empty,
+.admin-shell .reports-empty,
+.admin-shell .reports-loading{
+  background:transparent!important;
+}
