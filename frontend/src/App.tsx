@@ -269,7 +269,8 @@ function App() {
             <img className="pf-login-brand-mark" src="/brand/talvoa-mark.svg" alt="Símbolo TALVOA" />
             <strong>TALVOA</strong>
           </div>
-          <div className="pf-login-product-name">Gestão Inteligente de Impressão</div>
+          <div className="pf-login-product-name">Controle. Visibilidade. Eficiência.</div>
+          <div className="pf-login-product-subtitle">Gestão inteligente do seu parque de impressão.</div>
           <div className="auth-flow-title">
             {mode === "login" && <strong>Boas-vindas</strong>}
             {mode === "forgot" && <strong>Recuperar senha</strong>}
