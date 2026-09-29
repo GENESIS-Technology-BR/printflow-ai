@@ -927,3 +927,16 @@ tbody tr:hover td{background:#f9fbfd!important}
 .admin-shell .logout:hover{
   background:#08445A!important;
 }
+
+
+/* TALVOA shared navigation palette v0.98.3 */
+.admin-shell{
+  --talvoa-nav-top:#0E6B8C!important;
+  --talvoa-nav-side:#0B5872!important;
+}
+.admin-shell .workspace-topbar{
+  background:var(--talvoa-nav-top)!important;
+}
+.admin-shell aside{
+  background:linear-gradient(180deg,#0D627F 0%,var(--talvoa-nav-side) 100%)!important;
+}
