@@ -1,0 +1,636 @@
+/* TALVOA ERP MASTER v0.99
+   Visual master layer approved from dashboard reference.
+   Loaded last to normalize admin + client without touching business logic. */
+
+.admin-shell,
+.client-shell{
+  --tv-top:#0D6683;
+  --tv-top-2:#0A5872;
+  --tv-side:#0A5872;
+  --tv-side-2:#084A61;
+  --tv-bg:#E9EEF2;
+  --tv-surface:#FFFFFF;
+  --tv-surface-soft:#F6F9FB;
+  --tv-border:#D5DEE5;
+  --tv-border-strong:#C3CFD8;
+  --tv-text:#0F2E46;
+  --tv-muted:#6E8190;
+  --tv-blue:#0B73C9;
+  --tv-cyan:#1DA8C9;
+  --tv-green:#16A466;
+  --tv-red:#E74747;
+  --tv-orange:#E99028;
+  --tv-shadow:0 2px 10px rgba(22,52,72,.045);
+  background:var(--tv-bg)!important;
+  color:var(--tv-text)!important;
+}
+
+/* ===== Global frame ===== */
+.admin-shell .workspace-topbar,
+.client-shell .workspace-topbar{
+  height:48px!important;
+  min-height:48px!important;
+  padding:0 20px!important;
+  background:linear-gradient(90deg,var(--tv-top-2),var(--tv-top))!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:#fff!important;
+}
+.admin-shell .workspace-context,
+.admin-shell .workspace-user,
+.client-shell .workspace-context,
+.client-shell .workspace-user{
+  height:48px!important;
+  display:flex!important;
+  align-items:center!important;
+}
+.admin-shell .workspace-product,
+.admin-shell .workspace-divider,
+.admin-shell .workspace-context strong,
+.admin-shell .workspace-user-copy strong,
+.admin-shell .workspace-user-copy span,
+.client-shell .workspace-product,
+.client-shell .workspace-divider,
+.client-shell .workspace-context strong,
+.client-shell .workspace-user-copy strong,
+.client-shell .workspace-user-copy span{
+  color:#fff!important;
+}
+.admin-shell .workspace-product,
+.client-shell .workspace-product{
+  font-size:11px!important;
+  font-weight:800!important;
+  letter-spacing:.12em!important;
+}
+.admin-shell .workspace-user-copy,
+.client-shell .workspace-user-copy{
+  line-height:1.12!important;
+}
+.admin-shell .workspace-user-copy strong,
+.client-shell .workspace-user-copy strong{
+  font-size:10px!important;
+}
+.admin-shell .workspace-user-copy span,
+.client-shell .workspace-user-copy span{
+  font-size:8px!important;
+  opacity:.8!important;
+}
+.admin-shell .workspace-avatar,
+.client-shell .workspace-avatar{
+  width:30px!important;
+  height:30px!important;
+  border:1px solid rgba(255,255,255,.34)!important;
+  background:rgba(255,255,255,.09)!important;
+  color:#fff!important;
+}
+.admin-shell .workspace-environment,
+.client-shell .workspace-environment{
+  min-height:20px!important;
+  padding:0 8px!important;
+  border:1px solid rgba(255,255,255,.35)!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.10)!important;
+  color:#fff!important;
+  font-size:8px!important;
+}
+
+/* ===== Sidebar ===== */
+.admin-shell aside,
+.client-shell aside{
+  width:210px!important;
+  background:linear-gradient(180deg,var(--tv-top) 0%,var(--tv-side) 55%,var(--tv-side-2) 100%)!important;
+  border-right:1px solid #073E50!important;
+  box-shadow:none!important;
+  color:#EAF5F8!important;
+}
+.admin-shell .brand,
+.client-shell .brand{
+  min-height:78px!important;
+  padding:16px 16px!important;
+  border-bottom:1px solid rgba(255,255,255,.16)!important;
+  background:transparent!important;
+}
+.admin-shell .brand img,
+.client-shell .brand img{
+  width:34px!important;
+  height:34px!important;
+}
+.admin-shell .brand-copy strong,
+.client-shell .brand-copy strong{
+  color:#fff!important;
+  font-size:17px!important;
+  font-weight:800!important;
+  letter-spacing:.01em!important;
+}
+.admin-shell .brand-copy span,
+.client-shell .brand-copy span{
+  color:#BCD8E1!important;
+  font-size:8px!important;
+  letter-spacing:.08em!important;
+}
+.admin-shell .nav-section-title,
+.client-shell .nav-section-title{
+  margin:15px 14px 7px!important;
+  color:#9FC7D4!important;
+  font-size:8px!important;
+  letter-spacing:.12em!important;
+}
+.admin-shell nav,
+.client-shell nav{
+  padding:0 8px!important;
+}
+.admin-shell nav button,
+.client-shell nav button{
+  min-height:40px!important;
+  margin:2px 0!important;
+  padding:0 12px!important;
+  border:0!important;
+  border-radius:5px!important;
+  background:transparent!important;
+  color:#D3E7ED!important;
+  font-size:11px!important;
+  font-weight:600!important;
+  letter-spacing:0!important;
+  box-shadow:none!important;
+}
+.admin-shell nav button:hover,
+.client-shell nav button:hover{
+  background:rgba(255,255,255,.08)!important;
+  color:#fff!important;
+}
+.admin-shell nav button.active,
+.client-shell nav button.active{
+  background:linear-gradient(90deg,#1291C0,#11759A)!important;
+  color:#fff!important;
+  box-shadow:inset 3px 0 0 #63D6F1!important;
+}
+.admin-shell .nav-icon,
+.client-shell .nav-icon{
+  width:20px!important;
+  color:#B9DEE8!important;
+  font-size:14px!important;
+}
+.admin-shell nav button.active .nav-icon,
+.client-shell nav button.active .nav-icon{
+  color:#fff!important;
+}
+.admin-shell .logout,
+.client-shell .logout{
+  min-height:38px!important;
+  margin:0 12px 14px!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:6px!important;
+  background:rgba(255,255,255,.06)!important;
+  color:#fff!important;
+  font-size:11px!important;
+}
+.admin-shell .logout:hover,
+.client-shell .logout:hover{
+  background:rgba(255,255,255,.11)!important;
+}
+
+/* ===== Main canvas ===== */
+.admin-shell .dashboard,
+.client-shell .dashboard{
+  min-height:calc(100vh - 48px)!important;
+  padding:22px 24px 30px!important;
+  background:var(--tv-bg)!important;
+}
+
+/* ===== Page headers ===== */
+.admin-shell .sap-page-head,
+.admin-shell .control-center-header,
+.admin-shell .agent-monitor-header,
+.admin-shell .reports-header,
+.admin-shell .printers-workspace-header,
+.admin-shell .hero,
+.client-shell .sap-page-head,
+.client-shell .control-center-header,
+.client-shell .agent-monitor-header,
+.client-shell .reports-header,
+.client-shell .printers-workspace-header,
+.client-shell .hero{
+  min-height:74px!important;
+  margin:0 0 14px!important;
+  padding:14px 18px!important;
+  border:1px solid var(--tv-border)!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  box-shadow:var(--tv-shadow)!important;
+}
+.admin-shell .sap-page-head,
+.client-shell .sap-page-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+}
+.admin-shell .sap-page-head h1,
+.admin-shell .control-center-header h1,
+.admin-shell .agent-monitor-header h1,
+.admin-shell .reports-header h1,
+.admin-shell .printers-workspace-header h1,
+.client-shell .sap-page-head h1,
+.client-shell .control-center-header h1,
+.client-shell .agent-monitor-header h1,
+.client-shell .reports-header h1,
+.client-shell .printers-workspace-header h1{
+  margin:0!important;
+  color:var(--tv-text)!important;
+  font-size:28px!important;
+  line-height:1.05!important;
+  font-weight:800!important;
+  letter-spacing:-.025em!important;
+}
+.admin-shell .sap-page-head p,
+.admin-shell .control-center-header p,
+.admin-shell .agent-monitor-header p,
+.admin-shell .reports-header p,
+.client-shell .sap-page-head p,
+.client-shell .control-center-header p,
+.client-shell .agent-monitor-header p,
+.client-shell .reports-header p{
+  margin:4px 0 0!important;
+  color:var(--tv-muted)!important;
+  font-size:11px!important;
+  line-height:1.35!important;
+}
+
+/* ===== KPI cards ===== */
+.admin-shell .sap-kpi-grid,
+.admin-shell .sap-kpi-grid-six,
+.admin-shell .control-center-kpis,
+.admin-shell .agent-metrics,
+.admin-shell .reports-metrics,
+.client-shell .sap-kpi-grid,
+.client-shell .sap-kpi-grid-six,
+.client-shell .control-center-kpis,
+.client-shell .agent-metrics,
+.client-shell .reports-metrics{
+  gap:12px!important;
+}
+.admin-shell .sap-kpi-card,
+.admin-shell .control-center-kpis article,
+.admin-shell .agent-metrics article,
+.admin-shell .reports-metrics article,
+.client-shell .sap-kpi-card,
+.client-shell .control-center-kpis article,
+.client-shell .agent-metrics article,
+.client-shell .reports-metrics article{
+  min-height:96px!important;
+  padding:14px 16px!important;
+  border:1px solid var(--tv-border)!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  box-shadow:var(--tv-shadow)!important;
+}
+.admin-shell .sap-kpi-card small,
+.admin-shell .control-center-kpis article>span:first-child,
+.admin-shell .agent-metrics article>span:first-child,
+.admin-shell .reports-metrics article>span:first-child,
+.client-shell .sap-kpi-card small,
+.client-shell .control-center-kpis article>span:first-child,
+.client-shell .agent-metrics article>span:first-child,
+.client-shell .reports-metrics article>span:first-child{
+  color:#637D90!important;
+  font-size:9px!important;
+  font-weight:800!important;
+  text-transform:uppercase!important;
+  letter-spacing:.055em!important;
+}
+.admin-shell .sap-kpi-card strong,
+.admin-shell .control-center-kpis article strong,
+.admin-shell .agent-metrics article strong,
+.admin-shell .reports-metrics article strong,
+.client-shell .sap-kpi-card strong,
+.client-shell .control-center-kpis article strong,
+.client-shell .agent-metrics article strong,
+.client-shell .reports-metrics article strong{
+  color:#0F2E46!important;
+  font-size:24px!important;
+  font-weight:800!important;
+  line-height:1!important;
+}
+.admin-shell .sap-kpi-card em,
+.admin-shell .control-center-kpis article small,
+.admin-shell .agent-metrics article small,
+.admin-shell .reports-metrics article small,
+.client-shell .sap-kpi-card em,
+.client-shell .control-center-kpis article small,
+.client-shell .agent-metrics article small,
+.client-shell .reports-metrics article small{
+  color:#718796!important;
+  font-size:9px!important;
+}
+
+/* ===== Panels ===== */
+.admin-shell .sap-panel,
+.admin-shell .control-center-panel,
+.admin-shell .agent-panel,
+.admin-shell .reports-intro,
+.admin-shell .reports-filters,
+.admin-shell .reports-table-card,
+.admin-shell .panel,
+.admin-shell .printer-clean-card,
+.client-shell .sap-panel,
+.client-shell .control-center-panel,
+.client-shell .agent-panel,
+.client-shell .reports-intro,
+.client-shell .reports-filters,
+.client-shell .reports-table-card,
+.client-shell .panel,
+.client-shell .printer-clean-card{
+  border:1px solid var(--tv-border)!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  box-shadow:var(--tv-shadow)!important;
+}
+.admin-shell .sap-panel header,
+.client-shell .sap-panel header{
+  min-height:56px!important;
+  padding:12px 16px!important;
+  border-bottom:1px solid var(--tv-border)!important;
+  background:#fff!important;
+}
+.admin-shell .sap-panel header h2,
+.client-shell .sap-panel header h2{
+  margin:0!important;
+  color:#15364D!important;
+  font-size:15px!important;
+  font-weight:800!important;
+}
+.admin-shell .sap-panel header>div>span,
+.client-shell .sap-panel header>div>span{
+  color:#708697!important;
+  font-size:8px!important;
+  font-weight:800!important;
+  letter-spacing:.07em!important;
+}
+
+/* ===== Tables ===== */
+.admin-shell table,
+.client-shell table{
+  width:100%!important;
+  border-collapse:collapse!important;
+}
+.admin-shell th,
+.client-shell th{
+  height:38px!important;
+  padding:8px 12px!important;
+  border-bottom:1px solid var(--tv-border-strong)!important;
+  background:#EFF4F7!important;
+  color:#526A7C!important;
+  font-size:9px!important;
+  font-weight:800!important;
+  letter-spacing:.025em!important;
+}
+.admin-shell td,
+.client-shell td{
+  height:39px!important;
+  padding:8px 12px!important;
+  border-bottom:1px solid #E6EBEF!important;
+  color:#314A5C!important;
+  font-size:10px!important;
+  vertical-align:middle!important;
+}
+.admin-shell tbody tr:nth-child(even) td,
+.client-shell tbody tr:nth-child(even) td{
+  background:#FBFCFD!important;
+}
+.admin-shell tbody tr:hover td,
+.client-shell tbody tr:hover td{
+  background:#F2F8FB!important;
+}
+
+/* ===== Toolbars and filters ===== */
+.admin-shell .printer-filter-bar,
+.admin-shell .reports-filters,
+.admin-shell .control-center-title,
+.client-shell .printer-filter-bar,
+.client-shell .reports-filters,
+.client-shell .control-center-title{
+  border:1px solid var(--tv-border)!important;
+  border-radius:9px!important;
+  background:#F8FAFB!important;
+  box-shadow:none!important;
+}
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea,
+.client-shell input,
+.client-shell select,
+.client-shell textarea{
+  min-height:40px!important;
+  border:1px solid #C5D0D8!important;
+  border-radius:7px!important;
+  background:#fff!important;
+  color:#18374B!important;
+  font-size:10px!important;
+  box-shadow:none!important;
+}
+.admin-shell input:focus,
+.admin-shell select:focus,
+.admin-shell textarea:focus,
+.client-shell input:focus,
+.client-shell select:focus,
+.client-shell textarea:focus{
+  border-color:#3B9EC0!important;
+  box-shadow:0 0 0 3px rgba(29,168,201,.10)!important;
+}
+
+/* ===== Buttons ===== */
+.admin-shell button,
+.client-shell button{
+  font-family:inherit!important;
+}
+.admin-shell .primary,
+.admin-shell .cc-primary,
+.admin-shell .cc-create-button,
+.admin-shell .reports-downloads button:not(.pdf),
+.admin-shell .printers-workspace-actions button,
+.admin-shell .agent-monitor-header button,
+.client-shell .primary,
+.client-shell .cc-primary,
+.client-shell .cc-create-button,
+.client-shell .reports-downloads button:not(.pdf),
+.client-shell .printers-workspace-actions button,
+.client-shell .agent-monitor-header button{
+  min-height:38px!important;
+  padding:0 14px!important;
+  border:1px solid #075FAE!important;
+  border-radius:7px!important;
+  background:linear-gradient(180deg,#1684DC,#0B70C6)!important;
+  color:#fff!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  box-shadow:none!important;
+}
+.admin-shell .primary:hover,
+.admin-shell .cc-primary:hover,
+.admin-shell .cc-create-button:hover,
+.admin-shell .reports-downloads button:not(.pdf):hover,
+.admin-shell .printers-workspace-actions button:hover,
+.admin-shell .agent-monitor-header button:hover,
+.client-shell .primary:hover,
+.client-shell .cc-primary:hover,
+.client-shell .cc-create-button:hover,
+.client-shell .reports-downloads button:not(.pdf):hover,
+.client-shell .printers-workspace-actions button:hover,
+.client-shell .agent-monitor-header button:hover{
+  background:linear-gradient(180deg,#1076C7,#075FAE)!important;
+}
+
+/* ===== Dashboard grids ===== */
+.admin-shell .sap-dashboard-grid,
+.admin-shell .sap-dashboard-grid-overview,
+.client-shell .sap-dashboard-grid,
+.client-shell .sap-dashboard-grid-overview{
+  gap:12px!important;
+}
+.admin-shell .sap-printer-ranking,
+.client-shell .sap-printer-ranking{
+  border-radius:10px!important;
+  overflow:hidden!important;
+}
+.admin-shell .sap-health-strip,
+.client-shell .sap-health-strip{
+  min-height:58px!important;
+  padding:12px 16px!important;
+  border:1px solid #F0DAB7!important;
+  border-radius:10px!important;
+  background:#FFFCF7!important;
+  box-shadow:none!important;
+}
+
+/* ===== Printers ===== */
+.admin-shell .printers-workspace-page,
+.client-shell .printers-workspace-page{
+  gap:12px!important;
+}
+.admin-shell .printer-workspace-columns,
+.client-shell .printer-workspace-columns{
+  min-height:38px!important;
+  border-radius:8px 8px 0 0!important;
+  background:#123C52!important;
+  color:#F1F7FA!important;
+}
+.admin-shell .printer-clean-card,
+.client-shell .printer-clean-card{
+  border-radius:0!important;
+  border-top:0!important;
+}
+.admin-shell .printer-clean-card:last-child,
+.client-shell .printer-clean-card:last-child{
+  border-radius:0 0 8px 8px!important;
+}
+.admin-shell .printer-clean-summary,
+.client-shell .printer-clean-summary{
+  min-height:64px!important;
+}
+.admin-shell .printer-clean-details-button,
+.client-shell .printer-clean-details-button{
+  min-height:32px!important;
+  border-radius:6px!important;
+}
+
+/* ===== Reports ===== */
+.admin-shell .reports-page,
+.client-shell .reports-page{
+  gap:12px!important;
+}
+.admin-shell .reports-intro,
+.client-shell .reports-intro{
+  padding:16px 18px!important;
+  border-left:4px solid var(--tv-blue)!important;
+}
+.admin-shell .reports-intro h2,
+.client-shell .reports-intro h2{
+  font-size:20px!important;
+  color:#14354A!important;
+}
+.admin-shell .reports-table-card,
+.client-shell .reports-table-card{
+  overflow:hidden!important;
+}
+
+/* ===== Company + Agent ===== */
+.admin-shell .hero,
+.client-shell .hero{
+  border-radius:12px!important;
+}
+.admin-shell .grid,
+.client-shell .grid{
+  gap:14px!important;
+}
+.admin-shell .panel,
+.client-shell .panel{
+  padding:16px!important;
+}
+
+/* ===== Agent monitoring ===== */
+.admin-shell .agent-overview,
+.client-shell .agent-overview{
+  border:1px solid var(--tv-border)!important;
+  border-left:4px solid var(--tv-green)!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  box-shadow:var(--tv-shadow)!important;
+}
+.admin-shell .agent-monitor-grid,
+.client-shell .agent-monitor-grid{
+  gap:12px!important;
+}
+
+/* ===== Status colors ===== */
+.admin-shell .online,
+.client-shell .online{
+  color:var(--tv-green)!important;
+}
+.admin-shell .error,
+.client-shell .error{
+  color:var(--tv-red)!important;
+}
+
+/* ===== Client distinction: same family, cleaner content ===== */
+.client-shell .dashboard{
+  padding:24px 28px 34px!important;
+}
+.client-shell .sap-kpi-grid-six{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+.client-shell .sap-kpi-grid-six>.sap-kpi-card:nth-child(4),
+.client-shell .sap-kpi-grid-six>.sap-kpi-card:nth-child(6){
+  display:none!important;
+}
+.client-shell .printers-api-status{
+  display:none!important;
+}
+.client-shell .sap-printer-ranking .sap-table th:nth-child(4),
+.client-shell .sap-printer-ranking .sap-table td:nth-child(4){
+  display:none!important;
+}
+
+/* ===== Preview chip ===== */
+.client-preview-bar{
+  top:8px!important;
+  padding:6px 9px 6px 12px!important;
+  border:1px solid #C7D7E2!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.98)!important;
+  box-shadow:0 5px 18px rgba(22,52,72,.08)!important;
+  color:#617789!important;
+  font-size:10px!important;
+}
+
+/* ===== Responsive ===== */
+@media(max-width:1200px){
+  .admin-shell aside,
+  .client-shell aside{width:190px!important}
+  .admin-shell .dashboard,
+  .client-shell .dashboard{padding:18px!important}
+}
+@media(max-width:900px){
+  .admin-shell .sap-kpi-grid,
+  .admin-shell .sap-kpi-grid-six,
+  .client-shell .sap-kpi-grid,
+  .client-shell .sap-kpi-grid-six{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
