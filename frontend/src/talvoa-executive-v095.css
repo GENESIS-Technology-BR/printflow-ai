@@ -864,3 +864,66 @@ tbody tr:hover td{background:#f9fbfd!important}
     height:32px!important;
   }
 }
+
+
+/* TALVOA ERP sidebar color alignment v0.98.2 */
+.admin-shell{
+  --erp-sidebar:#0B5872!important;
+  --erp-sidebar-2:#0D627F!important;
+}
+
+.admin-shell aside{
+  background:linear-gradient(180deg,#0D627F 0%,#0B5872 100%)!important;
+  border-right:1px solid #08465B!important;
+  color:#EAF4F8!important;
+}
+
+.admin-shell .brand{
+  background:#0D627F!important;
+  border-bottom:1px solid rgba(255,255,255,.12)!important;
+}
+
+.admin-shell .brand-copy strong{
+  color:#FFFFFF!important;
+}
+
+.admin-shell .brand-copy span{
+  color:#B9D6E1!important;
+}
+
+.admin-shell .nav-section-title{
+  color:#A7CBD7!important;
+}
+
+.admin-shell nav button{
+  color:#D4E7EE!important;
+}
+
+.admin-shell nav button:hover{
+  background:#126B88!important;
+  color:#FFFFFF!important;
+}
+
+.admin-shell nav button.active{
+  background:#F2F7FA!important;
+  color:#0A5F7D!important;
+  box-shadow:inset 3px 0 0 #19A4C6!important;
+}
+
+.admin-shell nav button.active .nav-icon{
+  color:#0A6F91!important;
+}
+
+.admin-shell .nav-icon{
+  color:#B8D9E4!important;
+}
+
+.admin-shell .logout{
+  background:#0A4E65!important;
+  border-color:rgba(255,255,255,.16)!important;
+  color:#EAF4F8!important;
+}
+
+.admin-shell .logout:hover{
+  background:#08445A!important;
+}
