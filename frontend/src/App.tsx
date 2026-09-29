@@ -385,29 +385,9 @@ function App() {
     <div className={`shell ${isClientView ? "client-shell" : "admin-shell"}`}>
       <ThemeToggle />
       {isClientPreview && (
-        <div
-          style={{
-            position: "fixed",
-            top: 12,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1000,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "9px 14px",
-            border: "1px solid #1f9d7c",
-            borderRadius: 10,
-            background: "#0b2b27",
-            color: "#d9fff5",
-            boxShadow: "0 10px 30px rgba(0,0,0,.25)",
-          }}
-        >
-          <strong>
-            Visualizando como cliente:
-            {" "}
-            {previewCompany}
-          </strong>
+        <div className="client-preview-bar">
+          <span>Pré-visualização do cliente</span>
+          <strong>{previewCompany}</strong>
           <button
             type="button"
             onClick={leaveClientPreview}
