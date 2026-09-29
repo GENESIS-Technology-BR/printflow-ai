@@ -320,3 +320,74 @@
   .client-preview-bar{max-width:calc(100vw - 24px);white-space:nowrap}
   .client-shell .client-printer-shell .printer-clean-technical-grid{grid-template-columns:1fr!important}
 }
+
+
+/* TALVOA Client Portal v0.96.1 — final polish */
+.client-preview-bar{
+  top:8px!important;
+  padding:6px 8px 6px 11px!important;
+  border-color:#d4e1ec!important;
+  background:rgba(255,255,255,.96)!important;
+  box-shadow:0 4px 14px rgba(20,40,63,.07)!important;
+  font-size:10px!important;
+}
+.client-preview-bar>span{
+  color:#9aa7b4!important;
+  font-weight:500!important;
+}
+.client-preview-bar>strong{
+  color:#31516f!important;
+  font-weight:700!important;
+}
+.client-preview-bar button{
+  min-height:25px!important;
+  padding:0 9px!important;
+  border-color:#d7e3ed!important;
+  background:#f8fbfd!important;
+  color:#3f6f99!important;
+  font-size:9px!important;
+}
+
+.client-shell .sap-health-strip{
+  min-height:54px!important;
+  padding:10px 14px!important;
+  border:1px solid #eadfca!important;
+  background:#fffdfa!important;
+}
+.client-shell .sap-health-strip.has-alerts{
+  border-color:#efddbd!important;
+  background:#fffaf2!important;
+}
+.client-shell .sap-health-strip .sap-health-icon{
+  opacity:.82!important;
+}
+.client-shell .sap-health-strip p strong{
+  color:#654b23!important;
+}
+.client-shell .sap-health-strip p small{
+  color:#8b7a62!important;
+}
+
+.client-shell .sap-dashboard-page{
+  padding-bottom:10px!important;
+}
+.client-shell .sap-printer-ranking{
+  margin-bottom:8px!important;
+}
+.client-shell .dashboard{
+  min-height:calc(100vh - 58px)!important;
+}
+
+.client-shell .sap-page-actions small{
+  color:#9aa6b3!important;
+}
+
+.client-shell .sap-panel,
+.client-shell .sap-kpi-card,
+.client-shell .printers-workspace-header,
+.client-shell .reports-intro,
+.client-shell .reports-filters,
+.client-shell .reports-table-card,
+.client-shell .reports-metrics article{
+  box-shadow:0 2px 10px rgba(20,40,63,.025)!important;
+}
