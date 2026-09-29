@@ -29,14 +29,14 @@ from backend.modules.auth.security import (
     decode_password_reset_token,
     hash_password,
     verify_password,
-    session_minutes,
+    ACCESS_TOKEN_MINUTES,
 )
 from backend.modules.companies.model import Company
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 logger = logging.getLogger("talvoa.auth")
 AUTH_COOKIE_NAME = "printflow_session"
-AUTH_COOKIE_MAX_AGE = session_minutes() * 60
+AUTH_COOKIE_MAX_AGE = ACCESS_TOKEN_MINUTES * 60
 
 
 def _set_auth_cookie(
