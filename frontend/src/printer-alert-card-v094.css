@@ -110,3 +110,34 @@
   font-size:11px;
   line-height:1.35;
 }
+
+
+/* TALVOA alert diagnostic expansion fix */
+.printers-workspace .printer-card.alert-diagnostic-open{
+  overflow:visible!important;
+  position:relative!important;
+  z-index:4!important;
+}
+
+.printers-workspace .printer-card.alert-diagnostic-open>.printer-clean-summary{
+  height:auto!important;
+  min-height:112px!important;
+  align-items:start!important;
+  padding-top:10px!important;
+  padding-bottom:10px!important;
+}
+
+.printers-workspace .printer-card.alert-diagnostic-open .printer-clean-identity{
+  align-items:start!important;
+}
+
+.printers-workspace .printer-card.alert-diagnostic-open .printer-alert-popover{
+  display:block!important;
+  width:min(520px,100%)!important;
+  box-sizing:border-box!important;
+}
+
+.printers-workspace .printer-card.alert-diagnostic-open + .printer-card{
+  position:relative!important;
+  z-index:1!important;
+}
