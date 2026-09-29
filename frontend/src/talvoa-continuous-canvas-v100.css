@@ -1,0 +1,272 @@
+/* TALVOA Continuous Canvas v1.00
+   Apple-inspired information architecture for Visão Geral.
+   Goal: one continuous surface, almost no gaps between boxes. */
+
+.admin-shell .sap-dashboard-page,
+.client-shell .sap-dashboard-page{
+  --canvas-border:#E3E7EB;
+  --canvas-divider:#E8ECEF;
+  --canvas-bg:#FFFFFF;
+  --canvas-soft:#F7F8FA;
+  --canvas-radius:16px;
+
+  display:flex!important;
+  flex-direction:column!important;
+  gap:0!important;
+  padding:18px 22px 24px!important;
+  background:#F5F5F7!important;
+}
+
+/* Header: independent, light and calm */
+.admin-shell .sap-dashboard-page>.sap-page-head,
+.client-shell .sap-dashboard-page>.sap-page-head{
+  margin:0 0 12px!important;
+  min-height:84px!important;
+  padding:16px 18px!important;
+  border:1px solid var(--canvas-border)!important;
+  border-radius:var(--canvas-radius)!important;
+  background:rgba(255,255,255,.94)!important;
+  box-shadow:0 1px 2px rgba(15,23,42,.025)!important;
+}
+.admin-shell .sap-dashboard-page>.sap-page-head::after,
+.client-shell .sap-dashboard-page>.sap-page-head::after{
+  display:none!important;
+}
+
+/* Error/loading stays outside the canvas but tight */
+.admin-shell .sap-dashboard-page>.sap-message-error,
+.admin-shell .sap-dashboard-page>.sap-loading,
+.admin-shell .sap-dashboard-page>.sap-empty,
+.client-shell .sap-dashboard-page>.sap-message-error,
+.client-shell .sap-dashboard-page>.sap-loading,
+.client-shell .sap-dashboard-page>.sap-empty{
+  margin:0 0 8px!important;
+}
+
+/* ===== Continuous KPI rail ===== */
+.admin-shell .sap-dashboard-page>.sap-kpi-grid,
+.client-shell .sap-dashboard-page>.sap-kpi-grid{
+  position:relative!important;
+  z-index:2!important;
+  display:grid!important;
+  gap:0!important;
+  overflow:hidden!important;
+  margin:0!important;
+  border:1px solid var(--canvas-border)!important;
+  border-bottom:0!important;
+  border-radius:var(--canvas-radius) var(--canvas-radius) 0 0!important;
+  background:var(--canvas-bg)!important;
+  box-shadow:0 1px 2px rgba(15,23,42,.02)!important;
+}
+.admin-shell .sap-dashboard-page>.sap-kpi-grid-six,
+.client-shell .sap-dashboard-page>.sap-kpi-grid-six{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+}
+.admin-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-card,
+.client-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-card{
+  min-height:102px!important;
+  margin:0!important;
+  padding:17px 16px!important;
+  border:0!important;
+  border-right:1px solid var(--canvas-divider)!important;
+  border-radius:0!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+.admin-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-card:last-child,
+.client-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-card:last-child{
+  border-right:0!important;
+}
+.admin-shell .sap-dashboard-page>.sap-kpi-grid .sap-agent-kpi,
+.client-shell .sap-dashboard-page>.sap-kpi-grid .sap-agent-kpi{
+  background:#FBFEFC!important;
+}
+
+/* ===== One unified analytics surface ===== */
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview{
+  display:grid!important;
+  grid-template-columns:1.35fr .95fr 1fr!important;
+  gap:0!important;
+  min-height:224px!important;
+  margin:0!important;
+  overflow:hidden!important;
+  border:1px solid var(--canvas-border)!important;
+  border-bottom:0!important;
+  border-radius:0!important;
+  background:var(--canvas-bg)!important;
+  box-shadow:none!important;
+}
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel{
+  margin:0!important;
+  border:0!important;
+  border-right:1px solid var(--canvas-divider)!important;
+  border-radius:0!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel:last-child,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel:last-child{
+  border-right:0!important;
+}
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel>header,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel>header{
+  min-height:58px!important;
+  padding:14px 18px 10px!important;
+  border:0!important;
+  border-bottom:1px solid var(--canvas-divider)!important;
+  background:#fff!important;
+}
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview .sap-bars,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview .sap-bars{
+  padding:14px 18px 18px!important;
+}
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview .sap-donut-wrap,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview .sap-donut-wrap{
+  height:calc(100% - 58px)!important;
+  padding:16px 18px!important;
+}
+.admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview .sap-unit-list,
+.client-shell .sap-dashboard-page>.sap-dashboard-grid-overview .sap-unit-list{
+  padding:16px 18px!important;
+}
+
+/* ===== Ranking/table seamlessly attached ===== */
+.admin-shell .sap-dashboard-page>.sap-printer-ranking,
+.client-shell .sap-dashboard-page>.sap-printer-ranking{
+  min-height:238px!important;
+  margin:0!important;
+  overflow:hidden!important;
+  border:1px solid var(--canvas-border)!important;
+  border-bottom:0!important;
+  border-radius:0!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+.admin-shell .sap-dashboard-page>.sap-printer-ranking>header,
+.client-shell .sap-dashboard-page>.sap-printer-ranking>header{
+  min-height:58px!important;
+  padding:12px 18px!important;
+  border:0!important;
+  border-bottom:1px solid var(--canvas-divider)!important;
+  background:#fff!important;
+}
+.admin-shell .sap-dashboard-page>.sap-printer-ranking .sap-table th,
+.client-shell .sap-dashboard-page>.sap-printer-ranking .sap-table th{
+  background:#F6F7F9!important;
+  border-bottom:1px solid var(--canvas-divider)!important;
+}
+.admin-shell .sap-dashboard-page>.sap-printer-ranking .sap-table td,
+.client-shell .sap-dashboard-page>.sap-printer-ranking .sap-table td{
+  height:38px!important;
+  border-bottom:1px solid #EEF0F2!important;
+}
+
+/* ===== Alert is the integrated footer of the canvas ===== */
+.admin-shell .sap-dashboard-page>.sap-health-strip,
+.client-shell .sap-dashboard-page>.sap-health-strip{
+  min-height:62px!important;
+  margin:0!important;
+  padding:11px 16px!important;
+  border:1px solid var(--canvas-border)!important;
+  border-radius:0 0 var(--canvas-radius) var(--canvas-radius)!important;
+  background:#FFFCF7!important;
+  box-shadow:0 8px 22px rgba(15,23,42,.025)!important;
+}
+.admin-shell .sap-dashboard-page>.sap-health-strip.has-alerts,
+.client-shell .sap-dashboard-page>.sap-health-strip.has-alerts{
+  border-color:#F0DFC5!important;
+  border-top-color:#F3E7D4!important;
+}
+
+/* Remove floating-card feeling from internal surfaces */
+.admin-shell .sap-dashboard-page .sap-kpi-card,
+.admin-shell .sap-dashboard-page .sap-panel,
+.client-shell .sap-dashboard-page .sap-kpi-card,
+.client-shell .sap-dashboard-page .sap-panel{
+  transition:background-color .15s ease!important;
+}
+.admin-shell .sap-dashboard-page .sap-kpi-card:hover,
+.client-shell .sap-dashboard-page .sap-kpi-card:hover{
+  background:#FAFBFC!important;
+}
+
+/* Subtler typography inspired by Apple system hierarchy */
+.admin-shell .sap-dashboard-page .sap-kpi-card small,
+.client-shell .sap-dashboard-page .sap-kpi-card small{
+  color:#6E6E73!important;
+  font-size:9px!important;
+  font-weight:700!important;
+  letter-spacing:.035em!important;
+}
+.admin-shell .sap-dashboard-page .sap-kpi-card strong,
+.client-shell .sap-dashboard-page .sap-kpi-card strong{
+  color:#1D1D1F!important;
+}
+.admin-shell .sap-dashboard-page .sap-kpi-card em,
+.client-shell .sap-dashboard-page .sap-kpi-card em{
+  color:#86868B!important;
+}
+.admin-shell .sap-dashboard-page .sap-panel header h2,
+.client-shell .sap-dashboard-page .sap-panel header h2{
+  color:#1D1D1F!important;
+  font-size:15px!important;
+}
+.admin-shell .sap-dashboard-page .sap-panel header span,
+.client-shell .sap-dashboard-page .sap-panel header span{
+  color:#86868B!important;
+}
+
+/* Make icons quieter, content stronger */
+.admin-shell .sap-dashboard-page .sap-kpi-icon,
+.client-shell .sap-dashboard-page .sap-kpi-icon{
+  width:36px!important;
+  height:36px!important;
+  flex-basis:36px!important;
+  border-radius:10px!important;
+}
+
+/* Desktop density */
+@media(min-width:1500px){
+  .admin-shell .sap-dashboard-page,
+  .client-shell .sap-dashboard-page{
+    padding-left:26px!important;
+    padding-right:26px!important;
+  }
+}
+
+/* Responsive: continuous blocks still remain visually connected */
+@media(max-width:1350px){
+  .admin-shell .sap-dashboard-page>.sap-kpi-grid-six,
+  .client-shell .sap-dashboard-page>.sap-kpi-grid-six{
+    grid-template-columns:repeat(3,1fr)!important;
+  }
+  .admin-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-card:nth-child(3),
+  .client-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-card:nth-child(3){
+    border-right:0!important;
+  }
+  .admin-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-card:nth-child(-n+3),
+  .client-shell .sap-dashboard-page>.sap-kpi-grid .sap-kpi-card:nth-child(-n+3){
+    border-bottom:1px solid var(--canvas-divider)!important;
+  }
+}
+@media(max-width:900px){
+  .admin-shell .sap-dashboard-page,
+  .client-shell .sap-dashboard-page{
+    padding:14px!important;
+  }
+  .admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview,
+  .client-shell .sap-dashboard-page>.sap-dashboard-grid-overview{
+    grid-template-columns:1fr!important;
+  }
+  .admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel,
+  .client-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel{
+    border-right:0!important;
+    border-bottom:1px solid var(--canvas-divider)!important;
+  }
+  .admin-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel:last-child,
+  .client-shell .sap-dashboard-page>.sap-dashboard-grid-overview>.sap-panel:last-child{
+    border-bottom:0!important;
+  }
+}
