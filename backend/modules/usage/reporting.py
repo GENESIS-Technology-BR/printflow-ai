@@ -191,6 +191,20 @@ def consolidate_usage(
 
     for printer in printer_list:
         if printer.uuid in groups:
+            item = groups[printer.uuid]
+            item["display_name"] = _display_name(
+                printer.custom_name,
+                printer.hostname,
+                printer.name,
+                printer.ip,
+            )
+            item["ip"] = printer.ip or item.get("ip")
+            item["hostname"] = _clean_identity(printer.hostname) or item.get("hostname")
+            item["manufacturer"] = printer.manufacturer or item.get("manufacturer")
+            item["model"] = printer.model or item.get("model")
+            item["serial"] = _clean_identity(printer.serial) or item.get("serial")
+            item["unit_name"] = printer.unit_name or item.get("unit_name")
+            item["sector_name"] = printer.sector_name or item.get("sector_name")
             continue
 
         page_count = int(printer.page_count) if printer.page_count is not None else None
@@ -403,6 +417,12 @@ def build_excel_report(
     sheet.page_setup.fitToHeight = 0
     sheet.print_area = f"A1:L{max(header_row + len(rows), header_row)}"
 
+    current_name_by_uuid = {
+        str(item.get("printer_uuid")): str(item.get("display_name") or "").upper()
+        for item in rows
+        if item.get("printer_uuid")
+    }
+
     detail = workbook.create_sheet("Histórico diário")
     detail.sheet_view.showGridLines = False
     detail.sheet_view.zoomScale = 85
@@ -422,7 +442,10 @@ def build_excel_report(
     ):
         values = [
             usage.usage_date.strftime("%d/%m/%Y"),
-            _display_name(usage.custom_name, usage.hostname, usage.name, usage.ip).upper(),
+            current_name_by_uuid.get(
+                str(usage.printer_uuid),
+                _display_name(usage.custom_name, usage.hostname, usage.name, usage.ip).upper(),
+            ),
             usage.ip, _clean_identity(usage.serial) or "", usage.sector_name or "",
             usage.opening_page_count, usage.closing_page_count,
             usage.pages_printed,
