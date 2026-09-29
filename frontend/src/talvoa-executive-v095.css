@@ -78,3 +78,72 @@ tbody tr:hover td{background:#f9fbfd!important}
 @media(min-width:1280px){.dashboard{padding-left:30px!important;padding-right:30px!important}}
 @media(max-width:900px){.modern-dashboard-kpis,.dashboard-kpis,.control-center-kpis,.agent-metrics,.reports-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:640px){.modern-dashboard-kpis,.dashboard-kpis,.control-center-kpis,.agent-metrics,.reports-metrics{grid-template-columns:1fr!important}}
+
+
+/* Control Center final alignment fix v0.95.1 */
+@media (min-width: 1320px) {
+  .control-center-kpis {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  }
+}
+
+.control-center-table {
+  overflow-x: auto !important;
+}
+
+.control-center-row {
+  grid-template-columns:
+    minmax(240px, 1.55fr)
+    120px
+    minmax(190px, 1.2fr)
+    90px
+    80px
+    minmax(210px, 1.25fr)
+    150px
+    minmax(210px, 1.25fr) !important;
+  gap: 14px !important;
+  min-width: 1320px !important;
+  align-items: center !important;
+}
+
+.control-center-row.header {
+  align-items: center !important;
+}
+
+.control-center-row > span {
+  min-width: 0 !important;
+}
+
+.control-center-row > span:nth-child(3),
+.control-center-row > span:nth-child(6) {
+  line-height: 1.35 !important;
+}
+
+.control-center-row > span:nth-child(3) small,
+.control-center-row > span:nth-child(6) small {
+  display: block !important;
+  margin-top: 4px !important;
+}
+
+.cc-row-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.cc-row-actions button {
+  white-space: nowrap !important;
+}
+
+@media (min-width: 1050px) and (max-width: 1319px) {
+  .control-center-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1049px) {
+  .control-center-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
