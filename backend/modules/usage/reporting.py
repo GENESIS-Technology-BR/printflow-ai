@@ -363,7 +363,7 @@ def build_excel_report(
 
     for row_index, item in enumerate(rows, start=header_row + 1):
         values = [
-            item["display_name"], item["ip"] or "",
+            str(item["display_name"] or "").upper(), item["ip"] or "",
             item["serial"] or "", item["model"] or "",
             item["sector_name"] or "",
             item["first_usage_date"].strftime("%d/%m/%Y") if item["first_usage_date"] else "Sem histórico",
@@ -422,7 +422,7 @@ def build_excel_report(
     ):
         values = [
             usage.usage_date.strftime("%d/%m/%Y"),
-            _display_name(usage.custom_name, usage.hostname, usage.name, usage.ip),
+            _display_name(usage.custom_name, usage.hostname, usage.name, usage.ip).upper(),
             usage.ip, _clean_identity(usage.serial) or "", usage.sector_name or "",
             usage.opening_page_count, usage.closing_page_count,
             usage.pages_printed,
