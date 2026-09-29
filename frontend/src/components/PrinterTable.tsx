@@ -580,7 +580,7 @@ export default function PrinterTable({
 
           return (
             <article
-              className={`printer-card printer-clean-card ${expanded ? "is-expanded" : ""} ${alertState.level !== "none" ? `printer-alert-${alertState.level}` : ""}`}
+              className={`printer-card printer-clean-card ${expanded ? "is-expanded" : ""} ${alertOpen ? "alert-diagnostic-open" : ""} ${alertState.level !== "none" ? `printer-alert-${alertState.level}` : ""}`}
               key={key}
             >
               <div className="printer-clean-summary">
