@@ -47,3 +47,66 @@
 .printers-workspace .printer-card.printer-alert-critical .printer-clean-details{
   background:#fff!important;
 }
+
+
+/* TALVOA - diagnóstico clicável dos alertas */
+.printers-workspace .printer-attention-badge{
+  cursor:pointer!important;
+  font:inherit!important;
+  appearance:none!important;
+}
+
+.printers-workspace .printer-attention-badge:focus-visible{
+  outline:2px solid #0a6ed1!important;
+  outline-offset:2px!important;
+}
+
+.printers-workspace .printer-alert-popover{
+  margin-top:7px;
+  max-width:560px;
+  padding:10px 12px;
+  border-radius:8px;
+  background:#fff;
+  box-shadow:0 6px 18px rgba(15,35,55,.10);
+}
+
+.printers-workspace .printer-alert-popover-warning{
+  border:1px solid #e9c85b;
+  border-left:4px solid #d69c00;
+}
+
+.printers-workspace .printer-alert-popover-critical{
+  border:1px solid #e3a0a8;
+  border-left:4px solid #d73543;
+}
+
+.printers-workspace .printer-alert-popover>strong{
+  display:block;
+  margin-bottom:6px;
+  color:#17324f;
+  font-size:12px;
+}
+
+.printers-workspace .printer-alert-reason{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  padding:5px 0;
+  border-top:1px solid #edf1f5;
+}
+
+.printers-workspace .printer-alert-reason:first-of-type{
+  border-top:0;
+}
+
+.printers-workspace .printer-alert-reason span{
+  color:#263b52;
+  font-size:12px;
+  font-weight:700;
+}
+
+.printers-workspace .printer-alert-reason small{
+  color:#6f8092;
+  font-size:11px;
+  line-height:1.35;
+}
