@@ -17,7 +17,7 @@
   background:#F5F5F7!important;
 }
 
-/* Header: independent, light and calm */
+/* Header: attached to the continuous canvas */
 .admin-shell .sap-dashboard-page>.sap-page-head,
 .client-shell .sap-dashboard-page>.sap-page-head{
   margin:0!important;
@@ -55,7 +55,7 @@
   margin:0!important;
   border:1px solid var(--canvas-border)!important;
   border-bottom:0!important;
-  border-radius:var(--canvas-radius) var(--canvas-radius) 0 0!important;
+  border-radius:0!important;
   background:var(--canvas-bg)!important;
   box-shadow:0 1px 2px rgba(15,23,42,.02)!important;
 }
