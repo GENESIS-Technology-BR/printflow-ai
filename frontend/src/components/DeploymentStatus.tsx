@@ -21,7 +21,7 @@ function statusLabel(run: WorkflowRun | null): {
 } {
   if (!run) return { tone: "loading", label: "Consultando" };
   if (run.status !== "completed") return { tone: "warning", label: "Em andamento" };
-  if (run.conclusion === "success") return { tone: "success", label: "Pronto" };
+  if (run.conclusion === "success") return { tone: "success", label: "Validado" };
   return { tone: "error", label: "Falhou" };
 }
 
@@ -41,7 +41,7 @@ export default function DeploymentStatus() {
     async function load(): Promise<void> {
       try {
         const response = await fetch(
-          "https://api.github.com/repos/GENESIS-Technology-BR/printflow-ai/actions/runs?branch=main&per_page=1",
+          "https://api.github.com/repos/GENESIS-Technology-BR/printflow-ai/actions/workflows/validate-web.yml/runs?branch=main&per_page=1",
           {
             headers: {
               Accept: "application/vnd.github+json",
@@ -75,7 +75,7 @@ export default function DeploymentStatus() {
 
   return createPortal(
     <div className="deployment-status" aria-live="polite">
-      <span className="deployment-status-title">Atualização do sistema</span>
+      <span className="deployment-status-title">Validação do código</span>
       <div className={`deployment-status-state deployment-${unavailable ? "loading" : display.tone}`}>
         <i />
         <strong>{unavailable ? "Indisponível" : display.label}</strong>
