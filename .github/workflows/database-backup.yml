@@ -1,16 +1,9 @@
-name: TALVOA Database Backup
-# TALVOA backup trigger: connection-string mode
+name: TALVOA Database Backup (Legacy Manual)
+# Backup de producao foi migrado para o repositorio privado talvoa-backup.
+# Este workflow legado permanece somente para recuperacao manual e nao executa automaticamente.
 
 on:
   workflow_dispatch:
-  schedule:
-    # 05:00 UTC = 02:00 America/Sao_Paulo (UTC-3)
-    - cron: "0 5 * * *"
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/database-backup.yml"
-      - ".github/workflows/supabase-restore.yml"
 
 permissions:
   contents: read
