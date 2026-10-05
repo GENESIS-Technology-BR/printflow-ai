@@ -209,6 +209,33 @@ def test_completed_inventory_keeps_history_but_deactivates_missing_printers():
     assert [printer.active for printer in printers] == [True, True, False]
 
 
+def test_partial_inventory_snapshot_does_not_deactivate_fleet():
+    printers = [
+        SimpleNamespace(ip=f"10.2.0.{100 + index}", active=True)
+        for index in range(10)
+    ]
+
+    active, inactive = _reconcile_inventory(
+        printers,
+        ["10.2.0.100", "10.2.0.101"],
+    )
+
+    assert (active, inactive) == (10, 0)
+    assert all(printer.active for printer in printers)
+
+
+def test_empty_inventory_snapshot_does_not_deactivate_existing_fleet():
+    printers = [
+        SimpleNamespace(ip="10.2.0.101", active=True),
+        SimpleNamespace(ip="10.2.0.102", active=True),
+    ]
+
+    active, inactive = _reconcile_inventory(printers, [])
+
+    assert (active, inactive) == (2, 0)
+    assert all(printer.active for printer in printers)
+
+
 def test_heartbeat_accepts_authoritative_inventory_snapshot():
     payload = AgentHeartbeat(
         agent_token="A" * 43,
