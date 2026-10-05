@@ -181,11 +181,37 @@ def _should_persist_heartbeat(company, payload: AgentHeartbeat, now: datetime) -
 def _reconcile_inventory(
     printers: list[Printer], observed_printer_ips: list[str]
 ) -> tuple[int, int]:
+    """Reconcilia inventario sem desativar em massa por snapshot parcial."""
     observed_ips = {
         ip.strip()
         for ip in observed_printer_ips
         if ip and ip.strip()
     }
+
+    previously_active = [
+        printer
+        for printer in printers
+        if bool(getattr(printer, "active", False))
+    ]
+
+    # Snapshot completo vazio ou com queda abrupta pode indicar falha de descoberta
+    # entre VLANs. Nessa situacao preservamos o inventario existente e deixamos o
+    # proximo ciclo confirmar a remocao, evitando falso negativo em massa.
+    if previously_active:
+        coverage = len(
+            {
+                printer.ip
+                for printer in previously_active
+                if printer.ip in observed_ips
+            }
+        ) / len(previously_active)
+        suspicious_snapshot = not observed_ips or (
+            len(previously_active) >= 5 and coverage < 0.60
+        )
+        if suspicious_snapshot:
+            active = sum(1 for printer in printers if bool(getattr(printer, "active", False)))
+            return active, len(printers) - active
+
     active = 0
     inactive = 0
     for printer in printers:
