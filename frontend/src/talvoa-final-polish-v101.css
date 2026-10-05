@@ -1,0 +1,270 @@
+/* TALVOA v1.01 — acabamento final de homologação
+   Mantém o dashboard Continuous Canvas e unifica Relatórios/Agentes
+   ao mesmo vocabulário visual corporativo. */
+
+:root{
+  --talvoa-surface:#FFFFFF;
+  --talvoa-page:#F3F5F7;
+  --talvoa-border:#D7DEE6;
+  --talvoa-text:#17324D;
+  --talvoa-muted:#66788A;
+  --talvoa-primary:#0F6CBD;
+  --talvoa-success:#148A5B;
+  --talvoa-warning:#A96B12;
+}
+
+/* Relatórios: menos cartões soltos, mais superfície contínua */
+.admin-shell .reports-page,
+.client-shell .reports-page{
+  gap:0!important;
+  padding:22px!important;
+  color:var(--talvoa-text)!important;
+  background:var(--talvoa-page)!important;
+}
+.admin-shell .reports-header,
+.client-shell .reports-header{
+  padding:20px 22px!important;
+  border:1px solid var(--talvoa-border)!important;
+  border-bottom:0!important;
+  border-radius:14px 14px 0 0!important;
+  background:var(--talvoa-surface)!important;
+}
+.admin-shell .reports-header h1,
+.client-shell .reports-header h1,
+.admin-shell .reports-intro h2,
+.client-shell .reports-intro h2,
+.admin-shell .reports-table-title h3,
+.client-shell .reports-table-title h3{
+  color:#1D1D1F!important;
+}
+.admin-shell .reports-header p,
+.client-shell .reports-header p,
+.admin-shell .reports-intro p,
+.client-shell .reports-intro p{
+  color:var(--talvoa-muted)!important;
+}
+.admin-shell .reports-intro,
+.client-shell .reports-intro,
+.admin-shell .reports-period-bar,
+.client-shell .reports-period-bar,
+.admin-shell .reports-filters,
+.client-shell .reports-filters,
+.admin-shell .reports-metrics,
+.client-shell .reports-metrics,
+.admin-shell .reports-table-card,
+.client-shell .reports-table-card{
+  margin:0!important;
+  border-radius:0!important;
+  border-color:var(--talvoa-border)!important;
+  background:var(--talvoa-surface)!important;
+}
+.admin-shell .reports-intro,
+.client-shell .reports-intro{
+  border-top:1px solid #EEF0F2!important;
+  border-bottom:0!important;
+}
+.admin-shell .reports-period-bar,
+.client-shell .reports-period-bar{
+  border-left:1px solid var(--talvoa-border)!important;
+  border-right:1px solid var(--talvoa-border)!important;
+  border-top:1px solid #EEF0F2!important;
+  border-bottom:0!important;
+}
+.admin-shell .reports-filters,
+.client-shell .reports-filters{
+  border-top:1px solid #EEF0F2!important;
+  border-bottom:0!important;
+}
+.admin-shell .reports-filters label,
+.client-shell .reports-filters label{
+  color:var(--talvoa-muted)!important;
+}
+.admin-shell .reports-filters input,
+.admin-shell .reports-filters select,
+.client-shell .reports-filters input,
+.client-shell .reports-filters select{
+  border-color:#DDE3E9!important;
+  background:#FAFBFC!important;
+  color:#1D1D1F!important;
+}
+.admin-shell .reports-metrics,
+.client-shell .reports-metrics{
+  padding:0!important;
+  gap:0!important;
+  border-left:1px solid var(--talvoa-border)!important;
+  border-right:1px solid var(--talvoa-border)!important;
+}
+.admin-shell .reports-metrics article,
+.client-shell .reports-metrics article{
+  margin:0!important;
+  min-height:92px!important;
+  padding:16px 18px!important;
+  border:0!important;
+  border-right:1px solid #EEF0F2!important;
+  border-radius:0!important;
+  background:#fff!important;
+}
+.admin-shell .reports-metrics article:last-child,
+.client-shell .reports-metrics article:last-child{border-right:0!important}
+.admin-shell .reports-metrics span,
+.client-shell .reports-metrics span,
+.admin-shell .reports-metrics small,
+.client-shell .reports-metrics small{color:var(--talvoa-muted)!important}
+.admin-shell .reports-metrics strong,
+.client-shell .reports-metrics strong{color:#1D1D1F!important}
+.admin-shell .reports-table-card,
+.client-shell .reports-table-card{
+  border-radius:0 0 14px 14px!important;
+}
+.admin-shell .reports-table-title,
+.client-shell .reports-table-title{
+  border-color:#EEF0F2!important;
+  background:#fff!important;
+}
+.admin-shell .reports-table th,
+.client-shell .reports-table th{
+  background:#F6F7F9!important;
+  color:#52606D!important;
+  border-bottom-color:var(--talvoa-border)!important;
+}
+.admin-shell .reports-table td,
+.client-shell .reports-table td{
+  color:#344054!important;
+  border-bottom-color:#EEF0F2!important;
+}
+.admin-shell .reports-table td strong,
+.client-shell .reports-table td strong{color:#1D1D1F!important}
+.admin-shell .reports-table td.pages,
+.admin-shell .reports-table td.cost,
+.client-shell .reports-table td.pages,
+.client-shell .reports-table td.cost{color:var(--talvoa-success)!important}
+
+/* Agentes: mesma linguagem visual do restante do produto */
+.admin-shell .agent-monitor-page{
+  min-height:100%!important;
+  padding:22px!important;
+  color:var(--talvoa-text)!important;
+  background:var(--talvoa-page)!important;
+}
+.admin-shell .agent-monitor-header{
+  margin:0!important;
+  padding:20px 22px!important;
+  border:1px solid var(--talvoa-border)!important;
+  border-bottom:0!important;
+  border-radius:14px 14px 0 0!important;
+  background:#fff!important;
+}
+.admin-shell .agent-monitor-header h1,
+.admin-shell .agent-state-copy h2,
+.admin-shell .agent-panel-title h3,
+.admin-shell .agent-metrics strong,
+.admin-shell .agent-op-card strong{color:#1D1D1F!important}
+.admin-shell .agent-monitor-header p,
+.admin-shell .agent-state-copy p,
+.admin-shell .agent-token-help{color:var(--talvoa-muted)!important}
+.admin-shell .agent-monitor-header button,
+.admin-shell .agent-actions button{
+  border-color:#D9E0E7!important;
+  background:#fff!important;
+  color:var(--talvoa-text)!important;
+  box-shadow:none!important;
+}
+.admin-shell .agent-overview{
+  border:1px solid var(--talvoa-border)!important;
+  border-left:4px solid currentColor!important;
+  border-radius:0!important;
+  background:#fff!important;
+}
+.admin-shell .agent-state-icon{background:#F3F6FA!important}
+.admin-shell .agent-state-time strong{color:#1D1D1F!important}
+.admin-shell .agent-state-time span{color:var(--talvoa-muted)!important}
+.admin-shell .agent-metrics{
+  gap:0!important;
+  margin:0!important;
+  border-left:1px solid var(--talvoa-border)!important;
+  border-right:1px solid var(--talvoa-border)!important;
+  background:#fff!important;
+}
+.admin-shell .agent-metrics article{
+  padding:16px 18px!important;
+  border:0!important;
+  border-right:1px solid #EEF0F2!important;
+  border-radius:0!important;
+  background:#fff!important;
+}
+.admin-shell .agent-metrics article:last-child{border-right:0!important}
+.admin-shell .agent-metrics span,
+.admin-shell .agent-metrics small{color:var(--talvoa-muted)!important}
+.admin-shell .agent-ops-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0;
+  margin:0;
+  border:1px solid var(--talvoa-border);
+  border-top:1px solid #EEF0F2;
+  background:#fff;
+}
+.admin-shell .agent-op-card{
+  min-width:0;
+  padding:14px 18px;
+  border-right:1px solid #EEF0F2;
+  background:#fff;
+}
+.admin-shell .agent-op-card:last-child{border-right:0}
+.admin-shell .agent-op-card span,
+.admin-shell .agent-op-card strong,
+.admin-shell .agent-op-card small{display:block}
+.admin-shell .agent-op-card span{
+  color:var(--talvoa-muted);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.admin-shell .agent-op-card strong{margin-top:6px;font-size:16px}
+.admin-shell .agent-op-card small{margin-top:4px;color:var(--talvoa-muted);font-size:11px}
+.admin-shell .agent-op-ok strong{color:var(--talvoa-success)!important}
+.admin-shell .agent-op-warning strong{color:var(--talvoa-warning)!important}
+.admin-shell .agent-monitor-grid{
+  gap:0!important;
+  margin:0!important;
+  border:1px solid var(--talvoa-border)!important;
+  border-top:0!important;
+  border-radius:0 0 14px 14px!important;
+  overflow:hidden!important;
+  background:#fff!important;
+}
+.admin-shell .agent-panel{
+  padding:20px!important;
+  border:0!important;
+  border-right:1px solid #EEF0F2!important;
+  border-radius:0!important;
+  background:#fff!important;
+}
+.admin-shell .agent-panel:last-child{border-right:0!important}
+.admin-shell .agent-alert{background:#F8FAFC!important}
+.admin-shell .agent-alert p{color:var(--talvoa-muted)!important}
+.admin-shell .agent-token{
+  color:#23485A!important;
+  background:#F5F7F9!important;
+}
+.admin-shell .agent-error-detail code{color:#52606D!important}
+
+@media(max-width:1100px){
+  .admin-shell .agent-ops-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-shell .agent-op-card:nth-child(2){border-right:0}
+  .admin-shell .agent-op-card:nth-child(-n+2){border-bottom:1px solid #EEF0F2}
+}
+@media(max-width:760px){
+  .admin-shell .reports-page,
+  .client-shell .reports-page,
+  .admin-shell .agent-monitor-page{padding:14px!important}
+  .admin-shell .reports-metrics,
+  .client-shell .reports-metrics,
+  .admin-shell .agent-ops-grid{grid-template-columns:1fr!important}
+  .admin-shell .reports-metrics article,
+  .client-shell .reports-metrics article,
+  .admin-shell .agent-op-card{border-right:0!important;border-bottom:1px solid #EEF0F2!important}
+  .admin-shell .agent-monitor-grid{grid-template-columns:1fr!important}
+  .admin-shell .agent-panel{border-right:0!important;border-bottom:1px solid #EEF0F2!important}
+}
