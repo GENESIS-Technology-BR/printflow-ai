@@ -8,7 +8,6 @@ on:
     paths:
       - "agent/python/**"
       - "agent/windows/**"
-      - "backend/tests/**"
       - ".github/workflows/build-agent-windows.yml"
       - "requirements.txt"
       - "requirements-dev.txt"
@@ -17,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: printflow-agent-${{ github.ref }}
+  group: talvoa-agent-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
