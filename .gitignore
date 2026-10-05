@@ -234,3 +234,7 @@ agent/python/logs/
 frontend/src/App.tsx.backup_pf008*
 frontend/src/App.tsx.backup_pf008*
 frontend/src/components/*.backup_pf009
+
+# Legacy local snapshots
+*.backup_*
+*.bak
