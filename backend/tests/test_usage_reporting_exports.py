@@ -5,9 +5,9 @@ from types import SimpleNamespace
 from openpyxl import load_workbook
 
 from backend.modules.usage.router import _fixed_cost_for_period
+from backend.modules.usage.pdf_reporting import build_pdf_report
 from backend.modules.usage.reporting import (
     build_excel_report,
-    build_pdf_report,
     consolidate_usage,
 )
 
@@ -147,7 +147,7 @@ def test_excel_report_does_not_display_scope_line() -> None:
     assert "Escopo" not in visible_top
 
 
-def test_pdf_report_accepts_filtered_scope_and_technical_identity() -> None:
+def test_pdf_report_accepts_filtered_request_without_displaying_scope() -> None:
     content = build_pdf_report(
         "Empresa Teste",
         date(2026, 9, 1),
