@@ -195,7 +195,7 @@ jobs:
           Compress-Archive -Path package/* -DestinationPath TALVOA-Agent-Windows-Teste.zip
 
       - name: Publicar pacote
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: TALVOA-Agent-Windows-Build-${{ github.run_number }}
           path: TALVOA-Agent-Windows-Teste.zip

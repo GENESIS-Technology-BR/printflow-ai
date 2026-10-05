@@ -270,7 +270,7 @@ jobs:
 
       - name: Publicar evidencia de auditoria
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: TALVOA-DB-Evidence-${{ github.run_number }}
           path: ${{ env.BACKUP_DIR }}/backup-evidence.json
@@ -280,7 +280,7 @@ jobs:
 
       - name: Publicar backup diario
         if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: TALVOA-DB-Daily-${{ github.run_number }}
           path: |
@@ -292,7 +292,7 @@ jobs:
 
       - name: Publicar backup semanal
         if: ${{ steps.retention.outputs.is_weekly == 'true' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: TALVOA-DB-Weekly-${{ github.run_number }}
           path: |
@@ -304,7 +304,7 @@ jobs:
 
       - name: Publicar backup mensal
         if: ${{ steps.retention.outputs.is_monthly == 'true' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: TALVOA-DB-Monthly-${{ github.run_number }}
           path: |
