@@ -182,6 +182,29 @@ export default function AgentMonitor({
         </article>
       </div>
 
+      <div className="agent-ops-grid" aria-label="Saúde operacional">
+        <article className="agent-op-card agent-op-ok">
+          <span>API</span>
+          <strong>{error ? "Indisponível" : "Online"}</strong>
+          <small>{error ? "Falha na consulta atual" : "Resposta validada pelo painel"}</small>
+        </article>
+        <article className={`agent-op-card ${agent?.online ? "agent-op-ok" : "agent-op-warning"}`}>
+          <span>Agent</span>
+          <strong>{agent?.online ? "Comunicando" : "Atenção"}</strong>
+          <small>{formatElapsed(agent?.last_seen || null)}</small>
+        </article>
+        <article className={`agent-op-card ${summary?.offline ? "agent-op-warning" : "agent-op-ok"}`}>
+          <span>Impressoras</span>
+          <strong>{summary ? `${summary.online}/${summary.active_printers} online` : "Consultando"}</strong>
+          <small>{summary ? `${summary.offline} offline · ${summary.inactive_printers} inativa(s)` : "Carregando inventário"}</small>
+        </article>
+        <article className={`agent-op-card ${summary?.alerts ? "agent-op-warning" : "agent-op-ok"}`}>
+          <span>Alertas</span>
+          <strong>{summary ? summary.alerts : "—"}</strong>
+          <small>{summary?.alerts ? "Requer revisão operacional" : "Nenhum alerta crítico da frota"}</small>
+        </article>
+      </div>
+
       <div className="agent-monitor-grid">
         <article className="agent-panel">
           <div className="agent-panel-title">
