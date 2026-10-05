@@ -70,8 +70,13 @@ def build_pdf_report(
 
     header = Table([[
         Paragraph(f'<font color="#{BRAND_BLUE}" size="17"><b>TALVOA</b></font><br/><font color="#{BRAND_MUTED}">Gestão Inteligente de Impressão</font>', brand),
-        Paragraph(f"Relatório de Impressão<br/><font size='7' color='#{BRAND_MUTED}'>Período: {start.strftime('%d/%m/%Y')} a {end.strftime('%d/%m/%Y')}</font>", title),
-        Paragraph(f'<font color="#{BRAND_BLUE}" size="6"><b>FECHAMENTO COMERCIAL</b></font><br/><br/><b>Empresa:</b> {_short(company_name,32)}<br/><b>Escopo:</b> {_short(report_scope,32)}', meta_right),
+        Paragraph("Relatório de Impressão", title),
+        Paragraph(
+            f'<font color="#{BRAND_BLUE}" size="6"><b>FECHAMENTO COMERCIAL</b></font><br/>'
+            f'<b>Empresa:</b> {_short(company_name,28)}  —  '
+            f'<b>Período:</b> {start.strftime("%d/%m/%Y")} a {end.strftime("%d/%m/%Y")}',
+            meta_right,
+        ),
     ]], colWidths=[64*mm,143*mm,70*mm], rowHeights=[15*mm], hAlign="CENTER")
     header.setStyle(TableStyle([("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),1.5*mm),("RIGHTPADDING",(0,0),(-1,-1),1.5*mm),("TOPPADDING",(0,0),(-1,-1),0),("BOTTOMPADDING",(0,0),(-1,-1),0),("LINEBELOW",(0,0),(-1,-1),0.45,colors.HexColor(f"#{BORDER}"))]))
 
