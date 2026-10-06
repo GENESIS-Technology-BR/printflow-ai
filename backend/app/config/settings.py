@@ -44,7 +44,7 @@ def _database_url() -> str:
 @dataclass(frozen=True)
 class Settings:
     app_name: str = os.getenv("APP_NAME", "TALVOA")
-    version: str = os.getenv("APP_VERSION", "0.6.0")
+    version: str = os.getenv("APP_VERSION", "1.0.0")
     environment: str = os.getenv("ENVIRONMENT", "development")
     database_url: str = _database_url()
     report_utc_offset_hours: int = int(
