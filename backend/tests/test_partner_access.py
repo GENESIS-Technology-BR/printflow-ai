@@ -292,3 +292,24 @@ def test_partner_portfolio_does_not_count_other_partner_printers(tenant_db):
     db.flush()
     result = partner_portfolio_summary(user=user, db=db)
     assert result == {"companies": 1, "active_printers": 0, "online_printers": 0, "offline_printers": 0}
+
+
+def test_create_partner_platform_only_and_no_company_reassignment(tenant_db):
+    from backend.modules.partners.router import create_partner, PartnerCreateRequest
+    db = tenant_db
+    company = Company(name="Guerra homologação")
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Gestor", email="create-partner@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    with pytest.raises(HTTPException) as exc:
+        create_partner(PartnerCreateRequest(name="SupriTech"), user=user, db=db)
+    assert exc.value.status_code == 403
+    user.role = "platform_admin"
+    result = create_partner(PartnerCreateRequest(name="SupriTech"), user=user, db=db)
+    assert result["name"] == "SupriTech"
+    assert db.get(Company, company.id).partner_id is None
+    with pytest.raises(HTTPException) as exc:
+        create_partner(PartnerCreateRequest(name="SupriTech"), user=user, db=db)
+    assert exc.value.status_code == 409
