@@ -12,6 +12,8 @@ type PartnerCompany = {
   active: boolean;
 };
 
+type PortfolioSummary = { companies: number; active_printers: number; online_printers: number; offline_printers: number };
+
 type CompanyOverview = {
   company_id: number;
   total_active_printers: number;
@@ -46,6 +48,7 @@ export default function PartnerPortfolio() {
   const [companies, setCompanies] = useState<PartnerCompany[]>([]);
   const [loading, setLoading] = useState(true);
   const [overviews, setOverviews] = useState<Record<number, CompanyOverview>>({});
+  const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
@@ -59,6 +62,8 @@ export default function PartnerPortfolio() {
       ]);
       setContext(ctx);
       setCompanies(list);
+      const totals = await api<PortfolioSummary>("/partners/portfolio-summary");
+      setSummary(totals);
       const overviewResults = await Promise.allSettled(
         list.map((company) => api<CompanyOverview>(`/partners/companies/${company.id}/overview`))
       );
@@ -115,7 +120,12 @@ export default function PartnerPortfolio() {
       {error && <p role="alert">{error}</p>}
       {loading ? <p>Carregando carteira...</p> : (
         <>
-          <p>{companies.length} empresa(s) na carteira</p>
+          <div className="grid">
+            <article className="panel"><strong>Empresas</strong><h2>{summary?.companies ?? companies.length}</h2></article>
+            <article className="panel"><strong>Impressoras ativas</strong><h2>{summary?.active_printers ?? "—"}</h2></article>
+            <article className="panel"><strong>Online</strong><h2>{summary?.online_printers ?? "—"}</h2></article>
+            <article className="panel"><strong>Offline</strong><h2>{summary?.offline_printers ?? "—"}</h2></article>
+          </div>
           <div className="panel">
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead><tr><th scope="col">Empresa</th><th scope="col">Impressoras</th><th scope="col">Online</th><th scope="col">Offline</th><th scope="col">Portal do cliente</th><th scope="col">Ação</th></tr></thead>
