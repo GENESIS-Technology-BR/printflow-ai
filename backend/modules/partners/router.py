@@ -189,3 +189,19 @@ def partner_portfolio_summary(
         "online_printers": counts.get("online", 0),
         "offline_printers": counts.get("offline", 0),
     }
+
+
+@router.get("/companies/{company_id}/printers")
+def partner_company_printers(
+    company_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Tenant-scoped read-only fleet details for the partner dashboard."""
+    from backend.modules.printers.model import Printer
+    from backend.modules.dashboard.router import serialize_printer, _is_guerra_excluded_printer
+    company = require_partner_company_access(db, user, company_id)
+    printers = db.query(Printer).filter(Printer.company_id == company.id).order_by(Printer.id.desc()).all()
+    if "guerra" in (company.name or "").strip().lower():
+        printers = [printer for printer in printers if not _is_guerra_excluded_printer(printer)]
+    return [serialize_printer(printer) for printer in printers]
