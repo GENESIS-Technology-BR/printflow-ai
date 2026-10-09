@@ -212,3 +212,22 @@ def test_empty_partner_portfolio_summary(tenant_db):
     assert partner_portfolio_summary(user=user, db=db) == {
         "companies": 0, "active_printers": 0, "online_printers": 0, "offline_printers": 0
     }
+
+
+def test_partner_directory_platform_only(tenant_db):
+    from backend.modules.partners.router import partner_directory
+    db = tenant_db
+    partner = Partner(name="SupriTech")
+    db.add(partner)
+    db.flush()
+    company = Company(name="Empresa de teste")
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Leitor", email="directory@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    with pytest.raises(HTTPException) as exc:
+        partner_directory(user=user, db=db)
+    assert exc.value.status_code == 403
+    user.role = "platform_admin"
+    assert partner_directory(user=user, db=db) == [{"id": partner.id, "name": "SupriTech", "active": True}]
