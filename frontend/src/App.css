@@ -1283,3 +1283,13 @@ body {
 /* Homologacao: remover background-image/gradientes do shell, mantendo azul TOTVS */
 .shell.admin-shell > aside,.shell.admin-shell aside{background:#0077b9!important;background-image:none!important}
 .shell.admin-shell .workspace-topbar,.workspace-topbar{background:#0077b9!important;background-image:none!important}
+
+/* TALVOA UI homologacao — refinamento de navegacao e acessibilidade */
+.shell.admin-shell aside .brand-copy strong{color:#fff!important;text-shadow:none!important}
+.shell.admin-shell aside .brand-copy span{color:#e0f3ff!important}
+.shell.admin-shell aside .nav-section-title{color:#d8edff!important}
+.shell.admin-shell aside nav button:not(.active){color:#fff!important;opacity:1!important;font-weight:500!important}
+.shell.admin-shell aside nav button:not(.active) .nav-icon{color:#eaf7ff!important;opacity:1!important}
+.shell.admin-shell aside nav button.active{background:#e7f3fc!important;color:#005c99!important;font-weight:700!important}
+.shell.admin-shell aside nav button.active .nav-icon{color:#005c99!important}
+.shell.admin-shell aside nav button:hover:not(.active){background:#168ac8!important}
