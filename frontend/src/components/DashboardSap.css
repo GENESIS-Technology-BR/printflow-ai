@@ -21,3 +21,10 @@
 .sap-dashboard-v0993 .sap-kpi-icon.green{background:#e9f9ef;color:#55bc7b}
 .sap-dashboard-v0993 .sap-agent-kpi{border-color:#d4efdd;background:linear-gradient(135deg,#fff,#f5fcf7)}
 .sap-dashboard-v0993 .sap-agent-kpi strong{color:#389b60}
+
+/* TALVOA — verde pastel extra claro, revisão de homologação */
+.sap-dashboard-v0993 .sap-donut{background:conic-gradient(#c7f4d5 0 var(--online),#e74c3c var(--online) 360deg)}
+.sap-dashboard-v0993 .sap-status-list i.online,.sap-dashboard-v0993 .sap-status-dot.online{background:#b4eac5}
+.sap-dashboard-v0993 .sap-kpi-icon.green{background:#f1fcf5;color:#79c996}
+.sap-dashboard-v0993 .sap-agent-kpi{border-color:#e5f5eb;background:linear-gradient(135deg,#fff,#f9fefa)}
+.sap-dashboard-v0993 .sap-agent-kpi strong{color:#478a61}
