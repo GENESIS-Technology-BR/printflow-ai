@@ -173,12 +173,9 @@ def _report_data(db: Session, current_user: User, start: date, end: date, printe
         unit_name,
         sector_name,
     )
-    printers = _merge_historical_printers(
-        db,
-        current_user.company_id,
-        printers,
-        history,
-    )
+    # Fechamento comercial: somente parque ativo. Registros historicos de
+    # equipamentos desativados permanecem no banco e na consulta /daily.
+    # Nao reincorporar impressoras inativas aos relatorios e exportacoes.
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
     printers = _exclude_commercial_printers_for_company(company, printers)
     history = _active_history(history, printers)
