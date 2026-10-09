@@ -148,3 +148,26 @@ def test_customer_portal_guard_on_partner_assignment(tenant_db):
     assert exc.value.status_code == 403
     company.customer_portal_enabled = True
     assert require_legacy_company_portal_access(db, user).id == company.id
+
+
+def test_partner_company_printer_scope(tenant_db):
+    from backend.modules.partners.router import partner_company_printers
+    from backend.modules.printers.model import Printer
+    db = tenant_db
+    first = Partner(name="Parceiro A")
+    second = Partner(name="Parceiro B")
+    db.add_all([first, second])
+    db.flush()
+    a = Company(name="Cliente A", partner_id=first.id)
+    b = Company(name="Cliente B", partner_id=second.id)
+    db.add_all([a, b])
+    db.flush()
+    user = User(company_id=a.id, name="Gestor A", email="fleet@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    db.add(PartnerMembership(partner_id=first.id, user_id=user.id, role="partner_viewer"))
+    db.flush()
+    assert partner_company_printers(a.id, user=user, db=db) == []
+    with pytest.raises(HTTPException) as exc:
+        partner_company_printers(b.id, user=user, db=db)
+    assert exc.value.status_code == 403
