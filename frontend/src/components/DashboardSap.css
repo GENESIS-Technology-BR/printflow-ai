@@ -28,3 +28,13 @@
 .sap-dashboard-v0993 .sap-kpi-icon.green{background:#f1fcf5;color:#79c996}
 .sap-dashboard-v0993 .sap-agent-kpi{border-color:#e5f5eb;background:linear-gradient(135deg,#fff,#f9fefa)}
 .sap-dashboard-v0993 .sap-agent-kpi strong{color:#478a61}
+
+/* TALVOA: barras de navegacao em azul TOTVS, conforme referencia de homologacao */
+.shell aside{background:#0077b9!important;color:#fff!important;border-right:1px solid #00649e!important}
+.shell aside .brand strong,.shell aside .brand-copy span{color:#fff!important}
+.shell aside .nav-section-title{color:#d4ebfa!important}
+.shell nav button{color:#eaf6ff!important}
+.shell nav button:hover{background:#168bca!important;color:#fff!important}
+.shell nav button.active{background:#d9f0ff!important;color:#005f9e!important;border-color:#b5ddf5!important}
+.shell .workspace-topbar{background:#0077b9!important;color:#fff!important;border-bottom:1px solid #00649e!important}
+.shell .workspace-context,.shell .workspace-user-copy strong,.shell .workspace-user-copy span,.shell .workspace-environment{color:#fff!important}
