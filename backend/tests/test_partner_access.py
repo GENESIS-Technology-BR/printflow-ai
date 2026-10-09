@@ -98,3 +98,32 @@ def test_partner_viewer_cannot_write(tenant_db):
     with pytest.raises(HTTPException) as exc:
         require_partner_company_access(db, user, company.id, write=True)
     assert exc.value.status_code == 403
+
+
+def test_platform_admin_can_view_unassigned_company(tenant_db):
+    db = tenant_db
+    company = Company(name="Homologação sem parceiro")
+    db.add(company)
+    db.flush()
+    admin = User(company_id=company.id, name="TALVOA", email="platform@example.test", password_hash="test", role="platform_admin")
+    db.add(admin)
+    db.flush()
+    assert require_partner_company_access(db, admin, company.id, write=True).id == company.id
+
+
+def test_inactive_membership_denied(tenant_db):
+    db = tenant_db
+    partner = Partner(name="SupriTech")
+    db.add(partner)
+    db.flush()
+    company = Company(name="Guerra Implementos", partner_id=partner.id)
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Operador", email="inactive@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    db.add(PartnerMembership(partner_id=partner.id, user_id=user.id, role="partner_admin", active=False))
+    db.flush()
+    with pytest.raises(HTTPException) as exc:
+        require_partner_company_access(db, user, company.id)
+    assert exc.value.status_code == 403
