@@ -88,3 +88,30 @@ def set_customer_portal(
     company.customer_portal_enabled = payload.enabled
     db.commit()
     return {"company_id": company.id, "customer_portal_enabled": company.customer_portal_enabled}
+
+
+@router.get("/me")
+def my_partner_context(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role == "platform_admin":
+        return {"platform_admin": True, "partners": []}
+    memberships = (
+        db.query(PartnerMembership, Partner)
+        .join(Partner, Partner.id == PartnerMembership.partner_id)
+        .filter(
+            PartnerMembership.user_id == user.id,
+            PartnerMembership.active.is_(True),
+            Partner.active.is_(True),
+            PartnerMembership.role.in_(("partner_admin", "partner_operator", "partner_viewer")),
+        )
+        .all()
+    )
+    return {
+        "platform_admin": False,
+        "partners": [
+            {"id": partner.id, "name": partner.name, "role": membership.role}
+            for membership, partner in memberships
+        ],
+    }
