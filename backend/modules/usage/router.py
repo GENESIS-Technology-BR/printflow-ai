@@ -71,8 +71,7 @@ def _merge_historical_printers(
     company_id: int,
     current_printers: list[Printer],
     history: list[PrinterUsageDaily],
-)
- -> list[Printer]:
+) -> list[Printer]:
     history_uuids = {
         row.printer_uuid
         for row in history
