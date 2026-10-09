@@ -231,3 +231,43 @@ def test_partner_directory_platform_only(tenant_db):
     assert exc.value.status_code == 403
     user.role = "platform_admin"
     assert partner_directory(user=user, db=db) == [{"id": partner.id, "name": "SupriTech", "active": True}]
+
+
+def test_portal_toggle_requires_partner_admin(tenant_db):
+    from backend.modules.partners.router import set_customer_portal, CustomerPortalSettings
+    db = tenant_db
+    partner = Partner(name="Parceiro portal")
+    db.add(partner)
+    db.flush()
+    company = Company(name="Cliente portal", partner_id=partner.id)
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Operador", email="portal-role@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    membership = PartnerMembership(partner_id=partner.id, user_id=user.id, role="partner_operator")
+    db.add(membership)
+    db.flush()
+    with pytest.raises(HTTPException) as exc:
+        set_customer_portal(company.id, CustomerPortalSettings(enabled=True), user=user, db=db)
+    assert exc.value.status_code == 403
+    assert company.customer_portal_enabled is False
+    membership.role = "partner_admin"
+    result = set_customer_portal(company.id, CustomerPortalSettings(enabled=True), user=user, db=db)
+    assert result["customer_portal_enabled"] is True
+    assert company.customer_portal_enabled is True
+
+
+def test_unassigned_company_portal_cannot_be_enabled(tenant_db):
+    from backend.modules.partners.router import set_customer_portal, CustomerPortalSettings
+    db = tenant_db
+    company = Company(name="Cliente legado")
+    db.add(company)
+    db.flush()
+    admin = User(company_id=company.id, name="Plataforma", email="unassigned-portal@example.test", password_hash="test", role="platform_admin")
+    db.add(admin)
+    db.flush()
+    with pytest.raises(HTTPException) as exc:
+        set_customer_portal(company.id, CustomerPortalSettings(enabled=True), user=admin, db=db)
+    assert exc.value.status_code == 409
+    assert company.customer_portal_enabled is False
