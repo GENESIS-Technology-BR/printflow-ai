@@ -193,3 +193,22 @@ def test_partner_company_alert_scope(tenant_db):
     with pytest.raises(HTTPException) as exc:
         partner_company_alerts(b.id, user=user, db=db)
     assert exc.value.status_code == 403
+
+
+def test_empty_partner_portfolio_summary(tenant_db):
+    from backend.modules.partners.router import partner_portfolio_summary
+    db = tenant_db
+    partner = Partner(name="Parceiro sem clientes")
+    db.add(partner)
+    db.flush()
+    company = Company(name="Empresa legado")
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Gestor", email="empty-portfolio@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    db.add(PartnerMembership(partner_id=partner.id, user_id=user.id, role="partner_admin"))
+    db.flush()
+    assert partner_portfolio_summary(user=user, db=db) == {
+        "companies": 0, "active_printers": 0, "online_printers": 0, "offline_printers": 0
+    }
