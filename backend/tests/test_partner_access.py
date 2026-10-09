@@ -171,3 +171,25 @@ def test_partner_company_printer_scope(tenant_db):
     with pytest.raises(HTTPException) as exc:
         partner_company_printers(b.id, user=user, db=db)
     assert exc.value.status_code == 403
+
+
+def test_partner_company_alert_scope(tenant_db):
+    from backend.modules.partners.router import partner_company_alerts
+    db = tenant_db
+    first = Partner(name="Parceiro A")
+    second = Partner(name="Parceiro B")
+    db.add_all([first, second])
+    db.flush()
+    a = Company(name="Empresa A", partner_id=first.id)
+    b = Company(name="Empresa B", partner_id=second.id)
+    db.add_all([a, b])
+    db.flush()
+    user = User(company_id=a.id, name="Operador", email="alerts-scope@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    db.add(PartnerMembership(partner_id=first.id, user_id=user.id, role="partner_viewer"))
+    db.flush()
+    assert partner_company_alerts(a.id, user=user, db=db) == []
+    with pytest.raises(HTTPException) as exc:
+        partner_company_alerts(b.id, user=user, db=db)
+    assert exc.value.status_code == 403
