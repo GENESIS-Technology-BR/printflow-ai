@@ -143,3 +143,49 @@ def partner_company_overview(
         "agent_status": company.agent_status,
         "agent_last_seen": company.agent_last_seen,
     }
+
+
+@router.get("/portfolio-summary")
+def partner_portfolio_summary(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Aggregated company and printer counts, always scoped to partner membership."""
+    from sqlalchemy import func
+    from backend.modules.printers.model import Printer
+
+    if user.role == "platform_admin":
+        companies = db.query(Company.id).filter(Company.active.is_(True)).all()
+    else:
+        companies = (
+            db.query(Company.id)
+            .join(Partner, Partner.id == Company.partner_id)
+            .join(PartnerMembership, PartnerMembership.partner_id == Partner.id)
+            .filter(
+                PartnerMembership.user_id == user.id,
+                PartnerMembership.active.is_(True),
+                PartnerMembership.role.in_(("partner_admin", "partner_operator", "partner_viewer")),
+                Partner.active.is_(True),
+                Company.active.is_(True),
+            )
+            .distinct()
+            .all()
+        )
+        if not companies:
+            raise HTTPException(status_code=403, detail="Usuário sem carteira ativa")
+    company_ids = [item[0] for item in companies]
+    if not company_ids:
+        return {"companies": 0, "active_printers": 0, "online_printers": 0, "offline_printers": 0}
+    status_rows = (
+        db.query(Printer.status, func.count(Printer.id))
+        .filter(Printer.company_id.in_(company_ids), Printer.active.is_(True))
+        .group_by(Printer.status)
+        .all()
+    )
+    counts = {str(status or "").lower(): count for status, count in status_rows}
+    return {
+        "companies": len(company_ids),
+        "active_printers": sum(counts.values()),
+        "online_printers": counts.get("online", 0),
+        "offline_printers": counts.get("offline", 0),
+    }
