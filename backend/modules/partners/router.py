@@ -85,6 +85,8 @@ def set_customer_portal(
         )
         if not is_admin:
             raise HTTPException(status_code=403, detail="Somente o administrador do parceiro pode configurar o portal")
+    if company.partner_id is None and payload.enabled:
+        raise HTTPException(status_code=409, detail="Associe a empresa a um parceiro antes de habilitar o portal")
     company.customer_portal_enabled = payload.enabled
     db.commit()
     return {"company_id": company.id, "customer_portal_enabled": company.customer_portal_enabled}
