@@ -12,6 +12,8 @@ type PartnerCompany = {
   active: boolean;
 };
 
+type FleetAlert = { id: number; title: string; severity: string; status: string; description: string };
+
 type FleetPrinter = { id: number | null; name: string; ip: string | null; status: string; model: string | null; sector_name: string | null };
 
 type PortfolioSummary = { companies: number; active_printers: number; online_printers: number; offline_printers: number };
@@ -53,6 +55,7 @@ export default function PartnerPortfolio() {
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<PartnerCompany | null>(null);
   const [fleet, setFleet] = useState<FleetPrinter[]>([]);
+  const [alerts, setAlerts] = useState<FleetAlert[]>([]);
   const [fleetLoading, setFleetLoading] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -89,10 +92,16 @@ export default function PartnerPortfolio() {
   async function openFleet(company: PartnerCompany) {
     setSelectedCompany(company);
     setFleet([]);
+    setAlerts([]);
     setFleetLoading(true);
     setError("");
     try {
-      setFleet(await api<FleetPrinter[]>(`/partners/companies/${company.id}/printers`));
+      const [printers, companyAlerts] = await Promise.all([
+        api<FleetPrinter[]>(`/partners/companies/${company.id}/printers`),
+        api<FleetAlert[]>(`/partners/companies/${company.id}/alerts`),
+      ]);
+      setFleet(printers);
+      setAlerts(companyAlerts);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao consultar impressoras");
     } finally {
@@ -198,6 +207,11 @@ export default function PartnerPortfolio() {
             </table>
           )}
           {!fleetLoading && fleet.length === 0 && <p>Nenhuma impressora cadastrada.</p>}
+          {!fleetLoading && <div><h3>Alertas recentes ({alerts.length})</h3>
+            {alerts.filter((item) => item.status !== "resolved").slice(0, 10).map((item) => (
+              <p key={item.id}><strong>{item.severity.toUpperCase()}</strong> — {item.title}: {item.description}</p>
+            ))}
+          </div>}
         </div>
       )}
     </section>
