@@ -203,11 +203,11 @@ def partner_company_printers(
 ):
     """Tenant-scoped read-only fleet details for the partner dashboard."""
     from backend.modules.printers.model import Printer
-    from backend.modules.dashboard.router import serialize_printer, _is_guerra_excluded_printer
+    from backend.modules.dashboard.router import serialize_printer
+    from backend.modules.usage.router import _exclude_label_printers_for_company
     company = require_partner_company_access(db, user, company_id)
     printers = db.query(Printer).filter(Printer.company_id == company.id).order_by(Printer.id.desc()).all()
-    if "guerra" in (company.name or "").strip().lower():
-        printers = [printer for printer in printers if not _is_guerra_excluded_printer(printer)]
+    printers = _exclude_label_printers_for_company(company, printers)
     return [serialize_printer(printer) for printer in printers]
 
 
