@@ -176,7 +176,19 @@ def partner_portfolio_summary(
             .all()
         )
         if not companies:
-            raise HTTPException(status_code=403, detail="Usuário sem carteira ativa")
+            membership_exists = (
+                db.query(PartnerMembership.id)
+                .join(Partner, Partner.id == PartnerMembership.partner_id)
+                .filter(
+                    PartnerMembership.user_id == user.id,
+                    PartnerMembership.active.is_(True),
+                    PartnerMembership.role.in_(("partner_admin", "partner_operator", "partner_viewer")),
+                    Partner.active.is_(True),
+                )
+                .first()
+            )
+            if not membership_exists:
+                raise HTTPException(status_code=403, detail="Usuário sem vínculo ativo com parceiro")
     company_ids = [item[0] for item in companies]
     if not company_ids:
         return {"companies": 0, "active_printers": 0, "online_printers": 0, "offline_printers": 0}
