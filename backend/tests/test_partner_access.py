@@ -127,3 +127,24 @@ def test_inactive_membership_denied(tenant_db):
     with pytest.raises(HTTPException) as exc:
         require_partner_company_access(db, user, company.id)
     assert exc.value.status_code == 403
+
+
+def test_customer_portal_guard_on_partner_assignment(tenant_db):
+    from backend.modules.partners.access import require_legacy_company_portal_access
+    db = tenant_db
+    company = Company(name="Cliente legado")
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Cliente", email="guard@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    assert require_legacy_company_portal_access(db, user).id == company.id
+    partner = Partner(name="Parceiro")
+    db.add(partner)
+    db.flush()
+    company.partner_id = partner.id
+    with pytest.raises(HTTPException) as exc:
+        require_legacy_company_portal_access(db, user)
+    assert exc.value.status_code == 403
+    company.customer_portal_enabled = True
+    assert require_legacy_company_portal_access(db, user).id == company.id
