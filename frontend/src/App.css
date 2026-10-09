@@ -1270,3 +1270,12 @@ body {
   }
 }
 
+
+/* TALVOA navigation — TOTVS blue; placed in App.css to avoid lazy CSS cascade override */
+.shell aside{background:#0077b9!important;color:#fff!important;border-right:1px solid #00649e!important}
+.shell aside .brand strong,.shell aside .brand-copy span{color:#fff!important}
+.shell nav button{color:#eaf6ff!important}
+.shell nav button:hover{background:#168bca!important;color:#fff!important}
+.shell nav button.active{background:#d9f0ff!important;color:#005f9e!important;border-color:#b5ddf5!important}
+.workspace-topbar{background:#0077b9!important;color:#fff!important;border-bottom:1px solid #00649e!important}
+.workspace-topbar .workspace-context,.workspace-topbar .workspace-user-copy strong,.workspace-topbar .workspace-user-copy span,.workspace-topbar .workspace-environment{color:#fff!important}
