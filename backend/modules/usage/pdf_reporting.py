@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 from io import BytesIO
 
 BRAND_NAVY = "0B2A52"
@@ -139,7 +140,7 @@ def build_pdf_report(
         canvas.saveState(); width,_ = page_size
         canvas.setStrokeColor(colors.HexColor(f"#{BORDER}")); canvas.setLineWidth(.35); canvas.line(10*mm,7.2*mm,width-10*mm,7.2*mm)
         canvas.setFillColor(colors.HexColor(f"#{BRAND_NAVY}")); canvas.setFont("Helvetica-Bold",5.8); canvas.drawString(10*mm,4.0*mm,"TALVOA")
-        canvas.setFillColor(colors.HexColor(f"#{BRAND_MUTED}")); canvas.setFont("Helvetica",5.8); canvas.drawString(23*mm,4.0*mm,f"|  {company_name}"); canvas.drawRightString(width-10*mm,4.0*mm,f"Relatório gerado em {end.strftime('%d/%m/%Y')}  |  Fechamento comercial")
+        canvas.setFillColor(colors.HexColor(f"#{BRAND_MUTED}")); canvas.setFont("Helvetica",5.8); canvas.drawString(23*mm,4.0*mm,f"|  {company_name}"); canvas.drawRightString(width-10*mm,4.0*mm,f"Relatório gerado em {datetime.now(ZoneInfo('America/Sao_Paulo')).strftime('%d/%m/%Y')}  |  Fechamento comercial")
         canvas.restoreState()
 
     doc.build([KeepTogether(story)], onFirstPage=footer, onLaterPages=footer)
