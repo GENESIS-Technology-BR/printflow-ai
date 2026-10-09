@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, Integer, Numeric, String, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.database.connection import Base
@@ -21,6 +21,13 @@ class Company(Base):
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     state: Mapped[str | None] = mapped_column(String(2), nullable=True)
     plan: Mapped[str] = mapped_column(String(30), default="pilot")
+    # Nullable for backward compatibility with existing companies.
+    partner_id: Mapped[int | None] = mapped_column(
+        ForeignKey("partners.id"), nullable=True, index=True
+    )
+    customer_portal_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
     # Legacy fallback kept for compatibility with existing tenants/reports.
     default_cost_per_page: Mapped[Decimal] = mapped_column(
         Numeric(10, 4),
