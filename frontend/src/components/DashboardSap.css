@@ -70,3 +70,10 @@
 .sap-dashboard-v0993 .sap-health-strip.has-alerts .sap-health-icon{background:#fff1c9!important;color:#a87520!important}
 .sap-dashboard-v0993 .sap-health-strip.has-alerts button{border-color:#d9c9aa!important;color:#765a2a!important;border-radius:6px!important}
 @media(max-width:900px){.sap-dashboard-v0993 .sap-dashboard-grid-overview{min-height:0!important}.sap-dashboard-v0993 .sap-dashboard-grid-overview .sap-panel{min-height:0!important}}
+
+/* Homologacao: rodape de alertas no fluxo normal, sem cobrir a tabela */
+.sap-dashboard-page.sap-dashboard-v0993{height:calc(100vh - 64px)!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;display:flex!important;flex-direction:column!important;gap:0!important;padding-bottom:24px!important}
+.sap-dashboard-v0993 .sap-printer-ranking{flex:0 0 auto!important;min-height:0!important;overflow:visible!important}
+.sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap{height:auto!important;max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}
+.sap-dashboard-v0993 .sap-health-strip{position:static!important;inset:auto!important;bottom:auto!important;z-index:auto!important;flex:0 0 auto!important;transform:none!important;margin-top:12px!important;margin-bottom:0!important;width:100%!important}
+@media(max-width:900px){.sap-dashboard-page.sap-dashboard-v0993{height:auto!important;min-height:calc(100vh - 64px)!important;overflow:visible!important}}
