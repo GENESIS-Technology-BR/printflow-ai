@@ -241,3 +241,15 @@ def partner_company_alerts(
         .all()
     )
     return [serialize_alert(alert) for alert in alerts]
+
+
+@router.get("/directory")
+def partner_directory(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Platform-only directory; excludes membership and credential data."""
+    if user.role != "platform_admin":
+        raise HTTPException(status_code=403, detail="Acesso exclusivo TALVOA")
+    partners = db.query(Partner).order_by(Partner.name.asc()).all()
+    return [{"id": partner.id, "name": partner.name, "active": partner.active} for partner in partners]
