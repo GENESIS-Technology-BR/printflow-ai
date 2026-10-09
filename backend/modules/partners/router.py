@@ -51,3 +51,40 @@ def my_partner_companies(
         }
         for company in companies
     ]
+
+
+from pydantic import BaseModel
+from backend.modules.partners.access import require_partner_company_access
+
+
+class CustomerPortalSettings(BaseModel):
+    enabled: bool
+
+
+@router.patch("/companies/{company_id}/customer-portal")
+def set_customer_portal(
+    company_id: int,
+    payload: CustomerPortalSettings,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Only TALVOA or an active partner administrator can grant customer access."""
+    company = require_partner_company_access(db, user, company_id, write=True)
+    if user.role != "platform_admin":
+        is_admin = (
+            db.query(PartnerMembership.id)
+            .join(Partner, Partner.id == PartnerMembership.partner_id)
+            .filter(
+                PartnerMembership.user_id == user.id,
+                PartnerMembership.partner_id == company.partner_id,
+                PartnerMembership.role == "partner_admin",
+                PartnerMembership.active.is_(True),
+                Partner.active.is_(True),
+            )
+            .first()
+        )
+        if not is_admin:
+            raise HTTPException(status_code=403, detail="Somente o administrador do parceiro pode configurar o portal")
+    company.customer_portal_enabled = payload.enabled
+    db.commit()
+    return {"company_id": company.id, "customer_portal_enabled": company.customer_portal_enabled}
