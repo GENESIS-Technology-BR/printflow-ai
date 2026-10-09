@@ -115,3 +115,31 @@ def my_partner_context(
             for membership, partner in memberships
         ],
     }
+
+
+@router.get("/companies/{company_id}/overview")
+def partner_company_overview(
+    company_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Scoped fleet summary. No raw Agent credentials or printer secrets."""
+    from backend.modules.printers.model import Printer
+    company = require_partner_company_access(db, user, company_id)
+    printers = (
+        db.query(Printer)
+        .filter(Printer.company_id == company.id, Printer.active.is_(True))
+        .all()
+    )
+    online = sum(1 for printer in printers if (printer.status or "").lower() == "online")
+    offline = sum(1 for printer in printers if (printer.status or "").lower() == "offline")
+    return {
+        "company_id": company.id,
+        "company_name": company.name,
+        "total_active_printers": len(printers),
+        "online_printers": online,
+        "offline_printers": offline,
+        "other_status_printers": len(printers) - online - offline,
+        "agent_status": company.agent_status,
+        "agent_last_seen": company.agent_last_seen,
+    }
