@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from backend.modules.auth.model import User
 from backend.modules.companies.model import Company
-from .model import PartnerMembership
+from .model import Partner, PartnerMembership
 
 PARTNER_ROLES = frozenset({"partner_admin", "partner_operator", "partner_viewer"})
 PARTNER_WRITE_ROLES = frozenset({"partner_admin", "partner_operator"})
@@ -44,7 +44,10 @@ def require_partner_company_access(
                 PartnerMembership.user_id == user.id,
                 PartnerMembership.partner_id == company.partner_id,
                 PartnerMembership.active.is_(True),
+                PartnerMembership.role.in_(tuple(PARTNER_ROLES)),
             )
+            .join(Partner, Partner.id == PartnerMembership.partner_id)
+            .filter(Partner.active.is_(True))
             .all()
         )
         allowed = PARTNER_WRITE_ROLES if write else PARTNER_ROLES
