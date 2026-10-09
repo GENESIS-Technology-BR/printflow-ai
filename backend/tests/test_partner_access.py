@@ -271,3 +271,24 @@ def test_unassigned_company_portal_cannot_be_enabled(tenant_db):
         set_customer_portal(company.id, CustomerPortalSettings(enabled=True), user=admin, db=db)
     assert exc.value.status_code == 409
     assert company.customer_portal_enabled is False
+
+
+def test_partner_portfolio_does_not_count_other_partner_printers(tenant_db):
+    from backend.modules.partners.router import partner_portfolio_summary
+    from backend.modules.printers.model import Printer
+    db = tenant_db
+    first = Partner(name="Carteira A")
+    second = Partner(name="Carteira B")
+    db.add_all([first, second])
+    db.flush()
+    a = Company(name="Cliente carteira A", partner_id=first.id)
+    b = Company(name="Cliente carteira B", partner_id=second.id)
+    db.add_all([a, b])
+    db.flush()
+    user = User(company_id=a.id, name="Gestor", email="portfolio-scope@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    db.add(PartnerMembership(partner_id=first.id, user_id=user.id, role="partner_admin"))
+    db.flush()
+    result = partner_portfolio_summary(user=user, db=db)
+    assert result == {"companies": 1, "active_printers": 0, "online_printers": 0, "offline_printers": 0}
