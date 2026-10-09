@@ -1293,3 +1293,9 @@ body {
 .shell.admin-shell aside nav button.active{background:#e7f3fc!important;color:#005c99!important;font-weight:700!important}
 .shell.admin-shell aside nav button.active .nav-icon{color:#005c99!important}
 .shell.admin-shell aside nav button:hover:not(.active){background:#168ac8!important}
+
+/* TALVOA homologacao — azul aco aprovado pelo cliente */
+.shell.admin-shell > aside,.shell.admin-shell aside,.shell.admin-shell .workspace-topbar,.workspace-topbar{background:#397FA9!important;background-image:none!important}
+.shell.admin-shell aside nav button.active{background:#E7F3FC!important;color:#155781!important}
+.shell.admin-shell aside nav button.active .nav-icon{color:#155781!important}
+.shell.admin-shell aside nav button:hover:not(.active){background:#468FB8!important}
