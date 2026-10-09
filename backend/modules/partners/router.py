@@ -253,3 +253,29 @@ def partner_directory(
         raise HTTPException(status_code=403, detail="Acesso exclusivo TALVOA")
     partners = db.query(Partner).order_by(Partner.name.asc()).all()
     return [{"id": partner.id, "name": partner.name, "active": partner.active} for partner in partners]
+
+
+class PartnerCreateRequest(BaseModel):
+    name: str
+
+
+@router.post("/directory", status_code=201)
+def create_partner(
+    payload: PartnerCreateRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Platform-only onboarding; never reassigns an existing company."""
+    if user.role != "platform_admin":
+        raise HTTPException(status_code=403, detail="Acesso exclusivo TALVOA")
+    name = payload.name.strip()
+    if not 2 <= len(name) <= 180:
+        raise HTTPException(status_code=422, detail="Nome do parceiro deve ter entre 2 e 180 caracteres")
+    existing = db.query(Partner).filter(Partner.name == name).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="Parceiro já cadastrado")
+    partner = Partner(name=name, active=True)
+    db.add(partner)
+    db.commit()
+    db.refresh(partner)
+    return {"id": partner.id, "name": partner.name, "active": partner.active}
