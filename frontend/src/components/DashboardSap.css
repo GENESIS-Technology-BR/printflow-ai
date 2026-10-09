@@ -53,3 +53,20 @@
 @media(max-width:1350px){.sap-dashboard-v0993 .sap-kpi-grid-six{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:900px){.sap-dashboard-v0993 .sap-kpi-grid-six{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.sap-dashboard-v0993 .sap-kpi-grid-six{grid-template-columns:1fr}}
+
+/* TALVOA 1.0 — refinamento visual de homologacao: paineis, tabela e alertas */
+.sap-dashboard-v0993 .sap-dashboard-grid-overview{min-height:204px!important;gap:0!important}
+.sap-dashboard-v0993 .sap-dashboard-grid-overview .sap-panel{min-height:204px!important}
+.sap-dashboard-v0993 .sap-donut-wrap{height:auto!important;min-height:145px!important;padding:12px 20px!important;gap:12px!important}
+.sap-dashboard-v0993 .sap-bars{padding:10px 18px!important}
+.sap-dashboard-v0993 .sap-bar-row{margin:9px 0!important}
+.sap-dashboard-v0993 .sap-unit-list{padding:13px 18px!important;gap:12px!important}
+.sap-dashboard-v0993 .sap-printer-ranking{min-height:0!important}
+.sap-dashboard-v0993 .sap-table th{padding:11px 14px!important;background:#f3f6f9!important;color:#48627c!important;letter-spacing:.025em}
+.sap-dashboard-v0993 .sap-table td{padding:12px 14px!important;vertical-align:middle!important}
+.sap-dashboard-v0993 .sap-table tbody tr:nth-child(even){background:#fafbfd}
+.sap-dashboard-v0993 .sap-table tbody tr:hover{background:#edf5fb!important}
+.sap-dashboard-v0993 .sap-health-strip.has-alerts{min-height:62px!important;padding:10px 16px!important;background:#fffcf5!important;border-color:#f1e3c6!important;box-shadow:none!important}
+.sap-dashboard-v0993 .sap-health-strip.has-alerts .sap-health-icon{background:#fff1c9!important;color:#a87520!important}
+.sap-dashboard-v0993 .sap-health-strip.has-alerts button{border-color:#d9c9aa!important;color:#765a2a!important;border-radius:6px!important}
+@media(max-width:900px){.sap-dashboard-v0993 .sap-dashboard-grid-overview{min-height:0!important}.sap-dashboard-v0993 .sap-dashboard-grid-overview .sap-panel{min-height:0!important}}
