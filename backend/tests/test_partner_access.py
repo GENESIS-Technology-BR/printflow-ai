@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from backend.app.database.connection import Base
+from backend.app.database import models as registered_models  # noqa: F401
 from backend.modules.auth.model import User
 from backend.modules.companies.model import Company
 from backend.modules.partners.model import Partner, PartnerMembership
