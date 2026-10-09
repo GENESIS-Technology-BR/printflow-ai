@@ -114,16 +114,19 @@ export default function PartnerPortfolio() {
       (p) => p.id === company.partner_id && p.role === "partner_admin"
     );
     if (!allowed) return;
+    const nextEnabled = !company.customer_portal_enabled;
+    const action = nextEnabled ? "habilitar" : "desabilitar";
+    if (!window.confirm(`Confirma ${action} o portal de ${company.name}? Essa alteração afeta o acesso dos usuários dessa empresa.`)) return;
     setBusyId(company.id);
     setError("");
     try {
       await api(`/partners/companies/${company.id}/customer-portal`, {
         method: "PATCH",
-        body: JSON.stringify({ enabled: !company.customer_portal_enabled }),
+        body: JSON.stringify({ enabled: nextEnabled }),
       });
       setCompanies((previous) => previous.map((item) =>
         item.id === company.id
-          ? { ...item, customer_portal_enabled: !company.customer_portal_enabled }
+          ? { ...item, customer_portal_enabled: nextEnabled }
           : item
       ));
     } catch (err) {
