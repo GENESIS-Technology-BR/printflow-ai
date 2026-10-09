@@ -60,3 +60,40 @@ def test_customer_portal_is_opt_in(tenant_db):
     with pytest.raises(HTTPException) as exc:
         require_partner_company_access(db, user, company.id, write=True)
     assert exc.value.status_code == 403
+
+
+def test_inactive_partner_denied(tenant_db):
+    db = tenant_db
+    partner = Partner(name="Parceiro suspenso", active=False)
+    db.add(partner)
+    db.flush()
+    company = Company(name="Empresa", partner_id=partner.id)
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Gestor", email="suspended@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    db.add(PartnerMembership(partner_id=partner.id, user_id=user.id, role="partner_admin"))
+    db.flush()
+    with pytest.raises(HTTPException) as exc:
+        require_partner_company_access(db, user, company.id)
+    assert exc.value.status_code == 403
+
+
+def test_partner_viewer_cannot_write(tenant_db):
+    db = tenant_db
+    partner = Partner(name="Parceiro leitura")
+    db.add(partner)
+    db.flush()
+    company = Company(name="Empresa leitura", partner_id=partner.id)
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Leitor", email="viewer@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    db.add(PartnerMembership(partner_id=partner.id, user_id=user.id, role="partner_viewer"))
+    db.flush()
+    assert require_partner_company_access(db, user, company.id).id == company.id
+    with pytest.raises(HTTPException) as exc:
+        require_partner_company_access(db, user, company.id, write=True)
+    assert exc.value.status_code == 403
