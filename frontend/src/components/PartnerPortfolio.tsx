@@ -12,6 +12,8 @@ type PartnerCompany = {
   active: boolean;
 };
 
+type FleetPrinter = { id: number | null; name: string; ip: string | null; status: string; model: string | null; sector_name: string | null };
+
 type PortfolioSummary = { companies: number; active_printers: number; online_printers: number; offline_printers: number };
 
 type CompanyOverview = {
@@ -49,6 +51,9 @@ export default function PartnerPortfolio() {
   const [loading, setLoading] = useState(true);
   const [overviews, setOverviews] = useState<Record<number, CompanyOverview>>({});
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<PartnerCompany | null>(null);
+  const [fleet, setFleet] = useState<FleetPrinter[]>([]);
+  const [fleetLoading, setFleetLoading] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
@@ -80,6 +85,20 @@ export default function PartnerPortfolio() {
   }, []);
 
   useEffect(() => { void reload(); }, [reload]);
+
+  async function openFleet(company: PartnerCompany) {
+    setSelectedCompany(company);
+    setFleet([]);
+    setFleetLoading(true);
+    setError("");
+    try {
+      setFleet(await api<FleetPrinter[]>(`/partners/companies/${company.id}/printers`));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao consultar impressoras");
+    } finally {
+      setFleetLoading(false);
+    }
+  }
 
   async function setPortal(company: PartnerCompany) {
     const allowed = context?.platform_admin || context?.partners.some(
@@ -136,7 +155,7 @@ export default function PartnerPortfolio() {
                   );
                   return (
                     <tr key={company.id}>
-                      <td>{company.name}</td>
+                      <td><button type="button" onClick={() => void openFleet(company)}>{company.name}</button></td>
                       <td>{overviews[company.id]?.total_active_printers ?? "—"}</td>
                       <td>{overviews[company.id]?.online_printers ?? "—"}</td>
                       <td>{overviews[company.id]?.offline_printers ?? "—"}</td>
@@ -160,6 +179,26 @@ export default function PartnerPortfolio() {
             {companies.length === 0 && <p>Nenhuma empresa vinculada ao parceiro.</p>}
           </div>
         </>
+      )}
+      {selectedCompany && (
+        <div className="panel">
+          <header>
+            <div><small>INVENTÁRIO POR EMPRESA</small><h2>{selectedCompany.name}</h2></div>
+            <button type="button" onClick={() => setSelectedCompany(null)}>Fechar</button>
+          </header>
+          {fleetLoading ? <p>Carregando impressoras...</p> : (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead><tr><th>Nome</th><th>IP</th><th>Modelo</th><th>Setor</th><th>Status</th></tr></thead>
+              <tbody>{fleet.map((printer) => (
+                <tr key={printer.id ?? printer.ip ?? printer.name}>
+                  <td>{printer.name}</td><td>{printer.ip ?? "—"}</td>
+                  <td>{printer.model ?? "—"}</td><td>{printer.sector_name ?? "—"}</td><td>{printer.status}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          )}
+          {!fleetLoading && fleet.length === 0 && <p>Nenhuma impressora cadastrada.</p>}
+        </div>
       )}
     </section>
   );
