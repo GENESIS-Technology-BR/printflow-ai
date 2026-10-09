@@ -63,3 +63,15 @@ def require_partner_company_access(
         return company
 
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso não autorizado à empresa")
+
+
+def require_legacy_company_portal_access(db: Session, user: User) -> Company:
+    """Preserve unassigned tenants; require opt-in after partner assignment."""
+    company = db.query(Company).filter(Company.id == user.company_id, Company.active.is_(True)).first()
+    if company is None:
+        raise HTTPException(status_code=404, detail="Empresa não encontrada")
+    if user.role == "platform_admin" or company.partner_id is None:
+        return company
+    if user.role in {"client", "admin"} and company.customer_portal_enabled:
+        return company
+    raise HTTPException(status_code=403, detail="Portal do cliente desabilitado")
