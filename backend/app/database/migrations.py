@@ -91,3 +91,14 @@ def clean_descriptive_printer_serials(engine: Engine) -> None:
                 OR LOWER(serial) LIKE '%203dpi%' OR LOWER(serial) LIKE '%300dpi%'
                 OR LOWER(serial) LIKE '%600dpi%')
         """))
+
+
+PARTNER_COMPANY_COLUMNS = {
+    "partner_id": "INTEGER REFERENCES partners(id)",
+    "customer_portal_enabled": "BOOLEAN NOT NULL DEFAULT FALSE",
+}
+
+
+def ensure_partner_company_columns(engine: Engine) -> None:
+    """Additive migration; existing companies remain unassigned and portal-disabled."""
+    _ensure_columns(engine, "companies_v2", PARTNER_COMPANY_COLUMNS)

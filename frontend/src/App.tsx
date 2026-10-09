@@ -8,6 +8,7 @@ const ClientPrinterTable = lazy(() => import("./components/ClientPrinterTable"))
 const AgentMonitor = lazy(() => import("./components/AgentMonitor"))
 const ControlCenter = lazy(() => import("./components/ControlCenter"))
 const Reports = lazy(() => import("./components/Reports"))
+const PartnerPortfolio = lazy(() => import("./components/PartnerPortfolio"))
 import ThemeToggle from "./components/ThemeToggle"
 import { getDashboardPrinters, getMe } from "./services/api"
 import type { DashboardPrinter, MeProfile } from "./services/api"
@@ -32,13 +33,14 @@ type Company = {
   active: boolean
 }
 
-type Page = "dashboard" | "printers" | "reports" | "company" | "agents" | "control"
+type Page = "dashboard" | "printers" | "reports" | "company" | "agents" | "control" | "partners"
 
 function App() {
   const [authenticated, setAuthenticated] = useState(false)
   const [authReady, setAuthReady] = useState(false)
   const [company, setCompany] = useState<Company | null>(null)
   const [profile, setProfile] = useState<MeProfile | null>(null)
+  const [hasPartnerAccess, setHasPartnerAccess] = useState(false)
   const initialResetToken = new URLSearchParams(window.location.search).get("reset_token") || ""
   const [mode, setMode] = useState<"login" | "forgot" | "reset">(
     initialResetToken ? "reset" : "login",
@@ -116,6 +118,17 @@ function App() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (!profile) { setHasPartnerAccess(false); return }
+    if (profile.role === "platform_admin") { setHasPartnerAccess(true); return }
+    let cancelled = false
+    api("/api/v1/partners/me").then((data: { partners?: unknown[] }) => {
+      if (!cancelled) setHasPartnerAccess(Boolean(data.partners?.length))
+    }).catch(() => { if (!cancelled) setHasPartnerAccess(false) })
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile])
 
   async function authenticate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -380,6 +393,7 @@ function App() {
 
   const isPlatformAdmin = profile?.role === "platform_admin";
   const isClientView = isClientPreview || !isPlatformAdmin;
+  const isPartnerView = hasPartnerAccess && !isPlatformAdmin && !isClientPreview;
 
   return (
     <div className={`shell ${isClientView ? "client-shell" : "admin-shell"}`}>
@@ -414,9 +428,11 @@ function App() {
           <div className="workspace-user-copy">
             <strong>{profile?.name || "Usuário"}</strong>
             <span>
-              {isClientView
-                ? "Portal do cliente"
-                : "Administrador da plataforma"}
+              {isPartnerView
+                ? "Gestão de carteira"
+                : isClientView
+                  ? "Portal do cliente"
+                  : "Administrador da plataforma"}
             </span>
           </div>
           <div className="workspace-avatar">
@@ -430,12 +446,15 @@ function App() {
           <img src="/brand/talvoa-mark.svg" alt="" aria-hidden="true" />
           <div className="brand-copy">
             <strong>TALVOA</strong>
-            <span>{isClientView ? "Portal do Cliente" : "Operations Platform"}</span>
+            <span>{isPartnerView ? "Portal do Parceiro" : isClientView ? "Portal do Cliente" : "Operations Platform"}</span>
           </div>
         </div>
         <nav>
           <small className="nav-section-title">MENU PRINCIPAL</small>
           <button className={page === "dashboard" ? "active" : ""} onClick={() => setPage("dashboard")}><span className="nav-icon">⌂</span>Visão Geral</button>
+          {hasPartnerAccess && !isClientPreview && (
+            <button className={page === "partners" ? "active" : ""} onClick={() => setPage("partners")}><span className="nav-icon">▤</span>Carteira de clientes</button>
+          )}
           {!isClientView && (
             <button className={page === "control" ? "active" : ""} onClick={() => setPage("control")}><span className="nav-icon">▦</span>Control Center</button>
           )}
@@ -453,7 +472,9 @@ function App() {
 
       <main className={`dashboard ${page === "dashboard" ? "dashboard-modern-shell" : ""} ${page === "printers" ? "printers-workspace" : ""} ${page === "reports" ? "reports-workspace" : ""}`}>
         <Suspense fallback={<div className="sap-loading">Carregando módulo...</div>}>
-        {page === "control" ? (
+        {page === "partners" && hasPartnerAccess && !isClientPreview ? (
+          <PartnerPortfolio />
+        ) : page === "control" ? (
           <ControlCenter />
         ) : page === "reports" ? (
           <Reports

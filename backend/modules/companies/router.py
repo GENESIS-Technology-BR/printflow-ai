@@ -6,11 +6,21 @@ from sqlalchemy.orm import Session
 from backend.app.database.session import get_db
 from backend.modules.auth.dependencies import get_current_user, get_platform_admin, is_platform_admin
 from backend.modules.auth.model import User
+from backend.modules.partners.access import require_legacy_company_portal_access
 from backend.modules.companies.model import Company
 from backend.modules.companies.schema import CompanyResponse, CompanyUpdate
 from backend.modules.control_center.router import _agent_communication
 
 router = APIRouter(prefix="/companies", tags=["Companies"])
+
+
+def get_legacy_portal_user(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    require_legacy_company_portal_access(db, current_user)
+    return current_user
+
 
 
 def _current_user_company(current_user: User, db: Session) -> Company:
@@ -22,7 +32,7 @@ def _current_user_company(current_user: User, db: Session) -> Company:
 
 @router.get("/current", response_model=CompanyResponse)
 def current_company(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_legacy_portal_user),
     db: Session = Depends(get_db),
 ):
     company = _current_user_company(current_user, db)
@@ -34,7 +44,7 @@ def current_company(
 
 @router.get("/current/agent-status")
 def current_agent_status(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_legacy_portal_user),
     db: Session = Depends(get_db),
 ):
     company = _current_user_company(current_user, db)
