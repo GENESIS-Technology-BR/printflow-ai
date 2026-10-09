@@ -133,6 +133,8 @@ def partner_company_overview(
         .filter(Printer.company_id == company.id, Printer.active.is_(True))
         .all()
     )
+    from backend.modules.usage.router import _exclude_label_printers_for_company
+    printers = _exclude_label_printers_for_company(company, printers)
     online = sum(1 for printer in printers if (printer.status or "").lower() == "online")
     offline = sum(1 for printer in printers if (printer.status or "").lower() == "offline")
     return {
