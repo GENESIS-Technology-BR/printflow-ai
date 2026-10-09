@@ -393,6 +393,7 @@ function App() {
 
   const isPlatformAdmin = profile?.role === "platform_admin";
   const isClientView = isClientPreview || !isPlatformAdmin;
+  const isPartnerView = hasPartnerAccess && !isPlatformAdmin && !isClientPreview;
 
   return (
     <div className={`shell ${isClientView ? "client-shell" : "admin-shell"}`}>
@@ -427,9 +428,11 @@ function App() {
           <div className="workspace-user-copy">
             <strong>{profile?.name || "Usuário"}</strong>
             <span>
-              {isClientView
-                ? "Portal do cliente"
-                : "Administrador da plataforma"}
+              {isPartnerView
+                ? "Gestão de carteira"
+                : isClientView
+                  ? "Portal do cliente"
+                  : "Administrador da plataforma"}
             </span>
           </div>
           <div className="workspace-avatar">
@@ -443,7 +446,7 @@ function App() {
           <img src="/brand/talvoa-mark.svg" alt="" aria-hidden="true" />
           <div className="brand-copy">
             <strong>TALVOA</strong>
-            <span>{isClientView ? "Portal do Cliente" : "Operations Platform"}</span>
+            <span>{isPartnerView ? "Portal do Parceiro" : isClientView ? "Portal do Cliente" : "Operations Platform"}</span>
           </div>
         </div>
         <nav>
