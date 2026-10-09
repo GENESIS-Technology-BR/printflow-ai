@@ -205,3 +205,23 @@ def partner_company_printers(
     if "guerra" in (company.name or "").strip().lower():
         printers = [printer for printer in printers if not _is_guerra_excluded_printer(printer)]
     return [serialize_printer(printer) for printer in printers]
+
+
+@router.get("/companies/{company_id}/alerts")
+def partner_company_alerts(
+    company_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Read-only alert list with explicit tenant authorization."""
+    from backend.modules.alerts.model import OperationalAlert
+    from backend.modules.alerts.service import serialize_alert
+    company = require_partner_company_access(db, user, company_id)
+    alerts = (
+        db.query(OperationalAlert)
+        .filter(OperationalAlert.company_id == company.id)
+        .order_by(OperationalAlert.id.desc())
+        .limit(100)
+        .all()
+    )
+    return [serialize_alert(alert) for alert in alerts]
