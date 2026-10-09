@@ -19,6 +19,14 @@ from .service import reporting_date
 
 router = APIRouter(prefix="/usage", tags=["Usage"])
 
+def get_legacy_portal_user(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    require_legacy_company_portal_access(db, current_user)
+    return current_user
+
+
 
 def _report_scope_label(rows: list[dict], printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None) -> str:
     parts: list[str] = []
@@ -64,14 +72,6 @@ def _merge_historical_printers(
     current_printers: list[Printer],
     history: list[PrinterUsageDaily],
 )
-
-
-def get_legacy_portal_user(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> User:
-    require_legacy_company_portal_access(db, current_user)
-    return current_user
  -> list[Printer]:
     history_uuids = {
         row.printer_uuid
