@@ -12,6 +12,14 @@ type PartnerCompany = {
   active: boolean;
 };
 
+type CompanyOverview = {
+  company_id: number;
+  total_active_printers: number;
+  online_printers: number;
+  offline_printers: number;
+  agent_status: string | null;
+};
+
 type PartnerContext = {
   platform_admin: boolean;
   partners: { id: number; name: string; role: string }[];
@@ -37,6 +45,7 @@ export default function PartnerPortfolio() {
   const [context, setContext] = useState<PartnerContext | null>(null);
   const [companies, setCompanies] = useState<PartnerCompany[]>([]);
   const [loading, setLoading] = useState(true);
+  const [overviews, setOverviews] = useState<Record<number, CompanyOverview>>({});
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
@@ -50,6 +59,14 @@ export default function PartnerPortfolio() {
       ]);
       setContext(ctx);
       setCompanies(list);
+      const overviewResults = await Promise.allSettled(
+        list.map((company) => api<CompanyOverview>(`/partners/companies/${company.id}/overview`))
+      );
+      const scoped: Record<number, CompanyOverview> = {};
+      overviewResults.forEach((result) => {
+        if (result.status === "fulfilled") scoped[result.value.company_id] = result.value;
+      });
+      setOverviews(scoped);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao consultar parceiros");
     } finally {
@@ -101,7 +118,7 @@ export default function PartnerPortfolio() {
           <p>{companies.length} empresa(s) na carteira</p>
           <div className="panel">
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr><th scope="col">Empresa</th><th scope="col">Portal do cliente</th><th scope="col">Ação</th></tr></thead>
+              <thead><tr><th scope="col">Empresa</th><th scope="col">Impressoras</th><th scope="col">Online</th><th scope="col">Offline</th><th scope="col">Portal do cliente</th><th scope="col">Ação</th></tr></thead>
               <tbody>
                 {companies.map((company) => {
                   const canManage = context?.platform_admin || context?.partners.some(
@@ -110,6 +127,9 @@ export default function PartnerPortfolio() {
                   return (
                     <tr key={company.id}>
                       <td>{company.name}</td>
+                      <td>{overviews[company.id]?.total_active_printers ?? "—"}</td>
+                      <td>{overviews[company.id]?.online_printers ?? "—"}</td>
+                      <td>{overviews[company.id]?.offline_printers ?? "—"}</td>
                       <td>{company.customer_portal_enabled ? "Habilitado" : "Desabilitado"}</td>
                       <td>
                         {canManage ? (
