@@ -13,3 +13,11 @@
 }
 .sap-dashboard-v0993 .sap-health-strip.has-alerts .sap-health-icon{background:#ffedb0;color:#8b5b00}
 .sap-dashboard-v0993 .sap-health-strip.has-alerts button{border-color:#d7ad45;background:#fff;color:#7a5200}
+
+/* TALVOA 1.0 — indicadores online em verde menta claro */
+.sap-dashboard-v0993 .sap-donut{background:conic-gradient(#a8e8bd 0 var(--online),#e74c3c var(--online) 360deg)}
+.sap-dashboard-v0993 .sap-status-list i.online,
+.sap-dashboard-v0993 .sap-status-dot.online{background:#83d9a3}
+.sap-dashboard-v0993 .sap-kpi-icon.green{background:#e9f9ef;color:#55bc7b}
+.sap-dashboard-v0993 .sap-agent-kpi{border-color:#d4efdd;background:linear-gradient(135deg,#fff,#f5fcf7)}
+.sap-dashboard-v0993 .sap-agent-kpi strong{color:#389b60}
