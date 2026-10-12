@@ -128,13 +128,14 @@ def _billing_cycle_index(day: date) -> int:
 
 
 def _fixed_cost_for_period(monthly_cost: float, start: date, end: date) -> float:
-    """Cobra uma mensalidade por ciclo 20-19 abrangido pela consulta.
+    """Cobra uma mensalidade por mes calendario abrangido pela consulta.
 
-    Consultas parciais de um ciclo nao duplicam a mensalidade pela virada
-    do mes calendario. O valor nao e proporcional aos dias consultados.
+    Periodos parciais nao sao proporcionais aos dias consultados.
     """
-    cycles = _billing_cycle_index(end) - _billing_cycle_index(start) + 1
-    return round(max(monthly_cost, 0.0) * max(cycles, 0), 2)
+    if end < start:
+        return 0.0
+    months = (end.year - start.year) * 12 + end.month - start.month + 1
+    return round(max(monthly_cost, 0.0) * months, 2)
 
 
 def _apply_cost_models(rows: list[dict], printers: list[Printer], start: date, end: date) -> list[dict]:
