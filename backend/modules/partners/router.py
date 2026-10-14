@@ -298,3 +298,65 @@ def create_partner(
     db.commit()
     db.refresh(partner)
     return {"id": partner.id, "name": partner.name, "active": partner.active}
+
+
+class PartnerMemberRequest(BaseModel):
+    user_id: int
+    role: str
+
+
+@router.post("/directory/{partner_id}/members", status_code=201)
+def add_partner_member(
+    partner_id: int,
+    payload: PartnerMemberRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Platform-only membership provisioning; never changes user credentials."""
+    from backend.modules.partners.access import PARTNER_ROLES
+    if user.role != "platform_admin":
+        raise HTTPException(status_code=403, detail="Acesso exclusivo TALVOA")
+    partner = db.query(Partner).filter(Partner.id == partner_id, Partner.active.is_(True)).first()
+    if partner is None:
+        raise HTTPException(status_code=404, detail="Parceiro ativo não encontrado")
+    if payload.role not in PARTNER_ROLES:
+        raise HTTPException(status_code=422, detail="Perfil de parceiro inválido")
+    member_user = db.query(User).filter(User.id == payload.user_id, User.active.is_(True)).first()
+    if member_user is None or member_user.role == "platform_admin":
+        raise HTTPException(status_code=404, detail="Usuário elegível não encontrado")
+    existing = db.query(PartnerMembership).filter(
+        PartnerMembership.partner_id == partner_id,
+        PartnerMembership.user_id == payload.user_id,
+    ).first()
+    if existing is not None:
+        raise HTTPException(status_code=409, detail="Vínculo já cadastrado; atualize-o por fluxo específico")
+    membership = PartnerMembership(partner_id=partner_id, user_id=payload.user_id, role=payload.role, active=True)
+    db.add(membership)
+    db.commit()
+    db.refresh(membership)
+    return {"id": membership.id, "partner_id": partner_id, "user_id": payload.user_id, "role": payload.role, "active": True}
+
+
+@router.post("/directory/{partner_id}/companies/{company_id}", status_code=200)
+def assign_unassigned_company(
+    partner_id: int,
+    company_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """One-way explicit assignment; never transfer an existing partner's tenant."""
+    if user.role != "platform_admin":
+        raise HTTPException(status_code=403, detail="Acesso exclusivo TALVOA")
+    partner = db.query(Partner).filter(Partner.id == partner_id, Partner.active.is_(True)).first()
+    if partner is None:
+        raise HTTPException(status_code=404, detail="Parceiro ativo não encontrado")
+    company = db.query(Company).filter(Company.id == company_id, Company.active.is_(True)).first()
+    if company is None:
+        raise HTTPException(status_code=404, detail="Empresa ativa não encontrada")
+    if company.partner_id is not None:
+        raise HTTPException(status_code=409, detail="Empresa já vinculada; transferência não permitida")
+    if company.customer_portal_enabled:
+        raise HTTPException(status_code=409, detail="Desative o portal antes de vincular a empresa")
+    company.partner_id = partner.id
+    db.commit()
+    return {"company_id": company.id, "partner_id": partner.id, "customer_portal_enabled": False}
