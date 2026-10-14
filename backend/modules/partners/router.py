@@ -360,3 +360,32 @@ def assign_unassigned_company(
     company.partner_id = partner.id
     db.commit()
     return {"company_id": company.id, "partner_id": partner.id, "customer_portal_enabled": False}
+
+
+@router.get("/directory/{partner_id}/preview-companies")
+def preview_partner_companies(
+    partner_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Platform-only read-only view of a partner's exact company scope.
+
+    This is not impersonation: no membership, token or tenant context is changed.
+    """
+    if user.role != "platform_admin":
+        raise HTTPException(status_code=403, detail="Acesso exclusivo TALVOA")
+    partner = db.query(Partner).filter(Partner.id == partner_id, Partner.active.is_(True)).first()
+    if partner is None:
+        raise HTTPException(status_code=404, detail="Parceiro ativo não encontrado")
+    companies = db.query(Company).filter(
+        Company.partner_id == partner.id, Company.active.is_(True)
+    ).order_by(Company.name).all()
+    return {
+        "partner": {"id": partner.id, "name": partner.name},
+        "companies": [{
+            "id": company.id,
+            "name": company.name,
+            "customer_portal_enabled": company.customer_portal_enabled,
+        } for company in companies],
+        "preview_only": True,
+    }
