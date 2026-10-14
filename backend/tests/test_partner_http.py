@@ -202,3 +202,18 @@ def test_http_platform_partner_preview_is_scoped_and_read_only(http_context):
     assert outsider.id not in [item["id"] for item in data["companies"]]
     assert db.get(Company, own.id).customer_portal_enabled is False
     assert client.get("/api/v1/partners/directory/999999/preview-companies").status_code == 404
+
+
+def test_homologation_origin_preflight_allowed(http_context):
+    client, *_ = http_context
+    response = client.options(
+        "/api/v1/partners/me",
+        headers={
+            "Origin": "https://talvoa-supritech-homolog.onrender.com",
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "authorization",
+        },
+    )
+    assert response.status_code == 200, response.text
+    assert response.headers["access-control-allow-origin"] == "https://talvoa-supritech-homolog.onrender.com"
+    assert response.headers["access-control-allow-credentials"] == "true"
