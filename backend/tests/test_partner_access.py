@@ -434,3 +434,55 @@ def test_unassigned_company_preserves_legacy_access(tenant_db):
     db.add(user)
     db.flush()
     assert require_legacy_company_portal_access(db, user).id == company.id
+
+
+def test_partner_membership_provisioning_requires_platform_admin_and_valid_role(tenant_db):
+    from backend.modules.partners.router import add_partner_member, PartnerMemberRequest
+    db = tenant_db
+    partner = Partner(name="Parceiro onboarding")
+    db.add(partner)
+    db.flush()
+    company = Company(name="Empresa onboarding")
+    db.add(company)
+    db.flush()
+    platform = User(company_id=company.id, name="Plataforma", email="membership-platform@example.test", password_hash="test", role="platform_admin")
+    member = User(company_id=company.id, name="Parceiro", email="membership-partner@example.test", password_hash="test", role="client")
+    db.add_all([platform, member])
+    db.flush()
+    with pytest.raises(HTTPException) as exc:
+        add_partner_member(partner.id, PartnerMemberRequest(user_id=member.id, role="partner_admin"), user=member, db=db)
+    assert exc.value.status_code == 403
+    with pytest.raises(HTTPException) as exc:
+        add_partner_member(partner.id, PartnerMemberRequest(user_id=member.id, role="platform_admin"), user=platform, db=db)
+    assert exc.value.status_code == 422
+    result = add_partner_member(partner.id, PartnerMemberRequest(user_id=member.id, role="partner_viewer"), user=platform, db=db)
+    assert result["role"] == "partner_viewer"
+    with pytest.raises(HTTPException) as exc:
+        add_partner_member(partner.id, PartnerMemberRequest(user_id=member.id, role="partner_admin"), user=platform, db=db)
+    assert exc.value.status_code == 409
+
+
+def test_first_company_assignment_preserves_portal_and_blocks_transfer(tenant_db):
+    from backend.modules.partners.router import assign_unassigned_company
+    db = tenant_db
+    first = Partner(name="Parceiro destino")
+    second = Partner(name="Parceiro concorrente")
+    db.add_all([first, second])
+    db.flush()
+    company = Company(name="Cliente a vincular", customer_portal_enabled=False)
+    db.add(company)
+    db.flush()
+    admin = User(company_id=company.id, name="Plataforma", email="assign-platform@example.test", password_hash="test", role="platform_admin")
+    client = User(company_id=company.id, name="Cliente", email="assign-client@example.test", password_hash="test", role="client")
+    db.add_all([admin, client])
+    db.flush()
+    with pytest.raises(HTTPException) as exc:
+        assign_unassigned_company(first.id, company.id, user=client, db=db)
+    assert exc.value.status_code == 403
+    result = assign_unassigned_company(first.id, company.id, user=admin, db=db)
+    assert result == {"company_id": company.id, "partner_id": first.id, "customer_portal_enabled": False}
+    assert db.get(Company, company.id).customer_portal_enabled is False
+    with pytest.raises(HTTPException) as exc:
+        assign_unassigned_company(second.id, company.id, user=admin, db=db)
+    assert exc.value.status_code == 409
+    assert db.get(Company, company.id).partner_id == first.id
