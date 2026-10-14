@@ -186,3 +186,19 @@ def test_http_inventory_excludes_inactive_printers(http_context):
     ips = [item["ip"] for item in response.json()]
     assert "10.99.0.10" in ips
     assert "10.99.0.11" not in ips
+
+
+def test_http_platform_partner_preview_is_scoped_and_read_only(http_context):
+    client, db, identity, admin, _, own, outsider, partner = http_context
+    path = f"/api/v1/partners/directory/{partner.id}/preview-companies"
+    assert client.get(path).status_code == 403
+    identity["user"] = admin
+    response = client.get(path)
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["preview_only"] is True
+    assert data["partner"]["name"] == "Parceiro A"
+    assert [item["id"] for item in data["companies"]] == [own.id]
+    assert outsider.id not in [item["id"] for item in data["companies"]]
+    assert db.get(Company, own.id).customer_portal_enabled is False
+    assert client.get("/api/v1/partners/directory/999999/preview-companies").status_code == 404
