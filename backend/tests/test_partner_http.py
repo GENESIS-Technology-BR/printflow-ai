@@ -171,3 +171,18 @@ def test_http_real_auth_rejects_revoked_session(real_auth_http_context):
     db.flush()
     response = client.get(f"/api/v1/partners/companies/{company.id}/overview", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 401
+
+
+def test_http_inventory_excludes_inactive_printers(http_context):
+    from backend.modules.printers.model import Printer
+    client, db, _, _, _, company, _, _ = http_context
+    db.add_all([
+        Printer(company_id=company.id, ip="10.99.0.10", name="Ativa", active=True, status="online"),
+        Printer(company_id=company.id, ip="10.99.0.11", name="Desativada", active=False, status="offline"),
+    ])
+    db.flush()
+    response = client.get(f"/api/v1/partners/companies/{company.id}/printers")
+    assert response.status_code == 200, response.text
+    ips = [item["ip"] for item in response.json()]
+    assert "10.99.0.10" in ips
+    assert "10.99.0.11" not in ips
