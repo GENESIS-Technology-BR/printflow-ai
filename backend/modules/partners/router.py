@@ -155,14 +155,14 @@ def partner_portfolio_summary(
     db: Session = Depends(get_db),
 ):
     """Aggregated company and printer counts, always scoped to partner membership."""
-    from sqlalchemy import func
     from backend.modules.printers.model import Printer
+    from backend.modules.usage.router import _exclude_label_printers_for_company
 
     if user.role == "platform_admin":
-        companies = db.query(Company.id).filter(Company.active.is_(True)).all()
+        companies = db.query(Company).filter(Company.active.is_(True)).all()
     else:
         companies = (
-            db.query(Company.id)
+            db.query(Company)
             .join(Partner, Partner.id == Company.partner_id)
             .join(PartnerMembership, PartnerMembership.partner_id == Partner.id)
             .filter(
@@ -189,16 +189,20 @@ def partner_portfolio_summary(
             )
             if not membership_exists:
                 raise HTTPException(status_code=403, detail="Usuário sem vínculo ativo com parceiro")
-    company_ids = [item[0] for item in companies]
+    company_ids = [company.id for company in companies]
     if not company_ids:
         return {"companies": 0, "active_printers": 0, "online_printers": 0, "offline_printers": 0}
-    status_rows = (
-        db.query(Printer.status, func.count(Printer.id))
-        .filter(Printer.company_id.in_(company_ids), Printer.active.is_(True))
-        .group_by(Printer.status)
-        .all()
-    )
-    counts = {str(status or "").lower(): count for status, count in status_rows}
+    printers = db.query(Printer).filter(Printer.company_id.in_(company_ids), Printer.active.is_(True)).all()
+    company_by_id = {company.id: company for company in companies}
+    grouped = {company_id: [] for company_id in company_ids}
+    for printer in printers:
+        grouped[printer.company_id].append(printer)
+    included = [printer for company_id, group in grouped.items()
+                for printer in _exclude_label_printers_for_company(company_by_id[company_id], group)]
+    counts = {}
+    for printer in included:
+        key = str(printer.status or "").lower()
+        counts[key] = counts.get(key, 0) + 1
     return {
         "companies": len(company_ids),
         "active_printers": sum(counts.values()),
