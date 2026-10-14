@@ -339,3 +339,25 @@ def test_portfolio_and_company_overview_use_same_printer_exclusions(tenant_db):
     assert portfolio["active_printers"] == overview["total_active_printers"]
     assert portfolio["online_printers"] == overview["online_printers"]
     assert portfolio["offline_printers"] == overview["offline_printers"]
+
+
+def test_partner_printer_inventory_exposes_only_operational_allowlist(tenant_db):
+    from backend.modules.partners.router import partner_company_printers
+    from backend.modules.printers.model import Printer
+    db = tenant_db
+    partner = Partner(name="Parceiro inventário")
+    db.add(partner)
+    db.flush()
+    company = Company(name="Cliente inventário", partner_id=partner.id)
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Gestor", email="inventory-safe@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    db.add(PartnerMembership(partner_id=partner.id, user_id=user.id, role="partner_viewer"))
+    db.add(Printer(company_id=company.id, ip="10.30.1.4", name="Laser", status="online", active=True))
+    db.flush()
+    rows = partner_company_printers(company.id, user=user, db=db)
+    assert len(rows) == 1
+    assert set(rows[0]) == {"id", "ip", "name", "unit_name", "sector_name", "manufacturer", "model", "status", "active", "page_count", "toner_percent", "last_seen"}
+    assert "agent_token" not in str(rows)
