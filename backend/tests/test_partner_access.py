@@ -403,3 +403,34 @@ def test_partner_alerts_denies_unrelated_tenant_even_with_known_company_id(tenan
     with pytest.raises(HTTPException) as exc:
         partner_company_alerts(other.id, user=user, db=db)
     assert exc.value.status_code == 403
+
+
+def test_disabled_customer_portal_denies_legacy_access_for_assigned_company(tenant_db):
+    from backend.modules.partners.access import require_legacy_company_portal_access
+    db = tenant_db
+    partner = Partner(name="Parceiro legado")
+    db.add(partner)
+    db.flush()
+    company = Company(name="Cliente legado atribuído", partner_id=partner.id, customer_portal_enabled=False)
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Cliente", email="legacy-disabled@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    with pytest.raises(HTTPException) as exc:
+        require_legacy_company_portal_access(db, user)
+    assert exc.value.status_code == 403
+    company.customer_portal_enabled = True
+    assert require_legacy_company_portal_access(db, user).id == company.id
+
+
+def test_unassigned_company_preserves_legacy_access(tenant_db):
+    from backend.modules.partners.access import require_legacy_company_portal_access
+    db = tenant_db
+    company = Company(name="Empresa legado sem parceiro", customer_portal_enabled=False)
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Cliente", email="legacy-unassigned@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    assert require_legacy_company_portal_access(db, user).id == company.id
