@@ -26,6 +26,9 @@ type CompanyOverview = {
   agent_status: string | null;
 };
 
+type PartnerDirectoryEntry = { id: number; name: string; active: boolean };
+type PartnerPreview = { partner: { id: number; name: string }; companies: { id: number; name: string; customer_portal_enabled: boolean }[]; preview_only: boolean };
+
 type PartnerContext = {
   platform_admin: boolean;
   partners: { id: number; name: string; role: string }[];
@@ -59,6 +62,9 @@ export default function PartnerPortfolio() {
   const [fleetLoading, setFleetLoading] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [directory, setDirectory] = useState<PartnerDirectoryEntry[]>([]);
+  const [preview, setPreview] = useState<PartnerPreview | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -70,6 +76,12 @@ export default function PartnerPortfolio() {
       ]);
       setContext(ctx);
       setCompanies(list);
+      if (ctx.platform_admin) {
+        setDirectory(await api<PartnerDirectoryEntry[]>("/partners/directory"));
+      } else {
+        setDirectory([]);
+        setPreview(null);
+      }
       const totals = await api<PortfolioSummary>("/partners/portfolio-summary");
       setSummary(totals);
       const overviewResults = await Promise.allSettled(
@@ -88,6 +100,20 @@ export default function PartnerPortfolio() {
   }, []);
 
   useEffect(() => { void reload(); }, [reload]);
+
+  async function openPartnerPreview(partnerId: number) {
+    setPreview(null);
+    if (!partnerId) return;
+    setPreviewLoading(true);
+    setError("");
+    try {
+      setPreview(await api<PartnerPreview>(`/partners/directory/${partnerId}/preview-companies`));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao consultar pré-visualização");
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
 
   async function openFleet(company: PartnerCompany) {
     setSelectedCompany(company);
@@ -149,6 +175,23 @@ export default function PartnerPortfolio() {
         </button>
       </header>
       {error && <p role="alert">{error}</p>}
+      {context?.platform_admin && (
+        <div className="panel">
+          <h2>Pré-visualização de parceiro</h2>
+          <p>Consulta administrativa somente leitura. Não altera sua identidade nem as permissões dos parceiros.</p>
+          <label htmlFor="partner-preview-select">Parceiro</label>{" "}
+          <select id="partner-preview-select" defaultValue="" onChange={(event) => void openPartnerPreview(Number(event.target.value))}>
+            <option value="">Selecione um parceiro</option>
+            {directory.filter((p) => p.active).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          {previewLoading && <p>Consultando carteira...</p>}
+          {preview && <div>
+            <strong>{preview.partner.name}: {preview.companies.length} cliente(s)</strong>
+            {preview.companies.map((company) => <p key={company.id}>{company.name} — Portal: {company.customer_portal_enabled ? "habilitado" : "desabilitado"}</p>)}
+            {preview.companies.length === 0 && <p>Nenhum cliente vinculado.</p>}
+          </div>}
+        </div>
+      )}
       {loading ? <p>Carregando carteira...</p> : (
         <>
           <div className="grid">
