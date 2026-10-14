@@ -108,3 +108,38 @@ def test_http_customer_portal_is_disabled_by_default(http_context):
     assert response.status_code == 200
     selected = next(item for item in response.json() if item["id"] == company.id)
     assert selected["customer_portal_enabled"] is False
+
+
+@pytest.fixture()
+def real_auth_http_context(http_context):
+    """Exercise actual JWT/cookie/CSRF dependency, not an authentication mock."""
+    from backend.modules.auth.security import create_access_token
+    client, db, _, _, member, company, outsider, partner = http_context
+    app.dependency_overrides.pop(get_current_user, None)
+    token = create_access_token(str(member.id), company.id, member.session_version)
+    return client, token, company, outsider
+
+
+def test_http_real_auth_rejects_missing_session(real_auth_http_context):
+    client, _, company, _ = real_auth_http_context
+    assert client.get(f"/api/v1/partners/companies/{company.id}/overview").status_code == 401
+
+
+def test_http_real_auth_cookie_requires_csrf_for_mutation(real_auth_http_context):
+    from backend.modules.auth.dependencies import AUTH_COOKIE_NAME
+    client, token, company, _ = real_auth_http_context
+    client.cookies.set(AUTH_COOKIE_NAME, token)
+    assert client.get(f"/api/v1/partners/companies/{company.id}/overview").status_code == 200
+    path = f"/api/v1/partners/companies/{company.id}/customer-portal"
+    response = client.patch(path, json={"enabled": True})
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Proteção CSRF inválida"
+    response = client.patch(path, json={"enabled": True}, headers={"X-CSRF-Protection": "1"})
+    assert response.status_code == 403  # CSRF valid, but viewer cannot mutate
+    assert response.json()["detail"] != "Proteção CSRF inválida"
+
+
+def test_http_real_auth_enforces_cross_partner_scope(real_auth_http_context):
+    client, token, _, outsider = real_auth_http_context
+    response = client.get(f"/api/v1/partners/companies/{outsider.id}/overview", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 403
