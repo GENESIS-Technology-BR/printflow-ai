@@ -42,7 +42,7 @@ def http_context():
     app.dependency_overrides[get_db] = lambda: db
     app.dependency_overrides[get_current_user] = lambda: identity["user"]
     try:
-        client = TestClient(app)
+        client = TestClient(app, base_url="http://localhost")
         yield client, db, identity, admin, member, company, outsider, partner
     finally:
         app.dependency_overrides.pop(get_db, None)
