@@ -221,7 +221,7 @@ def partner_company_printers(
     from backend.modules.printers.model import Printer
     from backend.modules.usage.router import _exclude_label_printers_for_company
     company = require_partner_company_access(db, user, company_id)
-    printers = db.query(Printer).filter(Printer.company_id == company.id).order_by(Printer.id.desc()).all()
+    printers = db.query(Printer).filter(Printer.company_id == company.id, Printer.active.is_(True)).order_by(Printer.id.desc()).all()
     printers = _exclude_label_printers_for_company(company, printers)
     return [
         {
