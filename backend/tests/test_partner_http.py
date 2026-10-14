@@ -78,3 +78,33 @@ def test_http_portal_opt_in_requires_partner_admin(http_context):
     assert response.status_code == 200, response.text
     assert response.json()["customer_portal_enabled"] is True
     assert db.get(Company, company.id).customer_portal_enabled is True
+
+
+def test_http_partner_viewer_cannot_toggle_portal_even_for_own_company(http_context):
+    client, _, _, _, _, company, _, _ = http_context
+    response = client.patch(f"/api/v1/partners/companies/{company.id}/customer-portal", json={"enabled": True})
+    assert response.status_code == 403
+
+
+def test_http_partner_viewer_cannot_assign_existing_company(http_context):
+    client, _, _, _, _, company, _, partner = http_context
+    response = client.post(f"/api/v1/partners/directory/{partner.id}/companies/{company.id}")
+    assert response.status_code == 403
+
+
+def test_http_platform_cannot_transfer_company_between_partners(http_context):
+    client, db, identity, admin, _, company, outsider, partner = http_context
+    identity["user"] = admin
+    response = client.post(f"/api/v1/partners/directory/{partner.id}/companies/{outsider.id}")
+    assert response.status_code == 409
+    assert db.get(Company, outsider.id).partner_id != partner.id
+
+
+def test_http_customer_portal_is_disabled_by_default(http_context):
+    client, db, identity, admin, _, company, _, _ = http_context
+    assert db.get(Company, company.id).customer_portal_enabled is False
+    identity["user"] = admin
+    response = client.get("/api/v1/partners/my-companies")
+    assert response.status_code == 200
+    selected = next(item for item in response.json() if item["id"] == company.id)
+    assert selected["customer_portal_enabled"] is False
