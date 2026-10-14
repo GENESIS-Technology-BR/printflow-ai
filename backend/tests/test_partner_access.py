@@ -313,3 +313,29 @@ def test_create_partner_platform_only_and_no_company_reassignment(tenant_db):
     with pytest.raises(HTTPException) as exc:
         create_partner(PartnerCreateRequest(name="SupriTech"), user=user, db=db)
     assert exc.value.status_code == 409
+
+
+def test_portfolio_and_company_overview_use_same_printer_exclusions(tenant_db):
+    from backend.modules.partners.router import partner_portfolio_summary, partner_company_overview
+    from backend.modules.printers.model import Printer
+    db = tenant_db
+    partner = Partner(name="Parceiro KPI")
+    db.add(partner)
+    db.flush()
+    company = Company(name="Cliente KPI", partner_id=partner.id)
+    db.add(company)
+    db.flush()
+    user = User(company_id=company.id, name="Gestor", email="kpi-consistency@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    db.add(PartnerMembership(partner_id=partner.id, user_id=user.id, role="partner_admin"))
+    db.add_all([
+        Printer(company_id=company.id, ip="10.20.1.1", name="Impressora escritório", model="LaserJet", status="online", active=True),
+        Printer(company_id=company.id, ip="10.20.1.2", name="Etiquetas", model="Zebra ZT230", status="offline", active=True),
+    ])
+    db.flush()
+    portfolio = partner_portfolio_summary(user=user, db=db)
+    overview = partner_company_overview(company.id, user=user, db=db)
+    assert portfolio["active_printers"] == overview["total_active_printers"]
+    assert portfolio["online_printers"] == overview["online_printers"]
+    assert portfolio["offline_printers"] == overview["offline_printers"]
