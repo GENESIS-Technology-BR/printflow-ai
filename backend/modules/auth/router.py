@@ -46,7 +46,7 @@ def _set_auth_cookie(
     production = os.getenv(
         "ENVIRONMENT",
         "development",
-    ).strip().lower() == "production"
+    ).strip().lower() in {"production", "staging", "homologation"}
 
     # Frontend e API usam hosts Render distintos. Em produção, a sessão
     # precisa ser enviada em requisições cross-site; SameSite=None exige
@@ -68,7 +68,7 @@ def _clear_auth_cookie(
     production = os.getenv(
         "ENVIRONMENT",
         "development",
-    ).strip().lower() == "production"
+    ).strip().lower() in {"production", "staging", "homologation"}
 
     response.delete_cookie(
         key=AUTH_COOKIE_NAME,
