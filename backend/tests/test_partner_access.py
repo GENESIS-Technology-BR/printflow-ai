@@ -361,3 +361,45 @@ def test_partner_printer_inventory_exposes_only_operational_allowlist(tenant_db)
     assert len(rows) == 1
     assert set(rows[0]) == {"id", "ip", "name", "unit_name", "sector_name", "manufacturer", "model", "status", "active", "page_count", "toner_percent", "last_seen"}
     assert "agent_token" not in str(rows)
+
+
+def test_partner_inventory_denies_unrelated_tenant_even_with_known_company_id(tenant_db):
+    from backend.modules.partners.router import partner_company_printers
+    db = tenant_db
+    own_partner = Partner(name="Parceiro autorizado")
+    other_partner = Partner(name="Parceiro externo")
+    db.add_all([own_partner, other_partner])
+    db.flush()
+    own = Company(name="Empresa autorizada", partner_id=own_partner.id)
+    other = Company(name="Empresa externa", partner_id=other_partner.id)
+    db.add_all([own, other])
+    db.flush()
+    user = User(company_id=own.id, name="Leitor", email="tenant-inventory@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    db.add(PartnerMembership(partner_id=own_partner.id, user_id=user.id, role="partner_viewer"))
+    db.flush()
+    with pytest.raises(HTTPException) as exc:
+        partner_company_printers(other.id, user=user, db=db)
+    assert exc.value.status_code == 403
+
+
+def test_partner_alerts_denies_unrelated_tenant_even_with_known_company_id(tenant_db):
+    from backend.modules.partners.router import partner_company_alerts
+    db = tenant_db
+    own_partner = Partner(name="Parceiro alerta autorizado")
+    other_partner = Partner(name="Parceiro alerta externo")
+    db.add_all([own_partner, other_partner])
+    db.flush()
+    own = Company(name="Empresa alertas autorizada", partner_id=own_partner.id)
+    other = Company(name="Empresa alertas externa", partner_id=other_partner.id)
+    db.add_all([own, other])
+    db.flush()
+    user = User(company_id=own.id, name="Leitor", email="tenant-alerts@example.test", password_hash="test", role="client")
+    db.add(user)
+    db.flush()
+    db.add(PartnerMembership(partner_id=own_partner.id, user_id=user.id, role="partner_viewer"))
+    db.flush()
+    with pytest.raises(HTTPException) as exc:
+        partner_company_alerts(other.id, user=user, db=db)
+    assert exc.value.status_code == 403
