@@ -68,7 +68,7 @@ app = FastAPI(
 trusted_hosts = [item.strip() for item in (os.getenv("TALVOA_ALLOWED_HOSTS") or os.getenv("PRINTFLOW_ALLOWED_HOSTS") or "*.onrender.com,localhost,127.0.0.1").split(",") if item.strip()]
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
 
-allowed_origins = ["https://printflow-web.onrender.com", "https://printflow-m84u.onrender.com"]
+allowed_origins = ["https://printflow-web.onrender.com", "https://printflow-m84u.onrender.com", "https://talvoa-supritech-homolog.onrender.com"]
 configured_origins = [item.strip().rstrip("/") for item in (os.getenv("TALVOA_CORS_ORIGINS") or os.getenv("PRINTFLOW_CORS_ORIGINS") or "").split(",") if item.strip()]
 for origin in configured_origins:
     if origin not in allowed_origins: allowed_origins.append(origin)
