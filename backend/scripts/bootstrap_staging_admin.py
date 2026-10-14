@@ -28,7 +28,10 @@ def main() -> None:
     with Session(engine) as db:
         existing = db.query(User).filter(User.email == email).first()
         if existing:
-            raise RuntimeError("User already exists; refusing to overwrite credentials or roles")
+            if existing.role != "platform_admin" or not existing.active:
+                raise RuntimeError("Email already belongs to a non-admin or inactive user")
+            print("Staging administrator already exists; credentials unchanged")
+            return
         company = db.query(Company).filter(Company.name == "TALVOA Homologação").first()
         if company is None:
             company = Company(name="TALVOA Homologação")
