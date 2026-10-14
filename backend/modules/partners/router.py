@@ -219,12 +219,27 @@ def partner_company_printers(
 ):
     """Tenant-scoped read-only fleet details for the partner dashboard."""
     from backend.modules.printers.model import Printer
-    from backend.modules.dashboard.router import serialize_printer
     from backend.modules.usage.router import _exclude_label_printers_for_company
     company = require_partner_company_access(db, user, company_id)
     printers = db.query(Printer).filter(Printer.company_id == company.id).order_by(Printer.id.desc()).all()
     printers = _exclude_label_printers_for_company(company, printers)
-    return [serialize_printer(printer) for printer in printers]
+    return [
+        {
+            "id": printer.id,
+            "ip": printer.ip,
+            "name": printer.custom_name or printer.name,
+            "unit_name": printer.unit_name,
+            "sector_name": printer.sector_name,
+            "manufacturer": printer.manufacturer,
+            "model": printer.model,
+            "status": printer.status,
+            "active": bool(printer.active),
+            "page_count": printer.page_count,
+            "toner_percent": printer.toner_percent,
+            "last_seen": printer.last_seen.isoformat() if printer.last_seen else None,
+        }
+        for printer in printers
+    ]
 
 
 @router.get("/companies/{company_id}/alerts")
