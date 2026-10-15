@@ -217,3 +217,41 @@ def test_homologation_origin_preflight_allowed(http_context):
     assert response.status_code == 200, response.text
     assert response.headers["access-control-allow-origin"] == "https://talvoa-supritech-homolog.onrender.com"
     assert response.headers["access-control-allow-credentials"] == "true"
+
+
+def test_http_integration_scoped_key_isolates_partner_companies(http_context, monkeypatch):
+    """Real HTTP requests must not expose another partner's company or aggregates."""
+    import json
+    client, db, _, _, _, own, outsider, _ = http_context
+    key = "integration-test-key-" + "a" * 40
+    monkeypatch.setenv("TALVOA_INTEGRATION_SCOPED_KEYS", json.dumps([
+        {"company_uuid": own.uuid, "key": key},
+    ]))
+    headers = {"X-Talvoa-Integration-Key": key}
+    allowed = client.get(f"/api/v1/integration/companies/{own.uuid}", headers=headers)
+    assert allowed.status_code == 200, allowed.text
+    assert allowed.json()["uuid"] == own.uuid
+    denied = client.get(f"/api/v1/integration/companies/{outsider.uuid}", headers=headers)
+    assert denied.status_code == 403
+    listing = client.get("/api/v1/integration/companies", headers=headers)
+    assert listing.status_code == 200, listing.text
+    assert [item["uuid"] for item in listing.json()] == [own.uuid]
+    status = client.get("/api/v1/integration/status", headers=headers)
+    assert status.status_code == 200, status.text
+    assert status.json()["companies"] == 1
+
+
+def test_http_integration_key_denies_inactive_company(http_context, monkeypatch):
+    import json
+    client, db, _, _, _, own, _, _ = http_context
+    key = "integration-test-key-" + "b" * 40
+    monkeypatch.setenv("TALVOA_INTEGRATION_SCOPED_KEYS", json.dumps([
+        {"company_uuid": own.uuid, "key": key},
+    ]))
+    own.active = False
+    db.flush()
+    response = client.get(
+        f"/api/v1/integration/companies/{own.uuid}",
+        headers={"X-Talvoa-Integration-Key": key},
+    )
+    assert response.status_code == 403
