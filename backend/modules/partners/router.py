@@ -327,6 +327,80 @@ def update_partner_status(
     return {"id": partner.id, "name": partner.name, "active": partner.active}
 
 
+class PartnerUserCreateRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+    role: str = "partner_admin"
+
+
+@router.post("/directory/{partner_id}/users", status_code=201)
+def create_partner_user(
+    partner_id: int,
+    payload: PartnerUserCreateRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Platform-only provisioning of a named partner user and membership."""
+    from backend.modules.auth.security import hash_password
+    from backend.modules.partners.access import PARTNER_ROLES
+    from pydantic import EmailStr, TypeAdapter, ValidationError
+
+    if user.role != "platform_admin":
+        raise HTTPException(status_code=403, detail="Acesso exclusivo TALVOA")
+    partner = db.query(Partner).filter(Partner.id == partner_id, Partner.active.is_(True)).first()
+    if partner is None:
+        raise HTTPException(status_code=404, detail="Parceiro ativo não encontrado")
+    name = payload.name.strip()
+    if len(name) < 3 or len(name) > 120:
+        raise HTTPException(status_code=422, detail="Nome deve ter entre 3 e 120 caracteres")
+    try:
+        email = str(TypeAdapter(EmailStr).validate_python(payload.email)).lower().strip()
+    except ValidationError:
+        raise HTTPException(status_code=422, detail="E-mail inválido")
+    if payload.role not in PARTNER_ROLES:
+        raise HTTPException(status_code=422, detail="Perfil de parceiro inválido")
+    if len(payload.password) < 12 or len(payload.password) > 128:
+        raise HTTPException(status_code=422, detail="Senha deve ter entre 12 e 128 caracteres")
+    if db.query(User).filter(User.email == email).first():
+        raise HTTPException(status_code=409, detail="E-mail já cadastrado")
+    # User.company_id is currently required. Use a new, dedicated company
+    # for the partner identity, never a customer's tenant.
+    company = Company(name=f"Parceiro - {partner.name}", active=True)
+    try:
+        db.add(company)
+        db.flush()
+        member = User(
+            company_id=company.id,
+            name=name,
+            email=email,
+            password_hash=hash_password(payload.password),
+            role="client",
+            active=True,
+        )
+        db.add(member)
+        db.flush()
+        db.add(PartnerMembership(
+            partner_id=partner.id,
+            user_id=member.id,
+            role=payload.role,
+            active=True,
+        ))
+        db.commit()
+        db.refresh(member)
+    except Exception:
+        db.rollback()
+        raise
+    return {
+        "id": member.id,
+        "name": member.name,
+        "email": member.email,
+        "partner_id": partner.id,
+        "role": payload.role,
+        "active": member.active,
+    }
+
+
 class PartnerMemberRequest(BaseModel):
     user_id: int
     role: str
