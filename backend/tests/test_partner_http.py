@@ -360,3 +360,30 @@ def test_http_inactive_partner_revokes_portfolio_access(http_context):
     assert client.get("/api/v1/partners/my-companies").status_code == 403
     assert client.get("/api/v1/partners/portfolio-summary").status_code == 403
     assert client.get(f"/api/v1/partners/companies/{own.id}/printers").status_code == 403
+
+
+def test_http_platform_can_suspend_and_reactivate_partner(http_context):
+    client, db, identity, admin, member, own, outsider, partner = http_context
+    path = f"/api/v1/partners/directory/{partner.id}/status"
+    assert client.patch(path, json={"active": False}).status_code == 403
+    identity["user"] = admin
+    response = client.patch(path, json={"active": False})
+    assert response.status_code == 200, response.text
+    assert response.json()["active"] is False
+    assert db.get(Partner, partner.id).active is False
+    identity["user"] = member
+    assert client.get("/api/v1/partners/my-companies").status_code == 403
+    assert client.get(f"/api/v1/partners/companies/{own.id}/overview").status_code == 403
+    identity["user"] = admin
+    response = client.patch(path, json={"active": True})
+    assert response.status_code == 200, response.text
+    assert response.json()["active"] is True
+    identity["user"] = member
+    assert client.get(f"/api/v1/partners/companies/{own.id}/overview").status_code == 200
+
+
+def test_http_partner_status_unknown_partner_returns_404(http_context):
+    client, _, identity, admin, *_ = http_context
+    identity["user"] = admin
+    response = client.patch("/api/v1/partners/directory/999999/status", json={"active": False})
+    assert response.status_code == 404
