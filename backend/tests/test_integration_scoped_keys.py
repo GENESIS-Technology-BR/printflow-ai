@@ -21,7 +21,7 @@ def test_scoped_key_restricts_tenant(monkeypatch, requested, expected_status):
     ]))
     req = request_for(requested)
     db = MagicMock()
-    db.query.return_value.filter.return_value.all.return_value = [("tenant-a",), ("tenant-b",)]
+    db.query.return_value.filter.return_value.all.return_value = [("tenant-a",)]
     if expected_status:
         with pytest.raises(HTTPException) as exc:
             require_integration_key(req, db, x_talvoa_integration_key="a" * 40)
