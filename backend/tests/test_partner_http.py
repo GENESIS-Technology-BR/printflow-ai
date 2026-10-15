@@ -67,6 +67,7 @@ def test_http_onboarding_requires_platform_role(http_context):
     response = client.post("/api/v1/partners/directory", json={"name": "Novo parceiro"})
     assert response.status_code == 201, response.text
     assert client.post("/api/v1/partners/directory", json={"name": "Novo parceiro"}).status_code == 409
+    assert client.post("/api/v1/partners/directory", json={"name": "  NOVO PARCEIRO  "}).status_code == 409
 
 
 def test_http_portal_opt_in_requires_partner_admin(http_context):
