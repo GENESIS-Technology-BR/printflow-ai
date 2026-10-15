@@ -387,3 +387,43 @@ def test_http_partner_status_unknown_partner_returns_404(http_context):
     identity["user"] = admin
     response = client.patch("/api/v1/partners/directory/999999/status", json={"active": False})
     assert response.status_code == 404
+
+
+def test_http_platform_creates_named_partner_user_with_isolated_company(http_context):
+    client, db, identity, admin, member, own, outsider, partner = http_context
+    path = f"/api/v1/partners/directory/{partner.id}/users"
+    payload = {
+        "name": "Gestora SupriTech",
+        "email": "gestora.supritech@example.test",
+        "password": "ExampleOnly-StrongPassword-123",
+        "role": "partner_admin",
+    }
+    assert client.post(path, json=payload).status_code == 403
+    identity["user"] = admin
+    response = client.post(path, json=payload)
+    assert response.status_code == 201, response.text
+    data = response.json()
+    assert data["role"] == "partner_admin"
+    assert data["partner_id"] == partner.id
+    assert "password" not in data
+    created = db.get(User, data["id"])
+    assert created.company_id not in (own.id, outsider.id)
+    assert created.password_hash != payload["password"]
+    membership = db.query(PartnerMembership).filter(
+        PartnerMembership.user_id == created.id,
+        PartnerMembership.partner_id == partner.id,
+    ).one()
+    assert membership.role == "partner_admin"
+    assert client.post(path, json=payload).status_code == 409
+
+
+def test_http_partner_user_rejects_weak_password(http_context):
+    client, _, identity, admin, _, _, _, partner = http_context
+    identity["user"] = admin
+    response = client.post(f"/api/v1/partners/directory/{partner.id}/users", json={
+        "name": "Gestora SupriTech",
+        "email": "new@example.test",
+        "password": "short",
+        "role": "partner_admin",
+    })
+    assert response.status_code == 422
