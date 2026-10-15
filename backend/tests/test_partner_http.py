@@ -217,3 +217,145 @@ def test_homologation_origin_preflight_allowed(http_context):
     assert response.status_code == 200, response.text
     assert response.headers["access-control-allow-origin"] == "https://talvoa-supritech-homolog.onrender.com"
     assert response.headers["access-control-allow-credentials"] == "true"
+
+
+def test_http_integration_scoped_key_isolates_partner_companies(http_context, monkeypatch):
+    """Real HTTP requests must not expose another partner's company or aggregates."""
+    import json
+    client, db, _, _, _, own, outsider, _ = http_context
+    key = "integration-test-key-" + "a" * 40
+    monkeypatch.setenv("TALVOA_INTEGRATION_SCOPED_KEYS", json.dumps([
+        {"company_uuid": own.uuid, "key": key},
+    ]))
+    headers = {"X-Talvoa-Integration-Key": key}
+    allowed = client.get(f"/api/v1/integration/companies/{own.uuid}", headers=headers)
+    assert allowed.status_code == 200, allowed.text
+    assert allowed.json()["uuid"] == own.uuid
+    denied = client.get(f"/api/v1/integration/companies/{outsider.uuid}", headers=headers)
+    assert denied.status_code == 403
+    listing = client.get("/api/v1/integration/companies", headers=headers)
+    assert listing.status_code == 200, listing.text
+    assert [item["uuid"] for item in listing.json()] == [own.uuid]
+    status = client.get("/api/v1/integration/status", headers=headers)
+    assert status.status_code == 200, status.text
+    assert status.json()["companies"] == 1
+
+
+def test_http_integration_key_denies_inactive_company(http_context, monkeypatch):
+    import json
+    client, db, _, _, _, own, _, _ = http_context
+    key = "integration-test-key-" + "b" * 40
+    monkeypatch.setenv("TALVOA_INTEGRATION_SCOPED_KEYS", json.dumps([
+        {"company_uuid": own.uuid, "key": key},
+    ]))
+    own.active = False
+    db.flush()
+    response = client.get(
+        f"/api/v1/integration/companies/{own.uuid}",
+        headers={"X-Talvoa-Integration-Key": key},
+    )
+    assert response.status_code == 403
+
+
+def test_http_partner_portfolio_summary_excludes_other_partner_and_inactive(http_context):
+    from backend.modules.printers.model import Printer
+    client, db, _, _, _, own, outsider, _ = http_context
+    db.add_all([
+        Printer(company_id=own.id, ip="10.99.1.10", name="Own online", active=True, status="online"),
+        Printer(company_id=own.id, ip="10.99.1.11", name="Own disabled", active=False, status="offline"),
+        Printer(company_id=outsider.id, ip="10.99.2.10", name="Other tenant", active=True, status="offline"),
+    ])
+    db.flush()
+    response = client.get("/api/v1/partners/portfolio-summary")
+    assert response.status_code == 200, response.text
+    summary = response.json()
+    assert summary["companies"] == 1
+    assert summary["active_printers"] == 1
+    assert summary["online_printers"] == 1
+    assert summary["offline_printers"] == 0
+
+
+def test_http_partner_cannot_toggle_other_partner_customer_portal(http_context):
+    client, db, _, _, _, own, outsider, _ = http_context
+    response = client.patch(
+        f"/api/v1/partners/companies/{outsider.id}/customer-portal",
+        json={"enabled": True},
+    )
+    assert response.status_code == 403
+    assert db.get(Company, outsider.id).customer_portal_enabled is False
+
+
+def test_http_partner_my_companies_excludes_other_partner(http_context):
+    client, _, _, _, _, own, outsider, _ = http_context
+    response = client.get("/api/v1/partners/my-companies")
+    assert response.status_code == 200, response.text
+    ids = {company["id"] for company in response.json()}
+    assert own.id in ids
+    assert outsider.id not in ids
+
+
+def test_http_legacy_integration_excludes_inactive_unassigned_tenant(http_context, monkeypatch):
+    client, db, _, _, _, own, outsider, _ = http_context
+    own.partner_id = None
+    own.active = False
+    db.flush()
+    monkeypatch.delenv("TALVOA_INTEGRATION_SCOPED_KEYS", raising=False)
+    monkeypatch.setenv("TALVOA_INTEGRATION_KEY", "legacy-test-" + "c" * 40)
+    headers = {"X-Talvoa-Integration-Key": "legacy-test-" + "c" * 40}
+    response = client.get("/api/v1/integration/companies", headers=headers)
+    assert response.status_code == 200, response.text
+    assert own.uuid not in {row["uuid"] for row in response.json()}
+    status = client.get("/api/v1/integration/status", headers=headers)
+    assert status.status_code == 200, status.text
+    assert status.json()["companies"] == 0
+    assert client.get(f"/api/v1/integration/companies/{own.uuid}", headers=headers).status_code == 403
+
+
+def test_http_scoped_integration_key_does_not_expose_other_tenant_details(http_context, monkeypatch):
+    """Every company-detail route must reject cross-tenant scoped credentials."""
+    import json
+    client, _, _, _, _, own, outsider, _ = http_context
+    key = "cross-tenant-regression-" + "d" * 40
+    monkeypatch.setenv("TALVOA_INTEGRATION_SCOPED_KEYS", json.dumps([
+        {"company_uuid": own.uuid, "key": key},
+    ]))
+    headers = {"X-Talvoa-Integration-Key": key}
+    suffixes = (
+        "",
+        "/printers",
+        "/users",
+        "/alerts",
+        "/organization",
+        "/usage/report",
+        "/usage/daily",
+    )
+    for suffix in suffixes:
+        response = client.get(
+            f"/api/v1/integration/companies/{outsider.uuid}{suffix}",
+            headers=headers,
+        )
+        assert response.status_code == 403, (suffix, response.status_code, response.text)
+
+
+def test_http_inactive_partner_membership_revokes_portfolio_access(http_context):
+    """Removing partner membership must immediately revoke access to all tenants."""
+    client, db, _, _, member, own, _, partner = http_context
+    membership = db.query(PartnerMembership).filter(
+        PartnerMembership.user_id == member.id,
+        PartnerMembership.partner_id == partner.id,
+    ).one()
+    membership.active = False
+    db.flush()
+    assert client.get("/api/v1/partners/my-companies").status_code == 403
+    assert client.get("/api/v1/partners/portfolio-summary").status_code == 403
+    assert client.get(f"/api/v1/partners/companies/{own.id}/overview").status_code == 403
+
+
+def test_http_inactive_partner_revokes_portfolio_access(http_context):
+    """A disabled partner cannot access portfolio even with an active membership."""
+    client, db, _, _, _, own, _, partner = http_context
+    partner.active = False
+    db.flush()
+    assert client.get("/api/v1/partners/my-companies").status_code == 403
+    assert client.get("/api/v1/partners/portfolio-summary").status_code == 403
+    assert client.get(f"/api/v1/partners/companies/{own.id}/printers").status_code == 403

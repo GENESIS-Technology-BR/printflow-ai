@@ -2,11 +2,14 @@ INTEGRATION_OPENAPI = {
     "openapi": "3.1.0",
     "info": {
         "title": "TALVOA Integration API",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "description": (
             "API read-only para integração segura com assistentes e ferramentas externas. "
             "Inclui estado operacional, impressoras, usuários, alertas, organização e uso. "
-            "Não expõe senhas, JWT, chave de recovery ou token do Agent."
+            "Não expõe senhas, JWT, chave de recovery ou token do Agent. "
+            "Em ambientes multiempresa, configure TALVOA_INTEGRATION_SCOPED_KEYS "
+            "com chaves distintas por company_uuid; cada chave acessa apenas empresas "
+            "autorizadas e ativas. A chave global legada não acessa empresas de parceiros."
         ),
     },
     "servers": [
