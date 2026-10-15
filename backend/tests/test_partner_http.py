@@ -394,7 +394,7 @@ def test_http_platform_creates_named_partner_user_with_isolated_company(http_con
     path = f"/api/v1/partners/directory/{partner.id}/users"
     payload = {
         "name": "Gestora SupriTech",
-        "email": "gestora.supritech@example.test",
+        "email": "gestora.supritech@example.com",
         "password": "ExampleOnly-StrongPassword-123",
         "role": "partner_admin",
     }
