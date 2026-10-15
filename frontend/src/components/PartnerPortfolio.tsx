@@ -83,6 +83,7 @@ export default function PartnerPortfolio() {
   const [viewMembersPartnerId, setViewMembersPartnerId] = useState("");
   const [partnerMembers, setPartnerMembers] = useState<PartnerMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
+  const [changingMemberId, setChangingMemberId] = useState<number | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -151,6 +152,24 @@ export default function PartnerPortfolio() {
       setError(err instanceof Error ? err.message : "Não foi possível alterar o parceiro");
     } finally {
       setChangingPartnerId(null);
+    }
+  }
+
+  async function changeMemberStatus(member: PartnerMember) {
+    const partnerId = Number(viewMembersPartnerId);
+    if (!partnerId || !window.confirm(`Confirma ${member.active ? "revogar" : "restaurar"} o acesso de ${member.name} a este parceiro?`)) return;
+    setChangingMemberId(member.id);
+    setError("");
+    try {
+      await api(`/partners/directory/${partnerId}/members/${member.id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ active: !member.active }),
+      });
+      await loadPartnerMembers(String(partnerId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível alterar o acesso");
+    } finally {
+      setChangingMemberId(null);
     }
   }
 
@@ -328,10 +347,14 @@ export default function PartnerPortfolio() {
           </select>
           {membersLoading ? <p>Carregando usuários...</p> : viewMembersPartnerId && (
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr><th scope="col">Nome</th><th scope="col">E-mail</th><th scope="col">Perfil</th><th scope="col">Situação</th></tr></thead>
+              <thead><tr><th scope="col">Nome</th><th scope="col">E-mail</th><th scope="col">Perfil</th><th scope="col">Situação</th><th scope="col">Ação</th></tr></thead>
               <tbody>{partnerMembers.map((member) => (
                 <tr key={member.id}><td>{member.name}</td><td>{member.email}</td>
-                  <td>{member.role}</td><td>{member.active ? "Ativo" : "Inativo"}</td></tr>
+                  <td>{member.role}</td><td>{member.active ? "Ativo" : "Inativo"}</td>
+                  <td><button type="button" disabled={changingMemberId !== null}
+                    onClick={() => void changeMemberStatus(member)}>
+                    {changingMemberId === member.id ? "Salvando..." : member.active ? "Revogar" : "Restaurar"}
+                  </button></td></tr>
               ))}</tbody>
             </table>
           )}
