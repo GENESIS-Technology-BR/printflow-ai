@@ -66,3 +66,36 @@ def test_inactive_tenant_is_denied(monkeypatch):
     with pytest.raises(HTTPException) as exc:
         require_integration_key(request_for("tenant-a"), db, x_talvoa_integration_key="a" * 40)
     assert exc.value.status_code == 403
+
+
+def test_shared_key_only_returns_authorized_active_companies(monkeypatch):
+    """Even a reused key cannot expose inactive tenants in aggregate endpoints."""
+    monkeypatch.setenv("TALVOA_INTEGRATION_SCOPED_KEYS", json.dumps([
+        {"company_uuid": "tenant-a", "key": "a" * 40},
+        {"company_uuid": "tenant-b", "key": "a" * 40},
+    ]))
+    db = MagicMock()
+    db.query.return_value.filter.return_value.all.return_value = [("tenant-a",)]
+    req = request_for()
+    require_integration_key(req, db, x_talvoa_integration_key="a" * 40)
+    assert req.state.integration_company_uuids == frozenset({"tenant-a"})
+
+
+def test_scoped_key_cannot_fall_back_to_global_key(monkeypatch):
+    monkeypatch.setenv("TALVOA_INTEGRATION_KEY", "legacy" * 8)
+    monkeypatch.setenv("TALVOA_INTEGRATION_SCOPED_KEYS", json.dumps([
+        {"company_uuid": "tenant-a", "key": "a" * 40},
+    ]))
+    with pytest.raises(HTTPException) as exc:
+        require_integration_key(request_for("tenant-a"), MagicMock(), x_talvoa_integration_key="legacy" * 8)
+    assert exc.value.status_code == 401
+
+
+def test_legacy_key_rejects_unknown_tenant(monkeypatch):
+    monkeypatch.delenv("TALVOA_INTEGRATION_SCOPED_KEYS", raising=False)
+    monkeypatch.setenv("TALVOA_INTEGRATION_KEY", "legacy" * 8)
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = None
+    with pytest.raises(HTTPException) as exc:
+        require_integration_key(request_for("missing"), db, x_talvoa_integration_key="legacy" * 8)
+    assert exc.value.status_code == 403
