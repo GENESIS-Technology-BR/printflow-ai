@@ -335,3 +335,27 @@ def test_http_scoped_integration_key_does_not_expose_other_tenant_details(http_c
             headers=headers,
         )
         assert response.status_code == 403, (suffix, response.status_code, response.text)
+
+
+def test_http_inactive_partner_membership_revokes_portfolio_access(http_context):
+    """Removing partner membership must immediately revoke access to all tenants."""
+    client, db, _, _, member, own, _, partner = http_context
+    membership = db.query(PartnerMembership).filter(
+        PartnerMembership.user_id == member.id,
+        PartnerMembership.partner_id == partner.id,
+    ).one()
+    membership.active = False
+    db.flush()
+    assert client.get("/api/v1/partners/my-companies").status_code == 403
+    assert client.get("/api/v1/partners/portfolio-summary").status_code == 403
+    assert client.get(f"/api/v1/partners/companies/{own.id}/overview").status_code == 403
+
+
+def test_http_inactive_partner_revokes_portfolio_access(http_context):
+    """A disabled partner cannot access portfolio even with an active membership."""
+    client, db, _, _, _, own, _, partner = http_context
+    partner.active = False
+    db.flush()
+    assert client.get("/api/v1/partners/my-companies").status_code == 403
+    assert client.get("/api/v1/partners/portfolio-summary").status_code == 403
+    assert client.get(f"/api/v1/partners/companies/{own.id}/printers").status_code == 403
