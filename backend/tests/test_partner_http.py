@@ -485,3 +485,18 @@ def test_http_partner_users_share_identity_tenant_without_using_customer_tenant(
     assert company_ids[0] not in (own.id, outsider.id)
     identity_company = db.get(Company, company_ids[0])
     assert identity_company.partner_id == partner.id
+
+
+def test_http_partner_user_cannot_be_created_under_suspended_partner(http_context):
+    client, db, identity, admin, _, _, _, partner = http_context
+    identity["user"] = admin
+    partner.active = False
+    db.commit()
+    response = client.post(f"/api/v1/partners/directory/{partner.id}/users", json={
+        "name": "Suspended Partner User",
+        "email": "suspended-partner@example.com",
+        "password": "ExampleOnly-StrongPassword-123",
+        "role": "partner_admin",
+    })
+    assert response.status_code == 404, response.text
+    assert db.query(User).filter(User.email == "suspended-partner@example.com").count() == 0
