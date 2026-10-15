@@ -513,3 +513,20 @@ def test_http_partner_user_rejects_invalid_role_without_creating_identity(http_c
     })
     assert response.status_code == 422, response.text
     assert db.query(User).filter(User.email == "invalid-partner-role@example.com").count() == 0
+
+
+def test_http_partner_member_cannot_be_restored_when_partner_suspended(http_context):
+    client, db, identity, admin, member, _, _, partner = http_context
+    identity["user"] = admin
+    membership = db.query(PartnerMembership).filter(
+        PartnerMembership.partner_id == partner.id,
+        PartnerMembership.user_id == member.id,
+    ).one()
+    membership.active = False
+    partner.active = False
+    db.commit()
+    path = f"/api/v1/partners/directory/{partner.id}/members/{membership.id}/status"
+    response = client.patch(path, json={"active": True})
+    assert response.status_code == 409, response.text
+    db.refresh(membership)
+    assert membership.active is False
