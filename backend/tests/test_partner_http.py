@@ -309,3 +309,29 @@ def test_http_legacy_integration_excludes_inactive_unassigned_tenant(http_contex
     assert status.status_code == 200, status.text
     assert status.json()["companies"] == 0
     assert client.get(f"/api/v1/integration/companies/{own.uuid}", headers=headers).status_code == 403
+
+
+def test_http_scoped_integration_key_does_not_expose_other_tenant_details(http_context, monkeypatch):
+    """Every company-detail route must reject cross-tenant scoped credentials."""
+    import json
+    client, _, _, _, _, own, outsider, _ = http_context
+    key = "cross-tenant-regression-" + "d" * 40
+    monkeypatch.setenv("TALVOA_INTEGRATION_SCOPED_KEYS", json.dumps([
+        {"company_uuid": own.uuid, "key": key},
+    ]))
+    headers = {"X-Talvoa-Integration-Key": key}
+    suffixes = (
+        "",
+        "/printers",
+        "/users",
+        "/alerts",
+        "/organization",
+        "/usage/report",
+        "/usage/daily",
+    )
+    for suffix in suffixes:
+        response = client.get(
+            f"/api/v1/integration/companies/{outsider.uuid}{suffix}",
+            headers=headers,
+        )
+        assert response.status_code == 403, (suffix, response.status_code, response.text)
