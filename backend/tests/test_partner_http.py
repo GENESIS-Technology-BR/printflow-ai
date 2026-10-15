@@ -500,3 +500,16 @@ def test_http_partner_user_cannot_be_created_under_suspended_partner(http_contex
     })
     assert response.status_code == 404, response.text
     assert db.query(User).filter(User.email == "suspended-partner@example.com").count() == 0
+
+
+def test_http_partner_user_rejects_invalid_role_without_creating_identity(http_context):
+    client, db, identity, admin, _, _, _, partner = http_context
+    identity["user"] = admin
+    response = client.post(f"/api/v1/partners/directory/{partner.id}/users", json={
+        "name": "Invalid Partner Role",
+        "email": "invalid-partner-role@example.com",
+        "password": "ExampleOnly-StrongPassword-123",
+        "role": "platform_admin",
+    })
+    assert response.status_code == 422, response.text
+    assert db.query(User).filter(User.email == "invalid-partner-role@example.com").count() == 0
