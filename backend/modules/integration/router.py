@@ -82,7 +82,11 @@ def require_integration_key(
     company_uuid = request.path_params.get("company_uuid")
     if company_uuid is not None and company_uuid not in matches:
         raise HTTPException(status_code=403, detail="Integração sem acesso a esta empresa")
-    request.state.integration_company_uuids = frozenset(matches)
+    allowed_companies = db.query(Company.uuid).filter(Company.uuid.in_(matches), Company.active.is_(True)).all()
+    active_ids = frozenset(row[0] for row in allowed_companies)
+    if company_uuid is not None and company_uuid not in active_ids:
+        raise HTTPException(status_code=403, detail="Empresa inativa ou indisponível para integração")
+    request.state.integration_company_uuids = active_ids
 
 
 def _find_company(db: Session, company_uuid: str) -> Company:
