@@ -69,6 +69,11 @@ export default function PartnerPortfolio() {
   const [newPartnerName, setNewPartnerName] = useState("");
   const [creatingPartner, setCreatingPartner] = useState(false);
   const [changingPartnerId, setChangingPartnerId] = useState<number | null>(null);
+  const [memberPartnerId, setMemberPartnerId] = useState("");
+  const [memberUserId, setMemberUserId] = useState("");
+  const [memberRole, setMemberRole] = useState("partner_admin");
+  const [addingMember, setAddingMember] = useState(false);
+  const [notice, setNotice] = useState("");
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -137,6 +142,28 @@ export default function PartnerPortfolio() {
       setError(err instanceof Error ? err.message : "Não foi possível alterar o parceiro");
     } finally {
       setChangingPartnerId(null);
+    }
+  }
+
+  async function addPartnerMember(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const partnerId = Number(memberPartnerId);
+    const userId = Number(memberUserId);
+    if (!Number.isSafeInteger(partnerId) || partnerId <= 0 || !Number.isSafeInteger(userId) || userId <= 0) return;
+    setAddingMember(true);
+    setError("");
+    setNotice("");
+    try {
+      await api(`/partners/directory/${partnerId}/members`, {
+        method: "POST",
+        body: JSON.stringify({ user_id: userId, role: memberRole }),
+      });
+      setMemberUserId("");
+      setNotice("Usuário existente vinculado ao parceiro com sucesso.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível vincular o usuário");
+    } finally {
+      setAddingMember(false);
     }
   }
 
@@ -240,6 +267,31 @@ export default function PartnerPortfolio() {
             ))}</tbody>
           </table>
           {directory.length === 0 && <p>Nenhum parceiro cadastrado.</p>}
+          <h2>Vincular usuário existente</h2>
+          <p>Associe um usuário já cadastrado à carteira do parceiro. Administradores da plataforma não podem ser vinculados.</p>
+          <form onSubmit={(event) => void addPartnerMember(event)}>
+            <label htmlFor="member-partner">Parceiro</label>{" "}
+            <select id="member-partner" required value={memberPartnerId}
+              onChange={(event) => setMemberPartnerId(event.target.value)}>
+              <option value="">Selecione</option>
+              {directory.filter((partner) => partner.active).map((partner) => (
+                <option key={partner.id} value={partner.id}>{partner.name}</option>
+              ))}
+            </select>{" "}
+            <label htmlFor="member-user-id">ID do usuário existente</label>{" "}
+            <input id="member-user-id" type="number" min="1" step="1" required
+              value={memberUserId} onChange={(event) => setMemberUserId(event.target.value)} />{" "}
+            <label htmlFor="member-role">Permissão</label>{" "}
+            <select id="member-role" value={memberRole} onChange={(event) => setMemberRole(event.target.value)}>
+              <option value="partner_admin">Administrador</option>
+              <option value="partner_operator">Operador</option>
+              <option value="partner_viewer">Consulta</option>
+            </select>{" "}
+            <button type="submit" disabled={addingMember || !memberPartnerId || !memberUserId}>
+              {addingMember ? "Vinculando..." : "Vincular usuário"}
+            </button>
+          </form>
+          {notice && <p role="status">{notice}</p>}
           <h2>Pré-visualização de parceiro</h2>
           <p>Consulta administrativa somente leitura. Não altera sua identidade nem as permissões dos parceiros.</p>
           <label htmlFor="partner-preview-select">Parceiro</label>{" "}
