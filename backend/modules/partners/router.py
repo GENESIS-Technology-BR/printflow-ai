@@ -301,6 +301,32 @@ def create_partner(
     return {"id": partner.id, "name": partner.name, "active": partner.active}
 
 
+class PartnerStatusRequest(BaseModel):
+    active: bool
+
+
+@router.patch("/directory/{partner_id}/status")
+def update_partner_status(
+    partner_id: int,
+    payload: PartnerStatusRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Platform-only partner suspension/reactivation.
+
+    Access to partner-scoped endpoints is denied for suspended partners
+    through existing Partner.active checks; no credentials are changed.
+    """
+    if user.role != "platform_admin":
+        raise HTTPException(status_code=403, detail="Acesso exclusivo TALVOA")
+    partner = db.query(Partner).filter(Partner.id == partner_id).first()
+    if partner is None:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    partner.active = payload.active
+    db.commit()
+    return {"id": partner.id, "name": partner.name, "active": partner.active}
+
+
 class PartnerMemberRequest(BaseModel):
     user_id: int
     role: str
