@@ -327,6 +327,35 @@ def update_partner_status(
     return {"id": partner.id, "name": partner.name, "active": partner.active}
 
 
+@router.get("/directory/{partner_id}/members")
+def list_partner_members(
+    partner_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Platform-only member directory without credentials or password hashes."""
+    if user.role != "platform_admin":
+        raise HTTPException(status_code=403, detail="Acesso exclusivo TALVOA")
+    partner = db.query(Partner).filter(Partner.id == partner_id).first()
+    if partner is None:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    memberships = (
+        db.query(PartnerMembership, User)
+        .join(User, User.id == PartnerMembership.user_id)
+        .filter(PartnerMembership.partner_id == partner_id)
+        .order_by(User.name.asc(), User.id.asc())
+        .all()
+    )
+    return [{
+        "id": membership.id,
+        "user_id": member.id,
+        "name": member.name,
+        "email": member.email,
+        "role": membership.role,
+        "active": membership.active and member.active,
+    } for membership, member in memberships]
+
+
 class PartnerUserCreateRequest(BaseModel):
     name: str
     email: str
