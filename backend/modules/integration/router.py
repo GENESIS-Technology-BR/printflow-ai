@@ -57,8 +57,8 @@ def require_integration_key(
         expected = _integration_key()
         if not hmac.compare_digest(provided, expected):
             raise HTTPException(status_code=401, detail="Credencial de integração inválida")
-        if request.url.path.startswith("/api/v1/integration/companies/"):
-            company_uuid = request.path_params.get("company_uuid")
+        company_uuid = request.path_params.get("company_uuid")
+        if company_uuid is not None:
             company = db.query(Company).filter(Company.uuid == company_uuid).first()
             if company is None or company.partner_id is not None:
                 raise HTTPException(status_code=403, detail="Integração por empresa requer chave com escopo")
