@@ -65,6 +65,9 @@ export default function PartnerPortfolio() {
   const [directory, setDirectory] = useState<PartnerDirectoryEntry[]>([]);
   const [preview, setPreview] = useState<PartnerPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [newPartnerName, setNewPartnerName] = useState("");
+  const [creatingPartner, setCreatingPartner] = useState(false);
+  const [changingPartnerId, setChangingPartnerId] = useState<number | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -100,6 +103,41 @@ export default function PartnerPortfolio() {
   }, []);
 
   useEffect(() => { void reload(); }, [reload]);
+
+  async function createPartner(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = newPartnerName.trim();
+    if (name.length < 2 || name.length > 180) return;
+    setCreatingPartner(true);
+    setError("");
+    try {
+      await api("/partners/directory", { method: "POST", body: JSON.stringify({ name }) });
+      setNewPartnerName("");
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível cadastrar o parceiro");
+    } finally {
+      setCreatingPartner(false);
+    }
+  }
+
+  async function changePartnerStatus(partner: PartnerDirectoryEntry) {
+    const active = !partner.active;
+    if (!window.confirm(`Confirma ${active ? "reativar" : "suspender"} ${partner.name}? ${active ? "O acesso dos membros será restaurado." : "Os membros perderão acesso à carteira imediatamente."}`)) return;
+    setChangingPartnerId(partner.id);
+    setError("");
+    try {
+      await api(`/partners/directory/${partner.id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ active }),
+      });
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível alterar o parceiro");
+    } finally {
+      setChangingPartnerId(null);
+    }
+  }
 
   async function openPartnerPreview(partnerId: number) {
     setPreview(null);
@@ -177,6 +215,30 @@ export default function PartnerPortfolio() {
       {error && <p role="alert">{error}</p>}
       {context?.platform_admin && (
         <div className="panel">
+          <h2>Administração TALVOA — parceiros</h2>
+          <form onSubmit={(event) => void createPartner(event)}>
+            <label htmlFor="new-partner-name">Nome do parceiro</label>{" "}
+            <input id="new-partner-name" type="text" minLength={2} maxLength={180} required
+              value={newPartnerName} onChange={(event) => setNewPartnerName(event.target.value)}
+              placeholder="Ex.: SupriTech" />
+            <button type="submit" disabled={creatingPartner || newPartnerName.trim().length < 2}>
+              {creatingPartner ? "Cadastrando..." : "Cadastrar parceiro"}
+            </button>
+          </form>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead><tr><th scope="col">Parceiro</th><th scope="col">Situação</th><th scope="col">Ação</th></tr></thead>
+            <tbody>{directory.map((partner) => (
+              <tr key={partner.id}>
+                <td>{partner.name}</td>
+                <td>{partner.active ? "Ativo" : "Suspenso"}</td>
+                <td><button type="button" disabled={changingPartnerId !== null}
+                  onClick={() => void changePartnerStatus(partner)}>
+                  {changingPartnerId === partner.id ? "Salvando..." : partner.active ? "Suspender" : "Reativar"}
+                </button></td>
+              </tr>
+            ))}</tbody>
+          </table>
+          {directory.length === 0 && <p>Nenhum parceiro cadastrado.</p>}
           <h2>Pré-visualização de parceiro</h2>
           <p>Consulta administrativa somente leitura. Não altera sua identidade nem as permissões dos parceiros.</p>
           <label htmlFor="partner-preview-select">Parceiro</label>{" "}
