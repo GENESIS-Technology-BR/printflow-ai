@@ -60,7 +60,7 @@ def require_integration_key(
         company_uuid = request.path_params.get("company_uuid")
         if company_uuid is not None:
             company = db.query(Company).filter(Company.uuid == company_uuid).first()
-            if company is None or company.partner_id is not None:
+            if company is None or company.partner_id is not None or not company.active:
                 raise HTTPException(status_code=403, detail="Integração por empresa requer chave com escopo")
         return
     try:
@@ -264,7 +264,7 @@ def integration_openapi() -> dict:
 @router.get("/status", dependencies=[Depends(require_integration_key)])
 def integration_status(request: Request, db: Session = Depends(get_db)) -> dict:
     allowed = getattr(request.state, "integration_company_uuids", None)
-    companies = db.query(Company).filter(Company.uuid.in_(allowed)).all() if allowed is not None else db.query(Company).filter(Company.partner_id.is_(None)).all()
+    companies = db.query(Company).filter(Company.uuid.in_(allowed)).all() if allowed is not None else db.query(Company).filter(Company.partner_id.is_(None), Company.active.is_(True)).all()
     printers = db.query(Printer).filter(Printer.active.is_(True), Printer.company_id.in_([c.id for c in companies])).count()
     alerts = db.query(OperationalAlert).filter(
         OperationalAlert.status.in_(("open", "acknowledged")),
@@ -288,7 +288,7 @@ def integration_status(request: Request, db: Session = Depends(get_db)) -> dict:
 def list_companies(request: Request, db: Session = Depends(get_db)) -> list[dict]:
     allowed = getattr(request.state, "integration_company_uuids", None)
     query = db.query(Company)
-    query = query.filter(Company.uuid.in_(allowed)) if allowed is not None else query.filter(Company.partner_id.is_(None))
+    query = query.filter(Company.uuid.in_(allowed)) if allowed is not None else query.filter(Company.partner_id.is_(None), Company.active.is_(True))
     companies = query.order_by(Company.name.asc()).all()
     return [_company_snapshot(db, company) for company in companies]
 
