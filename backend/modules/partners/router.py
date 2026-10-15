@@ -290,7 +290,8 @@ def create_partner(
     name = payload.name.strip()
     if not 2 <= len(name) <= 180:
         raise HTTPException(status_code=422, detail="Nome do parceiro deve ter entre 2 e 180 caracteres")
-    existing = db.query(Partner).filter(Partner.name == name).first()
+    from sqlalchemy import func
+    existing = db.query(Partner).filter(func.lower(Partner.name) == name.lower()).first()
     if existing:
         raise HTTPException(status_code=409, detail="Parceiro já cadastrado")
     partner = Partner(name=name, active=True)
