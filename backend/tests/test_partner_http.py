@@ -427,3 +427,40 @@ def test_http_partner_user_rejects_weak_password(http_context):
         "role": "partner_admin",
     })
     assert response.status_code == 422
+
+
+def test_http_partner_membership_revocation_is_scoped_and_admin_only(http_context):
+    client, db, identity, admin, member, own, outsider, partner = http_context
+    membership = db.query(PartnerMembership).filter(
+        PartnerMembership.partner_id == partner.id,
+        PartnerMembership.user_id == member.id,
+    ).first()
+    assert membership is not None
+    path = f"/api/v1/partners/directory/{partner.id}/members/{membership.id}/status"
+    assert client.patch(path, json={"active": False}).status_code == 403
+    identity["user"] = admin
+    response = client.patch(path, json={"active": False})
+    assert response.status_code == 200, response.text
+    db.refresh(membership)
+    assert membership.active is False
+    assert db.get(User, member.id).active is True
+    assert client.patch(
+        f"/api/v1/partners/directory/{partner.id + 999}/members/{membership.id}/status",
+        json={"active": True},
+    ).status_code == 404
+    response = client.patch(path, json={"active": True})
+    assert response.status_code == 200, response.text
+    db.refresh(membership)
+    assert membership.active is True
+
+
+def test_http_partner_member_directory_does_not_expose_secrets(http_context):
+    client, _, identity, admin, member, _, _, partner = http_context
+    path = f"/api/v1/partners/directory/{partner.id}/members"
+    assert client.get(path).status_code == 403
+    identity["user"] = admin
+    response = client.get(path)
+    assert response.status_code == 200, response.text
+    entries = response.json()
+    assert any(entry["user_id"] == member.id for entry in entries)
+    assert all("password_hash" not in entry and "session_version" not in entry for entry in entries)
