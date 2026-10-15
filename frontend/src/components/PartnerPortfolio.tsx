@@ -28,6 +28,7 @@ type CompanyOverview = {
 };
 
 type PartnerDirectoryEntry = { id: number; name: string; active: boolean };
+type PartnerMember = { id: number; user_id: number; name: string; email: string; role: string; active: boolean };
 type PartnerPreview = { partner: { id: number; name: string }; companies: { id: number; name: string; customer_portal_enabled: boolean }[]; preview_only: boolean };
 
 type PartnerContext = {
@@ -79,6 +80,9 @@ export default function PartnerPortfolio() {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [creatingUser, setCreatingUser] = useState(false);
+  const [viewMembersPartnerId, setViewMembersPartnerId] = useState("");
+  const [partnerMembers, setPartnerMembers] = useState<PartnerMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -147,6 +151,21 @@ export default function PartnerPortfolio() {
       setError(err instanceof Error ? err.message : "Não foi possível alterar o parceiro");
     } finally {
       setChangingPartnerId(null);
+    }
+  }
+
+  async function loadPartnerMembers(partnerId: string) {
+    setViewMembersPartnerId(partnerId);
+    setPartnerMembers([]);
+    if (!partnerId) return;
+    setMembersLoading(true);
+    setError("");
+    try {
+      setPartnerMembers(await api<PartnerMember[]>(`/partners/directory/${Number(partnerId)}/members`));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível consultar os usuários");
+    } finally {
+      setMembersLoading(false);
     }
   }
 
@@ -300,6 +319,23 @@ export default function PartnerPortfolio() {
             ))}</tbody>
           </table>
           {directory.length === 0 && <p>Nenhum parceiro cadastrado.</p>}
+          <h2>Usuários do parceiro</h2>
+          <label htmlFor="members-partner-select">Parceiro</label>{" "}
+          <select id="members-partner-select" value={viewMembersPartnerId}
+            onChange={(event) => void loadPartnerMembers(event.target.value)}>
+            <option value="">Selecione</option>
+            {directory.map((partner) => <option key={partner.id} value={partner.id}>{partner.name}</option>)}
+          </select>
+          {membersLoading ? <p>Carregando usuários...</p> : viewMembersPartnerId && (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead><tr><th scope="col">Nome</th><th scope="col">E-mail</th><th scope="col">Perfil</th><th scope="col">Situação</th></tr></thead>
+              <tbody>{partnerMembers.map((member) => (
+                <tr key={member.id}><td>{member.name}</td><td>{member.email}</td>
+                  <td>{member.role}</td><td>{member.active ? "Ativo" : "Inativo"}</td></tr>
+              ))}</tbody>
+            </table>
+          )}
+          {!membersLoading && viewMembersPartnerId && partnerMembers.length === 0 && <p>Nenhum usuário vinculado.</p>}
           <h2>Cadastrar administrador do parceiro</h2>
           <p>Crie uma conta individual para a revenda. A senha não será exibida após o cadastro.</p>
           <form onSubmit={(event) => void createPartnerUser(event)}>
