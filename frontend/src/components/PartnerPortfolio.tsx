@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import type { FormEvent } from "react";
 
 const API_URL = (
   import.meta.env.VITE_API_URL || "https://printflow-api-genesis.onrender.com"
@@ -104,7 +105,7 @@ export default function PartnerPortfolio() {
 
   useEffect(() => { void reload(); }, [reload]);
 
-  async function createPartner(event: React.FormEvent<HTMLFormElement>) {
+  async function createPartner(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const name = newPartnerName.trim();
     if (name.length < 2 || name.length > 180) return;
