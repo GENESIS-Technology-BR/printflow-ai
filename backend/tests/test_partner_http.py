@@ -464,3 +464,24 @@ def test_http_partner_member_directory_does_not_expose_secrets(http_context):
     entries = response.json()
     assert any(entry["user_id"] == member.id for entry in entries)
     assert all("password_hash" not in entry and "session_version" not in entry for entry in entries)
+
+
+def test_http_partner_users_share_identity_tenant_without_using_customer_tenant(http_context):
+    client, db, identity, admin, _, own, outsider, partner = http_context
+    identity["user"] = admin
+    path = f"/api/v1/partners/directory/{partner.id}/users"
+    company_ids = []
+    for suffix in ("first", "second"):
+        response = client.post(path, json={
+            "name": f"Partner User {suffix}",
+            "email": f"partner-{suffix}@example.com",
+            "password": "ExampleOnly-StrongPassword-123",
+            "role": "partner_admin",
+        })
+        assert response.status_code == 201, response.text
+        user = db.get(User, response.json()["id"])
+        company_ids.append(user.company_id)
+    assert company_ids[0] == company_ids[1]
+    assert company_ids[0] not in (own.id, outsider.id)
+    identity_company = db.get(Company, company_ids[0])
+    assert identity_company.partner_id == partner.id
