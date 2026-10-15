@@ -255,3 +255,40 @@ def test_http_integration_key_denies_inactive_company(http_context, monkeypatch)
         headers={"X-Talvoa-Integration-Key": key},
     )
     assert response.status_code == 403
+
+
+def test_http_partner_portfolio_summary_excludes_other_partner_and_inactive(http_context):
+    from backend.modules.printers.model import Printer
+    client, db, _, _, _, own, outsider, _ = http_context
+    db.add_all([
+        Printer(company_id=own.id, ip="10.99.1.10", name="Own online", active=True, status="online"),
+        Printer(company_id=own.id, ip="10.99.1.11", name="Own disabled", active=False, status="offline"),
+        Printer(company_id=outsider.id, ip="10.99.2.10", name="Other tenant", active=True, status="offline"),
+    ])
+    db.flush()
+    response = client.get("/api/v1/partners/portfolio-summary")
+    assert response.status_code == 200, response.text
+    summary = response.json()
+    assert summary["companies"] == 1
+    assert summary["active_printers"] == 1
+    assert summary["online_printers"] == 1
+    assert summary["offline_printers"] == 0
+
+
+def test_http_partner_cannot_toggle_other_partner_customer_portal(http_context):
+    client, db, _, _, _, own, outsider, _ = http_context
+    response = client.patch(
+        f"/api/v1/partners/companies/{outsider.id}/customer-portal",
+        json={"enabled": True},
+    )
+    assert response.status_code == 403
+    assert db.get(Company, outsider.id).customer_portal_enabled is False
+
+
+def test_http_partner_my_companies_excludes_other_partner(http_context):
+    client, _, _, _, _, own, outsider, _ = http_context
+    response = client.get("/api/v1/partners/my-companies")
+    assert response.status_code == 200, response.text
+    ids = {company["id"] for company in response.json()}
+    assert own.id in ids
+    assert outsider.id not in ids
