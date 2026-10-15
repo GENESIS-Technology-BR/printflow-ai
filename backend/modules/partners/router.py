@@ -356,6 +356,47 @@ def list_partner_members(
     } for membership, member in memberships]
 
 
+class PartnerMemberStatusRequest(BaseModel):
+    active: bool
+
+
+@router.patch("/directory/{partner_id}/members/{membership_id}/status")
+def update_partner_member_status(
+    partner_id: int,
+    membership_id: int,
+    payload: PartnerMemberStatusRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Platform-only revocation of one partner membership, not a global user."""
+    if user.role != "platform_admin":
+        raise HTTPException(status_code=403, detail="Acesso exclusivo TALVOA")
+    membership = db.query(PartnerMembership).filter(
+        PartnerMembership.id == membership_id,
+        PartnerMembership.partner_id == partner_id,
+    ).first()
+    if membership is None:
+        raise HTTPException(status_code=404, detail="Vínculo não encontrado")
+    if payload.active:
+        partner = db.query(Partner).filter(
+            Partner.id == partner_id, Partner.active.is_(True)
+        ).first()
+        member = db.query(User).filter(
+            User.id == membership.user_id, User.active.is_(True)
+        ).first()
+        if partner is None or member is None:
+            raise HTTPException(status_code=409, detail="Parceiro ou usuário inativo")
+    membership.active = payload.active
+    db.commit()
+    return {
+        "id": membership.id,
+        "partner_id": partner_id,
+        "user_id": membership.user_id,
+        "role": membership.role,
+        "active": membership.active,
+    }
+
+
 class PartnerUserCreateRequest(BaseModel):
     name: str
     email: str
