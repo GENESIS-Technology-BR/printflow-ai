@@ -436,10 +436,15 @@ def create_partner_user(
         raise HTTPException(status_code=409, detail="E-mail já cadastrado")
     # User.company_id is currently required. Use a new, dedicated company
     # for the partner identity, never a customer's tenant.
-    company = Company(name=f"Parceiro - {partner.name}", active=True)
+    company = db.query(Company).filter(
+        Company.partner_id == partner.id,
+        Company.name == f"Parceiro - {partner.name}",
+    ).first()
     try:
-        db.add(company)
-        db.flush()
+        if company is None:
+            company = Company(name=f"Parceiro - {partner.name}", partner_id=partner.id, active=True)
+            db.add(company)
+            db.flush()
         member = User(
             company_id=company.id,
             name=name,
