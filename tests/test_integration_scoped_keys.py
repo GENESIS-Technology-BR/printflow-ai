@@ -20,9 +20,11 @@ def test_scoped_key_restricts_tenant(monkeypatch, requested, expected_status):
         {"company_uuid": "tenant-b", "key": "b" * 40},
     ]))
     req = request_for(requested)
+    db = MagicMock()
+    db.query.return_value.filter.return_value.all.return_value = [("tenant-a",), ("tenant-b",)]
     if expected_status:
         with pytest.raises(HTTPException) as exc:
-            require_integration_key(req, MagicMock(), x_talvoa_integration_key="a" * 40)
+            require_integration_key(req, db, x_talvoa_integration_key="a" * 40)
         assert exc.value.status_code == expected_status
     else:
         require_integration_key(req, MagicMock(), x_talvoa_integration_key="a" * 40)
@@ -52,4 +54,15 @@ def test_legacy_key_cannot_access_partner_tenant(monkeypatch):
     db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(partner_id=10)
     with pytest.raises(HTTPException) as exc:
         require_integration_key(request_for("tenant-a"), db, x_talvoa_integration_key="legacy" * 8)
+    assert exc.value.status_code == 403
+
+
+def test_inactive_tenant_is_denied(monkeypatch):
+    monkeypatch.setenv("TALVOA_INTEGRATION_SCOPED_KEYS", json.dumps([
+        {"company_uuid": "tenant-a", "key": "a" * 40},
+    ]))
+    db = MagicMock()
+    db.query.return_value.filter.return_value.all.return_value = []
+    with pytest.raises(HTTPException) as exc:
+        require_integration_key(request_for("tenant-a"), db, x_talvoa_integration_key="a" * 40)
     assert exc.value.status_code == 403
