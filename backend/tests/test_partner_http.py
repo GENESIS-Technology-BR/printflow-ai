@@ -292,3 +292,20 @@ def test_http_partner_my_companies_excludes_other_partner(http_context):
     ids = {company["id"] for company in response.json()}
     assert own.id in ids
     assert outsider.id not in ids
+
+
+def test_http_legacy_integration_excludes_inactive_unassigned_tenant(http_context, monkeypatch):
+    client, db, _, _, _, own, outsider, _ = http_context
+    own.partner_id = None
+    own.active = False
+    db.flush()
+    monkeypatch.delenv("TALVOA_INTEGRATION_SCOPED_KEYS", raising=False)
+    monkeypatch.setenv("TALVOA_INTEGRATION_KEY", "legacy-test-" + "c" * 40)
+    headers = {"X-Talvoa-Integration-Key": "legacy-test-" + "c" * 40}
+    response = client.get("/api/v1/integration/companies", headers=headers)
+    assert response.status_code == 200, response.text
+    assert own.uuid not in {row["uuid"] for row in response.json()}
+    status = client.get("/api/v1/integration/status", headers=headers)
+    assert status.status_code == 200, status.text
+    assert status.json()["companies"] == 0
+    assert client.get(f"/api/v1/integration/companies/{own.uuid}", headers=headers).status_code == 403
