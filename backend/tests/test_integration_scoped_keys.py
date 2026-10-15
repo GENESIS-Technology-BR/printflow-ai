@@ -27,7 +27,7 @@ def test_scoped_key_restricts_tenant(monkeypatch, requested, expected_status):
             require_integration_key(req, db, x_talvoa_integration_key="a" * 40)
         assert exc.value.status_code == expected_status
     else:
-        require_integration_key(req, MagicMock(), x_talvoa_integration_key="a" * 40)
+        require_integration_key(req, db, x_talvoa_integration_key="a" * 40)
         assert req.state.integration_company_uuids == frozenset({"tenant-a"})
 
 
