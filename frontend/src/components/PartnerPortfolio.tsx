@@ -74,6 +74,11 @@ export default function PartnerPortfolio() {
   const [memberRole, setMemberRole] = useState("partner_admin");
   const [addingMember, setAddingMember] = useState(false);
   const [notice, setNotice] = useState("");
+  const [newUserPartnerId, setNewUserPartnerId] = useState("");
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
+  const [creatingUser, setCreatingUser] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -142,6 +147,34 @@ export default function PartnerPortfolio() {
       setError(err instanceof Error ? err.message : "Não foi possível alterar o parceiro");
     } finally {
       setChangingPartnerId(null);
+    }
+  }
+
+  async function createPartnerUser(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const partnerId = Number(newUserPartnerId);
+    if (!Number.isSafeInteger(partnerId) || partnerId <= 0 || newUserPassword.length < 12) return;
+    setCreatingUser(true);
+    setError("");
+    setNotice("");
+    try {
+      await api(`/partners/directory/${partnerId}/users`, {
+        method: "POST",
+        body: JSON.stringify({
+          name: newUserName.trim(),
+          email: newUserEmail.trim(),
+          password: newUserPassword,
+          role: "partner_admin",
+        }),
+      });
+      setNewUserName("");
+      setNewUserEmail("");
+      setNewUserPassword("");
+      setNotice("Administrador do parceiro cadastrado com sucesso.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível cadastrar o usuário");
+    } finally {
+      setCreatingUser(false);
     }
   }
 
@@ -267,6 +300,31 @@ export default function PartnerPortfolio() {
             ))}</tbody>
           </table>
           {directory.length === 0 && <p>Nenhum parceiro cadastrado.</p>}
+          <h2>Cadastrar administrador do parceiro</h2>
+          <p>Crie uma conta individual para a revenda. A senha não será exibida após o cadastro.</p>
+          <form onSubmit={(event) => void createPartnerUser(event)}>
+            <label htmlFor="new-user-partner">Parceiro</label>{" "}
+            <select id="new-user-partner" required value={newUserPartnerId}
+              onChange={(event) => setNewUserPartnerId(event.target.value)}>
+              <option value="">Selecione</option>
+              {directory.filter((partner) => partner.active).map((partner) => (
+                <option key={partner.id} value={partner.id}>{partner.name}</option>
+              ))}
+            </select>{" "}
+            <label htmlFor="new-user-name">Nome</label>{" "}
+            <input id="new-user-name" required minLength={3} maxLength={120} value={newUserName}
+              onChange={(event) => setNewUserName(event.target.value)} />{" "}
+            <label htmlFor="new-user-email">E-mail</label>{" "}
+            <input id="new-user-email" required type="email" value={newUserEmail}
+              onChange={(event) => setNewUserEmail(event.target.value)} />{" "}
+            <label htmlFor="new-user-password">Senha inicial (mínimo 12 caracteres)</label>{" "}
+            <input id="new-user-password" required type="password" minLength={12} maxLength={128}
+              autoComplete="new-password" value={newUserPassword}
+              onChange={(event) => setNewUserPassword(event.target.value)} />{" "}
+            <button type="submit" disabled={creatingUser || !newUserPartnerId || newUserPassword.length < 12}>
+              {creatingUser ? "Cadastrando..." : "Criar administrador"}
+            </button>
+          </form>
           <h2>Vincular usuário existente</h2>
           <p>Associe um usuário já cadastrado à carteira do parceiro. Administradores da plataforma não podem ser vinculados.</p>
           <form onSubmit={(event) => void addPartnerMember(event)}>
