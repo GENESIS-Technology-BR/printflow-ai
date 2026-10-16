@@ -574,3 +574,43 @@ def preview_partner_companies(
         } for company in companies],
         "preview_only": True,
     }
+
+
+class PartnerUsernameUpdate(BaseModel):
+    username: str
+
+
+@router.patch("/directory/{partner_id}/members/{membership_id}/username")
+def update_partner_username(
+    partner_id: int,
+    membership_id: int,
+    payload: PartnerUsernameUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Assign a login name to an existing partner user without changing credentials."""
+    import re
+    from sqlalchemy import func
+    if user.role != "platform_admin":
+        raise HTTPException(status_code=403, detail="Acesso exclusivo TALVOA")
+    username = payload.username.strip().lower()
+    if not re.fullmatch(r"[a-z][a-z0-9._-]{2,59}", username):
+        raise HTTPException(status_code=422, detail="Usuário inválido")
+    membership = db.query(PartnerMembership).filter(
+        PartnerMembership.id == membership_id,
+        PartnerMembership.partner_id == partner_id,
+    ).first()
+    if membership is None:
+        raise HTTPException(status_code=404, detail="Vínculo não encontrado")
+    member = db.query(User).filter(User.id == membership.user_id).first()
+    if member is None:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    collision = db.query(User).filter(
+        func.lower(User.username) == username,
+        User.id != member.id,
+    ).first()
+    if collision:
+        raise HTTPException(status_code=409, detail="Nome de usuário já cadastrado")
+    member.username = username
+    db.commit()
+    return {"user_id": member.id, "username": member.username}
