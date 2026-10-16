@@ -6,6 +6,7 @@ from collections import defaultdict, deque
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from backend.app.database.session import get_db
@@ -352,8 +353,7 @@ def login(
     user = (
         db.query(User)
         .filter(
-            User.email
-            == normalized_email
+            or_(User.email == normalized_email, User.username == normalized_email)
         )
         .first()
     )
