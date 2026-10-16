@@ -402,6 +402,7 @@ class PartnerUserCreateRequest(BaseModel):
     email: str
     password: str
     role: str = "partner_admin"
+    username: str | None = None
 
 
 @router.post("/directory/{partner_id}/users", status_code=201)
@@ -434,6 +435,13 @@ def create_partner_user(
         raise HTTPException(status_code=422, detail="Senha deve ter entre 12 e 128 caracteres")
     if db.query(User).filter(User.email == email).first():
         raise HTTPException(status_code=409, detail="E-mail já cadastrado")
+    import re
+    username = payload.username.strip().lower() if payload.username else None
+    if username:
+        if not re.fullmatch(r"[a-z][a-z0-9._-]{2,59}", username):
+            raise HTTPException(status_code=422, detail="Usuário deve ter 3 a 60 caracteres, iniciando com letra")
+        if db.query(User).filter(User.username == username).first():
+            raise HTTPException(status_code=409, detail="Nome de usuário já cadastrado")
     # User.company_id is currently required. Use a new, dedicated company
     # for the partner identity, never a customer's tenant.
     company = db.query(Company).filter(
@@ -449,6 +457,7 @@ def create_partner_user(
             company_id=company.id,
             name=name,
             email=email,
+            username=username,
             password_hash=hash_password(payload.password),
             role="client",
             active=True,
