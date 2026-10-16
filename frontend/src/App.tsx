@@ -9,6 +9,7 @@ const AgentMonitor = lazy(() => import("./components/AgentMonitor"))
 const ControlCenter = lazy(() => import("./components/ControlCenter"))
 const Reports = lazy(() => import("./components/Reports"))
 const PartnerPortfolio = lazy(() => import("./components/PartnerPortfolio"))
+const PartnerManagement = lazy(() => import("./components/PartnerManagement"))
 import ThemeToggle from "./components/ThemeToggle"
 import { getDashboardPrinters, getMe } from "./services/api"
 import type { DashboardPrinter, MeProfile } from "./services/api"
@@ -33,7 +34,7 @@ type Company = {
   active: boolean
 }
 
-type Page = "dashboard" | "printers" | "reports" | "company" | "agents" | "control" | "partners"
+type Page = "dashboard" | "printers" | "reports" | "company" | "agents" | "control" | "partners" | "partner-admin"
 
 function App() {
   const [authenticated, setAuthenticated] = useState(false)
@@ -466,6 +467,9 @@ function App() {
           {!isClientView && !isPartnerView && (
             <button className={page === "control" ? "active" : ""} onClick={() => setPage("control")}><span className="nav-icon">▦</span>Control Center</button>
           )}
+          {isPlatformAdmin && !isClientPreview && (
+            <button className={page === "partner-admin" ? "active" : ""} onClick={() => setPage("partner-admin")}><span className="nav-icon">▤</span>Gestão de Parceiros</button>
+          )}
           {!isClientView && !isPartnerView && (
             <button className={page === "company" ? "active" : ""} onClick={() => setPage("company")}><span className="nav-icon">⌘</span>Empresa e Agent</button>
           )}
@@ -480,7 +484,9 @@ function App() {
 
       <main className={`dashboard ${page === "dashboard" ? "dashboard-modern-shell" : ""} ${page === "printers" ? "printers-workspace" : ""} ${page === "reports" ? "reports-workspace" : ""}`}>
         <Suspense fallback={<div className="sap-loading">Carregando módulo...</div>}>
-        {page === "partners" && hasPartnerAccess && !isClientPreview ? (
+        {page === "partner-admin" && isPlatformAdmin && !isClientPreview ? (
+          <PartnerManagement />
+        ) : page === "partners" && hasPartnerAccess && !isClientPreview ? (
           <PartnerPortfolio />
         ) : page === "control" ? (
           <ControlCenter />
