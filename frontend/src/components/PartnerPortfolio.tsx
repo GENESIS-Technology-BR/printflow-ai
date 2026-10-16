@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 
 const API_URL = (
   import.meta.env.VITE_API_URL || "https://printflow-api-genesis.onrender.com"
-).replace(/\/$/, "");
+).replace(/\/$/, "").replace(/^\/$/, "");
 
 type PartnerCompany = {
   id: number;
