@@ -299,12 +299,12 @@ function App() {
           <form onSubmit={authenticate}>
             {mode !== "reset" && (
               <label>
-                {mode === "login" ? "Insira seu usuário" : "E-mail"}
+                {mode === "login" ? "Usuário ou e-mail" : "E-mail"}
                 <div className="auth-input-wrap auth-input-user">
                   <input
                     name="email"
-                    type="email"
-                    placeholder="usuario@empresa.com.br"
+                    type={mode === "login" ? "text" : "email"}
+                    placeholder={mode === "login" ? "Usuário ou e-mail" : "usuario@empresa.com.br"}
                     autoComplete="username"
                     required
                   />
