@@ -21,7 +21,7 @@ COMPANY_AGENT_COLUMNS = {
     "default_color_cost_per_page": "NUMERIC(10,4) DEFAULT 0 NOT NULL",
 }
 OPERATIONAL_ALERT_COLUMNS = {"acknowledged_at": "TIMESTAMP", "acknowledged_by": "INTEGER"}
-USER_SECURITY_COLUMNS = {"session_version": "INTEGER DEFAULT 0 NOT NULL", "password_reset_version": "INTEGER DEFAULT 0 NOT NULL"}
+USER_SECURITY_COLUMNS = {"session_version": "INTEGER DEFAULT 0 NOT NULL", "password_reset_version": "INTEGER DEFAULT 0 NOT NULL", "username": "VARCHAR(60)"}
 
 
 def _ensure_columns(engine: Engine, table: str, definitions: dict[str, str]) -> None:
@@ -36,7 +36,11 @@ def _ensure_columns(engine: Engine, table: str, definitions: dict[str, str]) -> 
 def ensure_printer_columns(engine: Engine) -> None: _ensure_columns(engine, "printers", PRINTER_COLUMNS)
 def ensure_company_agent_columns(engine: Engine) -> None: _ensure_columns(engine, "companies_v2", COMPANY_AGENT_COLUMNS)
 def ensure_operational_alert_columns(engine: Engine) -> None: _ensure_columns(engine, "operational_alerts", OPERATIONAL_ALERT_COLUMNS)
-def ensure_user_security_columns(engine: Engine) -> None: _ensure_columns(engine, "users_v2", USER_SECURITY_COLUMNS)
+def ensure_user_security_columns(engine: Engine) -> None:
+    _ensure_columns(engine, "users_v2", USER_SECURITY_COLUMNS)
+    if engine.dialect.name == "postgresql":
+        with engine.begin() as connection:
+            connection.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_v2_username ON users_v2 (username)"))
 
 
 def configure_guerra_pilot_financials(engine: Engine) -> None:
