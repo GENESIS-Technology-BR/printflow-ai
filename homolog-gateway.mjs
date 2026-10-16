@@ -1,0 +1,49 @@
+import http from "node:http";
+import { readFile, stat } from "node:fs/promises";
+import path from "node:path";
+
+const root = path.resolve("frontend/dist");
+const upstream = "https://talvoa-supritech-homolog-api.onrender.com";
+const mime = { ".html":"text/html; charset=utf-8", ".js":"text/javascript; charset=utf-8", ".css":"text/css; charset=utf-8", ".svg":"image/svg+xml", ".png":"image/png", ".ico":"image/x-icon", ".json":"application/json" };
+const port = Number(process.env.PORT || 10000);
+
+http.createServer(async (req, res) => {
+  try {
+    const url = new URL(req.url || "/", "http://localhost");
+    if (url.pathname.startsWith("/api/")) {
+      const headers = new Headers();
+      for (const [name, value] of Object.entries(req.headers)) {
+        if (!value || ["host","connection","content-length","transfer-encoding","accept-encoding","origin","referer"].includes(name)) continue;
+        headers.set(name, Array.isArray(value) ? value.join(", ") : value);
+      }
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      const body = Buffer.concat(chunks);
+      const response = await fetch(upstream + url.pathname + url.search, {
+        method: req.method, headers, body: ["GET","HEAD"].includes(req.method) ? undefined : body,
+        redirect: "manual", signal: AbortSignal.timeout(25000),
+      });
+      res.statusCode = response.status;
+      for (const [name, value] of response.headers) {
+        if (["content-length","content-encoding","transfer-encoding","connection","set-cookie","access-control-allow-origin","access-control-allow-credentials"].includes(name)) continue;
+        res.setHeader(name, value);
+      }
+      const cookies = response.headers.getSetCookie();
+      if (cookies.length) res.setHeader("Set-Cookie", cookies.map(cookie => cookie.replace(/;\s*Domain=[^;]*/ig, "")));
+      res.end(Buffer.from(await response.arrayBuffer()));
+      return;
+    }
+    const requested = path.resolve(root, "." + decodeURIComponent(url.pathname));
+    if (!requested.startsWith(root + path.sep) && requested !== root) { res.writeHead(403); res.end(); return; }
+    let file = requested;
+    try { if (!(await stat(file)).isFile()) file = path.join(root, "index.html"); }
+    catch { file = path.join(root, "index.html"); }
+    const data = await readFile(file);
+    res.setHeader("Content-Type", mime[path.extname(file)] || "application/octet-stream");
+    res.setHeader("Cache-Control", file.endsWith("index.html") ? "no-store" : "public, max-age=3600");
+    res.end(data);
+  } catch (error) {
+    res.writeHead(502, {"Content-Type":"application/json"});
+    res.end(JSON.stringify({detail:"Gateway temporariamente indisponível"}));
+  }
+}).listen(port, "0.0.0.0");
