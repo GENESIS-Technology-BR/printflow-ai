@@ -13,16 +13,20 @@ http.createServer(async (req, res) => {
     if (url.pathname.startsWith("/api/")) {
       const headers = new Headers();
       for (const [name, value] of Object.entries(req.headers)) {
-        if (!value || ["host","connection","content-length","transfer-encoding","accept-encoding","origin","referer"].includes(name)) continue;
+        if (!value || ["host","connection","content-length","transfer-encoding","accept-encoding","origin","referer","cookie"].includes(name)) continue;
         headers.set(name, Array.isArray(value) ? value.join(", ") : value);
       }
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const body = Buffer.concat(chunks);
+      headers.set("origin", upstream);
+      // Forward the session cookie explicitly to the API.
+      if (req.headers.cookie) headers.set("cookie", req.headers.cookie);
       const response = await fetch(upstream + url.pathname + url.search, {
         method: req.method, headers, body: ["GET","HEAD"].includes(req.method) ? undefined : body,
         redirect: "manual", signal: AbortSignal.timeout(25000),
       });
+      console.info(JSON.stringify({ method: req.method, path: url.pathname, upstreamStatus: response.status }));
       res.statusCode = response.status;
       for (const [name, value] of response.headers) {
         if (["content-length","content-encoding","transfer-encoding","connection","set-cookie","access-control-allow-origin","access-control-allow-credentials"].includes(name)) continue;
