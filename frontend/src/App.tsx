@@ -99,12 +99,17 @@ function App() {
 
     window.addEventListener("talvoa:unauthorized", handleUnauthorized)
 
-    Promise.all([api("/api/v1/companies/current"), getMe()])
-      .then(([companyData, profileData]) => {
+    getMe()
+      .then(async (profileData) => {
+        const partner = profileData.role !== "platform_admin"
+          ? await api("/api/v1/partners/me").then((data: { partners?: unknown[] }) => Boolean(data.partners?.length)).catch(() => false)
+          : false
+        const companyData = partner ? null : await api("/api/v1/companies/current")
         setCompany(companyData)
         setProfile(profileData)
+        setHasPartnerAccess(partner || profileData.role === "platform_admin")
+        setPage(partner ? "partners" : "dashboard")
         setAuthenticated(true)
-        if (profileData.role !== "platform_admin") setPage("dashboard")
       })
       .catch(() => {
         setAuthenticated(false)
@@ -175,14 +180,17 @@ function App() {
           password: form.get("password"),
         }),
       })
-      setAuthenticated(true)
-      setAuthReady(true)
-      const [companyData, profileData] = await Promise.all([
-        api("/api/v1/companies/current"),
-        getMe(),
-      ])
+      const profileData = await getMe()
+      const partner = profileData.role !== "platform_admin"
+        ? await api("/api/v1/partners/me").then((data: { partners?: unknown[] }) => Boolean(data.partners?.length)).catch(() => false)
+        : false
+      const companyData = partner ? null : await api("/api/v1/companies/current")
       setCompany(companyData)
       setProfile(profileData)
+      setHasPartnerAccess(partner || profileData.role === "platform_admin")
+      setPage(partner ? "partners" : "dashboard")
+      setAuthenticated(true)
+      setAuthReady(true)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Falha na autenticação")
       setMessageKind("error")
@@ -392,7 +400,7 @@ function App() {
   );
 
   const isPlatformAdmin = profile?.role === "platform_admin";
-  const isClientView = isClientPreview || !isPlatformAdmin;
+  const isClientView = isClientPreview || (!isPlatformAdmin && !hasPartnerAccess);
   const isPartnerView = hasPartnerAccess && !isPlatformAdmin && !isClientPreview;
 
   return (
@@ -417,7 +425,7 @@ function App() {
           </span>
           <span className="workspace-divider">/</span>
           <strong>
-            {company?.name || "Empresa monitorada"}
+            {isPartnerView ? "Carteira de clientes" : company?.name || "Empresa monitorada"}
           </strong>
           <span className="workspace-environment">
             {company?.plan === "pilot" ? "Piloto" : company?.plan || "Produção"}
@@ -451,19 +459,19 @@ function App() {
         </div>
         <nav>
           <small className="nav-section-title">MENU PRINCIPAL</small>
-          <button className={page === "dashboard" ? "active" : ""} onClick={() => setPage("dashboard")}><span className="nav-icon">⌂</span>Visão Geral</button>
+          {!isPartnerView && <button className={page === "dashboard" ? "active" : ""} onClick={() => setPage("dashboard")}><span className="nav-icon">⌂</span>Visão Geral</button>}
           {hasPartnerAccess && !isClientPreview && (
             <button className={page === "partners" ? "active" : ""} onClick={() => setPage("partners")}><span className="nav-icon">▤</span>Carteira de clientes</button>
           )}
-          {!isClientView && (
+          {!isClientView && !isPartnerView && (
             <button className={page === "control" ? "active" : ""} onClick={() => setPage("control")}><span className="nav-icon">▦</span>Control Center</button>
           )}
-          {!isClientView && (
+          {!isClientView && !isPartnerView && (
             <button className={page === "company" ? "active" : ""} onClick={() => setPage("company")}><span className="nav-icon">⌘</span>Empresa e Agent</button>
           )}
-          <button className={page === "printers" ? "active" : ""} onClick={() => { setPage("printers"); void loadPrinters() }}><span className="nav-icon">▣</span>Impressoras</button>
-          <button className={page === "reports" ? "active" : ""} onClick={() => setPage("reports")}><span className="nav-icon">≡</span>Relatórios</button>
-          {!isClientView && (
+          {!isPartnerView && <button className={page === "printers" ? "active" : ""} onClick={() => { setPage("printers"); void loadPrinters() }}><span className="nav-icon">▣</span>Impressoras</button>}
+          {!isPartnerView && <button className={page === "reports" ? "active" : ""} onClick={() => setPage("reports")}><span className="nav-icon">≡</span>Relatórios</button>}
+          {!isClientView && !isPartnerView && (
             <button className={page === "agents" ? "active" : ""} onClick={() => setPage("agents")}><span className="nav-icon">◉</span>Agentes</button>
           )}
         </nav>
