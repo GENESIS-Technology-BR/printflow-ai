@@ -13,6 +13,7 @@ from backend.modules.auth.dependencies import (
     get_platform_admin,
 )
 from backend.modules.auth.model import User
+from backend.modules.partners.access import require_legacy_company_portal_access
 from backend.modules.organization.model import (
     CompanySector,
     CompanyUnit,
@@ -31,6 +32,15 @@ router = APIRouter(
     prefix="/organization",
     tags=["Organization"],
 )
+
+
+def get_legacy_portal_user(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    require_legacy_company_portal_access(db, current_user)
+    return current_user
+
 
 
 def _clean_name(value: str) -> str:
@@ -110,7 +120,7 @@ def _get_sector(
 def list_units(
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        get_current_user
+        get_legacy_portal_user
     ),
 ):
     return (
@@ -345,7 +355,7 @@ def list_sectors(
     unit_id: int | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        get_current_user
+        get_legacy_portal_user
     ),
 ):
     query = (

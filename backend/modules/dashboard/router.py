@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from backend.app.database.session import get_db
 from backend.modules.auth.dependencies import get_current_user
 from backend.modules.auth.model import User
+from backend.modules.partners.access import require_legacy_company_portal_access
 from backend.modules.companies.model import Company
 from ..printers.model import Printer
 
@@ -17,6 +18,15 @@ router = APIRouter(
     prefix="/api/v1/dashboard",
     tags=["Dashboard"],
 )
+
+
+def get_legacy_portal_user(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    require_legacy_company_portal_access(db, current_user)
+    return current_user
+
 
 
 def normalize_status(value: Any) -> str:
@@ -175,7 +185,7 @@ def _company_inventory(db: Session, company_id: int) -> tuple[list[dict[str, Any
 
 
 @router.get("/summary")
-def dashboard_summary(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, Any]:
+def dashboard_summary(db: Session = Depends(get_db), current_user: User = Depends(get_legacy_portal_user)) -> dict[str, Any]:
     serialized, monitored = _company_inventory(db, current_user.company_id)
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
     total = len(serialized)
@@ -240,13 +250,13 @@ def dashboard_summary(db: Session = Depends(get_db), current_user: User = Depend
 
 
 @router.get("/printers")
-def dashboard_printers(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> list[dict[str, Any]]:
+def dashboard_printers(db: Session = Depends(get_db), current_user: User = Depends(get_legacy_portal_user)) -> list[dict[str, Any]]:
     _, monitored = _company_inventory(db, current_user.company_id)
     return sorted(monitored, key=lambda printer: int(printer.get("id") or 0), reverse=True)
 
 
 @router.get("/printers/{printer_uuid}")
-def dashboard_printer_detail(printer_uuid: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, Any]:
+def dashboard_printer_detail(printer_uuid: str, db: Session = Depends(get_db), current_user: User = Depends(get_legacy_portal_user)) -> dict[str, Any]:
     printer = db.query(Printer).filter(Printer.uuid == printer_uuid, Printer.company_id == current_user.company_id).first()
     if not printer:
         raise HTTPException(status_code=404, detail="Impressora não encontrada.")

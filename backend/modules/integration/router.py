@@ -1,8 +1,9 @@
 import hmac
+import json
 import os
 from datetime import date, datetime, timezone
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from backend.app.database.session import get_db
@@ -43,22 +44,49 @@ def _integration_key() -> str:
 
 
 def require_integration_key(
-    x_talvoa_integration_key: str | None = Header(
-        None,
-        alias="X-Talvoa-Integration-Key",
-    ),
-    x_printflow_integration_key: str | None = Header(
-        None,
-        alias="X-Printflow-Integration-Key",
-    ),
+    request: Request,
+    db: Session = Depends(get_db),
+    x_talvoa_integration_key: str | None = Header(None, alias="X-Talvoa-Integration-Key"),
+    x_printflow_integration_key: str | None = Header(None, alias="X-Printflow-Integration-Key"),
 ) -> None:
-    expected = _integration_key()
+    """Authorize integrations per tenant when scoped keys are configured."""
     provided = (x_talvoa_integration_key or x_printflow_integration_key or "").strip()
-    if not hmac.compare_digest(provided, expected):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credencial de integração inválida",
-        )
+    scoped_raw = os.getenv("TALVOA_INTEGRATION_SCOPED_KEYS", "").strip()
+    if not scoped_raw:
+        # Legacy integrations cannot read partner-managed customer data.
+        expected = _integration_key()
+        if not hmac.compare_digest(provided, expected):
+            raise HTTPException(status_code=401, detail="Credencial de integração inválida")
+        company_uuid = request.path_params.get("company_uuid")
+        if company_uuid is not None:
+            company = db.query(Company).filter(Company.uuid == company_uuid).first()
+            if company is None or company.partner_id is not None or not company.active:
+                raise HTTPException(status_code=403, detail="Integração por empresa requer chave com escopo")
+        return
+    try:
+        entries = json.loads(scoped_raw)
+        if not isinstance(entries, list):
+            raise ValueError("Expected list")
+        matches = [
+            item["company_uuid"] for item in entries
+            if isinstance(item, dict)
+            and isinstance(item.get("key"), str)
+            and len(item["key"]) >= 32
+            and isinstance(item.get("company_uuid"), str)
+            and hmac.compare_digest(provided, item["key"])
+        ]
+    except (ValueError, TypeError, KeyError):
+        raise HTTPException(status_code=503, detail="Configuração de integração inválida")
+    if not matches:
+        raise HTTPException(status_code=401, detail="Credencial de integração inválida")
+    company_uuid = request.path_params.get("company_uuid")
+    if company_uuid is not None and company_uuid not in matches:
+        raise HTTPException(status_code=403, detail="Integração sem acesso a esta empresa")
+    allowed_companies = db.query(Company.uuid).filter(Company.uuid.in_(matches), Company.active.is_(True)).all()
+    active_ids = frozenset(row[0] for row in allowed_companies if row[0] in matches)
+    if company_uuid is not None and company_uuid not in active_ids:
+        raise HTTPException(status_code=403, detail="Empresa inativa ou indisponível para integração")
+    request.state.integration_company_uuids = active_ids
 
 
 def _find_company(db: Session, company_uuid: str) -> Company:
@@ -234,11 +262,13 @@ def integration_openapi() -> dict:
 
 
 @router.get("/status", dependencies=[Depends(require_integration_key)])
-def integration_status(db: Session = Depends(get_db)) -> dict:
-    companies = db.query(Company).all()
-    printers = db.query(Printer).filter(Printer.active.is_(True)).count()
+def integration_status(request: Request, db: Session = Depends(get_db)) -> dict:
+    allowed = getattr(request.state, "integration_company_uuids", None)
+    companies = db.query(Company).filter(Company.uuid.in_(allowed)).all() if allowed is not None else db.query(Company).filter(Company.partner_id.is_(None), Company.active.is_(True)).all()
+    printers = db.query(Printer).filter(Printer.active.is_(True), Printer.company_id.in_([c.id for c in companies])).count()
     alerts = db.query(OperationalAlert).filter(
-        OperationalAlert.status.in_(("open", "acknowledged"))
+        OperationalAlert.status.in_(("open", "acknowledged")),
+        OperationalAlert.company_id.in_([c.id for c in companies]),
     ).count()
     agents_online = sum(1 for company in companies if _agent_communication(company)[0])
 
@@ -255,8 +285,11 @@ def integration_status(db: Session = Depends(get_db)) -> dict:
 
 
 @router.get("/companies", dependencies=[Depends(require_integration_key)])
-def list_companies(db: Session = Depends(get_db)) -> list[dict]:
-    companies = db.query(Company).order_by(Company.name.asc()).all()
+def list_companies(request: Request, db: Session = Depends(get_db)) -> list[dict]:
+    allowed = getattr(request.state, "integration_company_uuids", None)
+    query = db.query(Company)
+    query = query.filter(Company.uuid.in_(allowed)) if allowed is not None else query.filter(Company.partner_id.is_(None), Company.active.is_(True))
+    companies = query.order_by(Company.name.asc()).all()
     return [_company_snapshot(db, company) for company in companies]
 
 

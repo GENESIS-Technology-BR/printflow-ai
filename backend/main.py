@@ -16,12 +16,14 @@ from backend.app.database.migrations import (
     ensure_company_agent_columns,
     ensure_operational_alert_columns,
     ensure_user_security_columns,
+    ensure_partner_company_columns,
 )
 from backend.app.routers.health import router as health_router
 from backend.modules.auth.model import User
 from backend.modules.auth.router import router as auth_router
 from backend.modules.companies.model import Company
 from backend.modules.companies.router import router as companies_router
+from backend.modules.partners.router import router as partners_router
 from backend.modules.organization.router import router as organization_router
 from backend.modules.dashboard.router import router as dashboard_router
 from backend.modules.alerts.router import router as alerts_router
@@ -45,8 +47,12 @@ async def lifespan(app: FastAPI):
     ensure_company_agent_columns(engine)
     ensure_operational_alert_columns(engine)
     ensure_user_security_columns(engine)
+    ensure_partner_company_columns(engine)
     clean_descriptive_printer_serials(engine)
     configure_guerra_pilot_financials(engine)
+    if os.getenv("TALVOA_ALLOW_STAGING_BOOTSTRAP") == "true":
+        from backend.scripts.bootstrap_staging_admin import main as bootstrap_staging_admin
+        bootstrap_staging_admin()
     yield
 
 
@@ -65,7 +71,7 @@ app = FastAPI(
 trusted_hosts = [item.strip() for item in (os.getenv("TALVOA_ALLOWED_HOSTS") or os.getenv("PRINTFLOW_ALLOWED_HOSTS") or "*.onrender.com,localhost,127.0.0.1").split(",") if item.strip()]
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
 
-allowed_origins = ["https://printflow-web.onrender.com", "https://printflow-m84u.onrender.com"]
+allowed_origins = ["https://printflow-web.onrender.com", "https://printflow-m84u.onrender.com", "https://talvoa-supritech-homolog.onrender.com"]
 configured_origins = [item.strip().rstrip("/") for item in (os.getenv("TALVOA_CORS_ORIGINS") or os.getenv("PRINTFLOW_CORS_ORIGINS") or "").split(",") if item.strip()]
 for origin in configured_origins:
     if origin not in allowed_origins: allowed_origins.append(origin)
@@ -93,6 +99,7 @@ async def security_headers(request: Request, call_next):
 app.include_router(health_router)
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(companies_router, prefix="/api/v1")
+app.include_router(partners_router, prefix="/api/v1")
 app.include_router(organization_router, prefix="/api/v1")
 if printers_router: app.include_router(printers_router, prefix="/api/v1")
 app.include_router(usage_router, prefix="/api/v1")
