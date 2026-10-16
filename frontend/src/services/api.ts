@@ -1,7 +1,7 @@
 const API_BASE_URL = (
   import.meta.env.VITE_API_URL ||
   "https://printflow-api-genesis.onrender.com"
-).replace(/\/$/, "");
+).replace(/\/$/, "").replace(/^\/$/, "");
 
 export type DashboardSummary = {
   total_printers: number;
