@@ -10,6 +10,11 @@ const port = Number(process.env.PORT || 10000);
 http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", "http://localhost");
+    if (url.pathname === "/health") {
+      res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+      res.end(JSON.stringify({ status: "healthy", component: "gateway" }));
+      return;
+    }
     if (url.pathname.startsWith("/api/")) {
       const headers = new Headers();
       for (const [name, value] of Object.entries(req.headers)) {
@@ -28,6 +33,10 @@ http.createServer(async (req, res) => {
       });
       console.info(JSON.stringify({ method: req.method, path: url.pathname, upstreamStatus: response.status }));
       res.statusCode = response.status;
+      if ([502, 503, 504].includes(response.status)) {
+        res.setHeader("Retry-After", "30");
+        res.setHeader("Cache-Control", "no-store");
+      }
       for (const [name, value] of response.headers) {
         if (["content-length","content-encoding","transfer-encoding","connection","set-cookie","access-control-allow-origin","access-control-allow-credentials"].includes(name)) continue;
         res.setHeader(name, value);
@@ -47,7 +56,12 @@ http.createServer(async (req, res) => {
     res.setHeader("Cache-Control", file.endsWith("index.html") ? "no-store" : "public, max-age=3600");
     res.end(data);
   } catch (error) {
-    res.writeHead(502, {"Content-Type":"application/json"});
-    res.end(JSON.stringify({detail:"Gateway temporariamente indisponível"}));
+    console.error(JSON.stringify({ event: "gateway_upstream_failure", errorType: error?.name || "unknown" }));
+    res.writeHead(503, {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+      "Retry-After": "30",
+    });
+    res.end(JSON.stringify({ detail: "Serviço temporariamente indisponível. Aguarde alguns instantes e tente novamente." }));
   }
 }).listen(port, "0.0.0.0");
