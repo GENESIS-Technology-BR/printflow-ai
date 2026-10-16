@@ -365,6 +365,10 @@ def login(
             user.password_hash,
         )
     ):
+        logger.warning(
+            "login_rejected reason=%s",
+            "unknown_user" if user is None else "password_mismatch",
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="E-mail ou senha inválidos",
