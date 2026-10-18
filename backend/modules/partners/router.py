@@ -351,6 +351,7 @@ def list_partner_members(
         "user_id": member.id,
         "name": member.name,
         "email": member.email,
+        "username": member.username,
         "role": membership.role,
         "active": membership.active and member.active,
     } for membership, member in memberships]
@@ -440,7 +441,7 @@ def create_partner_user(
     if username:
         if not re.fullmatch(r"[a-z][a-z0-9._-]{2,59}", username):
             raise HTTPException(status_code=422, detail="Usuário deve ter 3 a 60 caracteres, iniciando com letra")
-        if db.query(User).filter(User.username == username).first():
+        if db.query(User).filter((User.username == username) | (User.email == username)).first():
             raise HTTPException(status_code=409, detail="Nome de usuário já cadastrado")
     # User.company_id is currently required. Use a new, dedicated company
     # for the partner identity, never a customer's tenant.
@@ -606,7 +607,7 @@ def update_partner_username(
     if member is None:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     collision = db.query(User).filter(
-        func.lower(User.username) == username,
+        (func.lower(User.username) == username) | (func.lower(User.email) == username),
         User.id != member.id,
     ).first()
     if collision:
