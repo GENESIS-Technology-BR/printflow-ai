@@ -16,29 +16,32 @@ http.createServer(async (req, res) => {
       return;
     }
     if (url.pathname === "/health/upstream") {
-      // On-demand health check; retry temporary Render cold-start responses only.
+      // Explicit, on-demand warm-up. Render Free may need ~60 seconds to wake.
       const started = Date.now();
       let upstreamStatus = null;
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      let attempts = 0;
+      while (Date.now() - started < 75000 && attempts < 12) {
+        attempts++;
         try {
           const response = await fetch(upstream + "/health", {
-            signal: AbortSignal.timeout(20000),
+            signal: AbortSignal.timeout(12000),
             headers: { "Accept": "application/json" },
           });
           upstreamStatus = response.status;
           if (response.ok) {
             res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
-            res.end(JSON.stringify({ status: "healthy", component: "homolog-api", upstream_status: response.status, attempts: attempt, elapsed_ms: Date.now() - started }));
+            res.end(JSON.stringify({ status: "healthy", component: "homolog-api", upstream_status: 200, attempts, elapsed_ms: Date.now() - started }));
             return;
           }
           if (![502, 504].includes(response.status)) break;
         } catch (error) {
-          console.warn(JSON.stringify({ event: "health_attempt_failed", attempt, errorType: error?.name || "unknown" }));
+          console.warn(JSON.stringify({ event: "health_attempt_failed", attempt: attempts, errorType: error?.name || "unknown" }));
         }
-        if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 2000));
+        if (Date.now() - started < 65000) await new Promise(resolve => setTimeout(resolve, 5000));
       }
+      console.warn(JSON.stringify({ event: "homolog_api_unavailable", upstreamStatus, attempts, elapsedMs: Date.now() - started }));
       res.writeHead(503, { "Content-Type": "application/json", "Cache-Control": "no-store", "Retry-After": "30" });
-      res.end(JSON.stringify({ status: "unavailable", component: "homolog-api", upstream_status: upstreamStatus, elapsed_ms: Date.now() - started }));
+      res.end(JSON.stringify({ status: "unavailable", component: "homolog-api", upstream_status: upstreamStatus, attempts, elapsed_ms: Date.now() - started }));
       return;
     }
     if (url.pathname.startsWith("/api/")) {
