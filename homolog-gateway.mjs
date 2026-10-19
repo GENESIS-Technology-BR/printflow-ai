@@ -15,6 +15,30 @@ http.createServer(async (req, res) => {
       res.end(JSON.stringify({ status: "healthy", component: "gateway" }));
       return;
     }
+    if (url.pathname === "/health/upstream") {
+      // Diagnostic endpoint: verifies API AND database health without credentials.
+      try {
+        const response = await fetch(upstream + "/health", {
+          signal: AbortSignal.timeout(20000),
+          headers: { "Accept": "application/json" },
+        });
+        const healthy = response.ok;
+        res.writeHead(healthy ? 200 : 503, {
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": "no-store",
+        });
+        res.end(JSON.stringify({
+          status: healthy ? "healthy" : "unavailable",
+          component: "homolog-api",
+          upstream_status: response.status,
+        }));
+      } catch (error) {
+        console.warn(JSON.stringify({ event: "homolog_api_health_failed", errorType: error?.name || "unknown" }));
+        res.writeHead(503, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+        res.end(JSON.stringify({ status: "unavailable", component: "homolog-api" }));
+      }
+      return;
+    }
     if (url.pathname.startsWith("/api/")) {
       const headers = new Headers();
       for (const [name, value] of Object.entries(req.headers)) {
