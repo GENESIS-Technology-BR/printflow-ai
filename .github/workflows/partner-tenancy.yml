@@ -6,7 +6,10 @@ on:
       - 'backend/**'
       - 'frontend/**'
       - 'requirements.txt'
+      - 'tests/**'
+      - 'backend/scripts/migrate_supritech_homolog_structure.py'
       - '.github/workflows/partner-tenancy.yml'
+      - '.github/workflows/homolog-migration-safety.yml'
   workflow_dispatch:
 
 jobs:
@@ -24,6 +27,8 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r requirements.txt pytest httpx
       - run: python -m compileall -q backend
+      - name: Run migration safety regression tests
+        run: python -m unittest discover -s tests -p 'test_homolog_migration_safety.py' -v
       - run: python -m pytest backend/tests/test_partner_access.py backend/tests/test_partner_http.py backend/tests/test_integration_scoped_keys.py -q
 
   frontend:
