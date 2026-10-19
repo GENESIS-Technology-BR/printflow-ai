@@ -56,21 +56,24 @@ http.createServer(async (req, res) => {
       headers.set("origin", upstream);
       // Forward the session cookie explicitly to the API.
       if (req.headers.cookie) headers.set("cookie", req.headers.cookie);
-      const response = await fetch(upstream + url.pathname + url.search, {
+      const upstreamStarted = Date.now();
+      let response;
+      try {
+        response = await fetch(upstream + url.pathname + url.search, {
         method: req.method, headers, body: ["GET","HEAD"].includes(req.method) ? undefined : body,
         redirect: "manual", signal: AbortSignal.timeout(25000),
-      });
-      console.info(JSON.stringify({ method: req.method, path: url.pathname, upstreamStatus: response.status }));
+        });
+      } catch (error) {
+        console.warn(JSON.stringify({ event: "proxy_transport_failure", method: req.method, path: url.pathname, elapsedMs: Date.now() - upstreamStarted, errorType: error?.name || "unknown", causeCode: error?.cause?.code || null }));
+        throw error;
+      }
+      console.info(JSON.stringify({ event: "proxy_upstream_response", method: req.method, path: url.pathname, upstreamStatus: response.status, elapsedMs: Date.now() - upstreamStarted }));
       if ([502, 503, 504].includes(response.status)) {
         res.writeHead(503, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "Retry-After": "30" });
         res.end(JSON.stringify({ detail: "A homologação está despertando após um período de inatividade. Aguarde cerca de um minuto e tente novamente." }));
         return;
       }
       res.statusCode = response.status;
-      if ([502, 503, 504].includes(response.status)) {
-        res.setHeader("Retry-After", "30");
-        res.setHeader("Cache-Control", "no-store");
-      }
       for (const [name, value] of response.headers) {
         if (["content-length","content-encoding","transfer-encoding","connection","set-cookie","access-control-allow-origin","access-control-allow-credentials"].includes(name)) continue;
         res.setHeader(name, value);
