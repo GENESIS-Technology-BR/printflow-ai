@@ -30,7 +30,7 @@ def main():
 
     url = os.getenv("DATABASE_URL", "")
     db_name = urlparse(url).path.lstrip("/").lower()
-    if engine.dialect.name != "postgresql" or db_name != "talvoa-supritech-homolog-db":
+    if engine.dialect.name != "postgresql" or db_name != "talvoa_supritech_homolog_db":
         raise SystemExit("REFUSED: database must be SupriTech homologation PostgreSQL")
     if args.apply and os.getenv("TALVOA_MIGRATION_TARGET") != "supritech-homolog":
         raise SystemExit("REFUSED: set TALVOA_MIGRATION_TARGET=supritech-homolog for explicit authorization")
