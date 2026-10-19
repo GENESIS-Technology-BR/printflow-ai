@@ -31,6 +31,10 @@ class MigrationSafetyTests(unittest.TestCase):
         self.assertIn('db_name != "talvoa-supritech-homolog-db"', self.source)
         self.assertIn('engine.dialect.name != "postgresql"', self.source)
 
+    def test_target_confirmation_required(self):
+        self.assertIn('os.getenv("TALVOA_MIGRATION_TARGET") != "supritech-homolog"', self.source)
+        self.assertIn('if args.apply and', self.source)
+
     def test_explicit_apply_required(self):
         self.assertIn('parser.add_argument("--apply", action="store_true"', self.source)
         self.assertIn('if not args.apply:', self.source)
