@@ -451,9 +451,11 @@ def recovery_reset_password(
 ):
     expected_key = _recovery_key()
 
+    # Compare UTF-8 bytes: hmac.compare_digest rejects non-ASCII str values.
+    # Invalid keys must return 403, never an unhandled 500.
     if not hmac.compare_digest(
-        x_recovery_key,
-        expected_key,
+        x_recovery_key.encode("utf-8"),
+        expected_key.encode("utf-8"),
     ):
         raise HTTPException(
             status_code=403,
@@ -538,9 +540,11 @@ def recovery_users(
 
     expected_key = _recovery_key()
 
+    # Compare UTF-8 bytes: hmac.compare_digest rejects non-ASCII str values.
+    # Invalid keys must return 403, never an unhandled 500.
     if not hmac.compare_digest(
-        x_recovery_key,
-        expected_key,
+        x_recovery_key.encode("utf-8"),
+        expected_key.encode("utf-8"),
     ):
         raise HTTPException(
             status_code=403,
@@ -589,9 +593,11 @@ def recovery_issue_token(
 ):
     expected_key = _recovery_key()
 
+    # Compare UTF-8 bytes: hmac.compare_digest rejects non-ASCII str values.
+    # Invalid keys must return 403, never an unhandled 500.
     if not hmac.compare_digest(
-        x_recovery_key,
-        expected_key,
+        x_recovery_key.encode("utf-8"),
+        expected_key.encode("utf-8"),
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
