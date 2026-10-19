@@ -32,6 +32,11 @@ http.createServer(async (req, res) => {
         redirect: "manual", signal: AbortSignal.timeout(25000),
       });
       console.info(JSON.stringify({ method: req.method, path: url.pathname, upstreamStatus: response.status }));
+      if ([502, 503, 504].includes(response.status)) {
+        res.writeHead(503, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "Retry-After": "30" });
+        res.end(JSON.stringify({ detail: "A homologação está despertando após um período de inatividade. Aguarde cerca de um minuto e tente novamente." }));
+        return;
+      }
       res.statusCode = response.status;
       if ([502, 503, 504].includes(response.status)) {
         res.setHeader("Retry-After", "30");
