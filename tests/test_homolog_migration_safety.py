@@ -28,7 +28,7 @@ class MigrationSafetyTests(unittest.TestCase):
         self.assertNotIn("configure_guerra_pilot_financials", imports)
 
     def test_exact_homologation_guard(self):
-        self.assertIn('db_name != "talvoa-supritech-homolog-db"', self.source)
+        self.assertIn('db_name != "talvoa_supritech_homolog_db"', self.source)
         self.assertIn('engine.dialect.name != "postgresql"', self.source)
 
     def test_target_confirmation_required(self):
