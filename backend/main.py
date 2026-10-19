@@ -50,10 +50,8 @@ async def lifespan(app: FastAPI):
         ensure_operational_alert_columns(engine)
         ensure_user_security_columns(engine)
         ensure_partner_company_columns(engine)
-        # Never perform destructive/data-changing maintenance during SupriTech homolog startup.
-        if (engine.url.database or "").lower() != "talvoa_supritech_homolog_db":
-            clean_descriptive_printer_serials(engine)
-            configure_guerra_pilot_financials(engine)
+        clean_descriptive_printer_serials(engine)
+        configure_guerra_pilot_financials(engine)
     if os.getenv("TALVOA_ALLOW_STAGING_BOOTSTRAP") == "true":
         from backend.scripts.bootstrap_staging_admin import main as bootstrap_staging_admin
         bootstrap_staging_admin()
