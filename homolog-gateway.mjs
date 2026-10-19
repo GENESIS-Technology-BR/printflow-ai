@@ -16,27 +16,29 @@ http.createServer(async (req, res) => {
       return;
     }
     if (url.pathname === "/health/upstream") {
-      // Diagnostic endpoint: verifies API AND database health without credentials.
-      try {
-        const response = await fetch(upstream + "/health", {
-          signal: AbortSignal.timeout(20000),
-          headers: { "Accept": "application/json" },
-        });
-        const healthy = response.ok;
-        res.writeHead(healthy ? 200 : 503, {
-          "Content-Type": "application/json; charset=utf-8",
-          "Cache-Control": "no-store",
-        });
-        res.end(JSON.stringify({
-          status: healthy ? "healthy" : "unavailable",
-          component: "homolog-api",
-          upstream_status: response.status,
-        }));
-      } catch (error) {
-        console.warn(JSON.stringify({ event: "homolog_api_health_failed", errorType: error?.name || "unknown" }));
-        res.writeHead(503, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-        res.end(JSON.stringify({ status: "unavailable", component: "homolog-api" }));
+      // On-demand health check; retry temporary Render cold-start responses only.
+      const started = Date.now();
+      let upstreamStatus = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const response = await fetch(upstream + "/health", {
+            signal: AbortSignal.timeout(20000),
+            headers: { "Accept": "application/json" },
+          });
+          upstreamStatus = response.status;
+          if (response.ok) {
+            res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+            res.end(JSON.stringify({ status: "healthy", component: "homolog-api", upstream_status: response.status, attempts: attempt, elapsed_ms: Date.now() - started }));
+            return;
+          }
+          if (![502, 504].includes(response.status)) break;
+        } catch (error) {
+          console.warn(JSON.stringify({ event: "health_attempt_failed", attempt, errorType: error?.name || "unknown" }));
+        }
+        if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 2000));
       }
+      res.writeHead(503, { "Content-Type": "application/json", "Cache-Control": "no-store", "Retry-After": "30" });
+      res.end(JSON.stringify({ status: "unavailable", component: "homolog-api", upstream_status: upstreamStatus, elapsed_ms: Date.now() - started }));
       return;
     }
     if (url.pathname.startsWith("/api/")) {
