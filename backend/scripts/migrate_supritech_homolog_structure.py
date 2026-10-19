@@ -7,10 +7,12 @@ import argparse
 import os
 from urllib.parse import urlparse
 
-from sqlalchemy import inspect
-
-# Importing main registers ORM models; FastAPI lifespan is NOT executed.
-from backend.main import Base, engine
+from backend.app.database.connection import engine, Base
+# Explicit model imports register metadata without importing FastAPI application.
+from backend.app.database import models as database_models
+from backend.modules.auth.model import User
+from backend.modules.companies.model import Company
+from backend.modules.printers.model import Printer
 from backend.app.database.migrations import (
     ensure_printer_columns,
     ensure_printer_company_ip_constraint,
@@ -28,7 +30,7 @@ def main():
 
     url = os.getenv("DATABASE_URL", "")
     db_name = urlparse(url).path.lstrip("/").lower()
-    if engine.dialect.name != "postgresql" or "supritech" not in db_name or "homolog" not in db_name:
+    if engine.dialect.name != "postgresql" or db_name != "talvoa-supritech-homolog-db":
         raise SystemExit("REFUSED: database must be SupriTech homologation PostgreSQL")
     if not args.apply:
         print("DRY RUN ONLY: no database connection or changes performed.")
