@@ -43,7 +43,7 @@ class MigrationSafetyTests(unittest.TestCase):
         self.assertNotIn("from backend.main import", self.source)
 
     def test_guard_precedes_database_operations(self):
-        guard = self.source.index('db_name != "talvoa-supritech-homolog-db"')
+        guard = self.source.index('db_name != "talvoa_supritech_homolog_db"')
         create = self.source.index("Base.metadata.create_all(bind=engine)")
         self.assertLess(guard, create)
 
