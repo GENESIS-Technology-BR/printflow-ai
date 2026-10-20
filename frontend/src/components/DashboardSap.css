@@ -194,3 +194,46 @@
   .sap-dashboard-v0993 .sap-printer-ranking{min-height:90px!important}
   .sap-dashboard-v0993 .sap-health-strip{min-height:44px!important}
 }
+
+
+/* Desktop single-viewport fit: distribute available height rather than masking overflow. */
+@media (min-width:1100px) and (min-height:700px){
+  .sap-dashboard-page.sap-dashboard-v0993{
+    height:calc(100dvh - 48px)!important;
+    max-height:calc(100dvh - 48px)!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    display:grid!important;
+    grid-template-rows:auto auto auto minmax(120px,1fr) auto!important;
+    align-content:stretch!important;
+    row-gap:6px!important;
+    padding:8px 14px 7px!important;
+    box-sizing:border-box!important;
+  }
+  .sap-dashboard-v0993 .sap-page-head{min-height:46px!important}
+  .sap-dashboard-v0993 .sap-kpi-grid-six{min-height:0!important}
+  .sap-dashboard-v0993 .sap-kpi-card{min-height:68px!important}
+  .sap-dashboard-v0993 .sap-dashboard-grid-overview{
+    min-height:0!important;
+    height:148px!important;
+  }
+  .sap-dashboard-v0993 .sap-dashboard-grid-overview .sap-panel{min-height:0!important}
+  .sap-dashboard-v0993 .sap-printer-ranking{
+    min-height:0!important;
+    height:auto!important;
+    overflow:hidden!important;
+  }
+  .sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap{
+    min-height:0!important;
+    overflow-y:auto!important;
+  }
+  .sap-dashboard-v0993 .sap-health-strip{
+    min-height:42px!important;
+    height:auto!important;
+  }
+}
+@media (min-width:1100px) and (min-height:700px) and (max-height:820px){
+  .sap-dashboard-page.sap-dashboard-v0993{grid-template-rows:auto auto auto minmax(90px,1fr) auto!important}
+  .sap-dashboard-v0993 .sap-dashboard-grid-overview{height:130px!important}
+  .sap-dashboard-v0993 .sap-kpi-card{min-height:60px!important}
+}
