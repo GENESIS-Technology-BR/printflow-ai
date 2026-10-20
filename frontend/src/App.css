@@ -1523,3 +1523,45 @@ body {
     min-height:0!important;
   }
 }
+
+
+/* TALVOA customer portal: restore readable navigation and dashboard viewport. */
+.shell.client-shell aside .brand strong,
+.shell.client-shell aside .brand-copy,
+.shell.client-shell aside .brand-copy span,
+.shell.client-shell aside .nav-section-title{color:#e8f2ff!important;opacity:1!important}
+.shell.client-shell aside nav button{
+  color:#e6f1ff!important;
+  opacity:1!important;
+  font-weight:650!important;
+  font-size:12px!important;
+  min-height:39px!important;
+  padding:8px 11px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+.shell.client-shell aside nav button::before{content:none!important;display:none!important}
+.shell.client-shell aside nav .nav-icon{color:#d3e7ff!important;opacity:1!important;flex:0 0 19px}
+.shell.client-shell aside nav button.active{
+  background:#2161b8!important;
+  border-color:#5c99e9!important;
+  color:#fff!important;
+}
+.shell.client-shell aside nav button.active .nav-icon{color:#fff!important}
+.shell.client-shell aside .logout{color:#f5f9ff!important;background:#17527b!important}
+@media(min-width:1100px) and (min-height:700px){
+  .shell.client-shell:has(> .dashboard-modern-shell) > .dashboard-modern-shell{
+    height:calc(100dvh - 48px)!important;
+    max-height:calc(100dvh - 48px)!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  .shell.client-shell:has(> .dashboard-modern-shell) .sap-dashboard-page.sap-dashboard-v0993{
+    height:100%!important;
+    max-height:100%!important;
+    min-height:0!important;
+    overflow:hidden!important;
+    padding:8px 12px!important;
+  }
+}
