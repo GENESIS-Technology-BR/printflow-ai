@@ -515,3 +515,77 @@
     font-size:9px!important;padding:3px 6px!important;
   }
 }
+
+
+/* Final visual pass: tenant dashboard, zero-data experience and responsive sizing. */
+.shell.client-shell .sap-dashboard-v0993 .sap-page-head{
+  border-radius:12px!important;
+  box-shadow:0 2px 10px rgba(22,48,79,.04);
+}
+.shell.client-shell .sap-dashboard-v0993 .sap-company-chip{
+  border-radius:8px!important;
+  border-color:#d7e3f0!important;
+}
+.shell.client-shell .sap-dashboard-v0993.sap-no-printers .sap-printer-ranking .sap-onboarding-empty{
+  width:min(100%,720px)!important;
+  max-width:720px!important;
+}
+.shell.client-shell .sap-dashboard-v0993.sap-no-printers .sap-onboarding-empty strong{
+  color:#153c66!important;
+  font-size:13px!important;
+}
+.shell.client-shell .sap-dashboard-v0993.sap-no-printers .sap-onboarding-steps span{
+  white-space:normal!important;
+}
+@media(min-width:1100px) and (min-height:700px){
+  .shell:has(> .dashboard-modern-shell) .sap-dashboard-v0993.sap-no-printers .sap-printer-ranking .sap-table-wrap{
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:flex-start!important;
+  }
+  .shell:has(> .dashboard-modern-shell) .sap-dashboard-v0993.sap-no-printers .sap-onboarding-empty{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    align-self:center!important;
+    padding:8px 12px!important;
+  }
+  .shell:has(> .dashboard-modern-shell) .sap-dashboard-v0993.sap-no-printers .sap-table{
+    flex:0 0 auto!important;
+  }
+  .shell:has(> .dashboard-modern-shell) .sap-dashboard-v0993.sap-has-printers .sap-table-wrap{
+    overflow-y:auto!important;
+  }
+}
+@media(max-width:1099px), (max-height:699px){
+  .shell.client-shell .sap-dashboard-page.sap-dashboard-v0993{
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-dashboard-grid-overview{
+    max-height:none!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking{
+    overflow:visible!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-onboarding-empty{
+    padding:20px 14px!important;
+  }
+}
+@media(max-width:640px){
+  .shell.client-shell .sap-dashboard-v0993 .sap-page-head{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:10px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-page-actions{
+    width:100%!important;
+    display:flex!important;
+    flex-wrap:wrap!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-company-chip{
+    min-width:0!important;
+    flex:1 1 160px!important;
+  }
+}
