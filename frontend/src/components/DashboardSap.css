@@ -334,3 +334,55 @@
     min-height:43px!important;
   }
 }
+
+
+/* TALVOA customer experience v2 — balanced cards, readable spacing and no clipped footer. */
+.shell.client-shell .sap-dashboard-v0993 .sap-kpi-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+.shell.client-shell .sap-dashboard-v0993 .sap-kpi-card{
+  min-width:0;
+  border-radius:10px!important;
+  border:1px solid #dbe6f1!important;
+  box-shadow:0 2px 9px rgba(22,52,89,.045)!important;
+}
+.shell.client-shell .sap-dashboard-v0993 .sap-page-head{
+  background:#fff;
+  border:1px solid #e1e9f1;
+  border-radius:10px;
+  padding:12px 16px;
+}
+.shell.client-shell .sap-dashboard-v0993 .sap-dashboard-grid-overview{
+  grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr) minmax(0,1fr);
+}
+.shell.client-shell .sap-dashboard-v0993 .sap-health-strip{
+  margin-bottom:0!important;
+  border-radius:9px!important;
+}
+@media(min-width:1100px) and (min-height:700px){
+  .shell.client-shell:has(> .dashboard-modern-shell) .sap-dashboard-page.sap-dashboard-v0993{
+    grid-template-rows:auto auto auto minmax(130px,auto) minmax(0,1fr) auto!important;
+    gap:7px!important;
+    padding:10px 14px 12px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-page-head{min-height:72px!important}
+  .shell.client-shell .sap-dashboard-v0993 .sap-dashboard-grid-overview{
+    min-height:130px!important;
+    max-height:155px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking{
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-health-strip{
+    min-height:46px!important;
+  }
+}
+@media(max-width:1099px){
+  .shell.client-shell .sap-dashboard-v0993 .sap-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:640px){
+  .shell.client-shell .sap-dashboard-v0993 .sap-kpi-grid{grid-template-columns:1fr!important}
+  .shell.client-shell .sap-dashboard-v0993 .sap-page-head{flex-wrap:wrap}
+}
