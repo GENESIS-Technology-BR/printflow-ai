@@ -352,6 +352,8 @@ def overview(
                 name=company.name,
                 plan=company.plan,
                 active=company.active,
+                partner_id=company.partner_id,
+                customer_portal_enabled=company.customer_portal_enabled,
                 agent_online=agent_online,
                 agent_stale=agent_stale,
                 agent_communication_state=agent_communication_state,
