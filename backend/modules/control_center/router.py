@@ -507,6 +507,16 @@ def create_client_preview(
 ):
     company = _find_company_by_uuid(db, company_uuid)
 
+    # A preview must obey the same tenant portal gate as dashboard endpoints.
+    # Never issue a client token that is guaranteed to receive HTTP 403.
+    if not company.active:
+        raise HTTPException(status_code=409, detail="Empresa inativa. Ative a empresa antes de visualizar o portal.")
+    if company.partner_id is not None and not company.customer_portal_enabled:
+        raise HTTPException(
+            status_code=409,
+            detail="Portal do cliente desabilitado para esta empresa. Habilite o portal antes de iniciar a pré-visualização.",
+        )
+
     user = (
         db.query(User)
         .filter(
