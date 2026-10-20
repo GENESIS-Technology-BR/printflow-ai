@@ -11,6 +11,7 @@ import {
   createControlCenterClientUser,
   getControlCenterClientUsers,
   getControlCenterOverview,
+  setControlCenterCustomerPortal,
   updateControlCenterClientUserStatus,
 } from "../services/api";
 
@@ -52,6 +53,8 @@ export default function ControlCenter() {
     useState<ControlCenterOverview | null>(
       null,
     );
+
+  const [portalSaving, setPortalSaving] = useState<number | null>(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -245,6 +248,23 @@ export default function ControlCenter() {
           ? requestError.message
           : "Não foi possível alterar o usuário.",
       );
+    }
+  }
+
+  async function toggleCustomerPortal(company: ControlCenterCompany) {
+    if (company.partner_id == null) {
+      setError("Associe a empresa a um parceiro antes de habilitar o portal.");
+      return;
+    }
+    setPortalSaving(company.id);
+    setError(null);
+    try {
+      await setControlCenterCustomerPortal(company.id, !company.customer_portal_enabled);
+      await load();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Falha ao configurar portal do cliente.");
+    } finally {
+      setPortalSaving(null);
     }
   }
 
@@ -713,6 +733,14 @@ export default function ControlCenter() {
                 <span className="cc-row-actions">
                   <button
                     type="button"
+                    disabled={portalSaving === company.id || (!company.customer_portal_enabled && company.partner_id == null)}
+                    title={company.partner_id == null ? "Empresa sem parceiro vinculado" : "Configurar acesso ao portal do cliente"}
+                    onClick={() => void toggleCustomerPortal(company)}
+                  >
+                    {portalSaving === company.id ? "Salvando..." : company.customer_portal_enabled ? "Portal ativo · Desativar" : "Portal inativo · Ativar"}
+                  </button>
+                  <button
+                    type="button"
                     onClick={() =>
                       void openClientUsers(
                         company,
@@ -725,6 +753,8 @@ export default function ControlCenter() {
                   <button
                     type="button"
                     className="cc-preview-button"
+                    disabled={company.partner_id != null && !company.customer_portal_enabled}
+                    title={company.partner_id != null && !company.customer_portal_enabled ? "Habilite o portal antes de visualizar" : "Visualizar o portal do cliente"}
                     onClick={() =>
                       void previewClient(
                         company,
