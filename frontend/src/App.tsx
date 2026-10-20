@@ -426,7 +426,7 @@ function App() {
           </span>
           <span className="workspace-divider">/</span>
           <strong>
-            {isPartnerView ? "Carteira de clientes" : company?.name || "Empresa monitorada"}
+            {isPartnerView ? "Carteira de clientes" : (isClientPreview ? previewCompany : company?.name) || "Empresa monitorada"}
           </strong>
           <span className="workspace-environment">
             {company?.plan === "pilot" ? "Piloto" : company?.plan || "Produção"}
@@ -603,7 +603,7 @@ function App() {
             {message && <div className="message">{message}</div>}
           </>
         ) : (
-          <Dashboard companyName={company?.name || "Empresa monitorada"} onOpenPrinters={() => { setPage("printers"); void loadPrinters() }} />
+          <Dashboard companyName={(isClientPreview ? previewCompany : company?.name) || "Empresa monitorada"} onOpenPrinters={() => { setPage("printers"); void loadPrinters() }} />
         )}
         </Suspense>
       </main>
