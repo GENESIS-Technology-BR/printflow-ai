@@ -77,3 +77,97 @@
 .sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap{height:auto!important;max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}
 .sap-dashboard-v0993 .sap-health-strip{position:static!important;inset:auto!important;bottom:auto!important;z-index:auto!important;flex:0 0 auto!important;transform:none!important;margin-top:12px!important;margin-bottom:0!important;width:100%!important}
 @media(max-width:900px){.sap-dashboard-page.sap-dashboard-v0993{height:auto!important;min-height:calc(100vh - 64px)!important;overflow:visible!important}}
+
+
+/* TALVOA one-screen overview — desktop viewport fit, no clipped data */
+@media(min-width:1100px) and (min-height:700px){
+ .sap-dashboard-page.sap-dashboard-v0993{
+   height:calc(100dvh - 64px)!important;
+   min-height:0!important;
+   overflow-y:auto!important;
+   padding:12px 18px 10px!important;
+   gap:7px!important;
+   max-width:none!important;
+ }
+ .sap-dashboard-v0993 .sap-page-head{min-height:56px!important;flex:0 0 auto}
+ .sap-dashboard-v0993 .sap-page-head h1{font-size:23px}
+ .sap-dashboard-v0993 .sap-page-head p{font-size:11px}
+ .sap-dashboard-v0993 .sap-empty:not(.sap-bars .sap-empty):not(.sap-unit-list .sap-empty){padding:5px 10px}
+ .sap-dashboard-v0993 .sap-kpi-grid-six{
+   grid-template-columns:repeat(6,minmax(0,1fr))!important;
+   min-height:0!important;
+   gap:8px!important;
+   flex:0 0 auto;
+ }
+ .sap-dashboard-v0993 .sap-kpi-card{
+   min-height:78px!important;
+   padding:8px 10px!important;
+   gap:8px!important;
+   border-radius:9px!important;
+ }
+ .sap-dashboard-v0993 .sap-kpi-icon{width:30px;height:30px;flex-basis:30px}
+ .sap-dashboard-v0993 .sap-kpi-card strong{font-size:clamp(16px,1.35vw,22px)!important}
+ .sap-dashboard-v0993 .sap-dashboard-grid-overview{
+   grid-template-columns:1.35fr .92fr 1fr!important;
+   min-height:0!important;
+   gap:8px!important;
+   flex:0 0 auto;
+ }
+ .sap-dashboard-v0993 .sap-dashboard-grid-overview .sap-panel{
+   min-height:155px!important;
+   border-radius:9px!important;
+ }
+ .sap-dashboard-v0993 .sap-panel>header{min-height:39px!important;padding:8px 12px!important}
+ .sap-dashboard-v0993 .sap-panel>header h2{font-size:12px!important}
+ .sap-dashboard-v0993 .sap-bars,.sap-dashboard-v0993 .sap-unit-list{padding:8px 12px!important}
+ .sap-dashboard-v0993 .sap-donut-wrap{min-height:112px!important;padding:7px 12px!important}
+ .sap-dashboard-v0993 .sap-donut{width:75px;height:75px}
+ .sap-dashboard-v0993 .sap-donut::after{width:50px;height:50px}
+ .sap-dashboard-v0993 .sap-donut-wrap{grid-template-columns:80px 1fr;gap:10px}
+ .sap-dashboard-v0993 .sap-status-list{gap:7px}
+ .sap-dashboard-v0993 .sap-printer-ranking{
+   flex:1 1 auto!important;
+   min-height:116px!important;
+   display:flex;
+   flex-direction:column;
+ }
+ .sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap{
+   flex:1 1 auto;
+   min-height:0;
+   max-height:none!important;
+   overflow-y:auto!important;
+ }
+ .sap-dashboard-v0993 .sap-table th{padding:7px 10px!important}
+ .sap-dashboard-v0993 .sap-table td{padding:7px 10px!important}
+ .sap-dashboard-v0993 .sap-health-strip{
+   min-height:48px!important;
+   margin-top:0!important;
+   padding:7px 12px!important;
+   flex:0 0 auto!important;
+ }
+ .sap-dashboard-v0993 .sap-health-icon{width:28px;height:28px;font-size:14px}
+}
+.sap-dashboard-v0993 .sap-ranking-empty{
+  padding:16px 12px;
+  color:#61758a;
+  text-align:center;
+  font-size:11px;
+}
+.sap-dashboard-v0993 .sap-health-strip.is-pending{
+  border-color:#C9DDF5!important;
+  background:#F3F8FF!important;
+}
+.sap-dashboard-v0993 .sap-health-strip.is-pending .sap-health-icon{
+  background:#DCEBFF!important;
+  color:#185BA8!important;
+}
+.sap-dashboard-v0993 .sap-health-strip.is-pending button{
+  color:#185BA8!important;
+  background:#fff!important;
+  border-color:#BBD2EF!important;
+}
+.sap-dashboard-v0993 .sap-kpi-card{border-color:#DCE7F4!important;box-shadow:0 2px 10px rgba(16,57,110,.05)}
+.sap-dashboard-v0993 .sap-kpi-card:has(.sap-kpi-icon.red){border-top:2px solid #F3B3B3!important}
+@media(max-width:1099px), (max-height:699px){
+ .sap-dashboard-page.sap-dashboard-v0993{overflow-y:auto!important}
+}
