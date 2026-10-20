@@ -237,3 +237,25 @@
   .sap-dashboard-v0993 .sap-dashboard-grid-overview{height:130px!important}
   .sap-dashboard-v0993 .sap-kpi-card{min-height:60px!important}
 }
+
+
+/* Final framing: account for actual header, avoid cropping status footer. */
+@media(min-width:1100px) and (min-height:700px){
+ .shell:has(> .dashboard-modern-shell) .sap-dashboard-page.sap-dashboard-v0993{
+   grid-template-rows:auto auto auto minmax(0,1fr) auto!important;
+   row-gap:4px!important;
+   padding:5px 12px 5px!important;
+   overflow:hidden!important;
+ }
+ .sap-dashboard-v0993 .sap-page-head{min-height:42px!important}
+ .sap-dashboard-v0993 .sap-dashboard-grid-overview{height:132px!important}
+ .sap-dashboard-v0993 .sap-dashboard-grid-overview .sap-panel{height:132px!important}
+ .sap-dashboard-v0993 .sap-kpi-card{min-height:62px!important}
+ .sap-dashboard-v0993 .sap-printer-ranking{min-height:0!important}
+ .sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap{min-height:0!important}
+ .sap-dashboard-v0993 .sap-health-strip{
+   min-height:40px!important;
+   flex-shrink:0!important;
+   padding:5px 10px!important;
+ }
+}
