@@ -1483,3 +1483,13 @@ body {
   .shell.admin-shell aside nav button,
   .shell.admin-shell .dashboard button{transition:none}
 }
+
+/* TALVOA sidebar polish 2026-10-20 */
+.shell.admin-shell aside nav button::before{content:none!important;display:none!important}
+.shell.admin-shell aside nav button{display:flex;align-items:center;gap:10px;min-height:39px;padding:8px 11px;border-radius:7px;font-size:12px;line-height:1.35;font-weight:600}
+.shell.admin-shell aside nav .nav-icon{flex:0 0 19px;width:19px;height:19px;display:grid;place-items:center;color:#D5E6FF!important}
+.shell.admin-shell aside nav button.active{background:#2159C6!important;border-color:transparent!important;box-shadow:inset 3px 0 0 #79B7FF!important}
+.shell.admin-shell aside nav button.active .nav-icon{color:#fff!important}
+.shell.admin-shell aside .logout{background:#0D3C7B!important;border:1px solid #255A9C!important;border-radius:8px!important;color:#F5F9FF!important;min-height:41px;padding:10px 12px;font-weight:650}
+.shell.admin-shell aside .logout:hover{background:#1755A1!important;color:#fff!important}
+.shell.admin-shell aside .logout::before{margin-right:4px;color:#D5E6FF}
