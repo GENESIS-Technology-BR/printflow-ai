@@ -1565,3 +1565,32 @@ body {
     padding:8px 12px!important;
   }
 }
+
+
+/* Client desktop viewport: fixed header and main content share one screen. */
+@media(min-width:1100px) and (min-height:700px){
+  html:has(.shell.client-shell .dashboard-modern-shell),
+  body:has(.shell.client-shell .dashboard-modern-shell),
+  #root:has(.shell.client-shell .dashboard-modern-shell){
+    height:100%!important;min-height:0!important;overflow:hidden!important;
+  }
+  .shell.client-shell:has(> .dashboard-modern-shell){
+    height:100dvh!important;min-height:0!important;max-height:100dvh!important;
+    overflow:hidden!important;
+  }
+  .shell.client-shell:has(> .dashboard-modern-shell) > .dashboard-modern-shell{
+    box-sizing:border-box!important;
+    height:100dvh!important;max-height:100dvh!important;
+    min-height:0!important;
+    padding-top:48px!important;
+    padding-bottom:0!important;
+    overflow:hidden!important;
+  }
+  .shell.client-shell:has(> .dashboard-modern-shell) .sap-dashboard-page.sap-dashboard-v0993{
+    height:100%!important;max-height:100%!important;
+    min-height:0!important;overflow:hidden!important;
+    grid-template-rows:auto auto auto minmax(155px,auto) minmax(0,1fr) auto!important;
+    padding:6px 12px 7px!important;
+    gap:4px!important;
+  }
+}
