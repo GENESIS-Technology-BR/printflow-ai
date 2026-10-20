@@ -171,3 +171,26 @@
 @media(max-width:1099px), (max-height:699px){
  .sap-dashboard-page.sap-dashboard-v0993{overflow-y:auto!important}
 }
+
+
+/* TALVOA final viewport polish: no residual scrollbar on desktop */
+.sap-dashboard-v0993 .sap-donut.is-empty{
+  background:conic-gradient(#DCE5F0 0deg 360deg)!important;
+}
+.sap-dashboard-v0993 .sap-donut.is-empty strong{color:#526B87}
+@media(min-width:1100px) and (min-height:700px){
+  .sap-dashboard-page.sap-dashboard-v0993{
+    height:calc(100dvh - 64px)!important;
+    box-sizing:border-box!important;
+    padding-top:8px!important;
+    padding-bottom:6px!important;
+    gap:5px!important;
+    scrollbar-width:none;
+  }
+  .sap-dashboard-page.sap-dashboard-v0993::-webkit-scrollbar{display:none}
+  .sap-dashboard-v0993 .sap-page-head{min-height:50px!important}
+  .sap-dashboard-v0993 .sap-kpi-card{min-height:70px!important}
+  .sap-dashboard-v0993 .sap-dashboard-grid-overview .sap-panel{min-height:138px!important}
+  .sap-dashboard-v0993 .sap-printer-ranking{min-height:90px!important}
+  .sap-dashboard-v0993 .sap-health-strip{min-height:44px!important}
+}
