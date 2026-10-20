@@ -298,6 +298,8 @@ export type ControlCenterCompany = {
   name: string;
   plan: string;
   active: boolean;
+  partner_id: number | null;
+  customer_portal_enabled: boolean;
   agent_online: boolean;
   agent_stale: boolean;
   agent_communication_state: "healthy" | "stale" | "offline" | "never_seen" | "inactive";
@@ -331,6 +333,14 @@ export type ControlCenterOverview = {
 
 export async function getMe(): Promise<MeProfile> {
   return request<MeProfile>("/api/v1/auth/me");
+}
+
+export async function setControlCenterCustomerPortal(companyId: number, enabled: boolean): Promise<{company_id: number; customer_portal_enabled: boolean}> {
+  return request(`/api/v1/partners/companies/${companyId}/customer-portal`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled }),
+  });
 }
 
 export async function getControlCenterOverview(): Promise<ControlCenterOverview> {
