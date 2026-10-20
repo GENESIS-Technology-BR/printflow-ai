@@ -1364,3 +1364,122 @@ body {
 .shell.admin-shell aside .nav-section-title{color:#B9D8FF!important}
 .shell.admin-shell aside .brand-copy span{color:#D6E9FF!important}
 .shell.admin-shell aside .logout:hover{background:#104982!important}
+
+
+/* TALVOA Dashboard 2.0 — customer-facing homologation polish
+   Presentation only: no business logic, API or monitoring changes. */
+.shell.admin-shell{
+  --talvoa-navy:#062B63;
+  --talvoa-blue:#1268ED;
+  --talvoa-ink:#142B49;
+  --talvoa-line:#E0E8F3;
+  --talvoa-canvas:#F3F6FB;
+}
+.shell.admin-shell .dashboard{
+  background:var(--talvoa-canvas);
+  color:var(--talvoa-ink);
+}
+.shell.admin-shell aside{
+  box-shadow:4px 0 20px rgba(6,43,99,.09)!important;
+}
+.shell.admin-shell aside nav button{
+  min-height:41px;
+  border-radius:9px;
+  transition:background-color .16s ease,color .16s ease,transform .16s ease;
+}
+.shell.admin-shell aside nav button:hover:not(.active){
+  transform:translateX(2px);
+}
+.shell.admin-shell aside nav button.active{
+  box-shadow:inset 3px 0 0 #75B5FF,0 3px 12px rgba(0,23,75,.18);
+}
+.shell.admin-shell aside nav button:focus-visible,
+.shell.admin-shell button:focus-visible,
+.shell.admin-shell a:focus-visible{
+  outline:3px solid #70B8FF;
+  outline-offset:2px;
+}
+.shell.admin-shell .workspace-topbar{
+  box-shadow:0 2px 12px rgba(6,43,99,.13);
+}
+.shell.admin-shell .workspace-avatar{
+  border-color:rgba(255,255,255,.4);
+  color:#fff;
+  background:rgba(255,255,255,.12);
+}
+.shell.admin-shell .workspace-environment{
+  background:rgba(255,255,255,.13);
+  border-color:rgba(255,255,255,.3);
+}
+.shell.admin-shell .dashboard h1{
+  color:#112C50;
+  font-weight:800;
+  letter-spacing:-.035em;
+}
+.shell.admin-shell .dashboard .panel,
+.shell.admin-shell .dashboard .hero{
+  border:1px solid var(--talvoa-line);
+  border-radius:13px;
+  box-shadow:0 3px 16px rgba(13,47,91,.045);
+}
+.shell.admin-shell .dashboard .panel{
+  background:#fff;
+}
+.shell.admin-shell .dashboard .panel h3{
+  color:#173456;
+  letter-spacing:-.015em;
+}
+.shell.admin-shell .dashboard .grid{
+  gap:14px;
+}
+.shell.admin-shell .dashboard .primary{
+  background:var(--talvoa-blue);
+  border-radius:8px;
+  box-shadow:0 3px 10px rgba(18,104,237,.13);
+}
+.shell.admin-shell .dashboard .primary:hover{
+  background:#0954C8;
+}
+.shell.admin-shell .dashboard .actions button,
+.shell.admin-shell .dashboard button{
+  transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.shell.admin-shell .dashboard .status-box{
+  border-color:#D8E6F5;
+  background:#F5F9FF;
+}
+.shell.admin-shell .dashboard table{
+  border-collapse:separate;
+  border-spacing:0;
+  width:100%;
+}
+.shell.admin-shell .dashboard table th{
+  background:#F3F7FC;
+  color:#315474;
+  font-weight:750;
+}
+.shell.admin-shell .dashboard table th,
+.shell.admin-shell .dashboard table td{
+  border-bottom:1px solid #E8EDF5;
+}
+.shell.admin-shell .dashboard table tbody tr:hover{
+  background:#F6FAFF;
+}
+.shell.admin-shell .dashboard .printer-filter-empty{
+  border-color:#C9DDF4;
+  background:#F8FBFF;
+  color:#536B85;
+}
+@media(max-width:1100px) and (min-width:801px){
+  .shell.admin-shell .dashboard{padding-left:18px;padding-right:18px}
+  .shell.admin-shell .dashboard .grid{gap:12px}
+}
+@media(max-width:800px){
+  .shell.admin-shell aside nav button:hover:not(.active){transform:none}
+  .shell.admin-shell .dashboard .panel{border-radius:10px}
+  .shell.admin-shell .dashboard table{min-width:620px}
+}
+@media(prefers-reduced-motion:reduce){
+  .shell.admin-shell aside nav button,
+  .shell.admin-shell .dashboard button{transition:none}
+}
