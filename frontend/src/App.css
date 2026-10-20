@@ -1352,3 +1352,15 @@ body {
   .dashboard{min-width:0!important;padding:14px!important}
   .dashboard table{display:block;max-width:100%;overflow-x:auto}
 }
+
+
+/* TALVOA homologacao — azul corporativo intenso aprovado em 2026-10-20 */
+:root{--pf-accent:#1268ED;--pf-accent-soft:#E7F0FF}
+.shell.admin-shell > aside,.shell.admin-shell aside{background:#062B63!important;background-image:none!important;border-right-color:#052451!important}
+.shell.admin-shell .workspace-topbar,.workspace-topbar{background:#084594!important;background-image:none!important;border-bottom-color:#063778!important}
+.shell.admin-shell aside nav button.active{background:#1268ED!important;color:#fff!important;border-color:#1268ED!important}
+.shell.admin-shell aside nav button.active .nav-icon{color:#fff!important}
+.shell.admin-shell aside nav button:hover:not(.active){background:#104982!important;color:#fff!important}
+.shell.admin-shell aside .nav-section-title{color:#B9D8FF!important}
+.shell.admin-shell aside .brand-copy span{color:#D6E9FF!important}
+.shell.admin-shell aside .logout:hover{background:#104982!important}
