@@ -312,3 +312,25 @@
   .sap-dashboard-v0993 .sap-dashboard-grid-overview{min-height:125px!important;max-height:145px!important}
   .sap-dashboard-v0993 .sap-donut-wrap{min-height:90px!important}
 }
+
+
+/* Customer portal desktop: match compact six-row admin dashboard layout. */
+@media(min-width:1100px) and (min-height:700px){
+  .shell.client-shell:has(> .dashboard-modern-shell) .sap-dashboard-page.sap-dashboard-v0993{
+    display:grid!important;
+    grid-template-rows:auto auto auto minmax(125px,auto) minmax(0,1fr) auto!important;
+    align-content:stretch!important;
+    gap:5px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-dashboard-grid-overview{
+    min-height:125px!important;
+    max-height:165px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking{
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-health-strip{
+    min-height:43px!important;
+  }
+}
