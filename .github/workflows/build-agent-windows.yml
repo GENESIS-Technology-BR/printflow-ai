@@ -2,6 +2,15 @@ name: Build TALVOA Agent Windows
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "agent/python/**"
+      - "agent/windows/**"
+      - ".github/workflows/build-agent-windows.yml"
+      - "requirements.txt"
+      - "requirements-dev.txt"
   push:
     branches:
       - main
@@ -103,7 +112,7 @@ jobs:
           python -m py_compile agent/python/api/client.py
 
       - name: Impedir destino de producao no piloto SupriTech
-        if: github.ref == 'refs/heads/feature/partner-multitenancy'
+        if: github.ref == 'refs/heads/feature/partner-multitenancy' || github.head_ref == 'feature/partner-multitenancy'
         shell: powershell
         run: |
           $installer = Get-Content agent/windows/Install-TALVOA-Agent.ps1 -Raw
