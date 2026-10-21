@@ -55,6 +55,7 @@ export default function ControlCenter() {
       null,
     );
 
+  const [portalSaving, setPortalSaving] = useState<number | null>(null);
   const [agentCompany, setAgentCompany] = useState<ControlCenterCompany | null>(null);
   const [agentCredential, setAgentCredential] = useState<string | null>(null);
   const [agentLoading, setAgentLoading] = useState(false);
