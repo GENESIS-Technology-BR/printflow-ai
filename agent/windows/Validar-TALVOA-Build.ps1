@@ -83,6 +83,18 @@ try {
         Add-Check "Versao alinhada no instalador" $installerVersionAligned $versionDetail
     }
 
+    # SupriTech pilot must not silently send printer inventory to another tenant/API.
+    $expectedPilotApi = "https://talvoa-supritech-homolog-api.onrender.com"
+    foreach ($scriptName in @("Install-TALVOA-Agent.ps1", "Start-TALVOA-Agent.ps1")) {
+        $scriptPath = Join-Path $baseDir $scriptName
+        if (Test-Path $scriptPath) {
+            $scriptBody = Get-Content $scriptPath -Raw
+            $safeTarget = $scriptBody.Contains($expectedPilotApi) -and
+                -not $scriptBody.Contains("https://printflow-api-3uwr.onrender.com")
+            Add-Check "Destino homologacao $scriptName" $safeTarget "API SupriTech; nenhuma referencia ao endpoint legado"
+        }
+    }
+
     $exe = Join-Path $baseDir "TALVOA-Agent.exe"
     if (Test-Path $exe) {
         $hash = (Get-FileHash $exe -Algorithm SHA256).Hash
