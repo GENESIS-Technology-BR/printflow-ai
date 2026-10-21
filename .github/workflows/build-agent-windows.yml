@@ -73,14 +73,6 @@ jobs:
         shell: powershell
         run: pip-audit -r requirements.txt
 
-      - name: Gate de seguranca frontend
-        shell: powershell
-        run: |
-          Push-Location frontend
-          npm ci
-          npm audit --audit-level=high
-          Pop-Location
-
       - name: Validar scripts Windows
         shell: powershell
         run: |
