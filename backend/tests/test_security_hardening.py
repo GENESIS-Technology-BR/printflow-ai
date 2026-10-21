@@ -14,6 +14,7 @@ def source(path: str) -> str:
 
 def test_jwt_secret_has_no_insecure_fallback(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.delenv("JWT_SECRET", raising=False)
+    monkeypatch.delenv("SECRET_KEY", raising=False)
 
     with pytest.raises(RuntimeError):
         security._secret_key()
