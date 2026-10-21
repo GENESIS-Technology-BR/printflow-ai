@@ -7,6 +7,37 @@ const upstream = "https://talvoa-supritech-homolog-api.onrender.com";
 const mime = { ".html":"text/html; charset=utf-8", ".js":"text/javascript; charset=utf-8", ".css":"text/css; charset=utf-8", ".svg":"image/svg+xml", ".png":"image/png", ".ico":"image/x-icon", ".json":"application/json" };
 const port = Number(process.env.PORT || 10000);
 
+// Start warming the sleeping Free-tier API as soon as the portal HTML is requested.
+// Throttled and non-blocking: never forwards cookies, credentials, or user data.
+let lastWarmupAt = 0;
+let warmupRunning = false;
+function warmUpApi() {
+  if (warmupRunning || Date.now() - lastWarmupAt < 45000) return;
+  lastWarmupAt = Date.now();
+  warmupRunning = true;
+  void (async () => {
+    try {
+      for (let attempt = 1; attempt <= 12; attempt++) {
+        const response = await fetch(upstream + "/health", {
+          headers: { Accept: "application/json" },
+          signal: AbortSignal.timeout(12000),
+        });
+        if (response.ok) {
+          console.info(JSON.stringify({ event: "api_warmup_ready", attempt }));
+          return;
+        }
+        if (![502, 503, 504].includes(response.status)) return;
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+      console.warn(JSON.stringify({ event: "api_warmup_timeout" }));
+    } catch (error) {
+      console.warn(JSON.stringify({ event: "api_warmup_transport_error", errorType: error?.name || "unknown" }));
+    } finally {
+      warmupRunning = false;
+    }
+  })();
+}
+
 http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", "http://localhost");
@@ -105,6 +136,7 @@ http.createServer(async (req, res) => {
     let file = requested;
     try { if (!(await stat(file)).isFile()) file = path.join(root, "index.html"); }
     catch { file = path.join(root, "index.html"); }
+    if (file.endsWith("index.html")) warmUpApi();
     const data = await readFile(file);
     res.setHeader("Content-Type", mime[path.extname(file)] || "application/octet-stream");
     // HTML must not be cached; fingerprinted assets may be cached immutably.
