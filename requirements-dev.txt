@@ -5,3 +5,6 @@ pytest>=9.0,<10.0
 
 # FastAPI/Starlette TestClient used by backend integration tests
 httpx2
+
+# IANA timezone database for Windows CI (zoneinfo America/Sao_Paulo)
+tzdata
