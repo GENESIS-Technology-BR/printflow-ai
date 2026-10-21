@@ -102,53 +102,7 @@ try {
     if (Test-Path $exe) {
         $hash = (Get-FileHash $exe -Algorithm SHA256).Hash
         Add-Check "Integridade do executavel" ($hash.Length -eq 64) "SHA256 $hash"
-        Add-Check "SHA256 presente no manifesto" ($expectedExeHash -match '^[0-9a-fA-F]{64}
-        $help = & $exe --help 2>&1 | Out-String
-        Add-Check "Inicializacao do executavel" ($LASTEXITCODE -eq 0) "teste --help"
-        Add-Check "Modo automatico" ($help -match "--daemon") "opcao disponivel"
-        Add-Check "Suporte multi-rede" ($help -match "--network") "opcao --network disponivel"
-    }
-
-    $task = Get-ScheduledTask -TaskName "TALVOA Agent" -ErrorAction SilentlyContinue
-    if ($task) {
-        $actionText = ($task.Actions | ForEach-Object { "$($_.Execute) $($_.Arguments) $($_.WorkingDirectory)" }) -join " "
-        $currentBase = ([System.IO.Path]::GetFullPath($baseDir)).TrimEnd("\")
-        $taskBelongsToCurrentPackage = ($actionText -like "*$currentBase*")
-        if ($taskBelongsToCurrentPackage) {
-            Add-Check "Instalacao no Windows" $true "tarefa encontrada para este pacote: $($task.State)"
-            Add-Check "Fila do Agent" ($task.State -ne "Queued") "estado $($task.State)"
-            $taskInfo = Get-ScheduledTaskInfo -TaskName "TALVOA Agent"
-            $lastResult = [long]$taskInfo.LastTaskResult
-            $taskIsRunning = ($task.State -eq "Running" -and $lastResult -eq 267009)
-            $lastRunHealthy = $lastResult -eq 0 -or $taskIsRunning
-            $lastRunDetail = if ($taskIsRunning) { "execucao em andamento (codigo 267009)" } elseif ($lastResult -eq 0) { "concluida com sucesso (codigo 0)" } else { "falha real (codigo $lastResult)" }
-            Add-Check "Ultima execucao" $lastRunHealthy $lastRunDetail
-        } else {
-            Add-Check "Instalacao no Windows" $true "existe uma instalacao anterior em outra pasta; Build atual ainda nao instalado"
-        }
-    } else {
-        Add-Check "Instalacao no Windows" $true "Build ainda nao instalado; validacao do pacote concluida"
-    }
-}
-catch {
-    Add-Check "Execucao da validacao" $false $_.Exception.Message
-}
-
-$overall = if ($failed) { "ATENCAO" } else { "APROVADO" }
-@(
-    "TALVOA - RESULTADO DA VALIDACAO"
-    "Data: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-    "Resultado: $overall"
-    ""
-    $checks
-) | Set-Content $resultPath -Encoding UTF8
-
-Get-Content $resultPath
-Write-Host ""
-Write-Host "Relatorio salvo em: $resultPath"
-if ($failed) { exit 1 }
-exit 0
-) "manifesto de integridade obrigatorio"
+        Add-Check "SHA256 presente no manifesto" ($expectedExeHash -match '^[0-9a-fA-F]{64}$') "manifesto de integridade obrigatorio"
         Add-Check "SHA256 confere com a Build" ($hash -eq $expectedExeHash) "hash do executavel confere com BUILD-VALIDATION.txt"
         $help = & $exe --help 2>&1 | Out-String
         Add-Check "Inicializacao do executavel" ($LASTEXITCODE -eq 0) "teste --help"
