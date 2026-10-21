@@ -1659,3 +1659,46 @@ body {
     overflow-x:auto!important;
   }
 }
+
+
+/* SupriTech pilot: single page scrollbar, full manufacturer list, natural table flow. */
+@media (min-width:1100px) {
+  .shell.client-shell .sap-dashboard-page.sap-dashboard-v0993 {
+    display:flex!important;
+    flex-direction:column!important;
+    grid-template-rows:none!important;
+    height:auto!important;
+    min-height:calc(100dvh - 48px)!important;
+    max-height:none!important;
+    overflow:visible!important;
+    gap:0!important;
+  }
+  .shell.client-shell .sap-dashboard-page > .sap-dashboard-grid-overview {
+    height:auto!important;
+    max-height:none!important;
+    min-height:215px!important;
+    overflow:visible!important;
+    align-items:stretch!important;
+  }
+  .shell.client-shell .sap-dashboard-page > .sap-dashboard-grid-overview > * {
+    min-width:0!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .shell.client-shell .sap-dashboard-page > .sap-printer-ranking {
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .shell.client-shell .sap-dashboard-page > .sap-printer-ranking .sap-table-wrap {
+    height:auto!important;
+    max-height:none!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+  }
+  .shell.client-shell .sap-dashboard-page > .sap-health-strip {
+    position:static!important;
+    margin-top:8px!important;
+  }
+}
