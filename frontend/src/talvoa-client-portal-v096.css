@@ -455,3 +455,12 @@
 .client-shell .logout:hover{
   background:#084A61!important;
 }
+
+/* Premium client onboarding, scoped to empty dashboard. */
+.client-shell .sap-client-onboarding .sap-dashboard-grid-overview{display:none!important}
+.client-shell .sap-client-onboarding>.sap-empty{display:none!important}
+.client-shell .sap-client-onboarding .sap-printer-ranking>header,.client-shell .sap-client-onboarding .sap-printer-ranking .sap-table{display:none!important}
+.client-shell .sap-client-onboarding .sap-ranking-empty{min-height:0!important;padding:32px!important;background:#f8fbff!important}
+.client-shell .sap-client-onboarding .sap-health-strip{margin-top:12px!important}
+.client-shell .sap-kpi-card{border-radius:14px!important;min-height:108px!important}
+.client-shell .sap-page-head{border-radius:15px!important;padding:18px 22px!important}
