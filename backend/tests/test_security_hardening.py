@@ -81,7 +81,7 @@ def test_security_dependencies_avoid_known_blockers():
 
     assert "python-jose" not in requirements.lower()
     assert "PyJWT[crypto]" in requirements
-    assert "pillow>=12.3" in requirements.lower()
+    assert "pillow>=13.0" in requirements.lower()
 
 
 def test_access_tokens_are_short_lived_and_require_security_claims(
