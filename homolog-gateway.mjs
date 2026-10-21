@@ -18,16 +18,23 @@ function warmUpApi() {
   void (async () => {
     try {
       for (let attempt = 1; attempt <= 12; attempt++) {
-        const response = await fetch(upstream + "/health", {
-          headers: { Accept: "application/json" },
-          signal: AbortSignal.timeout(12000),
-        });
-        if (response.ok) {
-          console.info(JSON.stringify({ event: "api_warmup_ready", attempt }));
-          return;
+        try {
+          const response = await fetch(upstream + "/health", {
+            headers: { Accept: "application/json" },
+            signal: AbortSignal.timeout(12000),
+          });
+          if (response.ok) {
+            console.info(JSON.stringify({ event: "api_warmup_ready", attempt }));
+            return;
+          }
+          if (![502, 503, 504].includes(response.status)) {
+            console.warn(JSON.stringify({ event: "api_warmup_unexpected_status", status: response.status }));
+            return;
+          }
+        } catch (error) {
+          console.warn(JSON.stringify({ event: "api_warmup_attempt_failed", attempt, errorType: error?.name || "unknown" }));
         }
-        if (![502, 503, 504].includes(response.status)) return;
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        if (attempt < 12) await new Promise(resolve => setTimeout(resolve, 5000));
       }
       console.warn(JSON.stringify({ event: "api_warmup_timeout" }));
     } catch (error) {
