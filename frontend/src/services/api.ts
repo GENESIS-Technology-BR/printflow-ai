@@ -455,6 +455,12 @@ export type ControlCenterClientUser = {
   created_at: string;
 };
 
+export async function getControlCenterAgentCredential(companyUuid: string): Promise<{company_uuid: string; agent_token: string}> {
+  return request<{company_uuid: string; agent_token: string}>(
+    `/api/v1/control-center/clients/${encodeURIComponent(companyUuid)}/agent-credential`,
+  );
+}
+
 export async function getControlCenterClientUsers(
   companyUuid: string,
 ): Promise<ControlCenterClientUser[]> {
