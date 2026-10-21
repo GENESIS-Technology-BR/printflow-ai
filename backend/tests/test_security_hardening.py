@@ -262,7 +262,8 @@ def test_security_gate_blocks_high_dependency_risk():
     workflow = source(".github/workflows/build-agent-windows.yml")
 
     assert "pip-audit -r requirements.txt" in workflow
-    assert "npm audit --audit-level=high" in workflow
+    frontend_security = source(".github/workflows/frontend-security.yml")
+    assert "npm audit --audit-level=high" in frontend_security
     assert "python -m pytest -q agent/python/tests backend/tests" in workflow
     assert "actions/checkout@v5" in workflow
     assert "actions/setup-python@v6" in workflow
