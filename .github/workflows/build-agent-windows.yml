@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - feature/partner-multitenancy
     paths:
       - "agent/python/**"
       - "agent/windows/**"
@@ -101,6 +102,20 @@ jobs:
           python -m py_compile agent/python/snmp/engine.py
           python -m py_compile agent/python/api/client.py
 
+      - name: Impedir destino de producao no piloto SupriTech
+        if: github.ref == 'refs/heads/feature/partner-multitenancy'
+        shell: powershell
+        run: |
+          $installer = Get-Content agent/windows/Install-TALVOA-Agent.ps1 -Raw
+          $launcher = Get-Content agent/windows/Start-TALVOA-Agent.ps1 -Raw
+          $expected = 'https://talvoa-supritech-homolog-api.onrender.com'
+          if (-not $installer.Contains($expected) -or -not $launcher.Contains($expected)) {
+            throw 'O instalador ou o inicializador nao aponta para a API de homologacao SupriTech.'
+          }
+          if ($installer.Contains('https://printflow-api-3uwr.onrender.com') -or $launcher.Contains('https://printflow-api-3uwr.onrender.com')) {
+            throw 'Referencia antiga de producao encontrada no pacote piloto.'
+          }
+
       - name: Gerar executável oficial
         shell: powershell
         run: |
@@ -158,6 +173,7 @@ jobs:
           Copy-Item agent/windows/VALIDAR-TALVOA-Build.bat package/
           Copy-Item agent/windows/Validar-TALVOA-Build.ps1 package/
           Copy-Item agent/windows/README-TALVOA.txt package/
+          Copy-Item agent/windows/README-TESTE.txt package/
           $env:PYTHONPATH = "${{ github.workspace }}/agent/python"
           $agentVersion = (python -c "from version import AGENT_VERSION; print(AGENT_VERSION)").Trim()
           $exeHash = (Get-FileHash package/TALVOA-Agent.exe -Algorithm SHA256).Hash
