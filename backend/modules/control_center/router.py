@@ -407,6 +407,24 @@ def _find_company_by_uuid(
     return company
 
 
+@router.get("/clients/{company_uuid}/agent-credential")
+def get_client_agent_credential(
+    company_uuid: str,
+    current_user: User = Depends(get_platform_admin),
+    db: Session = Depends(get_db),
+):
+    """Explicit platform-admin-only retrieval for onboarding a specific tenant."""
+    from fastapi.responses import JSONResponse
+
+    company = _find_company_by_uuid(db, company_uuid)
+    response = JSONResponse(
+        content={"company_uuid": company.uuid, "agent_token": company.agent_token}
+    )
+    response.headers["Cache-Control"] = "no-store, private"
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+
 @router.get(
     "/clients/{company_uuid}/users",
     response_model=list[ControlCenterClientUser],
