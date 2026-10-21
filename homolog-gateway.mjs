@@ -90,7 +90,12 @@ http.createServer(async (req, res) => {
     catch { file = path.join(root, "index.html"); }
     const data = await readFile(file);
     res.setHeader("Content-Type", mime[path.extname(file)] || "application/octet-stream");
-    res.setHeader("Cache-Control", file.endsWith("index.html") ? "no-store" : "public, max-age=3600");
+    // HTML must not be cached; fingerprinted assets may be cached immutably.
+    const basename = path.basename(file);
+    const isHashedAsset = /\.[a-zA-Z0-9_-]{8,}\.(?:js|css|svg|png|webp|woff2?)$/.test(basename);
+    res.setHeader("Cache-Control", file.endsWith("index.html")
+      ? "no-store"
+      : isHashedAsset ? "public, max-age=31536000, immutable" : "public, max-age=3600");
     res.end(data);
   } catch (error) {
     console.error(JSON.stringify({ event: "gateway_upstream_failure", errorType: error?.name || "unknown" }));
