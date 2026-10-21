@@ -302,7 +302,7 @@ try {
 
     $processInfo.EnvironmentVariables[
         "TALVOA_API_URL"
-    ] = "https://printflow-api-3uwr.onrender.com"
+    ] = "https://talvoa-supritech-homolog-api.onrender.com"
 
     $processInfo.EnvironmentVariables[
         "TALVOA_AGENT_NAME"
