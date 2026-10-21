@@ -50,6 +50,7 @@ function App() {
   const [message, setMessage] = useState("")
   const [messageKind, setMessageKind] = useState<"error" | "success">("error")
   const [loading, setLoading] = useState(false)
+  const [apiRecovering, setApiRecovering] = useState(false)
   const [page, setPage] = useState<Page>("dashboard")
   const [printers, setPrinters] = useState<DashboardPrinter[]>([])
   const [printersLoading, setPrintersLoading] = useState(false)
@@ -136,6 +137,35 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile])
 
+  useEffect(() => {
+    if (!apiRecovering) return
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const check = async () => {
+      try {
+        const response = await fetch("/health/upstream", {
+          cache: "no-store",
+          signal: AbortSignal.timeout(80000),
+        })
+        if (cancelled) return
+        if (response.ok) {
+          setApiRecovering(false)
+          setMessage("Serviço disponível novamente. Você já pode entrar.")
+          setMessageKind("success")
+          return
+        }
+      } catch {
+        // Render Free may still be waking up; retry health only.
+      }
+      if (!cancelled) timer = setTimeout(check, 10000)
+    }
+    void check()
+    return () => {
+      cancelled = true
+      if (timer) clearTimeout(timer)
+    }
+  }, [apiRecovering])
+
   async function authenticate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setLoading(true)
@@ -193,7 +223,14 @@ function App() {
       setAuthenticated(true)
       setAuthReady(true)
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Falha na autenticação")
+      const detail = error instanceof Error ? error.message : "Falha na autenticação"
+      const isWakeup = detail.includes("homologação está despertando") || detail.includes("Serviço temporariamente indisponível")
+      if (isWakeup && mode === "login") {
+        setApiRecovering(true)
+        setMessage("Aguarde: estamos iniciando o serviço. A disponibilidade será verificada automaticamente; sua senha não será reenviada.")
+      } else {
+        setMessage(detail)
+      }
       setMessageKind("error")
     } finally {
       setLoading(false)
@@ -349,7 +386,7 @@ function App() {
                 </label>
               </>
             )}
-            <button className="primary" disabled={loading}>
+            <button className="primary" disabled={loading || apiRecovering}>
               {loading
                 ? "Processando..."
                 : mode === "login"
@@ -383,7 +420,7 @@ function App() {
               </button>
             )}
           </form>
-          {message && <div className={`message ${messageKind}`}>{message}</div>}
+          {message && <div className={`message ${messageKind}`} role="status" aria-live="polite">{apiRecovering ? "⏳ " : ""}{message}</div>}
         </section>
       </main>
     )
