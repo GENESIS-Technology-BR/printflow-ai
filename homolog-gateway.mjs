@@ -68,6 +68,23 @@ http.createServer(async (req, res) => {
         throw error;
       }
       console.info(JSON.stringify({ event: "proxy_upstream_response", method: req.method, path: url.pathname, upstreamStatus: response.status, elapsedMs: Date.now() - upstreamStarted }));
+      // Retry transient upstream errors for safe reads only.
+      // Never replay credential-bearing POST requests.
+      if (req.method === "GET" && [502, 503, 504].includes(response.status)) {
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+          try {
+            response = await fetch(upstream + url.pathname + url.search, {
+              method: "GET", headers, redirect: "manual",
+              signal: AbortSignal.timeout(12000),
+            });
+            console.info(JSON.stringify({ event: "proxy_safe_retry", path: url.pathname, attempt, upstreamStatus: response.status }));
+            if (![502, 503, 504].includes(response.status)) break;
+          } catch (error) {
+            console.warn(JSON.stringify({ event: "proxy_safe_retry_failed", path: url.pathname, attempt, errorType: error?.name || "unknown" }));
+          }
+        }
+      }
       if ([502, 503, 504].includes(response.status)) {
         res.writeHead(503, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "Retry-After": "30" });
         res.end(JSON.stringify({ detail: "A homologação está despertando após um período de inatividade. Aguarde cerca de um minuto e tente novamente." }));
