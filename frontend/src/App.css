@@ -1578,3 +1578,18 @@ body {
     overflow:hidden!important;
   }
 }
+
+
+/* Client overview: no outer scrollbar while the content fits the viewport.
+   Restrict the rule to the dashboard so other routes retain normal scrolling. */
+@media (min-width:1200px) and (min-height:820px) {
+  html:has(.shell.client-shell .sap-dashboard-page.sap-dashboard-v0993),
+  body:has(.shell.client-shell .sap-dashboard-page.sap-dashboard-v0993) {
+    overflow-y:hidden!important;
+    height:100dvh!important;
+  }
+  .shell.client-shell:has(.sap-dashboard-page.sap-dashboard-v0993) {
+    max-height:100dvh!important;
+    overflow:hidden!important;
+  }
+}

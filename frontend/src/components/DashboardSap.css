@@ -723,3 +723,77 @@
     padding:5px 10px!important;
   }
 }
+
+
+/* TALVOA customer visual polish — scoped to the client overview.
+   No changes to monitoring data, navigation or API. */
+@media (min-width:1200px) and (min-height:820px) {
+  .shell.client-shell .sap-dashboard-page.sap-dashboard-v0993 {
+    background:#f3f7fb!important;
+    gap:8px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-kpi-card {
+    border:1px solid #e1eaf3!important;
+    border-radius:10px!important;
+    box-shadow:0 2px 10px rgba(25,65,110,.035)!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-kpi-card strong {
+    font-size:clamp(20px,1.6vw,25px)!important;
+    font-weight:800!important;
+    letter-spacing:-.025em!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-kpi-card small {
+    font-weight:750!important;
+    letter-spacing:.035em!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-dashboard-grid-overview {
+    gap:8px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-dashboard-grid-overview .sap-panel {
+    border:1px solid #e1eaf3!important;
+    border-radius:10px!important;
+    box-shadow:0 2px 10px rgba(25,65,110,.035)!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-donut-wrap {
+    padding:10px 14px!important;
+    gap:12px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-status-list {
+    gap:10px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-unit-list {
+    padding:15px 14px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking {
+    border:1px solid #e1eaf3!important;
+    box-shadow:0 2px 10px rgba(25,65,110,.035)!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-table th {
+    background:#f1f6fb!important;
+    color:#315779!important;
+    font-weight:800!important;
+    border-bottom:1px solid #dce7f2!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-table td {
+    color:#304960!important;
+    font-size:10.5px!important;
+    border-bottom:1px solid #edf1f6!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-health-strip.has-alerts {
+    border:1px solid #f0dfbc!important;
+    border-left:3px solid #edb54a!important;
+    background:#fffaf1!important;
+    box-shadow:none!important;
+    border-radius:9px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-health-strip.has-alerts .sap-health-icon {
+    background:#fff0cf!important;
+    color:#9c6b17!important;
+  }
+  /* On a fitted desktop viewport, avoid a permanent empty scroll track
+     without disabling scrolling when the printer list actually overflows. */
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap {
+    scrollbar-width:auto;
+    overflow-y:auto!important;
+  }
+}
