@@ -12,6 +12,9 @@ on:
       - '.github/workflows/homolog-migration-safety.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   backend:
     runs-on: ubuntu-latest
@@ -38,10 +41,23 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref == 'security/vite-8-2-4-supritech' && github.head_ref || github.sha }}
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - name: Audit high and critical vulnerabilities in isolated security PR
+        if: github.event_name == 'pull_request' && github.head_ref == 'security/vite-8-2-4-supritech'
+        run: npm audit --audit-level=high
       - run: npm run build
+      - name: Export verified lockfile for review (no deploy)
+        if: github.event_name == 'pull_request' && github.head_ref == 'security/vite-8-2-4-supritech'
+        uses: actions/upload-artifact@v4
+        with:
+          name: supritech-vite-8-2-4-lockfile
+          path: frontend/package-lock.json
+          retention-days: 7
