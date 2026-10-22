@@ -57,6 +57,12 @@ export default function PartnerPortfolio() {
   const [companies, setCompanies] = useState<PartnerCompany[]>([]);
   const [loading, setLoading] = useState(true);
   const [companySearch, setCompanySearch] = useState("");
+  const [clientPartnerId, setClientPartnerId] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [clientResponsible, setClientResponsible] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientCreating, setClientCreating] = useState(false);
+  const [createdClient, setCreatedClient] = useState<{ company_name: string; email: string; temporary_password: string } | null>(null);
   const [companyStatusFilter, setCompanyStatusFilter] = useState<"all" | "attention" | "online">("all");
   const [overviews, setOverviews] = useState<Record<number, CompanyOverview>>({});
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
@@ -301,6 +307,35 @@ export default function PartnerPortfolio() {
     }
   }
 
+  async function createClient(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const partnerId = Number(clientPartnerId);
+    if (!Number.isSafeInteger(partnerId) || partnerId <= 0) return;
+    setClientCreating(true);
+    setCreatedClient(null);
+    setError("");
+    try {
+      const result = await api<{ company_name: string; email: string; temporary_password: string }>("/partners/clients", {
+        method: "POST",
+        body: JSON.stringify({
+          partner_id: partnerId,
+          company_name: clientName.trim(),
+          responsible_name: clientResponsible.trim(),
+          email: clientEmail.trim(),
+        }),
+      });
+      setCreatedClient(result);
+      setClientName("");
+      setClientResponsible("");
+      setClientEmail("");
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível cadastrar o cliente");
+    } finally {
+      setClientCreating(false);
+    }
+  }
+
   const openAlertCount = alerts.filter((alert) => alert.status !== "resolved").length;
   const companiesNeedingAttention = companies.filter((company) => (overviews[company.id]?.offline_printers ?? 0) > 0).length;
   const visibleCompanies = companies.filter((company) => {
@@ -433,6 +468,31 @@ export default function PartnerPortfolio() {
             <strong>{preview.partner.name}: {preview.companies.length} cliente(s)</strong>
             {preview.companies.map((company) => <p key={company.id}>{company.name} — Portal: {company.customer_portal_enabled ? "habilitado" : "desabilitado"}</p>)}
             {preview.companies.length === 0 && <p>Nenhum cliente vinculado.</p>}
+          </div>}
+        </div>
+      )}
+      {(context?.platform_admin || context?.partners.some((partner) => partner.role === "partner_admin")) && (
+        <div className="panel">
+          <h2>Cadastrar novo cliente</h2>
+          <p>O cliente ficará vinculado ao parceiro selecionado. O portal do cliente inicia desabilitado.</p>
+          <form onSubmit={(event) => void createClient(event)} style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end" }}>
+            <label>Parceiro{" "}
+              <select required value={clientPartnerId} onChange={(event) => setClientPartnerId(event.target.value)}>
+                <option value="">Selecione</option>
+                {(context?.platform_admin ? directory : context?.partners.filter((partner) => partner.role === "partner_admin") ?? []).map((partner) => (
+                  <option key={partner.id} value={partner.id}>{partner.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>Empresa <input required minLength={2} maxLength={180} value={clientName} onChange={(event) => setClientName(event.target.value)} /></label>
+            <label>Responsável <input required minLength={3} maxLength={120} value={clientResponsible} onChange={(event) => setClientResponsible(event.target.value)} /></label>
+            <label>E-mail <input required type="email" value={clientEmail} onChange={(event) => setClientEmail(event.target.value)} /></label>
+            <button type="submit" disabled={clientCreating}>{clientCreating ? "Cadastrando..." : "Cadastrar cliente"}</button>
+          </form>
+          {createdClient && <div role="status">
+            <p><strong>{createdClient.company_name}</strong> cadastrado. Guarde a senha provisória antes de sair desta página.</p>
+            <p>Login: {createdClient.email}</p>
+            <p>Senha provisória: <code>{createdClient.temporary_password}</code></p>
           </div>}
         </div>
       )}
