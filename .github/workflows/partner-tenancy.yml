@@ -29,7 +29,9 @@ jobs:
       - run: python -m compileall -q backend
       - name: Run migration safety regression tests
         run: python -m unittest discover -s tests -p 'test_homolog_migration_safety.py' -v
-      - run: python -m pytest backend/tests/test_partner_access.py backend/tests/test_partner_http.py backend/tests/test_integration_scoped_keys.py backend/tests/test_health_endpoints.py -q\n      - name: Verify populated tenant isolation regression\n        run: python -m pytest backend/tests/test_partner_populated_tenant_isolation.py -q
+      - run: python -m pytest backend/tests/test_partner_access.py backend/tests/test_partner_http.py backend/tests/test_integration_scoped_keys.py backend/tests/test_health_endpoints.py -q
+      - name: Verify populated tenant isolation regression
+        run: python -m pytest backend/tests/test_partner_populated_tenant_isolation.py -q
 
   frontend:
     runs-on: ubuntu-latest
