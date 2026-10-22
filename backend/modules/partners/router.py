@@ -2,7 +2,10 @@
 
 No token or secret fields are exposed. Company scope is checked server-side.
 """
-from fastapi import APIRouter, Depends, HTTPException
+import secrets
+from fastapi import APIRouter, Depends, HTTPException, status
+from backend.modules.auth.security import hash_password
+from backend.modules.control_center.schema import ControlCenterClientCreate
 from sqlalchemy.orm import Session
 from backend.app.database.session import get_db
 from backend.modules.auth.dependencies import get_current_user
@@ -11,6 +14,68 @@ from backend.modules.companies.model import Company
 from backend.modules.partners.model import Partner, PartnerMembership
 
 router = APIRouter(prefix="/partners", tags=["Partners"])
+
+
+class PartnerClientCreate(ControlCenterClientCreate):
+    partner_id: int
+
+
+@router.post("/clients", status_code=status.HTTP_201_CREATED)
+def create_partner_client(
+    payload: PartnerClientCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Create a customer only inside an active partner the caller administers."""
+    partner = db.query(Partner).filter(
+        Partner.id == payload.partner_id,
+        Partner.active.is_(True),
+    ).first()
+    if partner is None:
+        raise HTTPException(status_code=404, detail="Parceiro ativo não encontrado")
+    if user.role != "platform_admin":
+        membership = db.query(PartnerMembership.id).filter(
+            PartnerMembership.partner_id == partner.id,
+            PartnerMembership.user_id == user.id,
+            PartnerMembership.role == "partner_admin",
+            PartnerMembership.active.is_(True),
+        ).first()
+        if membership is None:
+            raise HTTPException(status_code=403, detail="Somente o administrador deste parceiro pode cadastrar clientes")
+    email = str(payload.email).strip().lower()
+    if db.query(User.id).filter(User.email == email).first() is not None:
+        raise HTTPException(status_code=409, detail="E-mail já cadastrado")
+    company_name = payload.company_name.strip()
+    responsible_name = payload.responsible_name.strip()
+    if len(company_name) < 2 or len(responsible_name) < 3:
+        raise HTTPException(status_code=422, detail="Nome de empresa ou responsável inválido")
+    temporary_password = secrets.token_urlsafe(18)
+    company = Company(name=company_name, partner_id=partner.id, plan="pilot", customer_portal_enabled=False)
+    try:
+        db.add(company)
+        db.flush()
+        customer_user = User(
+            company_id=company.id,
+            name=responsible_name,
+            email=email,
+            password_hash=hash_password(temporary_password),
+            role="client",
+            active=True,
+        )
+        db.add(customer_user)
+        db.commit()
+        db.refresh(company)
+    except Exception:
+        db.rollback()
+        raise
+    return {
+        "company_id": company.id,
+        "company_name": company.name,
+        "partner_id": partner.id,
+        "email": email,
+        "temporary_password": temporary_password,
+        "customer_portal_enabled": False,
+    }
 
 
 @router.get("/my-companies")
