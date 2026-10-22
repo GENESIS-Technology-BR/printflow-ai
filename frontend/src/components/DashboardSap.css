@@ -600,7 +600,7 @@
     box-sizing:border-box!important;
     height:calc(100dvh - 42px)!important;
     min-height:0!important;
-    max-height:calc(100dvh - 42px)!important;
+    max-height:calc(100dvh - 48px)!important;
     overflow:hidden!important;
   }
   .shell.client-shell:has(> .dashboard-modern-shell) .sap-dashboard-page.sap-dashboard-v0993 {
