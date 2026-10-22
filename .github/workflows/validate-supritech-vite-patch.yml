@@ -11,7 +11,7 @@ on:
       - frontend/package-lock.json
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate-vite:
@@ -45,7 +45,17 @@ jobs:
       - name: Lint frontend
         working-directory: frontend
         run: npm run lint
-      - name: Upload validated dependency files (no push or deploy)
+      - name: Commit validated lockfile to isolated branch
+        if: success() && github.ref == 'refs/heads/security/vite-8-2-4-supritech'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/package.json frontend/package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'security(frontend): regenerate verified Vite 8.2.4 lockfile'
+            git push origin HEAD:security/vite-8-2-4-supritech
+          fi
+      - name: Upload validated dependency files (no deploy)
         if: success()
         uses: actions/upload-artifact@v4
         with:
