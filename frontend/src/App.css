@@ -1532,7 +1532,11 @@ body {
     overflow-x:hidden!important;
     overflow-y:hidden!important;
   }
+  /* Grid's implicit auto row may grow beyond the viewport even if
+     the dashboard itself has overflow:hidden. Constrain the grid track. */
   .shell.client-shell:has(.sap-dashboard-page) {
+    grid-template-rows:minmax(0,1fr)!important;
+    align-content:stretch!important;
     height:100dvh!important;
     min-height:0!important;
     max-height:100dvh!important;
@@ -1544,6 +1548,9 @@ body {
     min-height:0!important;
     max-height:100dvh!important;
     padding-top:48px!important;
+    padding-bottom:0!important;
+    min-height:0!important;
+    align-self:stretch!important;
     overflow:hidden!important;
   }
 }
