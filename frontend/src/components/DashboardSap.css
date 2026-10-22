@@ -722,10 +722,4 @@
     min-height:38px!important;
     padding:5px 10px!important;
   }
-  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap {
-    scrollbar-width:none;
-  }
-  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap::-webkit-scrollbar {
-    display:none;
-  }
 }
