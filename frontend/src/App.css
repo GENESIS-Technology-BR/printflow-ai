@@ -1520,63 +1520,31 @@ body {
 }
 .shell.client-shell aside nav button.active .nav-icon{color:#fff!important}
 .shell.client-shell aside .logout{color:#f5f9ff!important;background:#17527b!important}
-/* Client dashboard: one vertical scroll owner (document), no nested table scrollbar.
-   Overrides the older fixed-viewport declarations above for the client dashboard only. */
-@media (min-width:1100px) {
+/* The client dashboard owns its viewport layout in DashboardSap.css.
+   Do not force document-level scrolling or override its grid with flex. */
+@media (min-width:1200px) and (min-height:820px) {
   html:has(.shell.client-shell .sap-dashboard-page),
   body:has(.shell.client-shell .sap-dashboard-page),
   #root:has(.shell.client-shell .sap-dashboard-page) {
-    height:auto!important;
-    min-height:100%!important;
-    max-height:none!important;
-    overflow-x:clip!important;
-    overflow-y:visible!important;
-  }
-  .shell.client-shell:has(.sap-dashboard-page),
-  .shell.client-shell:has(.sap-dashboard-page) > .dashboard-modern-shell {
-    height:auto!important;
-    min-height:100dvh!important;
-    max-height:none!important;
-    overflow:visible!important;
-  }
-  .shell.client-shell:has(.sap-dashboard-page) > .dashboard-modern-shell {
-    padding-top:48px!important;
-  }
-  .shell.client-shell .sap-dashboard-page.sap-dashboard-v0993 {
-    display:flex!important;
-    flex-direction:column!important;
-    grid-template-rows:none!important;
-    gap:0!important;
-    height:auto!important;
-    max-height:none!important;
-    min-height:calc(100dvh - 48px)!important;
-    overflow:visible!important;
-    padding:10px clamp(12px,1.4vw,24px) 22px!important;
-  }
-  .shell.client-shell .sap-dashboard-page .sap-dashboard-grid-overview,
-  .shell.client-shell .sap-dashboard-page .sap-dashboard-grid-overview > * {
-    height:auto!important;
-    min-height:245px!important;
-    max-height:none!important;
-    overflow:visible!important;
-  }
-  .shell.client-shell .sap-dashboard-page .sap-dashboard-grid-overview {
-    grid-template-columns:minmax(0,1.35fr) minmax(0,.95fr) minmax(0,1fr)!important;
-  }
-  .shell.client-shell .sap-dashboard-page .sap-printer-ranking,
-  .shell.client-shell .sap-dashboard-page .sap-printer-ranking .sap-table-wrap {
-    height:auto!important;
-    max-height:none!important;
+    height:100%!important;
     min-height:0!important;
-    overflow-y:visible!important;
+    max-height:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:hidden!important;
   }
-  .shell.client-shell .sap-dashboard-page .sap-printer-ranking .sap-table-wrap {
-    overflow-x:auto!important;
+  .shell.client-shell:has(.sap-dashboard-page) {
+    height:100dvh!important;
+    min-height:0!important;
+    max-height:100dvh!important;
+    overflow:hidden!important;
   }
-  .shell.client-shell .sap-dashboard-page .sap-health-strip {
-    position:relative!important;
-    flex-shrink:0!important;
-    margin-top:8px!important;
+  .shell.client-shell:has(.sap-dashboard-page) > .dashboard-modern-shell {
+    box-sizing:border-box!important;
+    height:100dvh!important;
+    min-height:0!important;
+    max-height:100dvh!important;
+    padding-top:48px!important;
+    overflow:hidden!important;
   }
 }
 @media (max-width:1099px) {
