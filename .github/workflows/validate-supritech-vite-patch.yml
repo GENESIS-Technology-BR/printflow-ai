@@ -1,0 +1,43 @@
+name: Validate SupriTech Vite security patch
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-vite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Regenerate package manifest and lockfile (workspace only)
+        working-directory: frontend
+        run: npm install --save-dev --save-exact vite@8.2.4
+      - name: Verify clean installation
+        working-directory: frontend
+        run: npm ci
+      - name: Audit high and critical vulnerabilities
+        working-directory: frontend
+        run: npm audit --audit-level=high
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+      - name: Upload validated dependency files (no push or deploy)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supritech-vite-8.2.4-dependency-patch
+          path: |
+            frontend/package.json
+            frontend/package-lock.json
+          retention-days: 7
