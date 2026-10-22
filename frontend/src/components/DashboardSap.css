@@ -797,3 +797,22 @@
     overflow-y:auto!important;
   }
 }
+
+
+/* Customer ranking: keep the newly exposed unit column readable. */
+@media (min-width:1200px) {
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table {
+    width:100%!important;
+    table-layout:fixed!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table th,
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table td {
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table th:first-child,
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table td:first-child {
+    width:5%;
+  }
+}
