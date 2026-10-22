@@ -56,6 +56,8 @@ export default function PartnerPortfolio() {
   const [context, setContext] = useState<PartnerContext | null>(null);
   const [companies, setCompanies] = useState<PartnerCompany[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPartnerAdmin, setShowPartnerAdmin] = useState(false);
+  const [showClientForm, setShowClientForm] = useState(false);
   const [companySearch, setCompanySearch] = useState("");
   const [clientPartnerId, setClientPartnerId] = useState("");
   const [clientName, setClientName] = useState("");
@@ -360,7 +362,11 @@ export default function PartnerPortfolio() {
       </header>
       {error && <p role="alert">{error}</p>}
       {context?.platform_admin && (
-        <div className="panel">
+        <div className="panel" style={{ marginBottom: 16 }}>
+          <button type="button" aria-expanded={showPartnerAdmin} onClick={() => setShowPartnerAdmin((value) => !value)}>
+            {showPartnerAdmin ? "Ocultar administração de parceiros" : "Gerenciar parceiros e acessos"}
+          </button>
+          {showPartnerAdmin && <div>
           <h2>Administração TALVOA — parceiros</h2>
           <form onSubmit={(event) => void createPartner(event)}>
             <label htmlFor="new-partner-name">Nome do parceiro</label>{" "}
@@ -469,10 +475,15 @@ export default function PartnerPortfolio() {
             {preview.companies.map((company) => <p key={company.id}>{company.name} — Portal: {company.customer_portal_enabled ? "habilitado" : "desabilitado"}</p>)}
             {preview.companies.length === 0 && <p>Nenhum cliente vinculado.</p>}
           </div>}
+          </div>}
         </div>
       )}
       {(context?.platform_admin || context?.partners.some((partner) => partner.role === "partner_admin")) && (
         <div className="panel">
+          <button type="button" aria-expanded={showClientForm} onClick={() => setShowClientForm((value) => !value)}>
+            {showClientForm ? "Fechar cadastro" : "+ Novo cliente"}
+          </button>
+          {showClientForm && <div>
           <h2>Cadastrar novo cliente</h2>
           <p>O cliente ficará vinculado ao parceiro selecionado. O portal do cliente inicia desabilitado.</p>
           <form onSubmit={(event) => void createClient(event)} style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end" }}>
@@ -498,7 +509,7 @@ export default function PartnerPortfolio() {
       )}
       {loading ? <p>Carregando carteira...</p> : (
         <>
-          <div className="grid">
+          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(155px, 1fr))", gap: 12 }}>
             <article className="panel"><strong>Empresas</strong><h2>{summary?.companies ?? companies.length}</h2></article>
             <article className="panel"><strong>Impressoras ativas</strong><h2>{summary?.active_printers ?? "—"}</h2></article>
             <article className="panel"><strong>Online</strong><h2>{summary?.online_printers ?? "—"}</h2></article>
