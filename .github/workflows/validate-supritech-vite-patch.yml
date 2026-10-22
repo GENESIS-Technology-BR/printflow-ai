@@ -2,6 +2,11 @@ name: Validate SupriTech Vite security patch
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - security/vite-8-2-4-supritech
+    paths:
+      - .github/workflows/validate-supritech-vite-patch.yml
 
 permissions:
   contents: read
