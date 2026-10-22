@@ -589,3 +589,60 @@
     flex:1 1 160px!important;
   }
 }
+
+
+/* TALVOA client dashboard: content-led layout instead of viewport-locked rows.
+   The former fixed-height grid clipped the alert strip and left an empty ranking panel. */
+@media (min-width:1100px) and (min-height:700px) {
+  .shell.client-shell:has(> .dashboard-modern-shell) > .dashboard-modern-shell {
+    height:auto!important;
+    min-height:calc(100dvh - 42px)!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .shell.client-shell:has(> .dashboard-modern-shell) .sap-dashboard-page.sap-dashboard-v0993 {
+    height:auto!important;
+    min-height:calc(100dvh - 42px)!important;
+    max-height:none!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-content:initial!important;
+    gap:12px!important;
+    padding:16px 20px 24px!important;
+    overflow:visible!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-dashboard-grid-overview {
+    min-height:190px!important;
+    max-height:none!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking {
+    flex:0 0 auto!important;
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap {
+    flex:0 0 auto!important;
+    height:auto!important;
+    max-height:none!important;
+    min-height:0!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-health-strip {
+    flex:0 0 auto!important;
+    height:auto!important;
+    min-height:52px!important;
+    overflow:visible!important;
+    margin-bottom:0!important;
+  }
+}
+@media (min-width:1100px) {
+  .shell.client-shell .sap-dashboard-v0993 .sap-page-head {
+    gap:16px!important;
+    min-height:84px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-kpi-card {
+    min-height:92px!important;
+  }
+}
