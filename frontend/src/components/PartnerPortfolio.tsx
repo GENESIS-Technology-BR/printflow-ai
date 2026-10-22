@@ -509,14 +509,15 @@ export default function PartnerPortfolio() {
       )}
       {loading ? <p>Carregando carteira...</p> : (
         <>
-          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(155px, 1fr))", gap: 12 }}>
-            <article className="panel"><strong>Empresas</strong><h2>{summary?.companies ?? companies.length}</h2></article>
-            <article className="panel"><strong>Impressoras ativas</strong><h2>{summary?.active_printers ?? "—"}</h2></article>
-            <article className="panel"><strong>Online</strong><h2>{summary?.online_printers ?? "—"}</h2></article>
-            <article className="panel"><strong>Offline</strong><h2>{summary?.offline_printers ?? "—"}</h2></article>
-            <article className="panel"><strong>Clientes com impressoras offline</strong><h2>{companiesNeedingAttention}</h2></article>
+          <div className="grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
+            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Empresas</strong><h2>{summary?.companies ?? companies.length}</h2></article>
+            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Impressoras ativas</strong><h2>{summary?.active_printers ?? "—"}</h2></article>
+            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Online</strong><h2>{summary?.online_printers ?? "—"}</h2></article>
+            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Offline</strong><h2>{summary?.offline_printers ?? "—"}</h2></article>
+            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Clientes com impressoras offline</strong><h2>{companiesNeedingAttention}</h2></article>
           </div>
           <div className="panel">
+            <h2 style={{ marginTop: 0, marginBottom: 12 }}>Clientes da carteira</h2>
             <div className="partner-portfolio-filters" style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 16, alignItems: "center" }}>
               <label htmlFor="partner-company-search">Buscar cliente</label>
               <input id="partner-company-search" type="search" value={companySearch} onChange={(event) => setCompanySearch(event.target.value)} placeholder="Nome do cliente" />
