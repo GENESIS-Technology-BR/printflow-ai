@@ -43,5 +43,8 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - name: Regenerate Vite lockfile for isolated security PR
+        if: github.event_name == 'pull_request' && github.head_ref == 'security/vite-8-2-4-supritech'
+        run: npm install --package-lock-only --ignore-scripts
       - run: npm ci
       - run: npm run build
