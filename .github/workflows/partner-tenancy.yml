@@ -41,6 +41,9 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref == 'security/vite-8-2-4-supritech' && github.head_ref || github.sha }}
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
