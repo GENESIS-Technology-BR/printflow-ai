@@ -47,4 +47,14 @@ jobs:
         if: github.event_name == 'pull_request' && github.head_ref == 'security/vite-8-2-4-supritech'
         run: npm install --package-lock-only --ignore-scripts
       - run: npm ci
+      - name: Audit high and critical vulnerabilities in isolated security PR
+        if: github.event_name == 'pull_request' && github.head_ref == 'security/vite-8-2-4-supritech'
+        run: npm audit --audit-level=high
       - run: npm run build
+      - name: Export regenerated lockfile for review (no deploy)
+        if: github.event_name == 'pull_request' && github.head_ref == 'security/vite-8-2-4-supritech'
+        uses: actions/upload-artifact@v4
+        with:
+          name: supritech-vite-8-2-4-lockfile
+          path: frontend/package-lock.json
+          retention-days: 7
