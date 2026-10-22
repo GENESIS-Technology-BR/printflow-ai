@@ -1562,3 +1562,19 @@ body {
     overflow-x:auto!important;
   }
 }
+
+/* TALVOA client dashboard: viewport anchored below the fixed 64px topbar.
+   Remove the dashboard from the grid scroll calculation entirely.
+   Keep inner ranking scrollable only if viewport content cannot fit. */
+@media (min-width:1200px) and (min-height:820px) {
+  .shell.client-shell:has(.sap-dashboard-page.sap-dashboard-v0993) > main.dashboard-modern-shell {
+    position:fixed!important;
+    inset:64px 0 0 248px!important;
+    width:auto!important;
+    height:auto!important;
+    max-height:none!important;
+    min-height:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+}
