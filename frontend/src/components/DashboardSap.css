@@ -598,7 +598,7 @@
 @media (min-width:1200px) and (min-height:820px) {
   .shell.client-shell:has(> .dashboard-modern-shell) > .dashboard-modern-shell {
     box-sizing:border-box!important;
-    height:calc(100dvh - 42px)!important;
+    height:calc(100dvh - 48px)!important;
     min-height:0!important;
     max-height:calc(100dvh - 48px)!important;
     overflow:hidden!important;
