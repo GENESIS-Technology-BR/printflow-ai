@@ -737,3 +737,80 @@
     grid-template-columns:minmax(0,1fr)!important;
   }
 }
+
+
+/* Customer desktop viewport fit: remove page scrollbar by reducing real content
+   heights, while preserving a safe fallback scroll on short screens. */
+@media (min-width:1200px) and (min-height:820px) {
+  .shell.client-shell:has(> .dashboard-modern-shell) > .dashboard-modern-shell {
+    height:calc(100dvh - 42px)!important;
+    min-height:0!important;
+    max-height:calc(100dvh - 42px)!important;
+    overflow:hidden!important;
+  }
+  .shell.client-shell:has(> .dashboard-modern-shell) .sap-dashboard-page.sap-dashboard-v0993 {
+    box-sizing:border-box!important;
+    height:100%!important;
+    min-height:0!important;
+    max-height:100%!important;
+    padding:7px 12px 8px!important;
+    gap:5px!important;
+    display:grid!important;
+    grid-template-rows:auto auto auto minmax(120px,auto) minmax(0,1fr) auto!important;
+    overflow:hidden!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-page-head {
+    padding:8px 12px!important;
+    min-height:58px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-kpi-card {
+    min-height:67px!important;
+    padding:7px 10px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-dashboard-grid-overview {
+    min-height:120px!important;
+    max-height:145px!important;
+    overflow:hidden!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-dashboard-grid-overview .sap-panel {
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking {
+    height:100%!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking > header {
+    min-height:34px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap {
+    flex:1 1 auto!important;
+    min-height:0!important;
+    height:auto!important;
+    max-height:100%!important;
+    overflow-x:auto!important;
+    overflow-y:auto!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-table th,
+  .shell.client-shell .sap-dashboard-v0993 .sap-table td {
+    padding-top:5px!important;
+    padding-bottom:5px!important;
+    line-height:1.2!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-health-strip {
+    min-height:37px!important;
+    height:auto!important;
+    padding:5px 10px!important;
+    margin:0!important;
+    overflow:visible!important;
+  }
+}
+/* On smaller viewports, never sacrifice accessibility by hiding content. */
+@media (max-height:819px), (max-width:1199px) {
+  .shell.client-shell:has(> .dashboard-modern-shell) > .dashboard-modern-shell {
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+}
