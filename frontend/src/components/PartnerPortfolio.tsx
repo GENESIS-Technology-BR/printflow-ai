@@ -56,6 +56,8 @@ export default function PartnerPortfolio() {
   const [context, setContext] = useState<PartnerContext | null>(null);
   const [companies, setCompanies] = useState<PartnerCompany[]>([]);
   const [loading, setLoading] = useState(true);
+  const [companySearch, setCompanySearch] = useState("");
+  const [companyStatusFilter, setCompanyStatusFilter] = useState<"all" | "attention" | "online">("all");
   const [overviews, setOverviews] = useState<Record<number, CompanyOverview>>({});
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<PartnerCompany | null>(null);
@@ -299,13 +301,23 @@ export default function PartnerPortfolio() {
     }
   }
 
+  const openAlertCount = alerts.filter((alert) => alert.status !== "resolved").length;
+  const companiesNeedingAttention = companies.filter((company) => (overviews[company.id]?.offline_printers ?? 0) > 0).length;
+  const visibleCompanies = companies.filter((company) => {
+    const overview = overviews[company.id];
+    if (!company.name.toLocaleLowerCase("pt-BR").includes(companySearch.trim().toLocaleLowerCase("pt-BR"))) return false;
+    if (companyStatusFilter === "attention") return (overview?.offline_printers ?? 0) > 0;
+    if (companyStatusFilter === "online") return overview !== undefined && overview.offline_printers === 0;
+    return true;
+  });
+
   return (
     <section className="partner-portfolio">
       <header>
         <div>
           <small>GESTÃO DE CARTEIRA</small>
-          <h1>Empresas atendidas</h1>
-          <p>Gerencie o acesso opcional dos seus clientes ao TALVOA.</p>
+          <h1>{context?.platform_admin ? "Carteira de empresas" : "Central de Gestão de Clientes"}</h1>
+          <p>Monitore os clientes da carteira, acompanhe a disponibilidade das impressoras e consulte alertas por empresa.</p>
         </div>
         <button type="button" onClick={() => void reload()} disabled={loading}>
           {loading ? "Atualizando..." : "Atualizar"}
@@ -431,12 +443,24 @@ export default function PartnerPortfolio() {
             <article className="panel"><strong>Impressoras ativas</strong><h2>{summary?.active_printers ?? "—"}</h2></article>
             <article className="panel"><strong>Online</strong><h2>{summary?.online_printers ?? "—"}</h2></article>
             <article className="panel"><strong>Offline</strong><h2>{summary?.offline_printers ?? "—"}</h2></article>
+            <article className="panel"><strong>Clientes com impressoras offline</strong><h2>{companiesNeedingAttention}</h2></article>
           </div>
           <div className="panel">
+            <div className="partner-portfolio-filters" style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 16, alignItems: "center" }}>
+              <label htmlFor="partner-company-search">Buscar cliente</label>
+              <input id="partner-company-search" type="search" value={companySearch} onChange={(event) => setCompanySearch(event.target.value)} placeholder="Nome do cliente" />
+              <label htmlFor="partner-company-status">Situação</label>
+              <select id="partner-company-status" value={companyStatusFilter} onChange={(event) => setCompanyStatusFilter(event.target.value as "all" | "attention" | "online")}>
+                <option value="all">Todos</option>
+                <option value="attention">Com impressoras offline</option>
+                <option value="online">Sem impressoras offline</option>
+              </select>
+              <span aria-live="polite">{visibleCompanies.length} cliente(s) exibido(s)</span>
+            </div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead><tr><th scope="col">Empresa</th><th scope="col">Impressoras</th><th scope="col">Online</th><th scope="col">Offline</th><th scope="col">Portal do cliente</th><th scope="col">Ação</th></tr></thead>
               <tbody>
-                {companies.map((company) => {
+                {visibleCompanies.map((company) => {
                   const canManage = context?.platform_admin || context?.partners.some(
                     (p) => p.id === company.partner_id && p.role === "partner_admin"
                   );
@@ -464,6 +488,7 @@ export default function PartnerPortfolio() {
               </tbody>
             </table>
             {companies.length === 0 && <p>Nenhuma empresa vinculada ao parceiro.</p>}
+            {companies.length > 0 && visibleCompanies.length === 0 && <p>Nenhum cliente corresponde aos filtros selecionados.</p>}
           </div>
         </>
       )}
@@ -485,7 +510,7 @@ export default function PartnerPortfolio() {
             </table>
           )}
           {!fleetLoading && fleet.length === 0 && <p>Nenhuma impressora cadastrada.</p>}
-          {!fleetLoading && <div><h3>Alertas recentes ({alerts.length})</h3>
+          {!fleetLoading && <div><h3>Alertas pendentes ({openAlertCount})</h3>
             {alerts.filter((item) => item.status !== "resolved").slice(0, 10).map((item) => (
               <p key={item.id}><strong>{item.severity.toUpperCase()}</strong> — {item.title}: {item.description}</p>
             ))}
