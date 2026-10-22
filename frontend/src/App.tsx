@@ -38,7 +38,9 @@ type Page = "dashboard" | "printers" | "reports" | "company" | "agents" | "contr
 
 function App() {
   const [authenticated, setAuthenticated] = useState(false)
-  const [authReady, setAuthReady] = useState(false)
+  // Render Free can wake asynchronously; the public login screen must render immediately.
+  // Protected content remains gated by authenticated state after getMe resolves.
+  const [authReady, setAuthReady] = useState(true)
   const [company, setCompany] = useState<Company | null>(null)
   const [profile, setProfile] = useState<MeProfile | null>(null)
   const [hasPartnerAccess, setHasPartnerAccess] = useState(false)
