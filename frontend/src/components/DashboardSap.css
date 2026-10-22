@@ -613,12 +613,12 @@
     margin:0 auto!important;
     padding:8px 12px 10px!important;
     display:grid!important;
-    grid-template-rows:auto auto minmax(185px, 205px) minmax(0,1fr) auto!important;
+    grid-template-rows:minmax(0,auto) minmax(0,auto) minmax(205px,220px) minmax(0,1fr) minmax(0,auto)!important;
     gap:7px!important;
     overflow:hidden!important;
   }
   .shell.client-shell .sap-dashboard-v0993 .sap-page-head {
-    min-height:64px!important;
+    min-height:56px!important;
     padding:9px 14px!important;
     border-radius:11px!important;
   }
@@ -627,12 +627,12 @@
     gap:8px!important;
   }
   .shell.client-shell .sap-dashboard-v0993 .sap-kpi-card {
-    min-height:72px!important;
+    min-height:64px!important;
     padding:8px 12px!important;
   }
   .shell.client-shell .sap-dashboard-v0993 .sap-dashboard-grid-overview {
-    min-height:185px!important;
-    max-height:205px!important;
+    min-height:205px!important;
+    max-height:220px!important;
     grid-template-columns:minmax(0,1.3fr) minmax(0,.95fr) minmax(0,1fr)!important;
     gap:8px!important;
     overflow:visible!important;
@@ -679,12 +679,12 @@
   }
   .shell.client-shell .sap-dashboard-v0993 .sap-table th,
   .shell.client-shell .sap-dashboard-v0993 .sap-table td {
-    padding-top:5px!important;
-    padding-bottom:5px!important;
+    padding-top:4px!important;
+    padding-bottom:4px!important;
     line-height:1.2!important;
   }
   .shell.client-shell .sap-dashboard-v0993 .sap-health-strip {
-    min-height:42px!important;
+    min-height:38px!important;
     height:auto!important;
     margin:0!important;
     padding:6px 10px!important;
@@ -703,5 +703,29 @@
     height:auto!important;
     max-height:none!important;
     overflow:visible!important;
+  }
+}
+
+/* Compact the real row heights, not the chart contents. */
+@media (min-width:1200px) and (min-height:820px) {
+  .shell.client-shell .sap-dashboard-v0993 .sap-bars {
+    padding:7px 12px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-bar-row {
+    margin:7px 0!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-panel > header {
+    min-height:36px!important;
+    padding:6px 12px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-health-strip.has-alerts {
+    min-height:38px!important;
+    padding:5px 10px!important;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap {
+    scrollbar-width:none;
+  }
+  .shell.client-shell .sap-dashboard-v0993 .sap-printer-ranking .sap-table-wrap::-webkit-scrollbar {
+    display:none;
   }
 }
