@@ -35,6 +35,7 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: frontend
@@ -45,5 +46,19 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
+      - name: Install locked frontend dependencies
+        run: npm ci --no-audit --no-fund --prefer-offline --loglevel=error
+      - name: Audit high and critical frontend vulnerabilities
+        run: |
+          for attempt in 1 2 3; do
+            if timeout 90s npm audit --audit-level=high --fetch-retries=0 --fetch-timeout=30000; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo 'Security audit failed after 3 attempts; blocking this PR.' >&2
+              exit 1
+            fi
+            echo "Security audit attempt $attempt failed; retrying in 10 seconds..." >&2
+            sleep 10
+          done
       - run: npm run build
