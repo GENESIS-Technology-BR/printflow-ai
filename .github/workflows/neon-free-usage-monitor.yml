@@ -59,7 +59,7 @@ jobs:
           host = "dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com"
           with socket.create_connection((host, 5432), timeout=8) as conn:
               conn.settimeout(8)
-              conn.sendall(b"\\x00\\x00\\x00\\x08\\x04\\xd2\\x16\\x2f")
+              conn.sendall(bytes.fromhex("0000000804d2162f"))
               response = conn.recv(1)
           if response != b"S":
               raise SystemExit("FAIL: Render PostgreSQL TLS negotiation unavailable")
