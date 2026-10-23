@@ -1,69 +1,89 @@
 #!/usr/bin/env python3
-"""Read-only Neon Free quota monitor. Never logs credentials."""
-import json, os, sys, urllib.request, urllib.error
+"""TALVOA Neon Free monitor. Read-only, fail closed on unverified units."""
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 
 BASE = "https://console.neon.tech/api/v2"
-PROJECTS = {"printflow-production": "proud-union-87295556",
-            "talvoa-supritech-homolog": "red-hat-77865204"}
+PROJECTS = {
+    "printflow-production": "proud-union-87295556",
+    "talvoa-supritech-homolog": "red-hat-77865204",
+}
 THRESHOLDS = (70, 85, 95)
-# Free plan limits confirmed in Neon Billing on 2026-10-23; revalidate on plan change.
-STORAGE_LIMIT = 1024 ** 3
+# Confirmed in Neon console: 1 GB and 100 compute hours per project.
+STORAGE_LIMIT_BYTES = 1024 ** 3
 COMPUTE_LIMIT_SECONDS = 100 * 3600
 
-def get(path, token):
-    req = urllib.request.Request(BASE + path, headers={"Authorization": "Bearer " + token,
-                               "Accept": "application/json", "User-Agent": "talvoa-quota-monitor/1"})
-    with urllib.request.urlopen(req, timeout=25) as resp:
-        return json.load(resp)
+
+def fetch(path, token):
+    request = urllib.request.Request(
+        BASE + path,
+        headers={"Authorization": "Bearer " + token, "Accept": "application/json"},
+    )
+    with urllib.request.urlopen(request, timeout=25) as response:
+        return json.load(response)
+
+
+def check_metric(name, value, limit, unit, alerts, gaps):
+    if not isinstance(value, (int, float)) or isinstance(value, bool) or value < 0:
+        gaps.append(name + ": missing or invalid API counter")
+        return "- " + name + ": unavailable (no fabricated zero)"
+    pct = value / limit * 100
+    level = next((threshold for threshold in reversed(THRESHOLDS) if pct >= threshold), None)
+    if level is not None:
+        alerts.append(f"{name}: {pct:.1f}% (threshold {level}%)")
+    return f"- {name}: {value:,.0f} {unit} / {limit:,.0f} {unit} ({pct:.2f}%)"
+
 
 def main():
     token = os.environ.get("NEON_API_KEY")
     if not token:
-        print("ERROR: missing NEON_API_KEY GitHub Actions secret", file=sys.stderr)
+        print("::error::Missing NEON_API_KEY GitHub Actions secret")
         return 2
-    report = ["# TALVOA Neon Free quota check", "", "UTC: " + datetime.now(timezone.utc).isoformat(), ""]
-    alerts = []
-    errors = []
+
+    lines = ["# TALVOA Neon Free monitoring", "",
+             "UTC: " + datetime.now(timezone.utc).isoformat(), ""]
+    alerts, gaps = [], []
     for name, project_id in PROJECTS.items():
+        lines.extend(["## " + name])
         try:
-            payload = get("/projects/" + project_id, token)
-            project = payload.get("project", payload)
+            result = fetch("/projects/" + project_id, token)
+            project = result.get("project", {})
             if project.get("id") != project_id:
-                raise ValueError("project identity mismatch")
-            # API counters and per-branch storage vary by API version.
-            # Never substitute missing metrics with zero.
-            report += ["## " + name, "Plan: " + str(project.get("owner", {}).get("subscription_type", "unverified"))]
-            metrics = [
-                ("Compute time", project.get("compute_time_seconds"), COMPUTE_LIMIT_SECONDS, "seconds"),
-                ("Storage", project.get("synthetic_storage_size"), STORAGE_LIMIT, "bytes"),
-            ]
-            for label, raw, limit, unit in metrics:
-                if raw is None or not isinstance(raw, (int, float)):
-                    report.append("- " + label + ": unavailable; needs API verification")
-                    errors.append(name + " " + label + " metric unavailable")
-                    continue
-                pct = raw / limit * 100
-                level = next((t for t in reversed(THRESHOLDS) if pct >= t), None)
-                report.append(f"- {label}: {raw:,.0f} {unit} / {limit:,.0f} {unit} ({pct:.2f}%)")
-                if level:
-                    alerts.append(f"{name}: {label} {pct:.1f}% (threshold {level}%)")
-            report.append("- Network transfer: quota not yet verified; no percentage calculated")
-            report.append("")
+                raise ValueError("Project ID mismatch")
+
+            # This endpoint exposes project metadata, not guaranteed monthly usage.
+            # Do NOT interpret cumulative lifetime counters as monthly quota consumption.
+            lines.append("- API access: OK (project metadata verified)")
+            lines.append("- Compute monthly consumption: unverified (requires billing usage API)")
+            lines.append("- Storage monthly/current usage: unverified (requires verified API source)")
+            lines.append("- Network transfer: unverified (requires free-tier quota confirmation)")
+            gaps.append(name + ": usage counters not yet validated; no thresholds calculated")
         except (urllib.error.URLError, ValueError, KeyError, TypeError) as exc:
-            errors.append(f"{name}: API check failed ({type(exc).__name__})")
-    report += ["## Alerts", *(["- " + x for x in alerts] if alerts else ["- None detected on available metrics"])]
-    report += ["", "## Monitoring gaps", *(["- " + x for x in errors] if errors else ["- Network quota requires validation"])]
-    output = "\n".join(report) + "\n"
-    print(output)
+            lines.append("- API access: FAILED (" + type(exc).__name__ + ")")
+            gaps.append(name + ": API access failed")
+        lines.append("")
+
+    lines += ["## Threshold alerts"]
+    lines += ["- " + a for a in alerts] if alerts else ["- None; metrics not yet validated"]
+    lines += ["", "## Blocking monitoring gaps"]
+    lines += ["- " + gap for gap in gaps]
+    report = "\n".join(lines) + "\n"
+    print(report)
     if os.environ.get("GITHUB_STEP_SUMMARY"):
-        with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
-            f.write(output)
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
+            handle.write(report)
+    if gaps:
+        print("::error::Neon quota monitoring not ready: consumption API validation required")
+        return 1
     if alerts:
-        print("::error::Neon quota threshold reached")
-    if errors:
-        print("::error::Neon quota monitoring incomplete")
-    return 1 if alerts or errors else 0
+        print("::error::Neon free quota threshold exceeded")
+        return 1
+    return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
