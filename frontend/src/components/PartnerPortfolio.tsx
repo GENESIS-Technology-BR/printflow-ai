@@ -505,6 +505,7 @@ export default function PartnerPortfolio() {
             <p>Login: {createdClient.email}</p>
             <p>Senha provisória: <code>{createdClient.temporary_password}</code></p>
           </div>}
+          </div>
         </div>
       )}
       {loading ? <p>Carregando carteira...</p> : (
