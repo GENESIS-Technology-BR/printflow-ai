@@ -4,16 +4,31 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '17 12 * * *'
+  pull_request:
+    paths:
+      - 'ops/neon_free_usage_monitor.py'
+      - 'tests/test_neon_free_usage_monitor.py'
+      - '.github/workflows/neon-free-usage-monitor.yml'
 
 permissions:
   contents: read
 
 concurrency:
-  group: talvoa-neon-free-monitor
+  group: talvoa-neon-free-monitor-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run offline monitor tests
+        run: python3 -m unittest discover -s tests -p 'test_neon_free_usage_monitor.py' -v
+
   check-quotas:
+    if: github.event_name != 'pull_request'
+    needs: offline-tests
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
