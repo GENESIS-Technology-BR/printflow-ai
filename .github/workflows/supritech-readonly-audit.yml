@@ -1,0 +1,39 @@
+name: SupriTech read-only account audit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supritech-readonly-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment: supritech-homolog-audit
+    steps:
+      - name: Checkout audit scripts
+        uses: actions/checkout@v4
+      - name: Configure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PostgreSQL client
+        run: python -m pip install 'psycopg2-binary>=2.9,<3.0'
+      - name: Check required secret
+        env:
+          AUDIT_DATABASE_URL: ${{ secrets.SUPRITECH_AUDIT_DATABASE_URL }}
+        run: |
+          if [ -z "$AUDIT_DATABASE_URL" ]; then
+            echo "::error::SUPRITECH_AUDIT_DATABASE_URL is not configured in the protected environment."
+            exit 1
+          fi
+      - name: Run read-only account inventory
+        env:
+          DATABASE_URL: ${{ secrets.SUPRITECH_AUDIT_DATABASE_URL }}
+          PGCONNECT_TIMEOUT: '8'
+        run: python ops/audit_supritech_accounts.py
