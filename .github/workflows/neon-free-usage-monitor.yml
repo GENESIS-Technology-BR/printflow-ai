@@ -1,0 +1,24 @@
+name: TALVOA Neon Free Usage Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 12 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: talvoa-neon-free-monitor
+  cancel-in-progress: false
+
+jobs:
+  check-quotas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Neon quotas
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: python3 ops/neon_free_usage_monitor.py
