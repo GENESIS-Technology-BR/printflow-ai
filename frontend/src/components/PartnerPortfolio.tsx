@@ -56,6 +56,8 @@ export default function PartnerPortfolio() {
   const [context, setContext] = useState<PartnerContext | null>(null);
   const [companies, setCompanies] = useState<PartnerCompany[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPartnerAdmin, setShowPartnerAdmin] = useState(false);
+  const [showClientForm, setShowClientForm] = useState(false);
   const [companySearch, setCompanySearch] = useState("");
   const [clientPartnerId, setClientPartnerId] = useState("");
   const [clientName, setClientName] = useState("");
@@ -360,7 +362,11 @@ export default function PartnerPortfolio() {
       </header>
       {error && <p role="alert">{error}</p>}
       {context?.platform_admin && (
-        <div className="panel">
+        <div className="panel" style={{ marginBottom: 16 }}>
+          <button type="button" aria-expanded={showPartnerAdmin} onClick={() => setShowPartnerAdmin((value) => !value)}>
+            {showPartnerAdmin ? "Ocultar administração de parceiros" : "Gerenciar parceiros e acessos"}
+          </button>
+          {showPartnerAdmin && <div>
           <h2>Administração TALVOA — parceiros</h2>
           <form onSubmit={(event) => void createPartner(event)}>
             <label htmlFor="new-partner-name">Nome do parceiro</label>{" "}
@@ -469,10 +475,15 @@ export default function PartnerPortfolio() {
             {preview.companies.map((company) => <p key={company.id}>{company.name} — Portal: {company.customer_portal_enabled ? "habilitado" : "desabilitado"}</p>)}
             {preview.companies.length === 0 && <p>Nenhum cliente vinculado.</p>}
           </div>}
+          </div>}
         </div>
       )}
       {(context?.platform_admin || context?.partners.some((partner) => partner.role === "partner_admin")) && (
         <div className="panel">
+          <button type="button" aria-expanded={showClientForm} onClick={() => setShowClientForm((value) => !value)}>
+            {showClientForm ? "Fechar cadastro" : "+ Novo cliente"}
+          </button>
+          {showClientForm && <div>
           <h2>Cadastrar novo cliente</h2>
           <p>O cliente ficará vinculado ao parceiro selecionado. O portal do cliente inicia desabilitado.</p>
           <form onSubmit={(event) => void createClient(event)} style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end" }}>
@@ -494,18 +505,20 @@ export default function PartnerPortfolio() {
             <p>Login: {createdClient.email}</p>
             <p>Senha provisória: <code>{createdClient.temporary_password}</code></p>
           </div>}
+          </div>}
         </div>
       )}
       {loading ? <p>Carregando carteira...</p> : (
         <>
-          <div className="grid">
-            <article className="panel"><strong>Empresas</strong><h2>{summary?.companies ?? companies.length}</h2></article>
-            <article className="panel"><strong>Impressoras ativas</strong><h2>{summary?.active_printers ?? "—"}</h2></article>
-            <article className="panel"><strong>Online</strong><h2>{summary?.online_printers ?? "—"}</h2></article>
-            <article className="panel"><strong>Offline</strong><h2>{summary?.offline_printers ?? "—"}</h2></article>
-            <article className="panel"><strong>Clientes com impressoras offline</strong><h2>{companiesNeedingAttention}</h2></article>
+          <div className="grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
+            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Empresas</strong><h2>{summary?.companies ?? companies.length}</h2></article>
+            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Impressoras ativas</strong><h2>{summary?.active_printers ?? "—"}</h2></article>
+            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Online</strong><h2>{summary?.online_printers ?? "—"}</h2></article>
+            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Offline</strong><h2>{summary?.offline_printers ?? "—"}</h2></article>
+            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Clientes com impressoras offline</strong><h2>{companiesNeedingAttention}</h2></article>
           </div>
           <div className="panel">
+            <h2 style={{ marginTop: 0, marginBottom: 12 }}>Clientes da carteira</h2>
             <div className="partner-portfolio-filters" style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 16, alignItems: "center" }}>
               <label htmlFor="partner-company-search">Buscar cliente</label>
               <input id="partner-company-search" type="search" value={companySearch} onChange={(event) => setCompanySearch(event.target.value)} placeholder="Nome do cliente" />
