@@ -70,8 +70,10 @@ def require_legacy_company_portal_access(db: Session, user: User) -> Company:
     company = db.query(Company).filter(Company.id == user.company_id, Company.active.is_(True)).first()
     if company is None:
         raise HTTPException(status_code=404, detail="Empresa não encontrada")
-    if user.role == "platform_admin" or company.partner_id is None:
+    if user.role == "platform_admin":
         return company
-    if user.role in {"client", "admin"} and company.customer_portal_enabled:
+    if user.role not in {"client", "admin"}:
+        raise HTTPException(status_code=403, detail="Acesso não autorizado ao portal")
+    if company.partner_id is None or company.customer_portal_enabled:
         return company
     raise HTTPException(status_code=403, detail="Portal do cliente desabilitado")
