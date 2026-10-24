@@ -10,7 +10,9 @@ import {
   createControlCenterClientPreview,
   createControlCenterClientUser,
   getControlCenterClientUsers,
+  getControlCenterAgentCredential,
   getControlCenterOverview,
+  setControlCenterCustomerPortal,
   updateControlCenterClientUserStatus,
 } from "../services/api";
 
@@ -52,6 +54,30 @@ export default function ControlCenter() {
     useState<ControlCenterOverview | null>(
       null,
     );
+
+  const [portalSaving, setPortalSaving] = useState<number | null>(null);
+  const [agentCompany, setAgentCompany] = useState<ControlCenterCompany | null>(null);
+  const [agentCredential, setAgentCredential] = useState<string | null>(null);
+  const [agentLoading, setAgentLoading] = useState(false);
+  const [agentVisible, setAgentVisible] = useState(false);
+
+  async function openAgentCredential(company: ControlCenterCompany) {
+    setAgentCompany(company);
+    setAgentCredential(null);
+    setAgentVisible(false);
+    setAgentLoading(true);
+    setError(null);
+    try {
+      const credential = await getControlCenterAgentCredential(company.uuid);
+      if (credential.company_uuid !== company.uuid) throw new Error("Credencial de outra empresa recebida.");
+      setAgentCredential(credential.agent_token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Falha ao obter credencial do Agent.");
+    } finally {
+      setAgentLoading(false);
+    }
+  }
+
 
   const [loading, setLoading] =
     useState(true);
@@ -245,6 +271,23 @@ export default function ControlCenter() {
           ? requestError.message
           : "Não foi possível alterar o usuário.",
       );
+    }
+  }
+
+  async function toggleCustomerPortal(company: ControlCenterCompany) {
+    if (company.partner_id == null) {
+      setError("Associe a empresa a um parceiro antes de habilitar o portal.");
+      return;
+    }
+    setPortalSaving(company.id);
+    setError(null);
+    try {
+      await setControlCenterCustomerPortal(company.id, !company.customer_portal_enabled);
+      await load();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Falha ao configurar portal do cliente.");
+    } finally {
+      setPortalSaving(null);
     }
   }
 
@@ -713,6 +756,17 @@ export default function ControlCenter() {
                 <span className="cc-row-actions">
                   <button
                     type="button"
+                    disabled={portalSaving === company.id || (!company.customer_portal_enabled && company.partner_id == null)}
+                    title={company.partner_id == null ? "Empresa sem parceiro vinculado" : "Configurar acesso ao portal do cliente"}
+                    onClick={() => void toggleCustomerPortal(company)}
+                  >
+                    {portalSaving === company.id ? "Salvando..." : company.customer_portal_enabled ? "Portal ativo · Desativar" : "Portal inativo · Ativar"}
+                  </button>
+                  <button type="button" onClick={() => void openAgentCredential(company)}>
+                    Configurar Agent
+                  </button>
+                  <button
+                    type="button"
                     onClick={() =>
                       void openClientUsers(
                         company,
@@ -725,6 +779,8 @@ export default function ControlCenter() {
                   <button
                     type="button"
                     className="cc-preview-button"
+                    disabled={company.partner_id != null && !company.customer_portal_enabled}
+                    title={company.partner_id != null && !company.customer_portal_enabled ? "Habilite o portal antes de visualizar" : "Visualizar o portal do cliente"}
                     onClick={() =>
                       void previewClient(
                         company,
@@ -746,6 +802,23 @@ export default function ControlCenter() {
             )}
         </div>
       </section>
+
+      {agentCompany && (
+        <section className="control-center-users">
+          <div className="cc-created-header">
+            <div><span>AGENT DO CLIENTE</span><h2>{agentCompany.name}</h2></div>
+            <button type="button" onClick={() => { setAgentCompany(null); setAgentCredential(null); setAgentVisible(false); }}>Fechar</button>
+          </div>
+          <p>Use esta credencial apenas no Agent instalado para esta empresa. Não compartilhe em mensagens ou capturas.</p>
+          {agentLoading ? <p>Consultando credencial...</p> : agentCredential ? (
+            <div className="cc-row-actions">
+              <code>{agentVisible ? agentCredential : "••••••••••••••••••••••••"}</code>
+              <button type="button" onClick={() => setAgentVisible(!agentVisible)}>{agentVisible ? "Ocultar" : "Mostrar"}</button>
+              <button type="button" onClick={() => void navigator.clipboard.writeText(agentCredential)}>Copiar token</button>
+            </div>
+          ) : <p>Credencial indisponível. Verifique a mensagem de erro.</p>}
+        </section>
+      )}
 
       {selectedCompany && (
         <section className="control-center-users">

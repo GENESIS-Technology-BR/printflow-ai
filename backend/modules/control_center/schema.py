@@ -9,6 +9,8 @@ class ControlCenterCompany(BaseModel):
     name: str
     plan: str
     active: bool
+    partner_id: int | None = None
+    customer_portal_enabled: bool = False
     agent_online: bool
     agent_stale: bool
     agent_communication_state: str

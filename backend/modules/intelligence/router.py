@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from backend.app.database.session import get_db
 from backend.modules.auth.dependencies import get_current_user
 from backend.modules.auth.model import User
+from backend.modules.partners.access import require_legacy_company_portal_access
 from backend.modules.dashboard.router import serialize_printer
 from backend.modules.printers.model import Printer
 from backend.modules.companies.model import Company
@@ -23,10 +24,19 @@ router = APIRouter(
 )
 
 
+def get_legacy_portal_user(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    require_legacy_company_portal_access(db, current_user)
+    return current_user
+
+
+
 @router.get("/overview")
 def intelligence_overview(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_legacy_portal_user),
 ):
     printers = (
         db.query(Printer)

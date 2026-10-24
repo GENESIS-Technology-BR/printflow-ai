@@ -9,10 +9,20 @@ from backend.modules.alerts.service import (
 )
 from backend.modules.auth.dependencies import get_current_user, get_platform_admin
 from backend.modules.auth.model import User
+from backend.modules.partners.access import require_legacy_company_portal_access
 from backend.modules.dashboard.router import serialize_printer
 
 
 router = APIRouter(prefix="/api/v1/alerts", tags=["Alerts"])
+
+
+def get_legacy_portal_user(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    require_legacy_company_portal_access(db, current_user)
+    return current_user
+
 
 
 @router.get("")
@@ -22,7 +32,7 @@ def list_alerts(
     ),
     limit: int = Query(default=50, ge=1, le=200),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_legacy_portal_user),
 ):
     alerts = reconcile_company_alerts(db, current_user.company_id, serialize_printer)
     if status == "open":

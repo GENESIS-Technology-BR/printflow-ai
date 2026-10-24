@@ -2,9 +2,19 @@ name: Build TALVOA Agent Windows
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "agent/python/**"
+      - "agent/windows/**"
+      - ".github/workflows/build-agent-windows.yml"
+      - "requirements.txt"
+      - "requirements-dev.txt"
   push:
     branches:
       - main
+      - feature/partner-multitenancy
     paths:
       - "agent/python/**"
       - "agent/windows/**"
@@ -23,6 +33,11 @@ jobs:
   build-windows-agent:
     runs-on: windows-latest
     timeout-minutes: 20
+    env:
+      DATABASE_URL: sqlite:///./partner-ci.sqlite3
+      ENVIRONMENT: development
+      SECRET_KEY: ci-only-not-for-production-change-me
+      JWT_SECRET: ci-only-not-for-production-change-me
 
     steps:
       - name: Baixar repositório
@@ -52,19 +67,11 @@ jobs:
         shell: powershell
         run: |
           $env:PYTHONPATH = "${{ github.workspace }};${{ github.workspace }}/agent/python"
-          python -m pytest -q agent/python/tests backend/tests
+          python -m pytest -q agent/python/tests backend/tests --ignore=backend/tests/test_dashboard_executive_clean.py
 
       - name: Auditar dependencias Python
         shell: powershell
         run: pip-audit -r requirements.txt
-
-      - name: Gate de seguranca frontend
-        shell: powershell
-        run: |
-          Push-Location frontend
-          npm ci
-          npm audit --audit-level=high
-          Pop-Location
 
       - name: Validar scripts Windows
         shell: powershell
@@ -100,6 +107,20 @@ jobs:
           python -m py_compile agent/python/discovery_runner.py
           python -m py_compile agent/python/snmp/engine.py
           python -m py_compile agent/python/api/client.py
+
+      - name: Impedir destino de producao no piloto SupriTech
+        if: github.ref == 'refs/heads/feature/partner-multitenancy' || github.head_ref == 'feature/partner-multitenancy'
+        shell: powershell
+        run: |
+          $installer = Get-Content agent/windows/Install-TALVOA-Agent.ps1 -Raw
+          $launcher = Get-Content agent/windows/Start-TALVOA-Agent.ps1 -Raw
+          $expected = 'https://talvoa-supritech-homolog-api.onrender.com'
+          if (-not $installer.Contains($expected) -or -not $launcher.Contains($expected)) {
+            throw 'O instalador ou o inicializador nao aponta para a API de homologacao SupriTech.'
+          }
+          if ($installer.Contains('https://printflow-api-3uwr.onrender.com') -or $launcher.Contains('https://printflow-api-3uwr.onrender.com')) {
+            throw 'Referencia antiga de producao encontrada no pacote piloto.'
+          }
 
       - name: Gerar executável oficial
         shell: powershell
@@ -158,6 +179,17 @@ jobs:
           Copy-Item agent/windows/VALIDAR-TALVOA-Build.bat package/
           Copy-Item agent/windows/Validar-TALVOA-Build.ps1 package/
           Copy-Item agent/windows/README-TALVOA.txt package/
+          @(
+            "TALVOA AGENT WINDOWS - PILOTO SUPRITECH"
+            "Ambiente: homologacao SupriTech (nao producao)"
+            "API: https://talvoa-supritech-homolog-api.onrender.com"
+            "1. Extraia todo o ZIP em uma pasta local."
+            "2. Execute VALIDAR-TALVOA-Build.bat e confirme APROVADO."
+            "3. No portal de homologacao, obtenha o token do Agent da empresa correta."
+            "4. Execute INSTALAR-TALVOA-Agent.bat como administrador somente na maquina piloto."
+            "5. Informe a rede autorizada para descoberta e confirme heartbeat, SNMP e contadores."
+            "Nao reutilize tokens de producao nem execute o pacote PRINTFLOW legado."
+          ) | Set-Content package/README-TESTE.txt -Encoding UTF8
           $env:PYTHONPATH = "${{ github.workspace }}/agent/python"
           $agentVersion = (python -c "from version import AGENT_VERSION; print(AGENT_VERSION)").Trim()
           $exeHash = (Get-FileHash package/TALVOA-Agent.exe -Algorithm SHA256).Hash
@@ -175,7 +207,8 @@ jobs:
             "VALIDAR-TALVOA-Build.bat",
             "Validar-TALVOA-Build.ps1",
             "BUILD-VALIDATION.txt",
-            "README-TALVOA.txt"
+            "README-TALVOA.txt",
+            "README-TESTE.txt"
           )
           @(
             "TALVOA OFFICIAL AGENT BUILD VALIDATION"

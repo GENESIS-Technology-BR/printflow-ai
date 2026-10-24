@@ -1,0 +1,64 @@
+name: Partner tenancy validation
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'requirements.txt'
+      - 'tests/**'
+      - 'backend/scripts/migrate_supritech_homolog_structure.py'
+      - '.github/workflows/partner-tenancy.yml'
+      - '.github/workflows/homolog-migration-safety.yml'
+  workflow_dispatch:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: sqlite:///./partner-ci.sqlite3
+      ENVIRONMENT: development
+      SECRET_KEY: ci-only-not-for-production-change-me
+      JWT_SECRET: ci-only-not-for-production-change-me
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt pytest httpx
+      - run: python -m compileall -q backend
+      - name: Run migration safety regression tests
+        run: python -m unittest discover -s tests -p 'test_homolog_migration_safety.py' -v
+      - run: python -m pytest backend/tests/test_partner_access.py backend/tests/test_partner_http.py backend/tests/test_integration_scoped_keys.py backend/tests/test_health_endpoints.py -q
+      - name: Verify populated tenant isolation regression
+        run: python -m pytest backend/tests/test_partner_populated_tenant_isolation.py -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked frontend dependencies
+        run: npm ci --no-audit --no-fund --prefer-offline --loglevel=error
+      - name: Audit high and critical frontend vulnerabilities
+        run: |
+          for attempt in 1 2 3; do
+            if timeout 90s npm audit --audit-level=high --fetch-retries=0 --fetch-timeout=30000; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo 'Security audit failed after 3 attempts; blocking this PR.' >&2
+              exit 1
+            fi
+            echo "Security audit attempt $attempt failed; retrying in 10 seconds..." >&2
+            sleep 10
+          done
+      - run: npm run build

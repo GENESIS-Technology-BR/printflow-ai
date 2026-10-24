@@ -6,6 +6,7 @@ from collections import defaultdict, deque
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from backend.app.database.session import get_db
@@ -46,7 +47,7 @@ def _set_auth_cookie(
     production = os.getenv(
         "ENVIRONMENT",
         "development",
-    ).strip().lower() == "production"
+    ).strip().lower() in {"production", "staging", "homologation"}
 
     # Frontend e API usam hosts Render distintos. Em produção, a sessão
     # precisa ser enviada em requisições cross-site; SameSite=None exige
@@ -68,7 +69,7 @@ def _clear_auth_cookie(
     production = os.getenv(
         "ENVIRONMENT",
         "development",
-    ).strip().lower() == "production"
+    ).strip().lower() in {"production", "staging", "homologation"}
 
     response.delete_cookie(
         key=AUTH_COOKIE_NAME,
@@ -352,8 +353,7 @@ def login(
     user = (
         db.query(User)
         .filter(
-            User.email
-            == normalized_email
+            or_(User.email == normalized_email, User.username == normalized_email)
         )
         .first()
     )
@@ -365,6 +365,10 @@ def login(
             user.password_hash,
         )
     ):
+        logger.warning(
+            "login_rejected reason=%s",
+            "unknown_user" if user is None else "password_mismatch",
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="E-mail ou senha inválidos",
@@ -447,9 +451,11 @@ def recovery_reset_password(
 ):
     expected_key = _recovery_key()
 
+    # Compare UTF-8 bytes: hmac.compare_digest rejects non-ASCII str values.
+    # Invalid keys must return 403, never an unhandled 500.
     if not hmac.compare_digest(
-        x_recovery_key,
-        expected_key,
+        x_recovery_key.encode("utf-8"),
+        expected_key.encode("utf-8"),
     ):
         raise HTTPException(
             status_code=403,
@@ -534,9 +540,11 @@ def recovery_users(
 
     expected_key = _recovery_key()
 
+    # Compare UTF-8 bytes: hmac.compare_digest rejects non-ASCII str values.
+    # Invalid keys must return 403, never an unhandled 500.
     if not hmac.compare_digest(
-        x_recovery_key,
-        expected_key,
+        x_recovery_key.encode("utf-8"),
+        expected_key.encode("utf-8"),
     ):
         raise HTTPException(
             status_code=403,
@@ -585,9 +593,11 @@ def recovery_issue_token(
 ):
     expected_key = _recovery_key()
 
+    # Compare UTF-8 bytes: hmac.compare_digest rejects non-ASCII str values.
+    # Invalid keys must return 403, never an unhandled 500.
     if not hmac.compare_digest(
-        x_recovery_key,
-        expected_key,
+        x_recovery_key.encode("utf-8"),
+        expected_key.encode("utf-8"),
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

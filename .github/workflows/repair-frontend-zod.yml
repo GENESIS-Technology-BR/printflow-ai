@@ -1,0 +1,37 @@
+name: Repair frontend dependency lockfile (one-shot)
+
+on:
+  push:
+    branches:
+      - feature/partner-multitenancy
+    paths:
+      - .github/workflows/repair-frontend-zod.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/partner-multitenancy
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Update vulnerable transitive Zod and regenerate lockfile
+        working-directory: frontend
+        run: |
+          npm pkg set 'overrides.zod=^4.6.6'
+          npm install --package-lock-only --ignore-scripts
+          npm ci --ignore-scripts
+          npm audit --audit-level=high
+          npm run build
+      - name: Commit validated dependency repair
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/package.json frontend/package-lock.json
+          git diff --cached --quiet || (git commit -m 'fix(frontend): override vulnerable transitive zod and refresh lockfile' && git push origin HEAD:feature/partner-multitenancy)

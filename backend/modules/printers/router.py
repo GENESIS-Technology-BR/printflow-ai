@@ -8,6 +8,7 @@ from backend.app.config.settings import settings
 from backend.app.database.session import get_db
 from backend.modules.auth.dependencies import get_current_user, get_platform_admin
 from backend.modules.auth.model import User
+from backend.modules.partners.access import require_legacy_company_portal_access
 from backend.modules.companies.model import Company
 from backend.modules.organization.model import CompanySector, CompanyUnit
 from backend.modules.printers.model import Printer
@@ -25,6 +26,15 @@ from backend.modules.usage.service import record_daily_printer_usage
 
 
 router = APIRouter(prefix="/printers", tags=["Printers"])
+
+
+def get_legacy_portal_user(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    require_legacy_company_portal_access(db, current_user)
+    return current_user
+
 
 
 # A politica comercial da Guerra e resolvida pelo nome da empresa, evitando
@@ -226,7 +236,7 @@ def _reconcile_inventory(
 @router.get("", response_model=list[PrinterResponse])
 def list_printers(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_legacy_portal_user),
 ):
     query = db.query(Printer).filter(
         Printer.company_id == current_user.company_id
