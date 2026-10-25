@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from urllib.parse import urlsplit, parse_qs
+from urllib.parse import urlsplit, parse_qs, unquote
 
 SOURCE_DB = "talvoa_supritech_homolog_db"
 SOURCE_HOST_PREFIX = "dpg-db7rsb25b2lc739g0img-a"
@@ -34,6 +34,21 @@ def verify(source, target):
         raise ValueError("Source and target must differ")
     if parse_qs(parsed.query).get("sslmode", [""])[0] not in ("require", "verify-full", "verify-ca"):
         raise ValueError("Target must specify sslmode=require or stronger")
+
+
+def pg_env(url):
+    parsed = urlsplit(url)
+    query = parse_qs(parsed.query)
+    env = os.environ.copy()
+    env.update({
+        'PGHOST': parsed.hostname or '',
+        'PGPORT': str(parsed.port or 5432),
+        'PGDATABASE': unquote(parsed.path.lstrip('/')),
+        'PGUSER': unquote(parsed.username or ''),
+        'PGPASSWORD': unquote(parsed.password or ''),
+        'PGSSLMODE': query.get('sslmode', ['require'])[0],
+    })
+    return env
 
 
 def run(cmd, *, env, stdout=None):
@@ -65,9 +80,9 @@ def main():
             raise SystemExit(f"REFUSED: {binary} not installed")
     # Fail closed: never restore into a nonempty database.
     result = subprocess.run(
-        ["psql", target, "-X", "-A", "-t", "-c",
+        ["psql", "-X", "-A", "-t", "-c",
          "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'"],
-        capture_output=True, text=True, timeout=60, check=True,
+        capture_output=True, text=True, timeout=60, check=True, env=pg_env(target),
     )
     if result.stdout.strip() != "0":
         raise SystemExit("REFUSED: destination already has public tables")
@@ -76,11 +91,11 @@ def main():
         raise SystemExit("REFUSED: backup path already exists")
     try:
         with backup.open("xb") as output:
-            run(["pg_dump", "--format=custom", "--no-owner", "--no-acl", "--dbname", source],
-                env=os.environ.copy(), stdout=output)
+            run(["pg_dump", "--format=custom", "--no-owner", "--no-acl"],
+                env=pg_env(source), stdout=output)
         print("Backup created. Keep it encrypted and restrict access.")
         run(["pg_restore", "--exit-on-error", "--no-owner", "--no-acl",
-             "--dbname", target, str(backup)], env=os.environ.copy())
+             str(backup)], env=pg_env(target))
         print("RESTORE FINISHED. Validation and API cutover are separate manual gates.")
     except Exception:
         print("FAILED: target may be partially restored. Do not cut over.", file=sys.stderr)
