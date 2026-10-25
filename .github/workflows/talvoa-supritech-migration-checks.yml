@@ -6,6 +6,7 @@ on:
       - backend/scripts/talvoa_supritech_migration_runner.py
       - backend/tests/test_supritech_migration_runner.py
       - backend/tests/test_supritech_verify_restore.py
+      - backend/tests/test_supritech_inventory.py
       - backend/scripts/talvoa_supritech_inventory.py
       - backend/scripts/talvoa_supritech_verify_restore.py
       - .github/workflows/talvoa-supritech-migration-checks.yml
