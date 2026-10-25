@@ -5,6 +5,7 @@ on:
     paths:
       - backend/scripts/talvoa_supritech_migration_runner.py
       - backend/tests/test_supritech_migration_runner.py
+      - backend/scripts/talvoa_supritech_inventory.py
       - .github/workflows/talvoa-supritech-migration-checks.yml
   workflow_dispatch:
 permissions:
@@ -18,7 +19,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile migration runner
-        run: python -m py_compile backend/scripts/talvoa_supritech_migration_runner.py
+        run: python -m py_compile backend/scripts/talvoa_supritech_migration_runner.py backend/scripts/talvoa_supritech_inventory.py
       - name: Run isolated safety tests
         run: python -m unittest discover -s backend/tests -p 'test_supritech_migration_runner.py' -v
       - name: Confirm migration remains dry-run only
