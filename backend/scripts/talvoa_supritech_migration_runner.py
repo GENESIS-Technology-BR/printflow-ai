@@ -26,9 +26,9 @@ def database(url):
 def verify(source, target):
     sdb, shost, _ = database(source)
     tdb, thost, parsed = database(target)
-    if sdb != SOURCE_DB or not shost.startswith(SOURCE_HOST_PREFIX):
+    if sdb != SOURCE_DB or shost not in (SOURCE_HOST_PREFIX, SOURCE_HOST_PREFIX + '.oregon-postgres.render.com'):
         raise ValueError("Source is not the approved SupriTech Render database")
-    if tdb != TARGET_DB or not thost.endswith(".neon.tech"):
+    if tdb != TARGET_DB or (not thost.endswith(".neon.tech") or not thost.startswith("ep-")):
         raise ValueError("Target must be the dedicated SupriTech Neon neondb")
     if shost == thost:
         raise ValueError("Source and target must differ")
@@ -81,11 +81,11 @@ def main():
     # Fail closed: never restore into a nonempty database.
     result = subprocess.run(
         ["psql", "-X", "-A", "-t", "-c",
-         "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'"],
+         "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%' AND c.relkind IN ('r','p','v','m','S','f')"],
         capture_output=True, text=True, timeout=60, check=True, env=pg_env(target),
     )
     if result.stdout.strip() != "0":
-        raise SystemExit("REFUSED: destination already has public tables")
+        raise SystemExit("REFUSED: destination contains database objects")
     backup = Path(args.backup)
     if backup.exists():
         raise SystemExit("REFUSED: backup path already exists")
