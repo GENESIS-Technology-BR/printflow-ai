@@ -46,6 +46,18 @@ h1{font-size:28px;letter-spacing:.4px}h2{font-size:17px;letter-spacing:.6px}
 .task{border-color:#23405b}.task a{text-decoration:none}.task a:hover{text-decoration:underline}
 @media(max-width:1100px){header{flex-wrap:wrap}.office-stage .grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.office-stage .grid,.lower-panels{grid-template-columns:1fr!important}.brand-sub{display:block}.nav{gap:0}.nav a{padding:8px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+.robot-art{isolation:isolate;overflow:hidden;border-radius:7px;background:linear-gradient(180deg,#0a1a2d 0%,#102d48 62%,#142739 63%,#152435 100%);border:1px solid #224968}
+.robot-art:before{z-index:2;position:relative;margin-top:9px;transform:scale(.77);transform-origin:center}
+.robot-art:after{z-index:1;bottom:9px;background:#164268;border:1px solid #4084b0;box-shadow:0 5px 0 #071522,0 12px 12px #0008}
+.workdesk{position:absolute;inset:0;pointer-events:none}
+.workdesk .monitor{position:absolute;top:12px;width:67px;height:58px;background:repeating-linear-gradient(180deg,#0c4e78 0 2px,#071c32 3px 9px);border:4px solid #294f70;box-shadow:0 0 14px #009dff38}
+.workdesk .monitor.left{left:10px;transform:perspective(120px) rotateY(14deg)}.workdesk .monitor.right{right:10px;transform:perspective(120px) rotateY(-14deg)}
+.workdesk .monitor:after{content:'▰  ▰';font-size:9px;color:#38baff;display:block;margin:9px 3px}
+.workdesk .desk{position:absolute;bottom:4px;left:5%;width:90%;height:13px;background:linear-gradient(#3e7698,#14354d);border:1px solid #5b9dc1;border-radius:3px;box-shadow:0 6px 10px #000a}
+.station-head{z-index:2}.robot-station{min-height:300px}.robot-station[data-active="true"] .monitor{box-shadow:0 0 16px #04bfff}
+.robot-station[data-active="true"] .robot-art:before{animation:working 1.7s ease-in-out infinite alternate}
+@media(prefers-reduced-motion:reduce){.robot-station[data-active="true"] .robot-art:before{animation:none}.robot-station{transition:none}}
 </style></head><body><main>
 <header><div class="brand"><span class="brand-logo">☁</span><div><h1>TALVOA <span class="brand-sub">│ CENTRO DE OPERAÇÕES</span></h1><div class="small">Robôs conectados a execuções verificáveis</div></div></div><nav class="nav"><a href="#overview">Visão Geral</a><a href="#robots">Robôs</a><a href="#executions">Execuções</a><a href="#infra">Infraestrutura</a></nav><span class="pill">Prévia pública · somente leitura</span></header>
 <section id="overview" class="card control-bar"><div class="top"><div><strong>GitHub Actions · feature/partner-multitenancy</strong><p id="updated">Aguardando consulta autorizada</p><div class="small" id="countdown" aria-live="off">Atualização automática a cada 30 segundos</div></div><button id="refresh">Atualizar</button></div><p id="error" role="alert" class="bad"></p></section>
@@ -81,7 +93,7 @@ async function refresh(){
     const active=Boolean(match&&match.status!=='completed');
     const color=active?'wait':match?.conclusion==='success'?'ok':match?.conclusion==='failure'?'bad':'';
     const last=match?.created_at?new Date(match.created_at).toLocaleString('pt-BR'):'Não disponível';
-    return '<article class="robot-station" data-active="'+active+'"><div class="station-head"><span>'+(i+1)+' · '+clean(name.toUpperCase())+'</span><span class="station-status '+color+'">'+clean(state)+'</span></div><div class="robot-art" aria-hidden="true"></div><div class="small">'+clean(workflow)+'</div><div class="station-meta">Última execução: '+clean(last)+'</div>'+(match?'<a class="station-link" href="'+clean(match.html_url)+'" target="_blank" rel="noopener noreferrer">Ver execução no GitHub ↗</a>':'<span class="station-link">Sem execução nos 100 registros consultados</span>')+'</article>';
+    return '<article class="robot-station" data-active="'+active+'"><div class="station-head"><span>'+(i+1)+' · '+clean(name.toUpperCase())+'</span><span class="station-status '+color+'">'+clean(state)+'</span></div><div class="robot-art" aria-hidden="true"><div class="workdesk"><span class="monitor left"></span><span class="monitor right"></span><span class="desk"></span></div></div><div class="small">'+clean(workflow)+'</div><div class="station-meta">Última execução: '+clean(last)+'</div>'+(match?'<a class="station-link" href="'+clean(match.html_url)+'" target="_blank" rel="noopener noreferrer">Ver execução no GitHub ↗</a>':'<span class="station-link">Sem execução nos 100 registros consultados</span>')+'</article>';
   }).join('');
   cachedRuns=runs;renderTasks();
   el('ghHealth').textContent='API respondeu';el('ghHealth').className='ok';
