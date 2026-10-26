@@ -148,7 +148,7 @@ class MigrationSafetyTests(unittest.TestCase):
                 "TALVOA_EXPECTED_NEON_HOST": runner.database(DST)[1],
             }), patch.object(sys, "argv", ["migration", "--apply", "--backup", str(backup)]), patch.object(
                 runner.shutil, "which", return_value="/usr/bin/psql"
-            ), patch.object(runner.subprocess, "run", return_value=SimpleNamespace(stdout="0\\n")) as execute:
+            ), patch.object(runner.subprocess, "run", return_value=SimpleNamespace(stdout="0\n")) as execute:
                 with self.assertRaises(SystemExit) as failure:
                     runner.main()
                 self.assertIn("directory", str(failure.exception).lower())
