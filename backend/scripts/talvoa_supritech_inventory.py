@@ -42,6 +42,8 @@ def main():
     expected_host = os.environ.get("TALVOA_EXPECTED_NEON_HOST", "").strip().lower()
     if not expected_host or migration.database(target)[1] != expected_host:
         raise SystemExit("REFUSED: target hostname must match TALVOA_EXPECTED_NEON_HOST")
+    if args.source and os.environ.get("TALVOA_SOURCE_NETWORK") != "render-private":
+        raise SystemExit("REFUSED: source inventory must run on an authorized Render private-network executor")
     data = inventory(source if args.source else target)
     print(json.dumps({"role": "source" if args.source else "target", "inventory": data}, indent=2))
 
