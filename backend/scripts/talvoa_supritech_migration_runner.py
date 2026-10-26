@@ -96,6 +96,8 @@ def main():
     if result.stdout.strip() != "0":
         raise SystemExit("REFUSED: destination contains database objects")
     backup = Path(args.backup)
+    if any(parent.is_symlink() for parent in backup.parent.parents):
+        raise SystemExit("REFUSED: ancestor backup directory must not be a symbolic link")
     if not backup.parent.is_dir():
         raise SystemExit("REFUSED: backup directory does not exist")
     if backup.parent.is_symlink():
