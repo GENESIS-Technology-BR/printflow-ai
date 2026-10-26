@@ -92,6 +92,8 @@ def main():
     backup = Path(args.backup)
     if not backup.parent.is_dir():
         raise SystemExit("REFUSED: backup directory does not exist")
+    if backup.parent.is_symlink():
+        raise SystemExit("REFUSED: backup directory must not be a symbolic link")
     if backup.is_symlink():
         raise SystemExit("REFUSED: backup path must not be a symbolic link")
     if backup.exists():
