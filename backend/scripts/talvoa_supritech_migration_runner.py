@@ -75,7 +75,10 @@ def main():
         return
     if os.environ.get("TALVOA_MIGRATION_APPROVED") != "supritech-homolog":
         raise SystemExit("REFUSED: TALVOA_MIGRATION_APPROVED must be supritech-homolog")
-    expected_host = os.environ.get("TALVOA_EXPECTED_NEON_HOST", "").lower().strip()\n    if not expected_host or database(target)[1] != expected_host:\n        raise SystemExit("REFUSED: target hostname must match TALVOA_EXPECTED_NEON_HOST")\n    for binary in ("pg_dump", "pg_restore", "psql"):
+    expected_host = os.environ.get("TALVOA_EXPECTED_NEON_HOST", "").lower().strip()
+    if not expected_host or database(target)[1] != expected_host:
+        raise SystemExit("REFUSED: target hostname must match TALVOA_EXPECTED_NEON_HOST")
+    for binary in ("pg_dump", "pg_restore", "psql"):
         if not shutil.which(binary):
             raise SystemExit(f"REFUSED: {binary} not installed")
     # Fail closed: never restore into a nonempty database.
@@ -93,7 +96,10 @@ def main():
         with backup.open("xb") as output:
             run(["pg_dump", "--format=custom", "--no-owner", "--no-acl"],
                 env=pg_env(source), stdout=output)
-        if backup.stat().st_size == 0:\n            raise SystemExit("REFUSED: empty backup; restore cancelled")\n        run(["pg_restore", "--list", str(backup)], env=os.environ.copy(), stdout=subprocess.DEVNULL)\n        print("Backup created and archive index verified. Keep it encrypted and restrict access.")
+        if backup.stat().st_size == 0:
+            raise SystemExit("REFUSED: empty backup; restore cancelled")
+        run(["pg_restore", "--list", str(backup)], env=os.environ.copy(), stdout=subprocess.DEVNULL)
+        print("Backup created and archive index verified. Keep it encrypted and restrict access.")
         run(["pg_restore", "--exit-on-error", "--no-owner", "--no-acl",
              str(backup)], env=pg_env(target))
         print("RESTORE FINISHED. Validation and API cutover are separate manual gates.")
