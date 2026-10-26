@@ -21,9 +21,9 @@ h2{margin:0 0 9px;font-size:15px}.hint{font-size:13px;color:#bed7e8;line-height:
 </head><body>
 <canvas id="viewport" aria-label="Escritório virtual TALVOA em três dimensões"></canvas>
 <header><div><div class="brand">◈ <span>TALVOA</span> · ESCRITÓRIO 3D</div><div class="muted">Seis robôs · tarefas verificadas · somente leitura</div></div><a href="./">← Centro de Operações</a></header>
-<aside id="hud"><h2>EXPLORAR O ESCRITÓRIO</h2><div class="hint">Arraste para girar a câmera. Use a roda do mouse para aproximar. Clique em um robô ou em sua mesa para ver o que está fazendo. No celular, arraste e use dois dedos para zoom.</div><div class="status" id="status">Consultando GitHub Actions...</div></aside>
+<aside id="hud"><h2>EXPLORAR O ESCRITÓRIO</h2><div class="hint">Use W A S D ou as setas para caminhar pelo escritório. Arraste para olhar ao redor, use a roda do mouse para aproximar e clique em cada robô. No celular, use os controles e gestos.</div><div class="status" id="status">Consultando GitHub Actions...</div></aside>
 <aside id="detail" hidden aria-live="polite"><button class="close" id="close" type="button">Fechar</button><h2 id="robotTitle"></h2><div id="robotBody"></div></aside>
-<div id="controls"><button id="reset" type="button">⌂ Visão geral</button><button id="left" type="button">◀ Girar</button><button id="right" type="button">Girar ▶</button><button id="refresh" type="button">↻ Atualizar</button></div>
+<div id="controls"><button id="reset" type="button">⌂ Visão geral</button><button id="left" type="button">◀ Girar</button><button id="right" type="button">Girar ▶</button><button id="refresh" type="button">↻ Atualizar</button><button id="inside" type="button">🚶 Entrar no escritório</button><button id="overview" type="button">◈ Vista superior</button></div>
 <div id="fallback"><h2>Visualização 3D indisponível</h2><p>Este navegador precisa oferecer WebGL e acesso à biblioteca gráfica. O painel 2D continua disponível.</p><a href="./">Abrir Centro de Operações</a></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"}}</script><script type="module">
 import * as THREE from 'three';
@@ -51,6 +51,17 @@ const grid=new THREE.GridHelper(17,17,0x245d82,0x24506a);grid.position.y=.006;sc
 box(scene,17,5,.22,0,2.35,-6.5,mat(0x0c2a40,.3,.4));
 for(let i=-7;i<=7;i+=2){box(scene,.07,4.4,.06,i,2.25,-6.36,mBlue);box(scene,1.7,1.9,.04,i+.8,2.5,-6.34,mat(0x133a56,.2,.3))}
 for(let i=0;i<6;i++){const x=-5.2+(i%3)*5.2,z=-2.9+Math.floor(i/3)*5.1;const light=new THREE.PointLight(i%2?0x26baff:0x45dfff,10,6);light.position.set(x,3.5,z);scene.add(light)}
+// Detalhes arquitetônicos: janelas, iluminação, divisórias, plantas e recepção.
+const glass=new THREE.MeshPhysicalMaterial({color:0x4ba6d1,metalness:.15,roughness:.09,transmission:.8,transparent:true,opacity:.25,side:THREE.DoubleSide});
+const wood=mat(0x8b6246,.12,.62),leaf=mat(0x26734e,.08,.65),pot=mat(0x394b58,.35,.55),warm=new THREE.MeshBasicMaterial({color:0xffc58c});
+for(let j=-7;j<=7;j+=2.4){box(scene,.065,4.6,.12,j,2.3,6.25,mFrame);box(scene,.07,4.6,.08,j,2.3,-6.25,mFrame)}
+box(scene,16.8,.1,.12,0,4.6,6.25,mFrame);
+for(let j=0;j<7;j++){const x=-7.4+j*2.45;box(scene,1.8,.025,.14,x,4.35,0,warm);const lamp=new THREE.PointLight(0xffd7a0,1.7,5);lamp.position.set(x,4.15,0);scene.add(lamp)}
+function plant(x,z,scale=1){const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);scene.add(g);box(g,.44,.58,.44,0,.3,0,pot);box(g,.07,.65,.07,0,.86,0,wood);for(let k=0;k<7;k++){const a=k*Math.PI*2/7;const l=sphere(g,.27,Math.cos(a)*.3,1.16+(k%3)*.1,Math.sin(a)*.3,leaf);l.scale.set(.8,1.45,.65)}}
+for(const [x,z] of [[-7.5,-5.4],[-2.5,-5.5],[2.5,-5.5],[7.5,-5.4],[-7.5,0],[7.5,0],[-7.5,5.4],[7.5,5.4]])plant(x,z,.9);
+box(scene,3.3,.55,1.35,-5.5,.44,5.7,wood);
+for(let k=0;k<3;k++){box(scene,.15,.68,.16,-6.8+k*1.2,.8,5.65,mFrame)}
+const wallDisplay=box(scene,4.6,1.8,.07,0,3,-6.28,mDark);for(let j=0;j<6;j++)box(scene,.38,.12,.085,-1.7+j*.67,2.7+(j%3)*.23,-6.21,mGlow);
 const stations=[],rayTargets=[];
 for(let i=0;i<6;i++){
  const x=-5.1+(i%3)*5.1,z=-2.8+Math.floor(i/3)*5.1;
@@ -84,7 +95,15 @@ async function showRobot(i){selected=i;const run=runs.find(r=>r.name===workflows
  try{const res=await fetch('https://api.github.com/repos/'+repo+'/actions/runs/'+encodeURIComponent(run.id)+'/jobs?per_page=50',{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const data=await res.json();if(selected!==i||!Array.isArray(data.jobs))return;el('jobDetails').innerHTML=data.jobs.length?'<strong>Jobs reais ('+data.jobs.length+')</strong>'+data.jobs.map(j=>'<div class="job"><b>'+escape(j.name)+'</b> · '+escape(j.status==='completed'?(j.conclusion||'finalizado'):j.status)+(j.steps||[]).map(s=>'<div class="step">↳ '+escape(s.name)+' · '+escape(s.status==='completed'?(s.conclusion||'finalizado'):s.status)+'</div>').join('')+'</div>').join(''):'Jobs ainda não disponíveis; execução pode estar na fila.'}catch(e){if(selected===i)el('jobDetails').textContent='Não foi possível consultar jobs: '+e.message}}
 el('close').onclick=()=>{selected=-1;el('detail').hidden=true};
 async function refresh(){el('status').textContent='Consultando dados reais...';try{const res=await fetch('https://api.github.com/repos/'+repo+'/actions/runs?branch='+encodeURIComponent(branch)+'&per_page=100',{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const data=await res.json();if(!Array.isArray(data.workflow_runs))throw Error('Formato inválido');runs=data.workflow_runs;lastRead=Date.now();const active=stations.filter((s,i)=>{const r=runs.find(x=>x.name===workflows[i]);return r&&r.status==='in_progress'}).length;el('status').textContent='GitHub consultado · '+active+' robô(s) executando · '+new Date().toLocaleTimeString('pt-BR');if(selected>=0)showRobot(selected)}catch(e){el('status').textContent='GitHub indisponível: '+e.message+'. Nenhum estado presumido.'}}
-el('reset').onclick=()=>{camera.position.set(13,11,15);orbit.target.set(0,1.4,0);orbit.update()};el('left').onclick=()=>{camera.position.applyAxisAngle(new THREE.Vector3(0,1,0),-.35);orbit.update()};el('right').onclick=()=>{camera.position.applyAxisAngle(new THREE.Vector3(0,1,0),.35);orbit.update()};el('refresh').onclick=refresh;
+function setView(position,target){camera.position.set(...position);orbit.target.set(...target);orbit.update()}
+el('reset').onclick=()=>setView([13,11,15],[0,1.4,0]);
+el('overview').onclick=()=>setView([0,17,1],[0,1,0]);
+el('inside').onclick=()=>setView([0,2.25,5.65],[0,1.8,0]);el('left').onclick=()=>{camera.position.applyAxisAngle(new THREE.Vector3(0,1,0),-.35);orbit.update()};el('right').onclick=()=>{camera.position.applyAxisAngle(new THREE.Vector3(0,1,0),.35);orbit.update()};el('refresh').onclick=refresh;
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-const clock=new THREE.Clock();function frame(){requestAnimationFrame(frame);const t=clock.getElapsedTime();stations.forEach((s,i)=>{const r=runs.find(x=>x.name===workflows[i]);const active=r?.status==='in_progress';s.robot.position.y=(active?Math.sin(t*2+i)*.045:0);s.ring.material.color.setHex(active?0x39ffb2:r?.conclusion==='failure'?0xff6c74:0x23bfff);s.ring.rotation.z=t*.2});orbit.update();renderer.render(scene,camera)}frame();refresh();setInterval(()=>{if(!document.hidden)refresh()},60000);
+const pressed=new Set();
+window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))return;const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){pressed.add(k);e.preventDefault()}});
+window.addEventListener('keyup',e=>pressed.delete(e.key.toLowerCase()));
+window.addEventListener('blur',()=>pressed.clear());
+const clock=new THREE.Clock();function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.05);const t=clock.elapsedTime;
+const fwd=new THREE.Vector3().subVectors(orbit.target,camera.position);fwd.y=0;fwd.normalize();const right=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0)).normalize();const delta=new THREE.Vector3();if(pressed.has('w')||pressed.has('arrowup'))delta.add(fwd);if(pressed.has('s')||pressed.has('arrowdown'))delta.sub(fwd);if(pressed.has('d')||pressed.has('arrowright'))delta.add(right);if(pressed.has('a')||pressed.has('arrowleft'))delta.sub(right);if(delta.lengthSq()){delta.normalize().multiplyScalar(dt*3.5);const next=orbit.target.clone().add(delta);if(Math.abs(next.x)<8&&Math.abs(next.z)<6.3){camera.position.add(delta);orbit.target.add(delta)}}stations.forEach((s,i)=>{const r=runs.find(x=>x.name===workflows[i]);const active=r?.status==='in_progress';s.robot.position.y=(active?Math.sin(t*2+i)*.045:0);s.ring.material.color.setHex(active?0x39ffb2:r?.conclusion==='failure'?0xff6c74:0x23bfff);s.ring.rotation.z=t*.2});orbit.update();renderer.render(scene,camera)}frame();refresh();setInterval(()=>{if(!document.hidden)refresh()},60000);
 </script></body></html>
