@@ -28,10 +28,10 @@ h1{font-size:28px;letter-spacing:.4px}h2{font-size:17px;letter-spacing:.6px}
 @media(max-width:950px){.office-stage .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:560px){.office-stage .grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}header{align-items:flex-start;flex-direction:column}main{padding:12px}}
 </style></head><body><main>
-<header><div><div class="small">TALVOA · ADMINISTRAÇÃO INTERNA</div><h1>Centro de Operações</h1><p>Execuções públicas reais do GitHub · Atualização a cada 30s</p></div><span class="pill">Acesso administrativo obrigatório</span></header>
+<header><div><div class="small">TALVOA · ADMINISTRAÇÃO INTERNA</div><h1>Centro de Operações</h1><p>Execuções públicas reais do GitHub · Atualização a cada 30s</p></div><span class="pill">Prévia pública · somente leitura</span></header>
 <section class="card"><div class="top"><div><strong>GitHub Actions · feature/partner-multitenancy</strong><p id="updated">Aguardando consulta autorizada</p><div class="small" id="countdown" aria-live="off">Atualização automática a cada 30 segundos</div></div><button id="refresh">Atualizar</button></div><p id="error" role="alert" class="bad"></p></section>
 <div class="grid stats" style="margin:18px 0"><div class="card"><div class="small">Execuções retornadas</div><div class="stat" id="total">—</div></div><div class="card"><div class="small">Aprovadas</div><div class="stat ok" id="success">—</div></div><div class="card"><div class="small">Em andamento</div><div class="stat wait" id="running">—</div></div><div class="card"><div class="small">Falhas / canceladas</div><div class="stat bad" id="failed">—</div></div></div>
-<h2>Escritório virtual · seis estações com atividade comprovada</h2><div class="office-stage"><div id="office" class="grid"></div></div><h2>Atividade comprovada</h2><div id="tasks" class="card">Sem dados carregados.</div>
+<h2>Escritório virtual · seis estações com atividade comprovada</h2><div class="office-stage"><div id="office" class="grid"></div></div><h2>Atividade comprovada</h2><div class="row" style="margin:0 0 12px;flex-wrap:wrap"><label for="statusFilter" class="small">Filtrar execuções <select id="statusFilter" style="background:#112b46;color:#fff;border:1px solid #35618c;border-radius:7px;padding:8px"><option value="all">Todas</option><option value="running">Em andamento</option><option value="success">Aprovadas</option><option value="failure">Falhas</option></select></label><a id="githubActions" href="https://github.com/GENESIS-Technology-BR/printflow-ai/actions" target="_blank" rel="noopener noreferrer">Abrir GitHub Actions ↗</a></div><div id="tasks" class="card">Sem dados carregados.</div>
 <p class="small">Origem: API GitHub Actions. Sem acesso autorizado ou em caso de falha, a tela informa indisponibilidade — nunca inventa estados. Apenas dados públicos do GitHub Actions. Não inserir tokens neste arquivo. Para informações privadas, integrar posteriormente ao login TALVOA.</p>
 </main><script>
 'use strict';
@@ -40,6 +40,9 @@ const endpoint='https://api.github.com/repos/'+repo+'/actions/runs?branch=featur
 const el=id=>document.getElementById(id);
 function clean(t){return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function label(r){if(r.status!=='completed')return 'Em andamento';return ({success:'Aprovado',failure:'Falhou',cancelled:'Cancelado',skipped:'Ignorado'}[r.conclusion]||'Indeterminado');}
+let cachedRuns=[];
+function renderTasks(){const filter=el('statusFilter').value;const runs=cachedRuns.filter(r=>filter==='all'||(filter==='running'?r.status!=='completed':filter==='success'?r.conclusion==='success':['failure','timed_out'].includes(r.conclusion)));el('tasks').innerHTML=runs.length?runs.map(r=>'<div class="task row"><div><a href="'+clean(r.html_url)+'" target="_blank" rel="noopener noreferrer">'+clean(r.name)+'</a><div class="small">'+clean(r.head_sha?.slice(0,8))+' · '+clean(r.created_at?new Date(r.created_at).toLocaleString('pt-BR'):'sem data')+'</div></div><span class="pill">'+clean(label(r))+'</span></div>').join(''):'Nenhuma execução encontrada neste filtro.';}
+el('statusFilter').addEventListener('change',renderTasks);
 async function refresh(){
  el('error').textContent='';el('updated').textContent='Consultando GitHub...';
  try{
@@ -59,9 +62,9 @@ async function refresh(){
     const last=match?.created_at?new Date(match.created_at).toLocaleString('pt-BR'):'Não disponível';
     return '<article class="robot-station" data-active="'+active+'"><div class="station-head"><span>'+(i+1)+' · '+clean(name.toUpperCase())+'</span><span class="station-status '+color+'">'+clean(state)+'</span></div><div class="robot-art" aria-hidden="true"></div><div class="small">'+clean(workflow)+'</div><div class="station-meta">Última execução: '+clean(last)+'</div>'+(match?'<a class="station-link" href="'+clean(match.html_url)+'" target="_blank" rel="noopener noreferrer">Ver execução no GitHub ↗</a>':'<span class="station-link">Sem execução nos 30 registros consultados</span>')+'</article>';
   }).join('');
-  el('tasks').innerHTML=runs.length?runs.map(r=>'<div class="task row"><div><a href="'+clean(r.html_url)+'" target="_blank" rel="noopener noreferrer">'+clean(r.name)+'</a><div class="small">'+clean(r.head_sha?.slice(0,8))+' · '+clean(r.created_at?new Date(r.created_at).toLocaleString('pt-BR'):'sem data')+'</div></div><span class="pill">'+clean(label(r))+'</span></div>').join(''):'Nenhuma execução retornada.';
+  cachedRuns=runs;renderTasks();
   el('updated').textContent='Última consulta: '+new Date().toLocaleString('pt-BR');
- }catch(e){el('updated').textContent='Dados indisponíveis';el('error').textContent=e.message+'; nenhum status exibido como atual.';['total','success','running','failed'].forEach(id=>el(id).textContent='—');el('tasks').textContent='Não foi possível consultar execuções. Verifique autorização e conectividade.';el('office').innerHTML='';}
+ }catch(e){el('updated').textContent='Dados indisponíveis';el('error').textContent=e.message+'; nenhum status exibido como atual.';['total','success','running','failed'].forEach(id=>el(id).textContent='—');el('tasks').textContent='Não foi possível consultar execuções. Verifique autorização e conectividade.';el('office').innerHTML='';cachedRuns=[];}
 }
 let remaining=30;let fetching=false;
 const originalRefresh=refresh;
