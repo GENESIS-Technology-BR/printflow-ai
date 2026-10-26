@@ -110,7 +110,7 @@ def main():
         print("Backup created and archive index verified. Keep it encrypted and restrict access.")
         if os.environ.get("TALVOA_BACKUP_VERIFIED") != "supritech-homolog":
             raise SystemExit("REFUSED: backup recovery verification not acknowledged; restore cancelled")
-        run(["pg_restore", "--exit-on-error", "--no-owner", "--no-acl",
+        run(["pg_restore", "--single-transaction", "--exit-on-error", "--no-owner", "--no-acl",
              str(backup)], env=pg_env(target))
         print("RESTORE FINISHED. Validation and API cutover are separate manual gates.")
     except Exception:
