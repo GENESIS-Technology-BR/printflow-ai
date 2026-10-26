@@ -25,9 +25,9 @@ h2{margin:0 0 9px;font-size:15px}.hint{font-size:13px;color:#bed7e8;line-height:
 <aside id="detail" hidden aria-live="polite"><button class="close" id="close" type="button">Fechar</button><h2 id="robotTitle"></h2><div id="robotBody"></div></aside>
 <div id="controls"><button id="reset" type="button">⌂ Visão geral</button><button id="left" type="button">◀ Girar</button><button id="right" type="button">Girar ▶</button><button id="refresh" type="button">↻ Atualizar</button></div>
 <div id="fallback"><h2>Visualização 3D indisponível</h2><p>Este navegador precisa oferecer WebGL e acesso à biblioteca gráfica. O painel 2D continua disponível.</p><a href="./">Abrir Centro de Operações</a></div>
-<script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
-import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/controls/OrbitControls.js';
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"}}</script><script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const repo='GENESIS-Technology-BR/printflow-ai',branch='feature/partner-multitenancy';
 const names=['Desenvolvimento','Deploy','Banco de dados','Segurança','Monitoramento','Qualidade'];
 const workflows=['Build TALVOA Agent Windows','TALVOA CTO Operations','TALVOA SupriTech Migration Safety Checks','Frontend security audit','TALVOA Neon Free Usage Monitor','Partner tenancy validation'];
