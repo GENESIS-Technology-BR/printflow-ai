@@ -1,0 +1,70 @@
+name: TALVOA Robotic Operations Read-Only
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 12 * * 1-5'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: talvoa-robot-readonly
+  cancel-in-progress: true
+jobs:
+  operations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout for analysis only
+        uses: actions/checkout@v4
+      - name: Six robots - real read-only checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          python3 - <<'PY'
+          import os,json,urllib.request,datetime,subprocess,pathlib
+          root=pathlib.Path('.')
+          now=datetime.datetime.now(datetime.timezone.utc).isoformat()
+          checks=[]
+          def add(name,status,details):
+              checks.append(dict(robot=name,status=status,details=details))
+          py=list(root.rglob('*.py'))
+          add('Desenvolvimento','observado',f'{len(py)} arquivos Python encontrados; nenhuma alteração realizada')
+          workflows=list((root/'.github/workflows').glob('*.yml'))+list((root/'.github/workflows').glob('*.yaml'))
+          add('Deploy','observado',f'{len(workflows)} definições de workflow; deploy NÃO executado')
+          migrations=list(root.rglob('*migration*.py'))
+          add('Banco de dados','observado',f'{len(migrations)} arquivos de migração identificados; banco NÃO acessado')
+          risky=[]
+          for p in py[:400]:
+              try:
+                  t=p.read_text(encoding='utf-8',errors='ignore')
+                  if 'eval(' in t or 'exec(' in t:risky.append(str(p))
+              except OSError:pass
+          add('Segurança','atenção' if risky else 'observado',f'{len(risky)} arquivos com eval/exec em inspeção textual (não é auditoria de segurança)')
+          repo=os.environ['GH_REPOSITORY']
+          url=f'https://api.github.com/repos/{repo}/actions/runs?per_page=30'
+          try:
+              req=urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'talvoa-readonly'})
+              with urllib.request.urlopen(req,timeout=15) as response:
+                  runs=json.load(response).get('workflow_runs',[])
+              latest=[{'name':r.get('name'),'status':r.get('status'),'conclusion':r.get('conclusion')} for r in runs[:12]]
+              add('Monitoramento','observado',f'{len(runs)} execuções consultadas via API GitHub')
+          except Exception as exc:
+              latest=[]
+              add('Monitoramento','indisponível',f'API GitHub: {type(exc).__name__}')
+          add('Qualidade','observado','Relatório gerado; testes de produto não foram executados')
+          output={'generated_at_utc':now,'mode':'read_only','robots':checks,'recent_workflows':latest}
+          pathlib.Path('reports/talvoa-robots.json').write_text(json.dumps(output,ensure_ascii=False,indent=2))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('## TALVOA - 6 robôs (somente leitura)\n\n')
+              for c in checks:f.write(f"- **{c['robot']}**: {c['status']} — {c['details']}\n")
+          PY
+      - name: Publish inspection report
+        uses: actions/upload-artifact@v4
+        with:
+          name: talvoa-robot-readonly-report
+          path: reports/talvoa-robots.json
+          retention-days: 7
