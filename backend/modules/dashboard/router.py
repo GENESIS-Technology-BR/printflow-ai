@@ -256,3 +256,67 @@ def dashboard_printer_detail(printer_uuid: str, db: Session = Depends(get_db), c
         raise HTTPException(status_code=404, detail="Impressora não encontrada.")
 
     return serialize_printer(printer)
+
+@router.get("/operational-status")
+def dashboard_operational_status(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Read-only, authenticated pilot monitoring view scoped to user's company.
+
+    A healthy printer must have both recent printer telemetry and a healthy
+    collecting Agent. The endpoint does not change existing dashboard routes.
+    """
+    company_id = current_user.company_id
+    if company_id is None:
+        raise HTTPException(status_code=403, detail="Empresa não autorizada.")
+    serialized, _ = _company_inventory(db, company_id)
+    company = db.query(Company).filter(Company.id == company_id).first()
+    agent_age = _age_seconds(getattr(company, "agent_last_seen", None))
+    agent_state = (
+        "unknown" if agent_age is None
+        else "online" if agent_age <= 300
+        else "delayed" if agent_age <= 900
+        else "offline"
+    )
+    counts = {"online": 0, "delayed": 0, "offline": 0, "unknown": 0}
+    rows: list[dict[str, Any]] = []
+    for printer in serialized:
+        age = _age_seconds(
+            datetime.fromisoformat(printer["last_seen"]) if printer["last_seen"] else None
+        )
+        if agent_state == "unknown" or age is None:
+            state = "unknown"
+        elif agent_state == "offline" or age > 900:
+            state = "offline"
+        elif agent_state == "delayed" or age > 300:
+            state = "delayed"
+        elif printer["status"] == "offline" or not printer["active"]:
+            state = "offline"
+        elif printer["status"] != "online":
+            state = "unknown"
+        else:
+            state = "online"
+        counts[state] += 1
+        rows.append({
+            "id": printer["id"],
+            "uuid": printer["uuid"],
+            "name": printer["name"],
+            "ip": printer["ip"],
+            "operational_status": state,
+            "last_seen": printer["last_seen"],
+        })
+    return {
+        "tenant_id": company_id,
+        "agent_status": agent_state,
+        "cards": {
+            "total": len(rows),
+            "online": counts["online"],
+            "attention": counts["delayed"],
+            "critical": counts["offline"],
+            "unknown": counts["unknown"],
+        },
+        "printers": rows,
+        "policy_version": "pilot-v1",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
