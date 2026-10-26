@@ -163,11 +163,28 @@ jobs:
               latest=[]
               add('Monitoramento','indisponível',f'API GitHub: {type(exc).__name__}')
           add('Qualidade','observado','Relatório gerado; testes de produto não foram executados')
+          # Fila real de trabalho: issues abertas, consultadas sem criar/editar tickets.
+          queue=[]
+          try:
+              issue_url=f'https://api.github.com/repos/{repo}/issues?state=open&per_page=50'
+              issue_req=urllib.request.Request(issue_url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'talvoa-readonly'})
+              with urllib.request.urlopen(issue_req,timeout=15) as response:
+                  issue_rows=json.load(response)
+              for issue in issue_rows:
+                  if 'pull_request' in issue:continue
+                  title=issue.get('title','')
+                  body=issue.get('body') or ''
+                  priority='alta' if any(w in (title+' '+body).lower() for w in ['segurança','tenant','isolamento','critical','crítico']) else 'normal'
+                  robot='Segurança' if any(w in title.lower() for w in ['segurança','tenant','permiss']) else 'Desenvolvimento'
+                  queue.append({'issue':issue['number'],'title':title,'url':issue['html_url'],'priority':priority,'robot':robot,'state':'aguardando planejamento'})
+              queue.sort(key=lambda item:(item['priority']!='alta',item['issue']))
+          except Exception as exc:
+              add('Fila de tarefas','indisponível',f'Consulta de issues: {type(exc).__name__}')
           recommendations=[]
           if risky:recommendations.append({'robot':'Segurança','priority':'revisar','action':'Revisar manualmente chamadas eval/exec encontradas; não executar correção automática','files':risky[:20]})
           if not migrations:recommendations.append({'robot':'Banco de dados','priority':'informativo','action':'Nenhum arquivo de migração por nome localizado; conferir versionamento do esquema'})
           if not workflows:recommendations.append({'robot':'Deploy','priority':'revisar','action':'Nenhum workflow encontrado; verificar CI/CD'})
-          output={'generated_at_utc':now,'mode':'read_only','robots':checks,'recent_workflows':latest,'recommendations':recommendations,'metrics':{'python_files':len(py),'workflow_definitions':len(workflows),'migration_files':len(migrations),'security_pattern_files':len(risky),'github_runs_checked':len(latest)}}
+          output={'generated_at_utc':now,'mode':'read_only','robots':checks,'recent_workflows':latest,'recommendations':recommendations,'task_queue':queue,'metrics':{'python_files':len(py),'workflow_definitions':len(workflows),'migration_files':len(migrations),'security_pattern_files':len(risky),'github_runs_checked':len(latest),'open_issues_in_queue':len(queue)}}
           pathlib.Path('reports/talvoa-robots.json').write_text(json.dumps(output,ensure_ascii=False,indent=2))
           md=['# TALVOA — diagnóstico operacional','',f'Gerado em UTC: {now}','', '## Indicadores', '']
           for key,value in output['metrics'].items():md.append(f'- {key}: {value}')
@@ -177,7 +194,11 @@ jobs:
           if recommendations:
               for item in recommendations:md.append(f"- **{item['robot']}** ({item['priority']}): {item['action']}")
           else:md.append('- Nenhuma recomendação adicional gerada pelas verificações atuais.')
-          md.extend(['','Este relatório não representa auditoria completa nem autorização para alterar produção.'])
+          md.extend(['','## Fila real de trabalho (GitHub Issues)',''])
+          if queue:
+              for item in queue:md.append(f"- [#{item['issue']}]({item['url']}) **{item['title']}** — {item['robot']}; prioridade {item['priority']}; {item['state']}")
+          else:md.append('- Nenhuma issue recuperada; conferir acesso à API e estado do repositório.')
+          md.extend(['','A fila é somente leitura. Nenhuma issue foi alterada e nenhum código foi aplicado automaticamente.','','Este relatório não representa auditoria completa nem autorização para alterar produção.'])
           pathlib.Path('reports/talvoa-robots.md').write_text('\\n'.join(md)+'\\n',encoding='utf-8')
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
               f.write('## TALVOA - 6 robôs (somente leitura)\n\n')
