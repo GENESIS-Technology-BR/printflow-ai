@@ -175,6 +175,17 @@ for(let i=0;i<6;i++){
  }
  const visorTrim=new THREE.Mesh(new THREE.TorusGeometry(.41,.014,8,48),blueMetal);visorTrim.scale.set(1.17,.66,1);visorTrim.position.set(0,2.19,.48);robot.add(visorTrim);
  const shoulderBadge=box(robot,.16,.08,.025,0,1.68,.43,pearl);shoulderBadge.castShadow=false;
+ // Antebraços estendidos em direção à mesa e teclados com teclas físicas.
+ for(const s of [-1,1]){
+  const armLink=new THREE.Mesh(new THREE.CapsuleGeometry(.085,.42,5,10),pearl);
+  armLink.position.set(s*.58,1.08,.22);armLink.rotation.x=-.78;armLink.rotation.z=s*.12;robot.add(armLink);
+  const hand=sphere(robot,.115,s*.58,1.02,-.04,pearl);hand.scale.set(1.15,.42,.85);
+ }
+ for(const dx of [-.78,.78]){
+  box(group,.76,.045,.29,dx,1.19,-.37,mDark);
+  for(let row=0;row<3;row++)for(let col=0;col<9;col++)box(group,.055,.013,.05,dx-.30+col*.075,1.222,-.48+row*.085,joint);
+ }
+
 
  const ring=new THREE.Mesh(new THREE.TorusGeometry(.76,.035,8,44),new THREE.MeshBasicMaterial({color:0x23bfff}));ring.rotation.x=-Math.PI/2;ring.position.set(0,.07,.42);group.add(ring);
  const hit=new THREE.Mesh(new THREE.BoxGeometry(3.9,3.4,3.6),new THREE.MeshBasicMaterial({visible:false}));hit.position.set(0,1.7,0);hit.userData.station=i;group.add(hit);rayTargets.push(hit);
