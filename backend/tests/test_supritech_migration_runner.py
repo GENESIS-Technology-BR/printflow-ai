@@ -113,7 +113,7 @@ class MigrationSafetyTests(unittest.TestCase):
                 if cmd[0] == "pg_dump":
                     stdout.write(b"archive")
             def fake_subprocess(cmd, **kwargs):
-                return SimpleNamespace(stdout="0\\n")
+                return SimpleNamespace(stdout="0\n")
             with patch.dict(os.environ, {
                 "TALVOA_SOURCE_DATABASE_URL": SRC,
                 "TALVOA_TARGET_DATABASE_URL": DST,
