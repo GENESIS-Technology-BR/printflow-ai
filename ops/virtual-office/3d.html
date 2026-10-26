@@ -100,6 +100,15 @@ const concretePBR=new THREE.MeshStandardMaterial({map:surfaceTexture('concrete')
 const fabricPBR=new THREE.MeshStandardMaterial({map:surfaceTexture('fabric'),roughness:.89,metalness:0});
 scene.traverse(o=>{if(!o.isMesh)return;if(o.material===wood||o.material===woodWall||o.material===mDesk)o.material=timberPBR;else if(o.material===mFloor)o.material=concretePBR;else if(o.material===couch||o.material===cushion)o.material=fabricPBR});
 
+
+/* Vista urbana pelas janelas e sombras de contato nas estações. */
+const skylineMat=[mat(0x142c43,.05,.9),mat(0x1a3851,.05,.9),mat(0x23455d,.05,.9)];
+for(let i=0;i<28;i++){const x=-8.0+i*.61;const height=1.5+(Math.sin(i*9.7)+1)*1.1;const building=box(scene,.5,height,.6,x,height/2-1.0,-9.0-(i%4)*.7,skylineMat[i%3]);building.castShadow=false;
+ if(i%3===0){for(let j=0;j<3;j++)box(scene,.25,.07,.02,x,.15+j*.38,-8.67-(i%4)*.7,warm)}}
+const shadowMaterial=new THREE.MeshBasicMaterial({color:0x030914,transparent:true,opacity:.25,depthWrite:false});
+for(let i=0;i<6;i++){const x=-5.1+(i%3)*5.1,z=-2.8+Math.floor(i/3)*5.1;
+ const contact=new THREE.Mesh(new THREE.CircleGeometry(1.45,40),shadowMaterial);contact.rotation.x=-Math.PI/2;contact.scale.set(1.45,.85,1);contact.position.set(x,.014,z);scene.add(contact)}
+
 const stations=[],rayTargets=[];
 for(let i=0;i<6;i++){
  const x=-5.1+(i%3)*5.1,z=-2.8+Math.floor(i/3)*5.1;
