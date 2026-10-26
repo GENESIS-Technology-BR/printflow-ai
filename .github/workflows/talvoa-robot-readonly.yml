@@ -169,6 +169,16 @@ jobs:
           if not workflows:recommendations.append({'robot':'Deploy','priority':'revisar','action':'Nenhum workflow encontrado; verificar CI/CD'})
           output={'generated_at_utc':now,'mode':'read_only','robots':checks,'recent_workflows':latest,'recommendations':recommendations,'metrics':{'python_files':len(py),'workflow_definitions':len(workflows),'migration_files':len(migrations),'security_pattern_files':len(risky),'github_runs_checked':len(latest)}}
           pathlib.Path('reports/talvoa-robots.json').write_text(json.dumps(output,ensure_ascii=False,indent=2))
+          md=['# TALVOA — diagnóstico operacional','',f'Gerado em UTC: {now}','', '## Indicadores', '']
+          for key,value in output['metrics'].items():md.append(f'- {key}: {value}')
+          md.extend(['','## Situação dos robôs',''])
+          for item in checks:md.append(f"- **{item['robot']}** — {item['status']}: {item['details']}")
+          md.extend(['','## Recomendações para revisão humana',''])
+          if recommendations:
+              for item in recommendations:md.append(f"- **{item['robot']}** ({item['priority']}): {item['action']}")
+          else:md.append('- Nenhuma recomendação adicional gerada pelas verificações atuais.')
+          md.extend(['','Este relatório não representa auditoria completa nem autorização para alterar produção.'])
+          pathlib.Path('reports/talvoa-robots.md').write_text('\\n'.join(md)+'\\n',encoding='utf-8')
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
               f.write('## TALVOA - 6 robôs (somente leitura)\n\n')
               for c in checks:f.write(f"- **{c['robot']}**: {c['status']} — {c['details']}\n")
@@ -177,5 +187,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: talvoa-robot-readonly-report
-          path: reports/talvoa-robots.json
+          path: |
+            reports/talvoa-robots.json
+            reports/talvoa-robots.md
           retention-days: 7
