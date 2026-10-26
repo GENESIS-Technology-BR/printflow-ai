@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TALVOA | Escritório 3D Interativo</title>
+<style>
+:root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#e7f6ff;background:#06101d}*{box-sizing:border-box}body{margin:0;overflow:hidden}
+#viewport{position:fixed;inset:0;display:block;touch-action:none}
+header{position:fixed;z-index:5;top:0;left:0;right:0;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(#03101ef2,#061829d9);border-bottom:1px solid #2d739f;flex-wrap:wrap}
+.brand{font-weight:900;font-size:22px;letter-spacing:2px}.brand span{color:#5acbff}.muted{font-size:12px;color:#a9c7dc}
+a{color:#87d7ff}header a{border:1px solid #388bc0;border-radius:8px;padding:9px 13px;text-decoration:none}
+#hud{position:fixed;left:20px;top:95px;z-index:4;background:#061726eb;border:1px solid #3177a8;border-radius:12px;padding:15px;max-width:330px;box-shadow:0 12px 35px #0009}
+h2{margin:0 0 9px;font-size:15px}.hint{font-size:13px;color:#bed7e8;line-height:1.55}.status{margin-top:10px;font-size:12px;color:#a8e3ff}
+#detail{position:fixed;right:20px;top:95px;bottom:20px;width:min(390px,calc(100vw - 40px));z-index:6;background:#071a2bf5;border:1px solid #4197cb;border-radius:13px;padding:19px;overflow:auto;box-shadow:0 20px 70px #000b}
+#detail[hidden]{display:none}#detail h2{font-size:21px;padding-right:45px}.close{float:right;background:#175d9b;color:white;border:0;border-radius:7px;padding:8px 12px;cursor:pointer}
+.detail-row{padding:11px 0;border-bottom:1px solid #234866;font-size:13px;line-height:1.55}.detail-row strong{color:#90d7ff}
+.job{padding:10px;margin:8px 0;border:1px solid #285e80;border-radius:8px;background:#0b263d}.step{padding:5px 0 5px 12px;font-size:12px;color:#b8d5e9}
+#controls{position:fixed;z-index:4;bottom:20px;left:20px;display:flex;gap:8px;flex-wrap:wrap}
+#controls button{background:#0d3554dd;border:1px solid #3d8dbd;color:#fff;border-radius:8px;padding:11px 14px;cursor:pointer}
+#fallback{display:none;position:fixed;inset:0;z-index:8;background:#06101d;padding:120px 25px 30px;text-align:center}
+@media(max-width:700px){header{padding:10px}.brand{font-size:18px}#hud{left:10px;top:85px;max-width:240px;padding:10px}.hint{font-size:11px}#detail{top:80px;right:10px;bottom:10px}#controls{left:10px;bottom:10px}#controls button{padding:8px;font-size:12px}}
+</style>
+</head><body>
+<canvas id="viewport" aria-label="Escritório virtual TALVOA em três dimensões"></canvas>
+<header><div><div class="brand">◈ <span>TALVOA</span> · ESCRITÓRIO 3D</div><div class="muted">Seis robôs · tarefas verificadas · somente leitura</div></div><a href="./">← Centro de Operações</a></header>
+<aside id="hud"><h2>EXPLORAR O ESCRITÓRIO</h2><div class="hint">Arraste para girar a câmera. Use a roda do mouse para aproximar. Clique em um robô ou em sua mesa para ver o que está fazendo. No celular, arraste e use dois dedos para zoom.</div><div class="status" id="status">Consultando GitHub Actions...</div></aside>
+<aside id="detail" hidden aria-live="polite"><button class="close" id="close" type="button">Fechar</button><h2 id="robotTitle"></h2><div id="robotBody"></div></aside>
+<div id="controls"><button id="reset" type="button">⌂ Visão geral</button><button id="left" type="button">◀ Girar</button><button id="right" type="button">Girar ▶</button><button id="refresh" type="button">↻ Atualizar</button></div>
+<div id="fallback"><h2>Visualização 3D indisponível</h2><p>Este navegador precisa oferecer WebGL e acesso à biblioteca gráfica. O painel 2D continua disponível.</p><a href="./">Abrir Centro de Operações</a></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
+import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/controls/OrbitControls.js';
+const repo='GENESIS-Technology-BR/printflow-ai',branch='feature/partner-multitenancy';
+const names=['Desenvolvimento','Deploy','Banco de dados','Segurança','Monitoramento','Qualidade'];
+const workflows=['Build TALVOA Agent Windows','TALVOA CTO Operations','TALVOA SupriTech Migration Safety Checks','Frontend security audit','TALVOA Neon Free Usage Monitor','Partner tenancy validation'];
+const el=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+let runs=[],lastRead=0,selected=-1;
+const canvas=el('viewport');
+let renderer;
+try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});}catch(e){el('fallback').style.display='block';throw e}
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#061322');scene.fog=new THREE.Fog('#061322',20,47);
+const camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,100);camera.position.set(13,11,15);
+const orbit=new OrbitControls(camera,canvas);orbit.target.set(0,1.4,0);orbit.enableDamping=true;orbit.dampingFactor=.07;orbit.minDistance=4;orbit.maxDistance=29;orbit.maxPolarAngle=Math.PI/2.02;orbit.update();
+scene.add(new THREE.HemisphereLight(0x8ecfff,0x12243a,2.1));
+const sun=new THREE.DirectionalLight(0xbceaff,3.1);sun.position.set(-5,13,8);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-13;sun.shadow.camera.right=13;sun.shadow.camera.top=13;sun.shadow.camera.bottom=-13;scene.add(sun);
+function mat(color,metalness=.1,roughness=.55,emissive=0){return new THREE.MeshStandardMaterial({color,metalness,roughness,emissive,emissiveIntensity:emissive?.32:0})}
+const mFloor=mat(0x19334a,.45,.4),mDesk=mat(0x41637a,.4,.4),mFrame=mat(0x17334c,.55,.35),mWhite=mat(0xd5edff,.3,.3),mDark=mat(0x071a2b,.4,.25),mGlow=new THREE.MeshBasicMaterial({color:0x13c9ff}),mBlue=mat(0x159fe0,.5,.2,0x0868a0);
+function box(parent,w,h,d,x,y,z,material){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+function sphere(parent,r,x,y,z,material){const o=new THREE.Mesh(new THREE.SphereGeometry(r,20,16),material);o.position.set(x,y,z);o.castShadow=true;parent.add(o);return o}
+box(scene,17,.3,13,0,-.16,0,mFloor);
+const grid=new THREE.GridHelper(17,17,0x245d82,0x24506a);grid.position.y=.006;scene.add(grid);
+box(scene,17,5,.22,0,2.35,-6.5,mat(0x0c2a40,.3,.4));
+for(let i=-7;i<=7;i+=2){box(scene,.07,4.4,.06,i,2.25,-6.36,mBlue);box(scene,1.7,1.9,.04,i+.8,2.5,-6.34,mat(0x133a56,.2,.3))}
+for(let i=0;i<6;i++){const x=-5.2+(i%3)*5.2,z=-2.9+Math.floor(i/3)*5.1;const light=new THREE.PointLight(i%2?0x26baff:0x45dfff,10,6);light.position.set(x,3.5,z);scene.add(light)}
+const stations=[],rayTargets=[];
+for(let i=0;i<6;i++){
+ const x=-5.1+(i%3)*5.1,z=-2.8+Math.floor(i/3)*5.1;
+ const group=new THREE.Group();group.position.set(x,0,z);scene.add(group);
+ box(group,3.7,.17,1.55,0,1.08,-.52,mDesk);
+ for(const dx of [-1.5,1.5])box(group,.13,1.03,.14,dx,.51,-.52,mFrame);
+ for(const dx of [-.78,.78]){box(group,1.32,.83,.08,dx,1.78,-.96,mFrame);box(group,1.18,.68,.015,dx,1.79,-.9,new THREE.MeshBasicMaterial({color:0x092e4c}));for(let l=0;l<4;l++)box(group,.7,.028,.02,dx,1.96-l*.11,-.879,l%2?mGlow:mBlue);box(group,.08,.23,.08,dx,1.27,-.95,mFrame)}
+ box(group,.9,.18,.55,0,.62,.85,mFrame);box(group,.16,.75,.15,0,1,.98,mFrame);
+ const robot=new THREE.Group();robot.position.set(0,0,.42);group.add(robot);
+ const body=sphere(robot,.51,0,1.35,0,mWhite);body.scale.set(.9,1.05,.78);
+ const head=sphere(robot,.59,0,2.15,0,mWhite);head.scale.set(1.05,.82,.85);
+ const visor=sphere(robot,.43,0,2.15,.31,mDark);visor.scale.set(1.1,.63,.42);
+ sphere(robot,.11,-.2,2.19,.47,mGlow);sphere(robot,.11,.2,2.19,.47,mGlow);
+ sphere(robot,.12,-.63,2.15,0,mBlue);sphere(robot,.12,.63,2.15,0,mBlue);
+ sphere(robot,.12,0,2.7,0,mBlue);box(robot,.045,.22,.045,0,2.62,0,mFrame);
+ for(const side of [-1,1]){const arm=sphere(robot,.16,side*.55,1.48,.22,mWhite);arm.scale.set(.7,1.4,.7);sphere(robot,.13,side*.65,1.15,.5,mBlue)}
+ box(group,1.3,.12,.6,0,.75,1.06,mFrame);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.76,.035,8,44),new THREE.MeshBasicMaterial({color:0x23bfff}));ring.rotation.x=-Math.PI/2;ring.position.set(0,.07,.42);group.add(ring);
+ const hit=new THREE.Mesh(new THREE.BoxGeometry(3.9,3.4,3.6),new THREE.MeshBasicMaterial({visible:false}));hit.position.set(0,1.7,0);hit.userData.station=i;group.add(hit);rayTargets.push(hit);
+ stations.push({robot,ring,head,group});
+}
+const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let pointerStart=null;
+canvas.addEventListener('pointerdown',e=>{pointerStart={x:e.clientX,y:e.clientY}});
+canvas.addEventListener('pointerup',e=>{if(!pointerStart||Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>7)return;const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObjects(rayTargets)[0];if(hit)showRobot(hit.object.userData.station)});
+canvas.addEventListener('pointermove',e=>{const rect=canvas.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);canvas.style.cursor=raycaster.intersectObjects(rayTargets).length?'pointer':'grab'});
+function state(r){if(!r)return 'Sem execução recente';if(['queued','pending','waiting','requested'].includes(r.status))return 'Na fila';if(r.status!=='completed')return 'Executando';return ({success:'Concluído',failure:'Falha',cancelled:'Cancelado',skipped:'Ignorado'}[r.conclusion]||'Finalizado')}
+function safeUrl(r){const u=String(r?.html_url||'');return new RegExp('^https://github\\.com/GENESIS-Technology-BR/printflow-ai/actions/runs/[0-9]+$').test(u)?u:null}
+async function showRobot(i){selected=i;const run=runs.find(r=>r.name===workflows[i]);el('detail').hidden=false;el('robotTitle').textContent='Robô '+(i+1)+' · '+names[i];
+ el('robotBody').innerHTML='<div class="detail-row"><strong>Função:</strong> '+escape(workflows[i])+'</div><div class="detail-row"><strong>Estado:</strong> '+escape(state(run))+'</div><div class="detail-row"><strong>Execução:</strong> '+escape(run?.run_number||'—')+'</div><div class="detail-row"><strong>Início:</strong> '+escape(run?.run_started_at?new Date(run.run_started_at).toLocaleString('pt-BR'):'Não informado')+'</div><div class="detail-row"><strong>Commit:</strong> '+escape(run?.head_sha?.slice(0,12)||'—')+'</div>'+(safeUrl(run)?'<p><a target="_blank" rel="noopener noreferrer" href="'+escape(safeUrl(run))+'">Abrir execução no GitHub ↗</a></p>':'')+'<div class="detail-row" id="jobDetails">Consultando jobs reais...</div>';
+ if(!run?.id){el('jobDetails').textContent='Nenhuma execução localizada nos registros consultados.';return}
+ try{const res=await fetch('https://api.github.com/repos/'+repo+'/actions/runs/'+encodeURIComponent(run.id)+'/jobs?per_page=50',{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const data=await res.json();if(selected!==i||!Array.isArray(data.jobs))return;el('jobDetails').innerHTML=data.jobs.length?'<strong>Jobs reais ('+data.jobs.length+')</strong>'+data.jobs.map(j=>'<div class="job"><b>'+escape(j.name)+'</b> · '+escape(j.status==='completed'?(j.conclusion||'finalizado'):j.status)+(j.steps||[]).map(s=>'<div class="step">↳ '+escape(s.name)+' · '+escape(s.status==='completed'?(s.conclusion||'finalizado'):s.status)+'</div>').join('')+'</div>').join(''):'Jobs ainda não disponíveis; execução pode estar na fila.'}catch(e){if(selected===i)el('jobDetails').textContent='Não foi possível consultar jobs: '+e.message}}
+el('close').onclick=()=>{selected=-1;el('detail').hidden=true};
+async function refresh(){el('status').textContent='Consultando dados reais...';try{const res=await fetch('https://api.github.com/repos/'+repo+'/actions/runs?branch='+encodeURIComponent(branch)+'&per_page=100',{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const data=await res.json();if(!Array.isArray(data.workflow_runs))throw Error('Formato inválido');runs=data.workflow_runs;lastRead=Date.now();const active=stations.filter((s,i)=>{const r=runs.find(x=>x.name===workflows[i]);return r&&r.status==='in_progress'}).length;el('status').textContent='GitHub consultado · '+active+' robô(s) executando · '+new Date().toLocaleTimeString('pt-BR');if(selected>=0)showRobot(selected)}catch(e){el('status').textContent='GitHub indisponível: '+e.message+'. Nenhum estado presumido.'}}
+el('reset').onclick=()=>{camera.position.set(13,11,15);orbit.target.set(0,1.4,0);orbit.update()};el('left').onclick=()=>{camera.position.applyAxisAngle(new THREE.Vector3(0,1,0),-.35);orbit.update()};el('right').onclick=()=>{camera.position.applyAxisAngle(new THREE.Vector3(0,1,0),.35);orbit.update()};el('refresh').onclick=refresh;
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+const clock=new THREE.Clock();function frame(){requestAnimationFrame(frame);const t=clock.getElapsedTime();stations.forEach((s,i)=>{const r=runs.find(x=>x.name===workflows[i]);const active=r?.status==='in_progress';s.robot.position.y=(active?Math.sin(t*2+i)*.045:0);s.ring.material.color.setHex(active?0x39ffb2:r?.conclusion==='failure'?0xff6c74:0x23bfff);s.ring.rotation.z=t*.2});orbit.update();renderer.render(scene,camera)}frame();refresh();setInterval(()=>{if(!document.hidden)refresh()},60000);
+</script></body></html>
