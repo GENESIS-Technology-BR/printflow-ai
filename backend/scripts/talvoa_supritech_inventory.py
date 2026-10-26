@@ -36,9 +36,15 @@ def main():
         raise SystemExit("Specify exactly one of --source or --target")
     source = os.environ.get("TALVOA_SOURCE_DATABASE_URL", "")
     target = os.environ.get("TALVOA_TARGET_DATABASE_URL", "")
-    if not source or not target:
-        raise SystemExit("Missing migration secrets")
-    migration.verify(source, target)
+    if not target or (args.source and not source):
+        raise SystemExit("Missing required database secret")
+    if args.source:
+        migration.verify(source, target)
+    else:
+        db, host, parsed = migration.database(target)
+        from urllib.parse import parse_qs
+        if db != migration.TARGET_DB or not host.startswith("ep-") or not host.endswith(".neon.tech") or parse_qs(parsed.query).get("sslmode", [""])[0] not in ("require", "verify-full", "verify-ca"):
+            raise SystemExit("REFUSED: unapproved Neon target or TLS mode")
     expected_host = os.environ.get("TALVOA_EXPECTED_NEON_HOST", "").strip().lower()
     if not expected_host or migration.database(target)[1] != expected_host:
         raise SystemExit("REFUSED: target hostname must match TALVOA_EXPECTED_NEON_HOST")
