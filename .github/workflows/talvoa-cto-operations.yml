@@ -9,6 +9,7 @@ on:
         options:
           - verify-code
           - neon-inventory
+          - source-connectivity-preflight
 permissions:
   contents: read
 concurrency:
@@ -28,6 +29,12 @@ jobs:
         run: |
           python -m compileall -q backend/scripts
           python -m unittest discover -s backend/tests -p 'test_supritech_*.py'
+      - name: Explain private Render connectivity requirement
+        if: inputs.operation == 'source-connectivity-preflight'
+        run: |
+          echo 'Render source PostgreSQL is allowlisted and inaccessible to hosted GitHub runners.'
+          echo 'Use a private Render-side executor with short-lived credentials; no firewall changes authorized.'
+          echo 'No database operation attempted.'
       - name: Install PostgreSQL client
         if: inputs.operation == 'neon-inventory'
         run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
