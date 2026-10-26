@@ -131,6 +131,30 @@ class MigrationSafetyTests(unittest.TestCase):
                 self.assertEqual(commands, ["pg_dump", "pg_restore"])
                 self.assertTrue(backup.exists())
 
+    def test_refuse_symlink_backup_directory(self):
+        import sys
+        from tempfile import TemporaryDirectory
+        from types import SimpleNamespace
+        with TemporaryDirectory() as directory:
+            actual = Path(directory) / "actual"
+            actual.mkdir()
+            linked = Path(directory) / "linked"
+            linked.symlink_to(actual, target_is_directory=True)
+            backup = linked / "staging.dump"
+            with patch.dict(os.environ, {
+                "TALVOA_SOURCE_DATABASE_URL": SRC,
+                "TALVOA_TARGET_DATABASE_URL": DST,
+                "TALVOA_MIGRATION_APPROVED": "supritech-homolog",
+                "TALVOA_EXPECTED_NEON_HOST": runner.database(DST)[1],
+            }), patch.object(sys, "argv", ["migration", "--apply", "--backup", str(backup)]), patch.object(
+                runner.shutil, "which", return_value="/usr/bin/psql"
+            ), patch.object(runner.subprocess, "run", return_value=SimpleNamespace(stdout="0\\n")) as execute:
+                with self.assertRaises(SystemExit) as failure:
+                    runner.main()
+                self.assertIn("directory", str(failure.exception).lower())
+                self.assertFalse(backup.exists())
+                self.assertEqual(execute.call_count, 1)
+
     def test_password_not_in_command_args(self):
         env = runner.pg_env(DST)
         self.assertEqual(env["PGPASSWORD"], "password")
