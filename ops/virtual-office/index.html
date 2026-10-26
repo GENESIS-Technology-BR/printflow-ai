@@ -3,11 +3,35 @@
 <title>TALVOA | Centro de Operações</title>
 <style>
 :root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#e9efff;background:#101827}*{box-sizing:border-box}body{margin:0}main{max-width:1160px;margin:auto;padding:30px 20px}header,.top,.row{display:flex;justify-content:space-between;align-items:center;gap:12px}h1{margin:0;font-size:26px}p{color:#aabbd5}.pill{border:1px solid #37516c;border-radius:99px;padding:6px 11px;font-size:12px;color:#c9dcfa}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.card{background:#1a2639;border:1px solid #2e425e;border-radius:14px;padding:18px}.stat{font-size:30px;font-weight:700;margin:8px 0}.ok{color:#72e6ae}.bad{color:#ff8e91}.wait{color:#ffd081}button{background:#2363cf;border:0;color:white;padding:11px 18px;border-radius:9px;cursor:pointer}a{color:#9fc2ff}.small{font-size:12px;color:#aabbd5}.task{border-top:1px solid #33465d;padding:13px 0}.task:first-child{border:0}.task a{font-weight:600}.hidden{display:none}
+
+body{background:radial-gradient(ellipse at 48% 25%,#173b62 0%,#081422 55%,#050b14 100%);min-height:100vh}
+main{max-width:1600px;padding:18px 22px}
+header{background:#071321dd;border:1px solid #214262;border-radius:12px;padding:15px 22px;margin-bottom:14px}
+h1{font-size:28px;letter-spacing:.4px}h2{font-size:17px;letter-spacing:.6px}
+.card{background:linear-gradient(150deg,#0d2135eF,#071421ef);border:1px solid #295479;box-shadow:0 8px 24px #0005}
+.pill{background:#0d2742}
+.stats{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.office-stage{background:linear-gradient(145deg,#173552aa,#091a2eea),repeating-linear-gradient(90deg,transparent 0 79px,#2e527a33 80px 81px);border:1px solid #2d618c;border-radius:15px;padding:22px;box-shadow:inset 0 0 90px #0008;position:relative}
+.office-stage:before{content:'TALVOA  /  CENTRO DE OPERAÇÕES';display:block;text-align:center;letter-spacing:4px;color:#7ccaff;font-size:12px;margin-bottom:22px}
+.office-stage .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.robot-station{min-height:260px;position:relative;overflow:hidden;background:linear-gradient(160deg,#0e2a47d9,#06111fdc);border:1px solid #3679a5;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:9px;transition:transform .2s,border-color .2s}
+.robot-station:hover{transform:translateY(-3px);border-color:#54bbff}
+.station-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;font-weight:700}
+.robot-art{height:96px;display:flex;align-items:center;justify-content:center;position:relative}
+.robot-art:before{content:'▣   ▣';display:flex;align-items:center;justify-content:center;color:#45d9ff;letter-spacing:12px;text-indent:12px;width:86px;height:66px;border:5px solid #a7d3f4;border-radius:26px;background:linear-gradient(#0b2842,#07101d);box-shadow:0 0 0 8px #173d5a,0 0 26px #1599ff77;font-size:20px}
+.robot-art:after{content:'';position:absolute;bottom:0;width:108px;height:20px;background:#2b6c9e;border-radius:18px 18px 4px 4px;box-shadow:0 5px 0 #112f4c}
+.robot-station[data-active="true"] .robot-art:before{animation:working 1.7s ease-in-out infinite alternate}
+@keyframes working{to{box-shadow:0 0 0 8px #21567a,0 0 38px #00c8ff;transform:translateY(-4px)}}
+.station-meta{color:#adc6db;font-size:12px;margin-top:auto}
+.station-status{font-size:12px;font-weight:700;border-radius:7px;padding:6px 9px;background:#153149;align-self:flex-start}
+.station-link{font-size:12px}
+@media(max-width:950px){.office-stage .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:560px){.office-stage .grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}header{align-items:flex-start;flex-direction:column}main{padding:12px}}
 </style></head><body><main>
 <header><div><div class="small">TALVOA · ADMINISTRAÇÃO INTERNA</div><h1>Centro de Operações</h1><p>Execuções públicas reais do GitHub · Atualização a cada 30s</p></div><span class="pill">Acesso administrativo obrigatório</span></header>
 <section class="card"><div class="top"><div><strong>GitHub Actions · feature/partner-multitenancy</strong><p id="updated">Aguardando consulta autorizada</p><div class="small" id="countdown" aria-live="off">Atualização automática a cada 30 segundos</div></div><button id="refresh">Atualizar</button></div><p id="error" role="alert" class="bad"></p></section>
-<div class="grid" style="margin:18px 0"><div class="card"><div class="small">Execuções retornadas</div><div class="stat" id="total">—</div></div><div class="card"><div class="small">Aprovadas</div><div class="stat ok" id="success">—</div></div><div class="card"><div class="small">Em andamento</div><div class="stat wait" id="running">—</div></div><div class="card"><div class="small">Falhas / canceladas</div><div class="stat bad" id="failed">—</div></div></div>
-<h2>Escritório virtual · atividade comprovada</h2><div id="office" class="grid" style="margin-bottom:20px"></div><h2>Atividade comprovada</h2><div id="tasks" class="card">Sem dados carregados.</div>
+<div class="grid stats" style="margin:18px 0"><div class="card"><div class="small">Execuções retornadas</div><div class="stat" id="total">—</div></div><div class="card"><div class="small">Aprovadas</div><div class="stat ok" id="success">—</div></div><div class="card"><div class="small">Em andamento</div><div class="stat wait" id="running">—</div></div><div class="card"><div class="small">Falhas / canceladas</div><div class="stat bad" id="failed">—</div></div></div>
+<h2>Escritório virtual · seis estações com atividade comprovada</h2><div class="office-stage"><div id="office" class="grid"></div></div><h2>Atividade comprovada</h2><div id="tasks" class="card">Sem dados carregados.</div>
 <p class="small">Origem: API GitHub Actions. Sem acesso autorizado ou em caso de falha, a tela informa indisponibilidade — nunca inventa estados. Apenas dados públicos do GitHub Actions. Não inserir tokens neste arquivo. Para informações privadas, integrar posteriormente ao login TALVOA.</p>
 </main><script>
 'use strict';
@@ -27,11 +51,13 @@ async function refresh(){
   el('running').textContent=runs.filter(r=>r.status!=='completed').length;
   el('failed').textContent=runs.filter(r=>['failure','cancelled','timed_out'].includes(r.conclusion)).length;
   const groups=[['Desenvolvimento','Build TALVOA Agent Windows'],['Deploy','TALVOA CTO Operations'],['Banco de dados','TALVOA SupriTech Migration Safety Checks'],['Segurança','Frontend security audit'],['Monitoramento','TALVOA Neon Free Usage Monitor'],['Qualidade','Partner tenancy validation']];
-  el('office').innerHTML=groups.map(([name,workflow])=>{
+  el('office').innerHTML=groups.map(([name,workflow],i)=>{
     const match=runs.find(r=>r.name===workflow);
-    const state=!match?'Sem execução registrada':label(match);
-    const color=match?.status!=='completed'&&match?'wait':match?.conclusion==='success'?'ok':match?.conclusion==='failure'?'bad':'';
-    return '<div class="card"><div style="font-size:32px">🤖</div><strong>'+clean(name)+'</strong><p class="'+color+'">'+clean(state)+'</p><div class="small">'+(match?'Última atividade: '+clean(new Date(match.created_at).toLocaleString('pt-BR')):'Sem dados no histórico consultado')+'</div>'+(match?'<p><a href="'+clean(match.html_url)+'" target="_blank" rel="noopener noreferrer">Abrir execução real</a></p>':'')+'</div>';
+    const state=!match?'Sem registro':label(match);
+    const active=Boolean(match&&match.status!=='completed');
+    const color=active?'wait':match?.conclusion==='success'?'ok':match?.conclusion==='failure'?'bad':'';
+    const last=match?.created_at?new Date(match.created_at).toLocaleString('pt-BR'):'Não disponível';
+    return '<article class="robot-station" data-active="'+active+'"><div class="station-head"><span>'+(i+1)+' · '+clean(name.toUpperCase())+'</span><span class="station-status '+color+'">'+clean(state)+'</span></div><div class="robot-art" aria-hidden="true"></div><div class="small">'+clean(workflow)+'</div><div class="station-meta">Última execução: '+clean(last)+'</div>'+(match?'<a class="station-link" href="'+clean(match.html_url)+'" target="_blank" rel="noopener noreferrer">Ver execução no GitHub ↗</a>':'<span class="station-link">Sem execução nos 30 registros consultados</span>')+'</article>';
   }).join('');
   el('tasks').innerHTML=runs.length?runs.map(r=>'<div class="task row"><div><a href="'+clean(r.html_url)+'" target="_blank" rel="noopener noreferrer">'+clean(r.name)+'</a><div class="small">'+clean(r.head_sha?.slice(0,8))+' · '+clean(r.created_at?new Date(r.created_at).toLocaleString('pt-BR'):'sem data')+'</div></div><span class="pill">'+clean(label(r))+'</span></div>').join(''):'Nenhuma execução retornada.';
   el('updated').textContent='Última consulta: '+new Date().toLocaleString('pt-BR');
