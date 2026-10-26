@@ -73,11 +73,11 @@ class MigrationSafetyTests(unittest.TestCase):
             }), patch.object(sys, "argv", ["migration", "--apply", "--backup", str(backup)]), patch.object(
                 runner.shutil, "which", return_value="/usr/bin/psql"
             ), patch.object(runner.subprocess, "run") as execute:
-                execute.return_value.stdout = "0\\n"
+                execute.side_effect = lambda cmd, **kw: type("Result", (), {"stdout": "pg_dump (PostgreSQL) 18.0" if "--version" in cmd else "0\n"})()
                 with self.assertRaises(SystemExit):
                     runner.main()
                 self.assertEqual(backup.read_bytes(), b"existing")
-                self.assertEqual(execute.call_count, 1)
+                self.assertEqual(execute.call_count, 2)
 
     def test_refuse_symlink_backup_before_dump(self):
         import sys
@@ -95,11 +95,11 @@ class MigrationSafetyTests(unittest.TestCase):
             }), patch.object(sys, "argv", ["migration", "--apply", "--backup", str(link)]), patch.object(
                 runner.shutil, "which", return_value="/usr/bin/psql"
             ), patch.object(runner.subprocess, "run") as execute:
-                execute.return_value.stdout = "0\\n"
+                execute.side_effect = lambda cmd, **kw: type("Result", (), {"stdout": "pg_dump (PostgreSQL) 18.0" if "--version" in cmd else "0\n"})()
                 with self.assertRaises(SystemExit):
                     runner.main()
                 self.assertEqual(existing.read_bytes(), b"protected")
-                self.assertEqual(execute.call_count, 1)
+                self.assertEqual(execute.call_count, 2)
 
     def test_restore_requires_backup_verification_after_valid_dump(self):
         import sys
@@ -113,7 +113,7 @@ class MigrationSafetyTests(unittest.TestCase):
                 if cmd[0] == "pg_dump":
                     stdout.write(b"archive")
             def fake_subprocess(cmd, **kwargs):
-                return SimpleNamespace(stdout="0\n")
+                return SimpleNamespace(stdout="pg_dump (PostgreSQL) 18.0" if "--version" in cmd else "0\n")
             with patch.dict(os.environ, {
                 "TALVOA_SOURCE_DATABASE_URL": SRC,
                 "TALVOA_TARGET_DATABASE_URL": DST,
@@ -148,12 +148,12 @@ class MigrationSafetyTests(unittest.TestCase):
                 "TALVOA_EXPECTED_NEON_HOST": runner.database(DST)[1],
             }), patch.object(sys, "argv", ["migration", "--apply", "--backup", str(backup)]), patch.object(
                 runner.shutil, "which", return_value="/usr/bin/psql"
-            ), patch.object(runner.subprocess, "run", return_value=SimpleNamespace(stdout="0\n")) as execute:
+            ), patch.object(runner.subprocess, "run", side_effect=lambda cmd, **kw: SimpleNamespace(stdout="pg_dump (PostgreSQL) 18.0" if "--version" in cmd else "0\n")) as execute:
                 with self.assertRaises(SystemExit) as failure:
                     runner.main()
                 self.assertIn("directory", str(failure.exception).lower())
                 self.assertFalse(backup.exists())
-                self.assertEqual(execute.call_count, 1)
+                self.assertEqual(execute.call_count, 2)
 
     def test_password_not_in_command_args(self):
         env = runner.pg_env(DST)
