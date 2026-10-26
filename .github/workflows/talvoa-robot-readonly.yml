@@ -1,5 +1,8 @@
 name: TALVOA Robotic Operations Read-Only
 on:
+  push:
+    paths:
+      - '.github/workflows/talvoa-robot-readonly.yml'
   workflow_dispatch:
   schedule:
     - cron: '15 12 * * 1-5'
