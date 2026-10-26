@@ -121,7 +121,7 @@ for(let i=0;i<6;i++){
  box(group,.9,.18,.55,0,.62,.85,mFrame);box(group,.16,.75,.15,0,1,.98,mFrame);
  // Posicionar o robô alinhado ao teclado e aos monitores, sem girar as pernas da pose sentada.
  const robot=new THREE.Group();robot.position.set(0,0,.42);group.add(robot);
- const hands=[];
+ const hands=[];const forearms=[];const fingers=[];
  // Robô voltado para os monitores (-Z); pernas e joelhos já apontam para a mesa.
  // Robô articulado detalhado: carcaça, visor, sensores, juntas, mãos e luzes.
  const shell=mat(0xe1ebf4,.38,.22),joint=mat(0x233b52,.65,.3),rubber=mat(0x0a1827,.1,.84),accent=mat(0x228bd2,.48,.23,0x08456c);
@@ -141,10 +141,10 @@ for(let i=0;i<6;i++){
    const shoulder=sphere(robot,.23,s*.55,1.68,-.02,shell);
    const upper=sphere(robot,.17,s*.64,1.43,-.17,shell);upper.scale.set(.85,1.25,.85);
    const elbow=sphere(robot,.13,s*.69,1.2,-.28,joint);
-   const forearm=sphere(robot,.145,s*.6,1.06,-.48,shell);forearm.scale.set(.8,1.1,.8);
+   const forearm=sphere(robot,.145,s*.6,1.06,-.48,shell);forearm.scale.set(.8,1.1,.8);forearms.push(forearm);
    const wrist=cyl(robot,.09,.09,.1,s*.6,.94,-.56,joint);
    const palm=sphere(robot,.14,s*.6,.9,-.64,accent);palm.scale.set(.9,.45,1.1);hands.push(palm);
-   for(let finger=0;finger<3;finger++)sphere(robot,.045,s*(.51+finger*.09),.88,-.75,mWhite);
+   for(let finger=0;finger<3;finger++){const digit=sphere(robot,.045,s*(.51+finger*.09),.88,-.75,mWhite);fingers.push({digit,side:s,index:finger})}
    const hip=sphere(robot,.19,s*.25,.99,0,joint);
    // Coxa horizontal e canela vertical: pose sentada diante da mesa.
    const thigh=sphere(robot,.19,s*.26,.88,-.19,shell);thigh.scale.set(.9,.86,1.85);
@@ -196,7 +196,7 @@ for(let i=0;i<6;i++){
 
  const ring=new THREE.Mesh(new THREE.TorusGeometry(.76,.035,8,44),new THREE.MeshBasicMaterial({color:0x23bfff}));ring.rotation.x=-Math.PI/2;ring.position.set(0,.07,.42);group.add(ring);
  const hit=new THREE.Mesh(new THREE.BoxGeometry(3.9,3.4,3.6),new THREE.MeshBasicMaterial({visible:false}));hit.position.set(0,1.7,0);hit.userData.station=i;group.add(hit);rayTargets.push(hit);
- stations.push({robot,ring,head,group,hands});
+ stations.push({robot,ring,head,group,hands,forearms,fingers});
 }
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let pointerStart=null;
 canvas.addEventListener('pointerdown',e=>{pointerStart={x:e.clientX,y:e.clientY}});
@@ -238,5 +238,5 @@ window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(
 window.addEventListener('keyup',e=>pressed.delete(e.key.toLowerCase()));
 window.addEventListener('blur',()=>pressed.clear());
 const clock=new THREE.Clock();function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.05);const t=clock.elapsedTime;
-const fwd=new THREE.Vector3().subVectors(orbit.target,camera.position);fwd.y=0;fwd.normalize();const right=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0)).normalize();const delta=new THREE.Vector3();if(pressed.has('w')||pressed.has('arrowup'))delta.add(fwd);if(pressed.has('s')||pressed.has('arrowdown'))delta.sub(fwd);if(pressed.has('d')||pressed.has('arrowright'))delta.add(right);if(pressed.has('a')||pressed.has('arrowleft'))delta.sub(right);if(delta.lengthSq()){delta.normalize().multiplyScalar(dt*3.5);const next=orbit.target.clone().add(delta);if(Math.abs(next.x)<8&&Math.abs(next.z)<6.3){camera.position.add(delta);orbit.target.add(delta)}}stations.forEach((s,i)=>{const job=robotJob(i);const active=job?.status==='in_progress';const failed=job?.conclusion==='failure';s.robot.position.y=reducedMotion?0:(active?Math.sin(t*2+i)*.022:Math.sin(t*.75+i)*.008);if(!reducedMotion){s.robot.rotation.y=active?Math.sin(t*1.5+i)*.025:Math.sin(t*.35+i)*.012;s.head.rotation.z=active?Math.sin(t*2.3+i)*.055:Math.sin(t*.55+i)*.026;s.hands.forEach((hand,k)=>{hand.position.y=.9+(active?Math.sin(t*13+i+k*Math.PI)*.075:Math.sin(t*1.1+i+k*1.8)*.022);hand.position.z=-.64+(active?Math.cos(t*9+i+k)*.035:0)})}else{s.robot.rotation.y=0;s.head.rotation.z=0;s.hands.forEach(hand=>{hand.position.y=.9;hand.position.z=-.64})}const glow=active?0x39ffb2:failed?0xff6c74:0x23bfff;s.ring.material.color.setHex(glow);s.ring.rotation.z=reducedMotion?0:t*.2});orbit.update();renderer.render(scene,camera)}frame();refresh();setInterval(()=>{if(!document.hidden)refresh()},180000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+const fwd=new THREE.Vector3().subVectors(orbit.target,camera.position);fwd.y=0;fwd.normalize();const right=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0)).normalize();const delta=new THREE.Vector3();if(pressed.has('w')||pressed.has('arrowup'))delta.add(fwd);if(pressed.has('s')||pressed.has('arrowdown'))delta.sub(fwd);if(pressed.has('d')||pressed.has('arrowright'))delta.add(right);if(pressed.has('a')||pressed.has('arrowleft'))delta.sub(right);if(delta.lengthSq()){delta.normalize().multiplyScalar(dt*3.5);const next=orbit.target.clone().add(delta);if(Math.abs(next.x)<8&&Math.abs(next.z)<6.3){camera.position.add(delta);orbit.target.add(delta)}}stations.forEach((s,i)=>{const job=robotJob(i);const active=job?.status==='in_progress';const failed=job?.conclusion==='failure';s.robot.position.y=reducedMotion?0:(active?Math.sin(t*2+i)*.022:Math.sin(t*.75+i)*.008);if(!reducedMotion){s.robot.rotation.y=active?Math.sin(t*1.5+i)*.025:Math.sin(t*.35+i)*.012;s.head.rotation.z=active?Math.sin(t*2.3+i)*.055:Math.sin(t*.55+i)*.026;s.hands.forEach((hand,k)=>{hand.position.y=.9+(active?Math.sin(t*13+i+k*Math.PI)*.075:Math.sin(t*1.1+i+k*1.8)*.022);hand.position.z=-.64+(active?Math.cos(t*9+i+k)*.035:0)});s.forearms.forEach((arm,k)=>{arm.rotation.x=active?Math.sin(t*10+i+k*2.1)*.13:Math.sin(t*.9+i+k)*.018});s.fingers.forEach(({digit,side,index})=>{const handIndex=side===-1?0:1;digit.position.y=.88+(s.hands[handIndex].position.y-.9)+(active?Math.sin(t*17+i+index*1.7+handIndex)*.028:0);digit.position.z=-.75+(s.hands[handIndex].position.z+.64)})}else{s.robot.rotation.y=0;s.head.rotation.z=0;s.hands.forEach(hand=>{hand.position.y=.9;hand.position.z=-.64});s.forearms.forEach(arm=>arm.rotation.x=0);s.fingers.forEach(({digit})=>{digit.position.y=.88;digit.position.z=-.75})}const glow=active?0x39ffb2:failed?0xff6c74:0x23bfff;s.ring.material.color.setHex(glow);s.ring.rotation.z=reducedMotion?0:t*.2});orbit.update();renderer.render(scene,camera)}frame();refresh();setInterval(()=>{if(!document.hidden)refresh()},180000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 </script></body></html>
