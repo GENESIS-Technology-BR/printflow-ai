@@ -32,7 +32,7 @@ jobs:
           assert(html.includes('tabindex="0"'),'Focus support missing');
           const liveRender=script[1].match(/el\('office'\)\.innerHTML=groups\.map\(\(\[name,workflow\],i\)=>\{([\s\S]*?)\}\)\.join\(''\)/);
           assert(liveRender,'Live robot rendering function missing');
-          assert(liveRender[1].includes('data-station='),'Live robot cards must retain click identifier');
-          assert(liveRender[1].includes('tabindex='),'Live robot cards must retain keyboard focus');
+          assert(liveRender[1].includes('<details class=') && liveRender[1].includes('<summary class='),'Live robot cards must expose native clickable details');
+          assert(liveRender[1].includes('native-details'),'Live robot cards must expose a details body');
           console.log('Virtual office JavaScript syntax and interaction contract: PASS');
           NODE
