@@ -1,16 +1,38 @@
 name: TALVOA Robotic Operations Read-Only
 on:
   push:
+    branches:
+      - main
     paths:
       - '.github/workflows/talvoa-robot-readonly.yml'
+      - 'api/**'
+      - 'agent/**'
+      - 'dashboard/**'
+      - 'frontend/**'
+      - 'ops/**'
+      - 'tests/**'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'api/**'
+      - 'agent/**'
+      - 'dashboard/**'
+      - 'frontend/**'
+      - 'ops/**'
+      - 'tests/**'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
   workflow_dispatch:
   schedule:
-    - cron: '15 12,15,18,21 * * 1-5'
+    - cron: '17 */6 * * *'
 permissions:
   contents: read
   actions: read
 concurrency:
-  group: talvoa-robot-readonly
+  group: talvoa-robot-readonly-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
   robot-development:
