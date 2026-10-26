@@ -78,6 +78,20 @@ for(let j=0;j<4;j++)plant(-2.8+j*1.8,1.15,.55);
 for(let j=0;j<3;j++)plant(-2.8+j*2.7,-.7,.48);
 for(let i=0;i<6;i++){const x=-5.1+(i%3)*5.1,z=-2.8+Math.floor(i/3)*5.1;box(scene,3.3,.65,.13,x,1.28,z-1.72,wood);box(scene,3.3,.1,.18,x,1.67,z-1.72,mFrame)}
 
+
+/* Painéis com texturas procedurais: não dependem de modelos externos ou imagens pagas. */
+function canvasPanel(width,height,draw){const cvs=document.createElement('canvas');cvs.width=width;cvs.height=height;const ctx=cvs.getContext('2d');draw(ctx,width,height);const texture=new THREE.CanvasTexture(cvs);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);return new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,toneMapped:false})}
+const logoPanel=canvasPanel(1024,320,(g,w,h)=>{g.fillStyle='#07101b';g.fillRect(0,0,w,h);g.shadowBlur=32;g.shadowColor='#00aaff';g.fillStyle='#72d9ff';g.font='bold 112px Segoe UI,Arial';g.textAlign='center';g.fillText('◈ TALVOA',w/2,162);g.shadowBlur=0;g.fillStyle='#a6c8e0';g.font='30px Segoe UI,Arial';g.fillText('CENTRO DE OPERAÇÕES',w/2,232)});
+const analyticsPanel=canvasPanel(1024,512,(g,w,h)=>{g.fillStyle='#061526';g.fillRect(0,0,w,h);g.strokeStyle='#184967';g.lineWidth=2;for(let x=0;x<w;x+=64){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke()}for(let y=0;y<h;y+=64){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke()}g.fillStyle='#c8ecff';g.font='bold 34px Segoe UI,Arial';g.fillText('TALVOA  •  TELEMETRIA',32,58);g.font='20px Segoe UI,Arial';g.fillStyle='#75b7dc';g.fillText('Visualização ilustrativa • dados ao vivo no painel lateral',32,94);for(let i=0;i<24;i++){const v=50+(Math.sin(i*.9)*.5+.5)*220;g.fillStyle=i%4===0?'#1bdfb1':'#138bdf';g.fillRect(35+i*40,h-55-v,25,v)}g.strokeStyle='#53e8fa';g.lineWidth=5;g.beginPath();for(let i=0;i<65;i++){const x=28+i*15,y=205+Math.sin(i*.29)*30+Math.sin(i*.13)*40;if(i===0)g.moveTo(x,y);else g.lineTo(x,y)}g.stroke()});
+const codePanel=canvasPanel(512,320,(g,w,h)=>{g.fillStyle='#061525';g.fillRect(0,0,w,h);g.font='bold 18px monospace';g.fillStyle='#68d9ff';g.fillText('TALVOA / WORKFLOW',20,30);for(let i=0;i<13;i++){g.fillStyle=i%3===0?'#42e0af':i%3===1?'#52a6e7':'#b0c4dc';g.fillRect(22,55+i*18,32+(i*71)%330,6);g.fillStyle='#174c71';g.fillRect(22,64+i*18,130+(i*43)%280,2)}});
+const logo=box(scene,5.5,1.7,.045,0,3.95,-6.05,logoPanel);logo.castShadow=false;
+const dashboard=box(scene,5.6,2.25,.05,0,2.18,-6.04,analyticsPanel);dashboard.castShadow=false;
+for(let i=0;i<6;i++){const x=-5.1+(i%3)*5.1,z=-2.8+Math.floor(i/3)*5.1;for(const dx of [-.78,.78]){const screen=box(scene,1.18,.68,.015,x+dx,1.79,z-.9,codePanel);screen.castShadow=false}}
+const ceiling=mat(0x1b2530,.4,.42);
+for(let z=-5.4;z<=5.5;z+=2.3){box(scene,16.7,.09,.13,0,4.78,z,ceiling);for(let x=-6.8;x<=6.8;x+=3.4){box(scene,1.9,.035,.13,x,4.72,z,warm)}}
+const strip=new THREE.MeshBasicMaterial({color:0xffc890});
+for(let x of [-8,8])box(scene,.045,.06,12.2,x,4.6,0,strip);
+
 const stations=[],rayTargets=[];
 for(let i=0;i<6;i++){
  const x=-5.1+(i%3)*5.1,z=-2.8+Math.floor(i/3)*5.1;
