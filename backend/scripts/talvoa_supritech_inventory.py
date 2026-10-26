@@ -39,6 +39,9 @@ def main():
     if not source or not target:
         raise SystemExit("Missing migration secrets")
     migration.verify(source, target)
+    expected_host = os.environ.get("TALVOA_EXPECTED_NEON_HOST", "").strip().lower()
+    if not expected_host or migration.database(target)[1] != expected_host:
+        raise SystemExit("REFUSED: target hostname must match TALVOA_EXPECTED_NEON_HOST")
     data = inventory(source if args.source else target)
     print(json.dumps({"role": "source" if args.source else "target", "inventory": data}, indent=2))
 
