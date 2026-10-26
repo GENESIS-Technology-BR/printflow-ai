@@ -92,6 +92,14 @@ for(let z=-5.4;z<=5.5;z+=2.3){box(scene,16.7,.09,.13,0,4.78,z,ceiling);for(let x
 const strip=new THREE.MeshBasicMaterial({color:0xffc890});
 for(let x of [-8,8])box(scene,.045,.06,12.2,x,4.6,0,strip);
 
+
+/* Materiais procedurais PBR: madeira, concreto e tecido sem dependências pagas. */
+function surfaceTexture(kind,size=512){const cvs=document.createElement('canvas');cvs.width=cvs.height=size;const g=cvs.getContext('2d');const img=g.createImageData(size,size);for(let y=0;y<size;y++)for(let x=0;x<size;x++){const n=Math.sin((kind==='wood'?y:x)*.18)*.11+Math.sin((kind==='wood'?y:x)*.045)*.13+(Math.random()-.5)*.14;const v=kind==='wood'?[133,93,63]:kind==='fabric'?[54,71,85]:[114,125,131];const off=(y*size+x)*4;for(let k=0;k<3;k++)img.data[off+k]=Math.max(0,Math.min(255,v[k]*(1+n)));img.data[off+3]=255}g.putImageData(img,0,0);const t=new THREE.CanvasTexture(cvs);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,2);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);return t}
+const timberPBR=new THREE.MeshStandardMaterial({map:surfaceTexture('wood'),roughness:.48,metalness:.08});
+const concretePBR=new THREE.MeshStandardMaterial({map:surfaceTexture('concrete'),roughness:.32,metalness:.12});
+const fabricPBR=new THREE.MeshStandardMaterial({map:surfaceTexture('fabric'),roughness:.89,metalness:0});
+scene.traverse(o=>{if(!o.isMesh)return;if(o.material===wood||o.material===woodWall||o.material===mDesk)o.material=timberPBR;else if(o.material===mFloor)o.material=concretePBR;else if(o.material===couch||o.material===cushion)o.material=fabricPBR});
+
 const stations=[],rayTargets=[];
 for(let i=0;i<6;i++){
  const x=-5.1+(i%3)*5.1,z=-2.8+Math.floor(i/3)*5.1;
