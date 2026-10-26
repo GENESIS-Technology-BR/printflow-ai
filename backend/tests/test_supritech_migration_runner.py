@@ -33,6 +33,32 @@ class MigrationSafetyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             runner.verify(SRC, DST.replace("sslmode=require", "sslmode=disable"))
 
+    def test_refuse_unapproved_neon_hostname_on_apply(self):
+        import sys
+        with patch.dict(os.environ, {
+            "TALVOA_SOURCE_DATABASE_URL": SRC,
+            "TALVOA_TARGET_DATABASE_URL": DST,
+            "TALVOA_MIGRATION_APPROVED": "supritech-homolog",
+            "TALVOA_EXPECTED_NEON_HOST": "ep-wrong.neon.tech",
+        }), patch.object(sys, "argv", ["migration", "--apply"]), patch.object(
+            runner.subprocess, "run", side_effect=AssertionError("database connection attempted")
+        ):
+            with self.assertRaises(SystemExit) as failure:
+                runner.main()
+            self.assertIn("hostname", str(failure.exception).lower())
+
+    def test_refuse_missing_expected_neon_hostname_on_apply(self):
+        import sys
+        with patch.dict(os.environ, {
+            "TALVOA_SOURCE_DATABASE_URL": SRC,
+            "TALVOA_TARGET_DATABASE_URL": DST,
+            "TALVOA_MIGRATION_APPROVED": "supritech-homolog",
+        }), patch.dict(os.environ, {"TALVOA_EXPECTED_NEON_HOST": ""}), patch.object(
+            sys, "argv", ["migration", "--apply"]
+        ), patch.object(runner.subprocess, "run", side_effect=AssertionError("database connection attempted")):
+            with self.assertRaises(SystemExit):
+                runner.main()
+
     def test_password_not_in_command_args(self):
         env = runner.pg_env(DST)
         self.assertEqual(env["PGPASSWORD"], "password")
