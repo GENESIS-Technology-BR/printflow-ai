@@ -36,23 +36,23 @@ let runs=[],lastRead=0,selected=-1;
 const canvas=el('viewport');
 let renderer;
 try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});}catch(e){el('fallback').style.display='block';throw e}
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#061322');scene.fog=new THREE.Fog('#061322',20,47);
 const camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,100);camera.position.set(13,11,15);
 const orbit=new OrbitControls(camera,canvas);orbit.target.set(0,1.4,0);orbit.enableDamping=true;orbit.dampingFactor=.07;orbit.minDistance=4;orbit.maxDistance=29;orbit.maxPolarAngle=Math.PI/2.02;orbit.update();
 scene.add(new THREE.HemisphereLight(0x8ecfff,0x12243a,2.1));
 const sun=new THREE.DirectionalLight(0xbceaff,3.1);sun.position.set(-5,13,8);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-13;sun.shadow.camera.right=13;sun.shadow.camera.top=13;sun.shadow.camera.bottom=-13;scene.add(sun);
 function mat(color,metalness=.1,roughness=.55,emissive=0){return new THREE.MeshStandardMaterial({color,metalness,roughness,emissive,emissiveIntensity:emissive?.32:0})}
-const mFloor=mat(0x19334a,.45,.4),mDesk=mat(0x41637a,.4,.4),mFrame=mat(0x17334c,.55,.35),mWhite=mat(0xd5edff,.3,.3),mDark=mat(0x071a2b,.4,.25),mGlow=new THREE.MeshBasicMaterial({color:0x13c9ff}),mBlue=mat(0x159fe0,.5,.2,0x0868a0);
+const mFloor=mat(0x596575,.35,.28),mDesk=mat(0x9b8a79,.25,.38),mFrame=mat(0x202c3b,.55,.35),mWhite=mat(0xd5edff,.3,.3),mDark=mat(0x071a2b,.4,.25),mGlow=new THREE.MeshBasicMaterial({color:0x13c9ff}),mBlue=mat(0x159fe0,.5,.2,0x0868a0);
 function box(parent,w,h,d,x,y,z,material){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
 function sphere(parent,r,x,y,z,material){const o=new THREE.Mesh(new THREE.SphereGeometry(r,20,16),material);o.position.set(x,y,z);o.castShadow=true;parent.add(o);return o}
 box(scene,17,.3,13,0,-.16,0,mFloor);
-const grid=new THREE.GridHelper(17,17,0x245d82,0x24506a);grid.position.y=.006;scene.add(grid);
+const tileGrid=new THREE.GridHelper(17,17,0x677887,0x516476);tileGrid.position.y=.006;tileGrid.material.transparent=true;tileGrid.material.opacity=.22;scene.add(tileGrid);
 box(scene,17,5,.22,0,2.35,-6.5,mat(0x0c2a40,.3,.4));
 for(let i=-7;i<=7;i+=2){box(scene,.07,4.4,.06,i,2.25,-6.36,mBlue);box(scene,1.7,1.9,.04,i+.8,2.5,-6.34,mat(0x133a56,.2,.3))}
 for(let i=0;i<6;i++){const x=-5.2+(i%3)*5.2,z=-2.9+Math.floor(i/3)*5.1;const light=new THREE.PointLight(i%2?0x26baff:0x45dfff,10,6);light.position.set(x,3.5,z);scene.add(light)}
 // Detalhes arquitetônicos: janelas, iluminação, divisórias, plantas e recepção.
-const glass=new THREE.MeshPhysicalMaterial({color:0x4ba6d1,metalness:.15,roughness:.09,transmission:.8,transparent:true,opacity:.25,side:THREE.DoubleSide});
+const glass=new THREE.MeshPhysicalMaterial({color:0x8ac7e4,metalness:.05,roughness:.07,transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false});
 const wood=mat(0x8b6246,.12,.62),leaf=mat(0x26734e,.08,.65),pot=mat(0x394b58,.35,.55),warm=new THREE.MeshBasicMaterial({color:0xffc58c});
 for(let j=-7;j<=7;j+=2.4){box(scene,.065,4.6,.12,j,2.3,6.25,mFrame);box(scene,.07,4.6,.08,j,2.3,-6.25,mFrame)}
 box(scene,16.8,.1,.12,0,4.6,6.25,mFrame);
@@ -62,6 +62,22 @@ for(const [x,z] of [[-7.5,-5.4],[-2.5,-5.5],[2.5,-5.5],[7.5,-5.4],[-7.5,0],[7.5,
 box(scene,3.3,.55,1.35,-5.5,.44,5.7,wood);
 for(let k=0;k<3;k++){box(scene,.15,.68,.16,-6.8+k*1.2,.8,5.65,mFrame)}
 const wallDisplay=box(scene,4.6,1.8,.07,0,3,-6.28,mDark);for(let j=0;j<6;j++)box(scene,.38,.12,.085,-1.7+j*.67,2.7+(j%3)*.23,-6.21,mGlow);
+
+// Escritório realista: painéis envidraçados, salas, lounge, madeira e estações.
+for(const z of [-6.2,6.2]){for(let j=-7;j<8;j+=2.4){box(scene,.065,4.4,.06,j,2.2,z,mFrame);const pane=box(scene,2.28,3.9,.018,j+1.16,2.2,z,glass);pane.castShadow=false}}
+for(let j=-6;j<=6;j+=2.5){box(scene,.05,4.3,.07,8.2,2.2,j,mFrame)}
+const woodWall=mat(0x4e3326,.18,.52),couch=mat(0x354452,.12,.85),cushion=mat(0x6b8597,.1,.86);
+for(let k=0;k<18;k++)box(scene,.08,4.25,.16,-7.8+k*.11,2.15,-6.2,woodWall);
+box(scene,3.7,.45,1.15,-5.9,.43,4.55,couch);box(scene,3.7,.75,.26,-5.9,1.0,5.05,couch);
+for(let j=0;j<3;j++)box(scene,.83,.18,.6,-7.0+j*1.0,.77,4.65,cushion);
+box(scene,2.4,.15,1.0,-5.9,.46,2.95,wood);
+for(let j=0;j<4;j++)box(scene,.1,.45,.1,-6.9+j*.7,.22,2.95,mFrame);
+box(scene,2.1,.07,1.15,5.8,.95,5.1,wood);
+for(const xx of [5.0,6.6])for(const zz of [4.7,5.5])box(scene,.12,.95,.12,xx,.46,zz,mFrame);
+for(let j=0;j<4;j++)plant(-2.8+j*1.8,1.15,.55);
+for(let j=0;j<3;j++)plant(-2.8+j*2.7,-.7,.48);
+for(let i=0;i<6;i++){const x=-5.1+(i%3)*5.1,z=-2.8+Math.floor(i/3)*5.1;box(scene,3.3,.65,.13,x,1.28,z-1.72,wood);box(scene,3.3,.1,.18,x,1.67,z-1.72,mFrame)}
+
 const stations=[],rayTargets=[];
 for(let i=0;i<6;i++){
  const x=-5.1+(i%3)*5.1,z=-2.8+Math.floor(i/3)*5.1;
@@ -78,7 +94,7 @@ for(let i=0;i<6;i++){
  sphere(robot,.12,-.63,2.15,0,mBlue);sphere(robot,.12,.63,2.15,0,mBlue);
  sphere(robot,.12,0,2.7,0,mBlue);box(robot,.045,.22,.045,0,2.62,0,mFrame);
  for(const side of [-1,1]){const arm=sphere(robot,.16,side*.55,1.48,.22,mWhite);arm.scale.set(.7,1.4,.7);sphere(robot,.13,side*.65,1.15,.5,mBlue)}
- box(group,1.3,.12,.6,0,.75,1.06,mFrame);
+ box(group,1.3,.12,.6,0,.75,1.06,mFrame);box(group,1.1,.75,.16,0,1.16,1.33,mFrame);box(group,1.2,.14,.55,0,.7,1.12,couch);box(group,.42,.05,.25,-.4,1.16,-.22,mDark);box(group,.18,.03,.3,.58,1.15,-.25,mDark);
  const ring=new THREE.Mesh(new THREE.TorusGeometry(.76,.035,8,44),new THREE.MeshBasicMaterial({color:0x23bfff}));ring.rotation.x=-Math.PI/2;ring.position.set(0,.07,.42);group.add(ring);
  const hit=new THREE.Mesh(new THREE.BoxGeometry(3.9,3.4,3.6),new THREE.MeshBasicMaterial({visible:false}));hit.position.set(0,1.7,0);hit.userData.station=i;group.add(hit);rayTargets.push(hit);
  stations.push({robot,ring,head,group});
