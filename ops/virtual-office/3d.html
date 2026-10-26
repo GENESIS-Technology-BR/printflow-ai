@@ -119,6 +119,7 @@ for(let i=0;i<6;i++){
  for(const dx of [-1.5,1.5])box(group,.13,1.03,.14,dx,.51,-.52,mFrame);
  for(const dx of [-.78,.78]){box(group,1.32,.83,.08,dx,1.78,-.96,mFrame);box(group,1.18,.68,.015,dx,1.79,-.9,new THREE.MeshBasicMaterial({color:0x092e4c}));for(let l=0;l<4;l++)box(group,.7,.028,.02,dx,1.96-l*.11,-.879,l%2?mGlow:mBlue);box(group,.08,.23,.08,dx,1.27,-.95,mFrame)}
  box(group,.9,.18,.55,0,.62,.85,mFrame);box(group,.16,.75,.15,0,1,.98,mFrame);
+ // Posicionar o robô alinhado ao teclado e aos monitores, sem girar as pernas da pose sentada.
  const robot=new THREE.Group();robot.position.set(0,0,.42);group.add(robot);
  // Robô voltado para os monitores (-Z); pernas e joelhos já apontam para a mesa.
  // Robô articulado detalhado: carcaça, visor, sensores, juntas, mãos e luzes.
