@@ -180,11 +180,25 @@ jobs:
               queue.sort(key=lambda item:(item['priority']!='alta',item['issue']))
           except Exception as exc:
               add('Fila de tarefas','indisponível',f'Consulta de issues: {type(exc).__name__}')
+          # Plano de execução revisável: critérios extraídos das issues, sem gerar código ou alterar tickets.
+          plans=[]
+          for item in queue:
+              title=item['title'].lower()
+              if 'multiempresa' in title or 'tenant' in title:
+                  steps=['Mapear endpoints administrativos que usam company_id implícito','Exigir tenant alvo explícito nas mutações de platform_admin','Adicionar testes de isolamento cross-tenant e auditoria']
+                  acceptance=['Cliente permanece somente leitura','Nenhuma alteração cross-tenant sem autorização','Testes automatizados aprovados']
+              elif 'piloto' in title or 'revenue' in title:
+                  steps=['Validar heartbeat e retomada do Agent após reinício','Testar coleta periódica e status offline em ambiente controlado','Conferir relatórios Excel/PDF e onboarding de cliente']
+                  acceptance=['Evidências de teste anexadas','Sem alterações em dados de produção','Critérios da issue revisados pelo responsável']
+              else:
+                  steps=['Reproduzir a demanda em ambiente de teste','Preparar mudança isolada em branch e testes','Solicitar revisão antes de merge/deploy']
+                  acceptance=['Critérios da issue atendidos','Testes registrados','Aprovação humana para publicação']
+              plans.append({'issue':item['issue'],'title':item['title'],'robot':item['robot'],'priority':item['priority'],'steps':steps,'acceptance':acceptance,'approval_required':True})
           recommendations=[]
           if risky:recommendations.append({'robot':'Segurança','priority':'revisar','action':'Revisar manualmente chamadas eval/exec encontradas; não executar correção automática','files':risky[:20]})
           if not migrations:recommendations.append({'robot':'Banco de dados','priority':'informativo','action':'Nenhum arquivo de migração por nome localizado; conferir versionamento do esquema'})
           if not workflows:recommendations.append({'robot':'Deploy','priority':'revisar','action':'Nenhum workflow encontrado; verificar CI/CD'})
-          output={'generated_at_utc':now,'mode':'read_only','robots':checks,'recent_workflows':latest,'recommendations':recommendations,'task_queue':queue,'metrics':{'python_files':len(py),'workflow_definitions':len(workflows),'migration_files':len(migrations),'security_pattern_files':len(risky),'github_runs_checked':len(latest),'open_issues_in_queue':len(queue)}}
+          output={'generated_at_utc':now,'mode':'read_only','robots':checks,'recent_workflows':latest,'recommendations':recommendations,'task_queue':queue,'execution_plans':plans,'metrics':{'python_files':len(py),'workflow_definitions':len(workflows),'migration_files':len(migrations),'security_pattern_files':len(risky),'github_runs_checked':len(latest),'open_issues_in_queue':len(queue)}}
           pathlib.Path('reports/talvoa-robots.json').write_text(json.dumps(output,ensure_ascii=False,indent=2))
           md=['# TALVOA — diagnóstico operacional','',f'Gerado em UTC: {now}','', '## Indicadores', '']
           for key,value in output['metrics'].items():md.append(f'- {key}: {value}')
@@ -198,6 +212,15 @@ jobs:
           if queue:
               for item in queue:md.append(f"- [#{item['issue']}]({item['url']}) **{item['title']}** — {item['robot']}; prioridade {item['priority']}; {item['state']}")
           else:md.append('- Nenhuma issue recuperada; conferir acesso à API e estado do repositório.')
+          md.extend(['','## Planos técnicos propostos (requerem aprovação)',''])
+          for plan in plans:
+              md.append(f"### Issue #{plan['issue']}: {plan['title']}")
+              md.append(f"Robô: {plan['robot']} | Prioridade: {plan['priority']}")
+              md.append('Etapas:')
+              for step in plan['steps']:md.append(f'- [ ] {step}')
+              md.append('Critérios de aceite:')
+              for criterion in plan['acceptance']:md.append(f'- [ ] {criterion}')
+              md.append('')
           md.extend(['','A fila é somente leitura. Nenhuma issue foi alterada e nenhum código foi aplicado automaticamente.','','Este relatório não representa auditoria completa nem autorização para alterar produção.'])
           pathlib.Path('reports/talvoa-robots.md').write_text('\\n'.join(md)+'\\n',encoding='utf-8')
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
