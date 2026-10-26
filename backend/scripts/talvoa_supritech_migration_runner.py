@@ -90,10 +90,14 @@ def main():
     if result.stdout.strip() != "0":
         raise SystemExit("REFUSED: destination contains database objects")
     backup = Path(args.backup)
+    if backup.is_symlink():
+        raise SystemExit("REFUSED: backup path must not be a symbolic link")
     if backup.exists():
         raise SystemExit("REFUSED: backup path already exists")
     try:
-        with backup.open("xb") as output:
+        # Restrict backup permissions before writing any database content.
+        fd = os.open(str(backup), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "wb") as output:
             run(["pg_dump", "--format=custom", "--no-owner", "--no-acl"],
                 env=pg_env(source), stdout=output)
         if backup.stat().st_size == 0:
