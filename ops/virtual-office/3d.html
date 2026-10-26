@@ -141,9 +141,11 @@ for(let i=0;i<6;i++){
    const palm=sphere(robot,.14,s*.6,.9,.64,accent);palm.scale.set(.9,.45,1.1);
    for(let finger=0;finger<3;finger++)sphere(robot,.045,s*(.51+finger*.09),.88,.75,mWhite);
    const hip=sphere(robot,.19,s*.25,.99,0,joint);
-   const leg=sphere(robot,.19,s*.26,.69,.06,shell);leg.scale.set(.9,1.25,.95);
-   const knee=sphere(robot,.13,s*.26,.45,.1,accent);
-   const boot=sphere(robot,.19,s*.26,.25,.23,joint);boot.scale.set(1.1,.55,1.65);
+   // Coxa horizontal e canela vertical: pose sentada diante da mesa.
+   const thigh=sphere(robot,.19,s*.26,.88,-.19,shell);thigh.scale.set(.9,.86,1.85);
+   const knee=sphere(robot,.14,s*.26,.78,-.51,accent);
+   const shin=sphere(robot,.145,s*.26,.48,-.52,shell);shin.scale.set(.95,1.8,.86);
+   const boot=sphere(robot,.19,s*.26,.17,-.68,joint);boot.scale.set(1.1,.55,1.65);
  }
  const antenna=cyl(robot,.04,.055,.24,0,2.78,0,joint);
  sphere(robot,.1,0,2.93,0,mGlow);
@@ -168,8 +170,8 @@ for(let i=0;i<6;i++){
  const blueMetal=new THREE.MeshPhysicalMaterial({color:0x1678b6,metalness:.65,roughness:.19,clearcoat:.65});
  for(const s of [-1,1]){
   const shoulderCap=sphere(robot,.17,s*.57,1.7,.13,pearl);shoulderCap.scale.set(1.3,.85,.6);
-  const shin=sphere(robot,.13,s*.26,.59,.2,pearl);shin.scale.set(1.0,1.55,.52);
-  const kneeTrim=sphere(robot,.08,s*.26,.45,.23,blueMetal);kneeTrim.scale.set(1.2,.6,.45);
+  const shinPlate=sphere(robot,.13,s*.26,.48,-.37,pearl);shinPlate.scale.set(1.0,1.55,.52);
+  const kneeTrim=sphere(robot,.08,s*.26,.78,-.36,blueMetal);kneeTrim.scale.set(1.2,.6,.45);
   const temple=sphere(robot,.10,s*.53,2.24,.23,blueMetal);temple.scale.set(.55,1.1,.65);
   for(let j=0;j<3;j++)box(robot,.035,.012,.015,s*(.51+j*.075),1.52,.35,mGlow);
  }
