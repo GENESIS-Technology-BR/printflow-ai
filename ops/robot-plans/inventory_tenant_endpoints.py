@@ -51,6 +51,6 @@ if __name__ == "__main__":
     print("| Arquivo:linha | Função | Rota | Indícios |")
     print("|---|---|---|---|")
     for path, line, name, routes, hits in matches:
-        print(f"| \`{path}:{line}\` | \`{name}\` | \`{routes.replace('|', ' ')}\` | {hits} |")
+        print(f"| `{path}:{line}` | `{name}` | `{routes.replace('|', ' ')}` | {hits} |")
     print()
     print("Triagem estática: revisar autenticação, autorização e auditoria manualmente.")
