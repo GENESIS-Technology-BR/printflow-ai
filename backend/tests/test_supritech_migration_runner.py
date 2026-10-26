@@ -101,6 +101,36 @@ class MigrationSafetyTests(unittest.TestCase):
                 self.assertEqual(existing.read_bytes(), b"protected")
                 self.assertEqual(execute.call_count, 1)
 
+    def test_restore_requires_backup_verification_after_valid_dump(self):
+        import sys
+        from tempfile import TemporaryDirectory
+        from types import SimpleNamespace
+        with TemporaryDirectory() as directory:
+            backup = Path(directory) / "staging.dump"
+            commands = []
+            def fake_run(cmd, *, env, stdout=None):
+                commands.append(cmd[0])
+                if cmd[0] == "pg_dump":
+                    stdout.write(b"archive")
+            def fake_subprocess(cmd, **kwargs):
+                return SimpleNamespace(stdout="0\\n")
+            with patch.dict(os.environ, {
+                "TALVOA_SOURCE_DATABASE_URL": SRC,
+                "TALVOA_TARGET_DATABASE_URL": DST,
+                "TALVOA_MIGRATION_APPROVED": "supritech-homolog",
+                "TALVOA_EXPECTED_NEON_HOST": runner.database(DST)[1],
+                "TALVOA_BACKUP_VERIFIED": "",
+            }), patch.object(sys, "argv", ["migration", "--apply", "--backup", str(backup)]), patch.object(
+                runner.shutil, "which", return_value="/usr/bin/psql"
+            ), patch.object(runner.subprocess, "run", side_effect=fake_subprocess), patch.object(
+                runner, "run", side_effect=fake_run
+            ):
+                with self.assertRaises(SystemExit) as failure:
+                    runner.main()
+                self.assertIn("backup recovery verification", str(failure.exception).lower())
+                self.assertEqual(commands, ["pg_dump", "pg_restore"])
+                self.assertTrue(backup.exists())
+
     def test_password_not_in_command_args(self):
         env = runner.pg_env(DST)
         self.assertEqual(env["PGPASSWORD"], "password")
