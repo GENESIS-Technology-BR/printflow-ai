@@ -1,0 +1,34 @@
+name: TALVOA Virtual Office Checks
+on:
+  push:
+    branches: [feature/partner-multitenancy]
+    paths:
+      - 'ops/virtual-office/**'
+      - '.github/workflows/talvoa-virtual-office-checks.yml'
+  pull_request:
+    paths:
+      - 'ops/virtual-office/**'
+      - '.github/workflows/talvoa-virtual-office-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JavaScript and robot interaction contract
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm'),assert=require('assert');
+          const html=fs.readFileSync('ops/virtual-office/index.html','utf8');
+          const script=html.match(/<script>([\s\S]*?)<\/script>/);
+          assert(script,'Inline JavaScript not found');
+          new vm.Script(script[1],{filename:'talvoa-virtual-office.js'});
+          for(const marker of ['data-station','showStation','robotDetails','office','detailBody','safeRunUrl','statusFilter']){
+            assert(html.includes(marker),'Missing robot interaction element: '+marker);
+          }
+          assert(html.includes('role="button"'),'Keyboard-accessible station missing');
+          assert(html.includes('tabindex="0"'),'Focus support missing');
+          console.log('Virtual office JavaScript syntax and interaction contract: PASS');
+          NODE
