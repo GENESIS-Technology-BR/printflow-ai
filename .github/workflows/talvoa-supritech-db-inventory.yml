@@ -34,6 +34,6 @@ jobs:
               raise SystemExit('REFUSED: Neon hostname mismatch')
           print('Source and exact destination identities verified.')
           PY
-          python backend/scripts/talvoa_supritech_inventory.py --source
+          echo "::notice::External GitHub runner cannot reach allowlisted Render PostgreSQL. Source inventory is intentionally skipped; use a private Render executor."
           python backend/scripts/talvoa_supritech_inventory.py --target
-          echo "Read-only inventory complete; no data changed."
+          echo "Neon target read-only inventory complete; Render source requires private executor."
