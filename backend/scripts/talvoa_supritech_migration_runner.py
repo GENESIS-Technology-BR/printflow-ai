@@ -84,7 +84,7 @@ def main():
     # PostgreSQL clients older than the source major version cannot dump it.
     version = subprocess.run(["pg_dump", "--version"], capture_output=True, text=True, timeout=10, check=True)
     import re
-    match = re.search(r"pg_dump \(PostgreSQL\) (\d+)", version.stdout)
+    match = re.search(r"pg_dump \(PostgreSQL\) (\d+)", version.stdout or "")
     if not match or int(match.group(1)) < 16:
         raise SystemExit("REFUSED: pg_dump 16 or newer required for Render PostgreSQL 16")
     # Fail closed: never restore into a nonempty database.
