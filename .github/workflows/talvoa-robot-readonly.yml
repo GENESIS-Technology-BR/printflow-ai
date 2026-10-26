@@ -5,7 +5,7 @@ on:
       - '.github/workflows/talvoa-robot-readonly.yml'
   workflow_dispatch:
   schedule:
-    - cron: '15 12 * * 1-5'
+    - cron: '15 12,15,18,21 * * 1-5'
 permissions:
   contents: read
   actions: read
@@ -135,7 +135,11 @@ jobs:
               latest=[]
               add('Monitoramento','indisponível',f'API GitHub: {type(exc).__name__}')
           add('Qualidade','observado','Relatório gerado; testes de produto não foram executados')
-          output={'generated_at_utc':now,'mode':'read_only','robots':checks,'recent_workflows':latest}
+          recommendations=[]
+          if risky:recommendations.append({'robot':'Segurança','priority':'revisar','action':'Revisar manualmente chamadas eval/exec encontradas; não executar correção automática','files':risky[:20]})
+          if not migrations:recommendations.append({'robot':'Banco de dados','priority':'informativo','action':'Nenhum arquivo de migração por nome localizado; conferir versionamento do esquema'})
+          if not workflows:recommendations.append({'robot':'Deploy','priority':'revisar','action':'Nenhum workflow encontrado; verificar CI/CD'})
+          output={'generated_at_utc':now,'mode':'read_only','robots':checks,'recent_workflows':latest,'recommendations':recommendations,'metrics':{'python_files':len(py),'workflow_definitions':len(workflows),'migration_files':len(migrations),'security_pattern_files':len(risky),'github_runs_checked':len(latest)}}
           pathlib.Path('reports/talvoa-robots.json').write_text(json.dumps(output,ensure_ascii=False,indent=2))
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
               f.write('## TALVOA - 6 robôs (somente leitura)\n\n')
