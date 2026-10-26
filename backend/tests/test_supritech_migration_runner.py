@@ -59,6 +59,48 @@ class MigrationSafetyTests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 runner.main()
 
+    def test_refuse_existing_backup_before_dump(self):
+        import sys
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as directory:
+            backup = Path(directory) / "existing.dump"
+            backup.write_bytes(b"existing")
+            with patch.dict(os.environ, {
+                "TALVOA_SOURCE_DATABASE_URL": SRC,
+                "TALVOA_TARGET_DATABASE_URL": DST,
+                "TALVOA_MIGRATION_APPROVED": "supritech-homolog",
+                "TALVOA_EXPECTED_NEON_HOST": runner.database(DST)[1],
+            }), patch.object(sys, "argv", ["migration", "--apply", "--backup", str(backup)]), patch.object(
+                runner.shutil, "which", return_value="/usr/bin/psql"
+            ), patch.object(runner.subprocess, "run") as execute:
+                execute.return_value.stdout = "0\\n"
+                with self.assertRaises(SystemExit):
+                    runner.main()
+                self.assertEqual(backup.read_bytes(), b"existing")
+                self.assertEqual(execute.call_count, 1)
+
+    def test_refuse_symlink_backup_before_dump(self):
+        import sys
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as directory:
+            existing = Path(directory) / "protected.dump"
+            existing.write_bytes(b"protected")
+            link = Path(directory) / "link.dump"
+            link.symlink_to(existing)
+            with patch.dict(os.environ, {
+                "TALVOA_SOURCE_DATABASE_URL": SRC,
+                "TALVOA_TARGET_DATABASE_URL": DST,
+                "TALVOA_MIGRATION_APPROVED": "supritech-homolog",
+                "TALVOA_EXPECTED_NEON_HOST": runner.database(DST)[1],
+            }), patch.object(sys, "argv", ["migration", "--apply", "--backup", str(link)]), patch.object(
+                runner.shutil, "which", return_value="/usr/bin/psql"
+            ), patch.object(runner.subprocess, "run") as execute:
+                execute.return_value.stdout = "0\\n"
+                with self.assertRaises(SystemExit):
+                    runner.main()
+                self.assertEqual(existing.read_bytes(), b"protected")
+                self.assertEqual(execute.call_count, 1)
+
     def test_password_not_in_command_args(self):
         env = runner.pg_env(DST)
         self.assertEqual(env["PGPASSWORD"], "password")
