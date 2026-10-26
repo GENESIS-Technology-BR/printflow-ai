@@ -13,6 +13,82 @@ concurrency:
   group: talvoa-robot-readonly
   cancel-in-progress: true
 jobs:
+  robot-development:
+    name: Desenvolvimento
+    runs-on: ubuntu-latest
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect source
+        run: |
+          echo "### Desenvolvimento" >> "$GITHUB_STEP_SUMMARY"
+          echo "Arquivos Python: $(find . -type f -name '*.py' -not -path './.git/*' | wc -l)" >> "$GITHUB_STEP_SUMMARY"
+  robot-deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect deployment definitions
+        run: |
+          echo "### Deploy (somente leitura)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Workflows: $(find .github/workflows -type f \( -name '*.yml' -o -name '*.yaml' \) | wc -l)" >> "$GITHUB_STEP_SUMMARY"
+  robot-database:
+    name: Banco de dados
+    runs-on: ubuntu-latest
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect migration files without DB connection
+        run: |
+          echo "### Banco de dados (sem conexão)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Migrações candidatas: $(find . -type f -iname '*migration*.py' -not -path './.git/*' | wc -l)" >> "$GITHUB_STEP_SUMMARY"
+  robot-security:
+    name: Segurança
+    runs-on: ubuntu-latest
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check suspicious code patterns
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib,os
+          files=[str(p) for p in pathlib.Path('.').rglob('*.py') if '.git' not in p.parts and ('eval(' in p.read_text(errors='ignore') or 'exec(' in p.read_text(errors='ignore'))]
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write(f'### Segurança (triagem textual, não auditoria)\nArquivos para revisão: {len(files)}\n')
+          PY
+  robot-monitoring:
+    name: Monitoramento
+    runs-on: ubuntu-latest
+    permissions: {contents: read, actions: read}
+    steps:
+      - name: Inspect GitHub Actions via API
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          gh api "repos/$GH_REPOSITORY/actions/runs?per_page=10" --jq '.workflow_runs | length' | awk '{print "Execuções consultadas: "$1}' >> "$GITHUB_STEP_SUMMARY"
+  robot-quality:
+    name: Qualidade
+    runs-on: ubuntu-latest
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Python syntax without executing product code
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import ast,pathlib,os
+          total=0;errors=[]
+          for p in pathlib.Path('.').rglob('*.py'):
+              if '.git' in p.parts or total>=500:continue
+              try:ast.parse(p.read_text(encoding='utf-8-sig',errors='replace'),filename=str(p))
+              except SyntaxError as e:errors.append(f'{p}:{e.lineno}')
+              total+=1
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write(f'### Qualidade\nArquivos verificados: {total}; erros de sintaxe: {len(errors)}\n')
+          if errors:print('Erros:',*errors[:20],sep='\n');raise SystemExit(1)
+          PY
   operations:
     runs-on: ubuntu-latest
     timeout-minutes: 8
