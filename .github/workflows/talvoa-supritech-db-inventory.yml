@@ -1,0 +1,39 @@
+name: TALVOA SupriTech Read-Only Database Inventory
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+      - name: Read-only inventory (no migration or deploy)
+        env:
+          TALVOA_SOURCE_DATABASE_URL: ${{ secrets.TALVOA_SOURCE_DATABASE_URL }}
+          TALVOA_TARGET_DATABASE_URL: ${{ secrets.TALVOA_TARGET_DATABASE_URL }}
+          TALVOA_EXPECTED_NEON_HOST: ${{ vars.TALVOA_EXPECTED_NEON_HOST }}
+        run: |
+          set -euo pipefail
+          if [ -z "$TALVOA_SOURCE_DATABASE_URL" ] || [ -z "$TALVOA_TARGET_DATABASE_URL" ] || [ -z "$TALVOA_EXPECTED_NEON_HOST" ]; then
+            echo "::error::Migration connection secrets or exact Neon hostname are not configured."
+            exit 1
+          fi
+          python - <<'PY'
+          import os, sys
+          sys.path.insert(0, 'backend/scripts')
+          import talvoa_supritech_migration_runner as m
+          m.verify(os.environ['TALVOA_SOURCE_DATABASE_URL'], os.environ['TALVOA_TARGET_DATABASE_URL'])
+          if m.database(os.environ['TALVOA_TARGET_DATABASE_URL'])[1] != os.environ['TALVOA_EXPECTED_NEON_HOST'].lower():
+              raise SystemExit('REFUSED: Neon hostname mismatch')
+          print('Source and exact destination identities verified.')
+          PY
+          python backend/scripts/talvoa_supritech_inventory.py --source
+          python backend/scripts/talvoa_supritech_inventory.py --target
+          echo "Read-only inventory complete; no data changed."
