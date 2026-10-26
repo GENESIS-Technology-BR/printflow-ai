@@ -90,7 +90,20 @@ def main():
     # Fail closed: never restore into a nonempty database.
     result = subprocess.run(
         ["psql", "-X", "-A", "-t", "-c",
-         "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%' AND c.relkind IN ('r','p','v','m','S','f')"],
+         """SELECT
+           (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+            WHERE n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%'
+              AND c.relkind IN ('r','p','v','m','S','f'))
+           + (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+              WHERE n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%'
+                AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.classid='pg_proc'::regclass AND d.objid=p.oid AND d.deptype='e'))
+           + (SELECT count(*) FROM pg_namespace n WHERE n.nspname NOT IN ('public','pg_catalog','information_schema')
+              AND n.nspname NOT LIKE 'pg_toast%' AND NOT EXISTS
+                (SELECT 1 FROM pg_depend d WHERE d.classid='pg_namespace'::regclass AND d.objid=n.oid AND d.deptype='e'))
+           + (SELECT count(*) FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace
+              WHERE n.nspname='public' AND t.typtype IN ('d','e','r') AND NOT EXISTS
+                (SELECT 1 FROM pg_depend d WHERE d.classid='pg_type'::regclass AND d.objid=t.oid AND d.deptype='e'))
+           """] ,
         capture_output=True, text=True, timeout=60, check=True, env=pg_env(target),
     )
     if result.stdout.strip() != "0":
