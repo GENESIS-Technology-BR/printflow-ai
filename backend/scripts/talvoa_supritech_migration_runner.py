@@ -109,7 +109,7 @@ def main():
     if result.stdout.strip() != "0":
         raise SystemExit("REFUSED: destination contains database objects")
     backup = Path(args.backup)
-    if any(parent.is_symlink() for parent in backup.parent.parents):
+    if any(parent.is_symlink() for parent in (backup.parent, *backup.parent.parents)):
         raise SystemExit("REFUSED: ancestor backup directory must not be a symbolic link")
     if not backup.parent.is_dir():
         raise SystemExit("REFUSED: backup directory does not exist")
@@ -131,6 +131,8 @@ def main():
         print("Backup created and archive index verified. Keep it encrypted and restrict access.")
         if os.environ.get("TALVOA_BACKUP_VERIFIED") != "supritech-homolog":
             raise SystemExit("REFUSED: backup recovery verification not acknowledged; restore cancelled")
+        if os.environ.get("TALVOA_RECOVERY_TEST_PASSED") != "supritech-homolog":
+            raise SystemExit("REFUSED: documented restore test must pass before destination restore")
         run(["pg_restore", "--single-transaction", "--exit-on-error", "--no-owner", "--no-acl",
              str(backup)], env=pg_env(target))
         print("RESTORE FINISHED. Validation and API cutover are separate manual gates.")
