@@ -7,7 +7,7 @@
 <header><div><div class="small">TALVOA · ADMINISTRAÇÃO INTERNA</div><h1>Centro de Operações</h1><p>Somente execuções verificadas · Nenhum robô fictício</p></div><span class="pill">Acesso administrativo obrigatório</span></header>
 <section class="card"><div class="top"><div><strong>GitHub Actions · feature/partner-multitenancy</strong><p id="updated">Aguardando consulta autorizada</p><div class="small" id="countdown" aria-live="off">Atualização automática a cada 30 segundos</div></div><button id="refresh">Atualizar</button></div><p id="error" role="alert" class="bad"></p></section>
 <div class="grid" style="margin:18px 0"><div class="card"><div class="small">Execuções retornadas</div><div class="stat" id="total">—</div></div><div class="card"><div class="small">Aprovadas</div><div class="stat ok" id="success">—</div></div><div class="card"><div class="small">Em andamento</div><div class="stat wait" id="running">—</div></div><div class="card"><div class="small">Falhas / canceladas</div><div class="stat bad" id="failed">—</div></div></div>
-<h2>Atividade comprovada</h2><div id="tasks" class="card">Sem dados carregados.</div>
+<h2>Escritório virtual · atividade comprovada</h2><div id="office" class="grid" style="margin-bottom:20px"></div><h2>Atividade comprovada</h2><div id="tasks" class="card">Sem dados carregados.</div>
 <p class="small">Origem: API GitHub Actions. Sem acesso autorizado ou em caso de falha, a tela informa indisponibilidade — nunca inventa estados. Não hospedar publicamente sem autenticação TALVOA e proxy de leitura com permissões mínimas. Não inserir tokens neste arquivo.</p>
 </main><script>
 'use strict';
@@ -26,9 +26,16 @@ async function refresh(){
   el('success').textContent=runs.filter(r=>r.conclusion==='success').length;
   el('running').textContent=runs.filter(r=>r.status!=='completed').length;
   el('failed').textContent=runs.filter(r=>['failure','cancelled','timed_out'].includes(r.conclusion)).length;
+  const groups=[['Desenvolvimento','Build TALVOA Agent Windows'],['Deploy','TALVOA CTO Operations'],['Banco de dados','TALVOA SupriTech Migration Safety Checks'],['Segurança','Frontend security audit'],['Monitoramento','TALVOA Neon Free Usage Monitor'],['Qualidade','Partner tenancy validation']];
+  el('office').innerHTML=groups.map(([name,workflow])=>{
+    const match=runs.find(r=>r.name===workflow);
+    const state=!match?'Sem execução registrada':label(match);
+    const color=match?.status!=='completed'&&match?'wait':match?.conclusion==='success'?'ok':match?.conclusion==='failure'?'bad':'';
+    return '<div class="card"><div style="font-size:32px">🤖</div><strong>'+clean(name)+'</strong><p class="'+color+'">'+clean(state)+'</p><div class="small">'+(match?'Última atividade: '+clean(new Date(match.created_at).toLocaleString('pt-BR')):'Sem dados no histórico consultado')+'</div>'+(match?'<p><a href="'+clean(match.html_url)+'" target="_blank" rel="noopener noreferrer">Abrir execução real</a></p>':'')+'</div>';
+  }).join('');
   el('tasks').innerHTML=runs.length?runs.map(r=>'<div class="task row"><div><a href="'+clean(r.html_url)+'" target="_blank" rel="noopener noreferrer">'+clean(r.name)+'</a><div class="small">'+clean(r.head_sha?.slice(0,8))+' · '+clean(r.created_at?new Date(r.created_at).toLocaleString('pt-BR'):'sem data')+'</div></div><span class="pill">'+clean(label(r))+'</span></div>').join(''):'Nenhuma execução retornada.';
   el('updated').textContent='Última consulta: '+new Date().toLocaleString('pt-BR');
- }catch(e){el('updated').textContent='Dados indisponíveis';el('error').textContent=e.message+'; nenhum status exibido como atual.';['total','success','running','failed'].forEach(id=>el(id).textContent='—');el('tasks').textContent='Não foi possível consultar execuções. Verifique autorização e conectividade.';}
+ }catch(e){el('updated').textContent='Dados indisponíveis';el('error').textContent=e.message+'; nenhum status exibido como atual.';['total','success','running','failed'].forEach(id=>el(id).textContent='—');el('tasks').textContent='Não foi possível consultar execuções. Verifique autorização e conectividade.';el('office').innerHTML='';}
 }
 let remaining=30;let fetching=false;
 const originalRefresh=refresh;
