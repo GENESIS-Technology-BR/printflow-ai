@@ -43,7 +43,6 @@ def test_installer_saves_multiple_networks():
     # Validamos a semantica, nao a formatacao visual do PowerShell.
     assert "extra_network =" in installer
     assert "$extraNetworks -join" in installer
-    assert (
-        "Redes adicionais em CIDR separadas por virgula"
-        in installer
-    )
+    assert "Redes adicionais em CIDR" in installer
+    assert "ENTER preserva redes existentes" in installer
+    assert "if ($existingConfig -and $existingConfig.extra_networks)" in installer
