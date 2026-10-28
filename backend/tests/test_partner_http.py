@@ -149,8 +149,8 @@ def test_http_real_auth_enforces_cross_partner_scope(real_auth_http_context):
 def test_http_real_auth_rejects_invalid_and_expired_tokens(real_auth_http_context):
     from backend.modules.auth.security import create_access_token
     import jwt
-    import os
     from datetime import datetime, timedelta, timezone
+    from backend.modules.auth.security import _secret_key
     client, _, company, _ = real_auth_http_context
     path = f"/api/v1/partners/companies/{company.id}/overview"
     assert client.get(path, headers={"Authorization": "Bearer invalid.jwt.token"}).status_code == 401
@@ -158,7 +158,7 @@ def test_http_real_auth_rejects_invalid_and_expired_tokens(real_auth_http_contex
     expired = jwt.encode({
         "sub": "1", "company_id": company.id, "session_version": 0,
         "iat": now - timedelta(hours=2), "exp": now - timedelta(hours=1), "jti": "expired-test",
-    }, os.environ["JWT_SECRET"], algorithm="HS256")
+    }, _secret_key(), algorithm="HS256")
     assert client.get(path, headers={"Authorization": f"Bearer {expired}"}).status_code == 401
 
 
