@@ -238,3 +238,11 @@ def test_fixed_monthly_contract_full_20_to_19_cycle() -> None:
 
 def test_fixed_monthly_contract_zero_cost_is_zero() -> None:
     assert _fixed_cost_for_period(0.0, date(2026, 9, 19), date(2026, 9, 20)) == 0.0
+
+
+def test_fixed_monthly_contract_three_cycles_across_two_billing_boundaries() -> None:
+    assert _fixed_cost_for_period(1500.0, date(2026, 8, 19), date(2026, 9, 20)) == 4500.0
+
+
+def test_fixed_monthly_contract_never_charges_negative_monthly_cost() -> None:
+    assert _fixed_cost_for_period(-1500.0, date(2026, 9, 20), date(2026, 10, 19)) == 0.0
