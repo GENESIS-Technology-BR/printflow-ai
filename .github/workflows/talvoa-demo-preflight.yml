@@ -7,12 +7,16 @@ on:
     paths:
       - 'ops/demo_preflight.py'
       - 'backend/tests/test_demo_preflight.py'
+      - 'backend/tests/test_dashboard_executive_clean.py'
+      - 'frontend/src/components/Dashboard.tsx'
       - 'docs/qa/talvoa-1.0-homologacao.md'
       - '.github/workflows/talvoa-demo-preflight.yml'
   pull_request:
     paths:
       - 'ops/demo_preflight.py'
       - 'backend/tests/test_demo_preflight.py'
+      - 'backend/tests/test_dashboard_executive_clean.py'
+      - 'frontend/src/components/Dashboard.tsx'
       - 'docs/qa/talvoa-1.0-homologacao.md'
       - '.github/workflows/talvoa-demo-preflight.yml'
 permissions:
@@ -37,3 +41,15 @@ jobs:
           else
             echo "Demo remains blocked pending acceptance criteria."
           fi
+
+      - name: Verify dashboard UI contract against current frontend
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import runpy
+          checks = runpy.run_path("backend/tests/test_dashboard_executive_clean.py")
+          for name, fn in sorted(checks.items()):
+              if name.startswith("test_") and callable(fn):
+                  fn()
+                  print(f"PASS {name}")
+          PY
