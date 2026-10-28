@@ -1,6 +1,19 @@
 name: TALVOA Partner HTTP Isolation
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/partner-multitenancy
+    paths:
+      - 'backend/modules/partners/**'
+      - 'backend/modules/auth/**'
+      - 'backend/tests/test_partner_http.py'
+      - 'backend/tests/test_partner_populated_tenant_isolation.py'
+      - '.github/workflows/talvoa-partner-http-tests.yml'
+      - 'requirements.txt'
+      - 'requirements-dev.txt'
+      - 'backend/main.py'
+      - 'backend/app/database/**'
   pull_request:
     paths:
       - 'backend/modules/partners/**'
