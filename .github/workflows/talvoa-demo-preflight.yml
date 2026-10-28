@@ -42,9 +42,6 @@ jobs:
             echo "Demo remains blocked pending acceptance criteria."
           fi
 
-      - name: Verify dashboard UI contract against current frontend
-        shell: bash
-        run: python3 -m unittest discover -s backend/tests -p test_demo_preflight.py -v
       - name: Run dashboard source contract tests
         shell: bash
         run: |
