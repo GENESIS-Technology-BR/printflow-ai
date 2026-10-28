@@ -22,8 +22,9 @@ class ApiSyncResult:
 
 
 class PrintflowApiClient:
-    MAX_QUEUE_FILES = 500
-    MAX_QUEUE_AGE_SECONDS = 30 * 24 * 60 * 60
+    # Outages must not silently discard customer measurements.
+    MAX_QUEUE_FILES = 100000
+    MAX_QUEUE_AGE_SECONDS = 365 * 24 * 60 * 60
     def __init__(
         self,
         api_url: str,
@@ -724,28 +725,20 @@ class PrintflowApiClient:
             key=lambda item: item.stat().st_mtime,
         )
 
-        for queue_file in list(queue_files):
-            try:
-                content = json.loads(
-                    queue_file.read_text(encoding="utf-8")
-                )
-                created_at = int(content.get("created_at_unix", 0))
-            except (OSError, ValueError, TypeError):
-                created_at = 0
-
-            if created_at <= 0 or now_ms - created_at > maximum_age_ms:
-                queue_file.unlink(missing_ok=True)
-                queue_files.remove(queue_file)
-                removed_expired += 1
-
+        # Never delete unsynchronized readings automatically. An outage can
+        # last longer than the retention target; deletion would lose evidence.
+        # Report pressure for operational remediation instead.
         excess = max(0, len(queue_files) - self.MAX_QUEUE_FILES)
-        for queue_file in queue_files[:excess]:
-            queue_file.unlink(missing_ok=True)
-            removed_excess += 1
+        if excess:
+            self.logger.error(
+                "Fila local acima do limite operacional: %s arquivos; "
+                "nenhum registro pendente foi excluido.",
+                len(queue_files),
+            )
 
         return {
             "expired": removed_expired,
-            "excess": removed_excess,
+            "excess": excess,
         }
 
     @staticmethod
