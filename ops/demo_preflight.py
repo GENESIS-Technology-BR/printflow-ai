@@ -48,7 +48,7 @@ if qa.is_file():
         print(f"  {item}: duplicate")
     for item in sorted(unexpected):
         print(f"  {item}: unexpected")
-    checks.append(not pending and not missing and not duplicate and not unexpected)
+    checks.append(len(rows) == 14 and not pending and not missing and not duplicate and not unexpected)
 
 print("No deployments, external requests, database changes or secrets used.")
 if not all(checks):
