@@ -323,12 +323,18 @@ try {
             Out-Null
     }
     catch {
-
-        throw (
-            "Nao foi possivel validar a credencial na API de homologacao. " +
-            "Verifique conectividade, disponibilidade do Render e autorizacao do token. " +
-            "Instalacao anterior preservada."
-        )
+        $httpStatus = $null
+        if ($_.Exception.Response) {
+            try { $httpStatus = [int]$_.Exception.Response.StatusCode } catch {}
+        }
+        if ($httpStatus -eq 429) {
+            throw "HTTP 429: API limitada ou suspensa pelo provedor. Nao reinstale nem gere novo token. Agent anterior preservado."
+        }
+        if ($httpStatus -eq 401 -or $httpStatus -eq 403) {
+            throw "HTTP ${httpStatus}: API rejeitou a autorizacao. Verifique o token no painel. Agent anterior preservado."
+        }
+        throw ("Falha ao validar API de homologacao (HTTP: $httpStatus). " +
+               "Verifique disponibilidade do provedor e conectividade. Agent anterior preservado.")
     }
 
     $validationBody = $null
