@@ -1,5 +1,31 @@
 name: TALVOA Robotic Operations Read-Only
 on:
+  push:
+    branches:
+      - main
+      - feature/partner-multitenancy
+    paths:
+      - '.github/workflows/talvoa-robot-readonly.yml'
+      - 'api/**'
+      - 'agent/**'
+      - 'dashboard/**'
+      - 'frontend/**'
+      - 'ops/**'
+      - 'tests/**'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'api/**'
+      - 'agent/**'
+      - 'dashboard/**'
+      - 'frontend/**'
+      - 'ops/**'
+      - 'tests/**'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
   workflow_dispatch:
   schedule:
     - cron: '15 12 * * 1-5'
@@ -7,9 +33,91 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: talvoa-robot-readonly
+  group: talvoa-robot-readonly-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
+  robot-development:
+    name: Desenvolvimento
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect source
+        run: |
+          echo "### Desenvolvimento" >> "$GITHUB_STEP_SUMMARY"
+          echo "Arquivos Python: $(find . -type f -name '*.py' -not -path './.git/*' | wc -l)" >> "$GITHUB_STEP_SUMMARY"
+  robot-deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect deployment definitions
+        run: |
+          echo "### Deploy (somente leitura)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Workflows: $(find .github/workflows -type f \( -name '*.yml' -o -name '*.yaml' \) | wc -l)" >> "$GITHUB_STEP_SUMMARY"
+  robot-database:
+    name: Banco de dados
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect migration files without DB connection
+        run: |
+          echo "### Banco de dados (sem conexão)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Migrações candidatas: $(find . -type f -iname '*migration*.py' -not -path './.git/*' | wc -l)" >> "$GITHUB_STEP_SUMMARY"
+  robot-security:
+    name: Segurança
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check suspicious code patterns
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib,os
+          files=[str(p) for p in pathlib.Path('.').rglob('*.py') if '.git' not in p.parts and ('eval(' in p.read_text(errors='ignore') or 'exec(' in p.read_text(errors='ignore'))]
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write(f'### Segurança (triagem textual, não auditoria)\nArquivos para revisão: {len(files)}\n')
+          PY
+  robot-monitoring:
+    name: Monitoramento
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {contents: read, actions: read}
+    steps:
+      - name: Inspect GitHub Actions via API
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          gh api "repos/$GH_REPOSITORY/actions/runs?per_page=10" --jq '.workflow_runs | length' | awk '{print "Execuções consultadas: "$1}' >> "$GITHUB_STEP_SUMMARY"
+  robot-quality:
+    name: Qualidade
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {contents: read}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Python syntax without executing product code
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import ast,pathlib,os
+          total=0;errors=[]
+          for p in pathlib.Path('.').rglob('*.py'):
+              if '.git' in p.parts or total>=500:continue
+              try:ast.parse(p.read_text(encoding='utf-8-sig',errors='replace'),filename=str(p))
+              except SyntaxError as e:errors.append(f'{p}:{e.lineno}')
+              total+=1
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:f.write(f'### Qualidade\nArquivos verificados: {total}; erros de sintaxe: {len(errors)}\n')
+          if errors:print('Erros:',*errors[:20],sep='\n');raise SystemExit(1)
+          PY
   operations:
     runs-on: ubuntu-latest
     timeout-minutes: 8
@@ -56,8 +164,66 @@ jobs:
               latest=[]
               add('Monitoramento','indisponível',f'API GitHub: {type(exc).__name__}')
           add('Qualidade','observado','Relatório gerado; testes de produto não foram executados')
-          output={'generated_at_utc':now,'mode':'read_only','robots':checks,'recent_workflows':latest}
+          # Fila real de trabalho: issues abertas, consultadas sem criar/editar tickets.
+          queue=[]
+          try:
+              issue_url=f'https://api.github.com/repos/{repo}/issues?state=open&per_page=50'
+              issue_req=urllib.request.Request(issue_url,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json','User-Agent':'talvoa-readonly'})
+              with urllib.request.urlopen(issue_req,timeout=15) as response:
+                  issue_rows=json.load(response)
+              for issue in issue_rows:
+                  if 'pull_request' in issue:continue
+                  title=issue.get('title','')
+                  body=issue.get('body') or ''
+                  priority='alta' if any(w in (title+' '+body).lower() for w in ['segurança','tenant','isolamento','critical','crítico']) else 'normal'
+                  robot='Segurança' if any(w in title.lower() for w in ['segurança','tenant','permiss']) else 'Desenvolvimento'
+                  queue.append({'issue':issue['number'],'title':title,'url':issue['html_url'],'priority':priority,'robot':robot,'state':'aguardando planejamento'})
+              queue.sort(key=lambda item:(item['priority']!='alta',item['issue']))
+          except Exception as exc:
+              add('Fila de tarefas','indisponível',f'Consulta de issues: {type(exc).__name__}')
+          # Plano de execução revisável: critérios extraídos das issues, sem gerar código ou alterar tickets.
+          plans=[]
+          for item in queue:
+              title=item['title'].lower()
+              if 'multiempresa' in title or 'tenant' in title:
+                  steps=['Mapear endpoints administrativos que usam company_id implícito','Exigir tenant alvo explícito nas mutações de platform_admin','Adicionar testes de isolamento cross-tenant e auditoria']
+                  acceptance=['Cliente permanece somente leitura','Nenhuma alteração cross-tenant sem autorização','Testes automatizados aprovados']
+              elif 'piloto' in title or 'revenue' in title:
+                  steps=['Validar heartbeat e retomada do Agent após reinício','Testar coleta periódica e status offline em ambiente controlado','Conferir relatórios Excel/PDF e onboarding de cliente']
+                  acceptance=['Evidências de teste anexadas','Sem alterações em dados de produção','Critérios da issue revisados pelo responsável']
+              else:
+                  steps=['Reproduzir a demanda em ambiente de teste','Preparar mudança isolada em branch e testes','Solicitar revisão antes de merge/deploy']
+                  acceptance=['Critérios da issue atendidos','Testes registrados','Aprovação humana para publicação']
+              plans.append({'issue':item['issue'],'title':item['title'],'robot':item['robot'],'priority':item['priority'],'steps':steps,'acceptance':acceptance,'approval_required':True})
+          recommendations=[]
+          if risky:recommendations.append({'robot':'Segurança','priority':'revisar','action':'Revisar manualmente chamadas eval/exec encontradas; não executar correção automática','files':risky[:20]})
+          if not migrations:recommendations.append({'robot':'Banco de dados','priority':'informativo','action':'Nenhum arquivo de migração por nome localizado; conferir versionamento do esquema'})
+          if not workflows:recommendations.append({'robot':'Deploy','priority':'revisar','action':'Nenhum workflow encontrado; verificar CI/CD'})
+          output={'generated_at_utc':now,'mode':'read_only','robots':checks,'recent_workflows':latest,'recommendations':recommendations,'task_queue':queue,'execution_plans':plans,'metrics':{'python_files':len(py),'workflow_definitions':len(workflows),'migration_files':len(migrations),'security_pattern_files':len(risky),'github_runs_checked':len(latest),'open_issues_in_queue':len(queue)}}
           pathlib.Path('reports/talvoa-robots.json').write_text(json.dumps(output,ensure_ascii=False,indent=2))
+          md=['# TALVOA — diagnóstico operacional','',f'Gerado em UTC: {now}','', '## Indicadores', '']
+          for key,value in output['metrics'].items():md.append(f'- {key}: {value}')
+          md.extend(['','## Situação dos robôs',''])
+          for item in checks:md.append(f"- **{item['robot']}** — {item['status']}: {item['details']}")
+          md.extend(['','## Recomendações para revisão humana',''])
+          if recommendations:
+              for item in recommendations:md.append(f"- **{item['robot']}** ({item['priority']}): {item['action']}")
+          else:md.append('- Nenhuma recomendação adicional gerada pelas verificações atuais.')
+          md.extend(['','## Fila real de trabalho (GitHub Issues)',''])
+          if queue:
+              for item in queue:md.append(f"- [#{item['issue']}]({item['url']}) **{item['title']}** — {item['robot']}; prioridade {item['priority']}; {item['state']}")
+          else:md.append('- Nenhuma issue recuperada; conferir acesso à API e estado do repositório.')
+          md.extend(['','## Planos técnicos propostos (requerem aprovação)',''])
+          for plan in plans:
+              md.append(f"### Issue #{plan['issue']}: {plan['title']}")
+              md.append(f"Robô: {plan['robot']} | Prioridade: {plan['priority']}")
+              md.append('Etapas:')
+              for step in plan['steps']:md.append(f'- [ ] {step}')
+              md.append('Critérios de aceite:')
+              for criterion in plan['acceptance']:md.append(f'- [ ] {criterion}')
+              md.append('')
+          md.extend(['','A fila é somente leitura. Nenhuma issue foi alterada e nenhum código foi aplicado automaticamente.','','Este relatório não representa auditoria completa nem autorização para alterar produção.'])
+          pathlib.Path('reports/talvoa-robots.md').write_text('\\n'.join(md)+'\\n',encoding='utf-8')
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
               f.write('## TALVOA - 6 robôs (somente leitura)\n\n')
               for c in checks:f.write(f"- **{c['robot']}**: {c['status']} — {c['details']}\n")
@@ -66,5 +232,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: talvoa-robot-readonly-report
-          path: reports/talvoa-robots.json
+          path: |
+            reports/talvoa-robots.json
+            reports/talvoa-robots.md
           retention-days: 7
