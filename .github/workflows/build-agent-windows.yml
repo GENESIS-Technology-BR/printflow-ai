@@ -11,6 +11,8 @@ on:
       - ".github/workflows/build-agent-windows.yml"
       - "requirements.txt"
       - "requirements-dev.txt"
+      - "backend/tests/test_usage_reporting_exports.py"
+      - "backend/modules/usage/**"
   push:
     branches:
       - main
@@ -21,6 +23,8 @@ on:
       - ".github/workflows/build-agent-windows.yml"
       - "requirements.txt"
       - "requirements-dev.txt"
+      - "backend/tests/test_usage_reporting_exports.py"
+      - "backend/modules/usage/**"
 
 permissions:
   contents: read
