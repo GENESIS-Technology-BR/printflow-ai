@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
@@ -687,7 +688,7 @@ class PrintflowApiClient:
 
         output_file = (
             self.queue_directory
-            / f"{timestamp}_{safe_ip}.json"
+            / f"{timestamp}_{safe_ip}_{uuid.uuid4().hex}.json"
         )
 
         safe_payload = {
