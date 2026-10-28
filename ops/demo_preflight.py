@@ -30,12 +30,19 @@ for label, relative in REQUIRED.items():
 qa = ROOT / REQUIRED["Homologation criteria"]
 if qa.is_file():
     text = qa.read_text(encoding="utf-8")
-    pending = [line.strip() for line in text.splitlines()
-               if line.startswith("| H") and "Pendente" in line]
-    print(f"Pending homologation criteria: {len(pending)}")
-    for line in pending:
-        print("  " + line.split("|")[1].strip())
-    checks.append(not pending)
+    rows = [line.split("|") for line in text.splitlines() if line.startswith("| H")]
+    expected = {f"H{i:02d}" for i in range(1, 15)}
+    found = {cells[1].strip() for cells in rows if len(cells) >= 5}
+    missing = expected - found
+    # Unit tests or partial results do not constitute end-to-end acceptance.
+    pending = [(cells[1].strip(), cells[4].strip()) for cells in rows
+               if len(cells) >= 5 and cells[4].strip().casefold() != "aprovado"]
+    print(f"Not approved: {len(pending)}; missing acceptance IDs: {len(missing)}")
+    for item, status in pending:
+        print(f"  {item}: {status}")
+    for item in sorted(missing):
+        print(f"  {item}: missing")
+    checks.append(not pending and not missing)
 
 print("No deployments, external requests, database changes or secrets used.")
 if not all(checks):
