@@ -57,3 +57,10 @@ Nenhum destes resultados autoriza merge, publicação ou mudança de plano gratu
 - PR #69: GitHub retornou `mergeable=true` após a reconciliação; isso significa ausência de conflitos de merge, **não** aprovação para publicar.
 - No commit de integração, verificações aprovadas: Partner tenancy validation, TALVOA Partner HTTP Isolation, Frontend security audit, TALVOA Virtual Office Checks, TALVOA Demo Preflight, TALVOA Robotic Operations Read-Only e TALVOA Neon Free Usage Monitor. Build Windows Agent estava em execução no momento desta anotação.
 - **Gate preservado:** H09–H14 exigem evidência de ambiente real e aprovação explícita antes do merge na `main` ou deploy em produção.
+
+## Evidência consolidada de build — 28/10/2026
+
+- Commit `4ad678d1a2c5332f702358556f3e4a5c86c100e1`: [Build TALVOA Agent Windows #40735420852](https://github.com/GENESIS-Technology-BR/printflow-ai/actions/runs/40735420852) **concluído com sucesso**. Passaram testes automatizados, auditoria de dependências, validação de scripts e contratos operacionais, validação do Agent, bloqueio de destino de produção no piloto, geração e teste do executável e publicação do pacote como artefato do GitHub Actions.
+- No mesmo SHA, também passaram Partner tenancy validation, TALVOA Partner HTTP Isolation, Frontend security audit, TALVOA Virtual Office Checks, TALVOA Demo Preflight, TALVOA Robotic Operations Read-Only e TALVOA Neon Free Usage Monitor.
+- **Limite da evidência:** sucesso de build e publicação do artefato **não** comprovam coleta SNMP no ambiente Guerra/SupriTech, entrega HTTP de ponta a ponta, relatórios financeiros, backup/restauração ou rollback. H09–H14 permanecem sem aceite funcional.
+- Próximo teste controlado: baixar o artefato do run, validar assinatura/hash e antivírus, instalar em máquina piloto autorizada, registrar versão, horário, logs, inventário e contadores, sem direcionar dados para produção. Não habilitar o portal do cliente por padrão.
