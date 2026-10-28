@@ -588,3 +588,18 @@ def test_http_portfolio_summary_excludes_unrelated_partner_fleet(http_context):
     assert platform.status_code == 200, platform.text
     assert platform.json()["companies"] == 2
     assert platform.json()["active_printers"] == 2
+
+
+def test_http_partner_company_directory_excludes_other_partners(http_context):
+    """Company directory must not reveal another partner tenant to a viewer."""
+    client, _, identity, admin, member, own, outsider, _ = http_context
+    identity["user"] = member
+    response = client.get("/api/v1/partners/my-companies")
+    assert response.status_code == 200, response.text
+    ids = {item["id"] for item in response.json()}
+    assert own.id in ids
+    assert outsider.id not in ids
+    identity["user"] = admin
+    platform = client.get("/api/v1/partners/my-companies")
+    assert platform.status_code == 200, platform.text
+    assert {own.id, outsider.id}.issubset({item["id"] for item in platform.json()})
