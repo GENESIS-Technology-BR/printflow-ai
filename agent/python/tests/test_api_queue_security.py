@@ -35,6 +35,20 @@ def test_queue_never_persists_agent_token(tmp_path: Path):
     assert "agent_token" not in content["payload"]
 
 
+
+def test_same_millisecond_queue_writes_do_not_overwrite(tmp_path: Path, monkeypatch):
+    client = _client(tmp_path)
+    monkeypatch.setattr("api.client.time.time", lambda: 1234567890.123)
+
+    first = client.save_to_queue({"ip": "10.0.0.1", "counter": 1}, "offline")
+    second = client.save_to_queue({"ip": "10.0.0.1", "counter": 2}, "offline")
+
+    assert first != second
+    assert first.exists() and second.exists()
+    assert json.loads(first.read_text(encoding="utf-8"))["payload"]["counter"] == 1
+    assert json.loads(second.read_text(encoding="utf-8"))["payload"]["counter"] == 2
+
+
 def test_retry_sanitizes_legacy_queue_and_uses_current_token(
     tmp_path: Path,
     monkeypatch,
