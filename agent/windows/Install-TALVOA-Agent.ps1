@@ -395,6 +395,22 @@ try {
         }
     }
 
+    # Preflight do pacote ANTES de parar qualquer Agent em producao.
+    $runtimeFiles = @(
+        "TALVOA-Agent.exe",
+        "Start-TALVOA-Agent.ps1",
+        "Watchdog-TALVOA-Agent.ps1",
+        "Uninstall-TALVOA-Agent.ps1",
+        "BUILD-VALIDATION.txt",
+        "README-TESTE.txt"
+    )
+    foreach ($runtimeFile in $runtimeFiles) {
+        $sourceFile = Join-Path $sourceRoot $runtimeFile
+        if (-not (Test-Path -LiteralPath $sourceFile -PathType Leaf)) {
+            throw "Pacote incompleto: $runtimeFile. Agent anterior preservado."
+        }
+    }
+
     # ============================================================
     # PARAR INSTALACAO ANTERIOR
     # ============================================================
