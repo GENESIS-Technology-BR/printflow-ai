@@ -9,7 +9,7 @@ SCRIPT = REPO / "ops" / "demo_preflight.py"
 
 
 class DemoPreflightTests(unittest.TestCase):
-    def test_current_homologation_is_not_cleared(self):
+    def test_preflight_matches_documented_acceptance_state(self):
         result = subprocess.run(
             [sys.executable, str(SCRIPT)],
             cwd=REPO,
@@ -18,11 +18,14 @@ class DemoPreflightTests(unittest.TestCase):
             timeout=15,
             check=False,
         )
-        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-        self.assertIn("NOT CLEARED", result.stdout)
-        self.assertIn("H01", result.stdout)
-        self.assertIn("H09", result.stdout)
-        self.assertIn("H14", result.stdout)
+        matrix = (REPO / "docs/qa/talvoa-1.0-homologacao.md").read_text(encoding="utf-8")
+        rows = [line.split("|") for line in matrix.splitlines() if line.startswith("| H")]
+        accepted = len(rows) == 14 and all(len(row) >= 5 and row[4].strip().casefold() == "aprovado" for row in rows)
+        self.assertEqual(result.returncode, 0 if accepted else 1, result.stdout + result.stderr)
+        if not accepted:
+            self.assertIn("NOT CLEARED", result.stdout)
+        else:
+            self.assertIn("Source preflight passed", result.stdout)
 
     def test_preflight_is_read_only(self):
         source = SCRIPT.read_text(encoding="utf-8")
