@@ -562,6 +562,6 @@ def test_http_legacy_dashboard_and_alerts_blocked_when_portal_disabled(http_cont
     identity["user"] = member
     company.customer_portal_enabled = False
     db.flush()
-    for path in ("/api/v1/dashboard", "/api/v1/alerts"):
+    for path in ("/api/v1/dashboard/summary", "/api/v1/dashboard/printers", "/api/v1/alerts"):
         response = client.get(path)
         assert response.status_code == 403, (path, response.status_code, response.text)
