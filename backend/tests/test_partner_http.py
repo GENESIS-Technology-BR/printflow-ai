@@ -533,3 +533,24 @@ def test_http_partner_member_cannot_be_restored_when_partner_suspended(http_cont
     assert response.status_code == 409, response.text
     db.refresh(membership)
     assert membership.active is False
+
+
+def test_http_legacy_portal_is_blocked_without_opt_in(http_context):
+    """A partner-linked customer cannot bypass portal opt-in via legacy routes."""
+    client, db, identity, _, member, company, _, _ = http_context
+    identity["user"] = member
+    company.customer_portal_enabled = False
+    db.flush()
+    for path in ("/api/v1/printers", "/api/v1/usage/report", "/api/v1/usage/export.xlsx", "/api/v1/usage/export.pdf"):
+        response = client.get(path)
+        assert response.status_code == 403, (path, response.status_code, response.text)
+
+
+def test_http_legacy_portal_reopens_after_explicit_opt_in(http_context):
+    """Opt-in must restore access for the same company without changing partner membership."""
+    client, db, identity, _, member, company, _, _ = http_context
+    identity["user"] = member
+    company.customer_portal_enabled = True
+    db.flush()
+    response = client.get("/api/v1/printers")
+    assert response.status_code == 200, response.text
