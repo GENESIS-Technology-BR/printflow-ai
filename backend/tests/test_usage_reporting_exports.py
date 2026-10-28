@@ -251,3 +251,17 @@ def test_fixed_monthly_contract_never_charges_negative_monthly_cost() -> None:
 def test_fixed_monthly_contract_inverted_dates_within_same_cycle_charge_nothing() -> None:
     """Invalid date ordering must not silently bill a full 20-19 cycle."""
     assert _fixed_cost_for_period(1500.0, date(2026, 9, 18), date(2026, 9, 5)) == 0.0
+
+
+def test_fixed_monthly_contract_inverted_dates_across_cycles_charge_nothing() -> None:
+    """Invalid reversed periods spanning the billing boundary cannot generate charges."""
+    assert _fixed_cost_for_period(1500.0, date(2026, 10, 20), date(2026, 9, 19)) == 0.0
+
+
+def test_fixed_monthly_contract_year_boundary_without_day_20_is_one_cycle() -> None:
+    """Crossing December into January alone does not start a second billing cycle."""
+    assert _fixed_cost_for_period(1500.0, date(2026, 12, 31), date(2027, 1, 1)) == 1500.0
+
+
+def test_fixed_monthly_contract_year_boundary_day_20_starts_second_cycle() -> None:
+    assert _fixed_cost_for_period(1500.0, date(2026, 12, 19), date(2026, 12, 20)) == 3000.0
