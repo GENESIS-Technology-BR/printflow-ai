@@ -8,6 +8,10 @@ on:
       - 'backend/tests/test_partner_http.py'
       - 'backend/tests/test_partner_populated_tenant_isolation.py'
       - '.github/workflows/talvoa-partner-http-tests.yml'
+      - 'requirements.txt'
+      - 'requirements-dev.txt'
+      - 'backend/main.py'
+      - 'backend/app/database/**'
 permissions:
   contents: read
 concurrency:
@@ -23,9 +27,12 @@ jobs:
         with:
           python-version: '3.12'
           cache: 'pip'
-          cache-dependency-path: requirements.txt
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+            agent/python/requirements.txt
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest httpx
+        run: pip install -r requirements-dev.txt
       - name: Verify HTTP authorization and tenant isolation
         env:
           PYTHONPATH: .
