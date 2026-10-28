@@ -20,7 +20,14 @@ class DemoPreflightTests(unittest.TestCase):
         )
         matrix = (REPO / "docs/qa/talvoa-1.0-homologacao.md").read_text(encoding="utf-8")
         rows = [line.split("|") for line in matrix.splitlines() if line.startswith("| H")]
-        accepted = len(rows) == 14 and all(len(row) >= 5 and row[4].strip().casefold() == "aprovado" for row in rows)
+        expected_ids = {f"H{i:02d}" for i in range(1, 15)}
+        found_ids = [row[1].strip() for row in rows if len(row) >= 5]
+        accepted = (
+            len(rows) == 14
+            and len(found_ids) == 14
+            and set(found_ids) == expected_ids
+            and all(row[4].strip().casefold() == "aprovado" for row in rows)
+        )
         self.assertEqual(result.returncode, 0 if accepted else 1, result.stdout + result.stderr)
         if not accepted:
             self.assertIn("NOT CLEARED", result.stdout)
