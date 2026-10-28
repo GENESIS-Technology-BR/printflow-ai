@@ -50,3 +50,10 @@ Estas evidências **não** alteram os estados da matriz de aceite. Não realizar
 - **Próximo gate:** reconciliar histórico das branches e resolver conflitos do PR #69 sem descartar a verificação de acesso `require_legacy_company_portal_access`, a cobrança 20–19 nem as rotinas de inspeção somente leitura. Reexecutar CI após a integração e manter H09–H14 pendentes até testes reais.
 
 Nenhum destes resultados autoriza merge, publicação ou mudança de plano gratuito.
+
+## Reconciliação de branches — 28/10/2026
+
+- Commit de integração `657d1d9ed1727eddae358a4352aacb1b1e6c5605`: a feature incorporou o histórico da `main` sem substituir o conteúdo da feature, preservando cobrança por ciclo 20–19 e verificações de acesso do portal legado.
+- PR #69: GitHub retornou `mergeable=true` após a reconciliação; isso significa ausência de conflitos de merge, **não** aprovação para publicar.
+- No commit de integração, verificações aprovadas: Partner tenancy validation, TALVOA Partner HTTP Isolation, Frontend security audit, TALVOA Virtual Office Checks, TALVOA Demo Preflight, TALVOA Robotic Operations Read-Only e TALVOA Neon Free Usage Monitor. Build Windows Agent estava em execução no momento desta anotação.
+- **Gate preservado:** H09–H14 exigem evidência de ambiente real e aprovação explícita antes do merge na `main` ou deploy em produção.
