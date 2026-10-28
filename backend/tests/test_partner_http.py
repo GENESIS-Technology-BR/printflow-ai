@@ -565,3 +565,26 @@ def test_http_legacy_dashboard_and_alerts_blocked_when_portal_disabled(http_cont
     for path in ("/api/v1/dashboard/summary", "/api/v1/dashboard/printers", "/api/v1/alerts"):
         response = client.get(path)
         assert response.status_code == 403, (path, response.status_code, response.text)
+
+
+def test_http_portfolio_summary_excludes_unrelated_partner_fleet(http_context):
+    """Partner portfolio totals must not include printers owned by other partners."""
+    from backend.modules.printers.model import Printer
+    client, db, identity, admin, member, own, outsider, _ = http_context
+    db.add_all([
+        Printer(company_id=own.id, ip="10.99.2.10", name="Nossa", active=True, status="online"),
+        Printer(company_id=outsider.id, ip="10.99.2.11", name="Terceiro", active=True, status="offline"),
+    ])
+    db.flush()
+    identity["user"] = member
+    response = client.get("/api/v1/partners/portfolio-summary")
+    assert response.status_code == 200, response.text
+    assert response.json()["companies"] == 1
+    assert response.json()["active_printers"] == 1
+    assert response.json()["online_printers"] == 1
+    assert response.json()["offline_printers"] == 0
+    identity["user"] = admin
+    platform = client.get("/api/v1/partners/portfolio-summary")
+    assert platform.status_code == 200, platform.text
+    assert platform.json()["companies"] == 2
+    assert platform.json()["active_printers"] == 2
