@@ -318,14 +318,16 @@ try {
             -Uri "https://talvoa-supritech-homolog-api.onrender.com/api/v1/printers/agent/heartbeat" `
             -Method Post `
             -ContentType "application/json" `
+            -TimeoutSec 25 `
             -Body $validationBody |
             Out-Null
     }
     catch {
 
         throw (
-            "Token recusado pela API. " +
-            "Copie novamente o Token do Agent no Dashboard."
+            "Nao foi possivel validar a credencial na API de homologacao. " +
+            "Verifique conectividade, disponibilidade do Render e autorizacao do token. " +
+            "Instalacao anterior preservada."
         )
     }
 
@@ -340,7 +342,7 @@ try {
     Write-Host ""
 
     $networkInput = Read-Host `
-        "Redes adicionais em CIDR separadas por virgula ou ENTER para somente descoberta automatica"
+        "Redes adicionais em CIDR (ENTER preserva redes existentes ou usa descoberta automatica)"
 
     $extraNetworks = @()
     if ($existingConfig -and $existingConfig.extra_networks) {
