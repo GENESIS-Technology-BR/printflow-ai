@@ -54,7 +54,7 @@ def test_dashboard_commercial_layout_contract():
     assert "Distribuição por fabricante" in source
     assert "Status das impressoras" in source
     assert "Equipamentos por unidade" in source
-    assert "Impressoras com maior contador" in source
+    assert "Impressoras com maior utilização" in source
     assert "Parque de impressão saudável" in source
     assert "Alertas prioritários" not in source
     assert "Comunicação</h2>" not in source
