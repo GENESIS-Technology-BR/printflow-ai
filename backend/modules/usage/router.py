@@ -142,6 +142,8 @@ def _fixed_cost_for_period(monthly_cost: float, start: date, end: date) -> float
     Consultas parciais de um ciclo nao duplicam a mensalidade pela virada
     do mes calendario. O valor nao e proporcional aos dias consultados.
     """
+    if end < start:
+        return 0.0
     cycles = _billing_cycle_index(end) - _billing_cycle_index(start) + 1
     return round(max(monthly_cost, 0.0) * max(cycles, 0), 2)
 
