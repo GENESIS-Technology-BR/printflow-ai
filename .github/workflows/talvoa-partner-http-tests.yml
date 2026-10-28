@@ -1,0 +1,32 @@
+name: TALVOA Partner HTTP Isolation
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'backend/modules/partners/**'
+      - 'backend/modules/auth/**'
+      - 'backend/tests/test_partner_http.py'
+      - 'backend/tests/test_partner_populated_tenant_isolation.py'
+      - '.github/workflows/talvoa-partner-http-tests.yml'
+permissions:
+  contents: read
+concurrency:
+  group: talvoa-partner-http-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  security-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest httpx
+      - name: Verify HTTP authorization and tenant isolation
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q backend/tests/test_partner_http.py backend/tests/test_partner_populated_tenant_isolation.py
