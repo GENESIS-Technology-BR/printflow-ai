@@ -1,7 +1,6 @@
 """Regression tests for the offline SupriTech demo preflight."""
 import subprocess
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -21,6 +20,7 @@ class DemoPreflightTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn("NOT CLEARED", result.stdout)
+        self.assertIn("H01", result.stdout)
         self.assertIn("H09", result.stdout)
         self.assertIn("H14", result.stdout)
 
