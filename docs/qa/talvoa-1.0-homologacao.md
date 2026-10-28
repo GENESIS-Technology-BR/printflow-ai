@@ -40,3 +40,13 @@ Zero falhas críticas; isolamento comprovado em HTTP; relatório e Agent validad
 - **Bloqueios remanescentes:** PR #69 não mesclável; homologação live H09–H14 não aprovada; API Render de homologação suspensa por limite gratuito na última verificação. Revalidar disponibilidade antes da demonstração.
 
 Estas evidências **não** alteram os estados da matriz de aceite. Não realizar merge/deploy sem homologação e autorização explícita.
+
+## Auditoria de integração PR #69 — 28/10/2026
+
+- **CI financeiro/Agent:** execução [40726234382](https://github.com/GENESIS-Technology-BR/printflow-ai/actions/runs/40726234382) aprovada no commit `2a8650ae`; execução posterior no commit `a4c9a659` também aprovada, incluindo testes de ano bissexto. Esses resultados não equivalem à homologação SNMP real.
+- **CI de isolamento HTTP:** execução [40714205510](https://github.com/GENESIS-Technology-BR/printflow-ai/actions/runs/40714205510) aprovada no commit `116dd946`, incluindo isolamento de diretório de empresas.
+- **CI dos robôs somente leitura:** execução aprovada no commit `4a40e357`, após reconciliação do workflow com a versão da branch principal. Os robôs fazem inspeções; não executam deploy.
+- **Divergências identificadas ao comparar main com feature:** `.github/workflows/talvoa-robot-readonly.yml`, `backend/modules/usage/router.py`, `backend/tests/test_dashboard_executive_clean.py`. O teste do dashboard já foi alinhado ao texto efetivamente exibido; o workflow foi reconciliado na feature. O cálculo financeiro da feature preserva o ciclo contratual **20–19**, enquanto a main usa mês calendário: **não substituir a implementação da feature pela main** durante a resolução de conflitos.
+- **Próximo gate:** reconciliar histórico das branches e resolver conflitos do PR #69 sem descartar a verificação de acesso `require_legacy_company_portal_access`, a cobrança 20–19 nem as rotinas de inspeção somente leitura. Reexecutar CI após a integração e manter H09–H14 pendentes até testes reais.
+
+Nenhum destes resultados autoriza merge, publicação ou mudança de plano gratuito.
