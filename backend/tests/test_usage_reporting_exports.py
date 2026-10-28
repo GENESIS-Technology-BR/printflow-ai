@@ -246,3 +246,8 @@ def test_fixed_monthly_contract_three_cycles_across_two_billing_boundaries() -> 
 
 def test_fixed_monthly_contract_never_charges_negative_monthly_cost() -> None:
     assert _fixed_cost_for_period(-1500.0, date(2026, 9, 20), date(2026, 10, 19)) == 0.0
+
+
+def test_fixed_monthly_contract_inverted_dates_within_same_cycle_charge_nothing() -> None:
+    """Invalid date ordering must not silently bill a full 20-19 cycle."""
+    assert _fixed_cost_for_period(1500.0, date(2026, 9, 18), date(2026, 9, 5)) == 0.0
