@@ -118,7 +118,10 @@ def real_auth_http_context(http_context):
     client, db, _, _, member, company, outsider, partner = http_context
     app.dependency_overrides.pop(get_current_user, None)
     token = create_access_token(str(member.id), company.id, member.session_version)
-    return client, token, company, outsider
+    try:
+        yield client, token, company, outsider
+    finally:
+        app.dependency_overrides[get_current_user] = lambda: member
 
 
 def test_http_real_auth_rejects_missing_session(real_auth_http_context):
