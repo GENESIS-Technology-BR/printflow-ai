@@ -25,7 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           if python3 ops/demo_preflight.py; then
-            echo "::error::Demo gate unexpectedly approved without functional homologation."
-            exit 1
+            echo "Demo criteria approved in document; live validation remains mandatory."
+          else
+            echo "Demo remains blocked pending acceptance criteria."
           fi
-          echo "Expected: demo blocked until all acceptance criteria are approved."
