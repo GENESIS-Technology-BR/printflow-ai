@@ -1,6 +1,14 @@
 name: TALVOA Demo Preflight
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/partner-multitenancy
+    paths:
+      - 'ops/demo_preflight.py'
+      - 'backend/tests/test_demo_preflight.py'
+      - 'docs/qa/talvoa-1.0-homologacao.md'
+      - '.github/workflows/talvoa-demo-preflight.yml'
   pull_request:
     paths:
       - 'ops/demo_preflight.py'
