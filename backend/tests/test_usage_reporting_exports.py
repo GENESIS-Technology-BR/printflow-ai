@@ -160,20 +160,20 @@ def test_pdf_report_accepts_filtered_request_without_displaying_scope() -> None:
     assert len(content) > 1000
 
 
-def test_fixed_monthly_contract_charges_full_month_without_daily_proration() -> None:
+def test_fixed_monthly_contract_counts_two_cycles_across_billing_day_20() -> None:
     assert _fixed_cost_for_period(
         1500.0,
         date(2026, 9, 1),
         date(2026, 9, 30),
-    ) == 1500.0
+    ) == 3000.0
 
 
-def test_fixed_monthly_contract_counts_each_calendar_month_in_period() -> None:
+def test_fixed_monthly_contract_counts_single_20_to_19_billing_cycle() -> None:
     assert _fixed_cost_for_period(
         1500.0,
         date(2026, 8, 20),
         date(2026, 9, 18),
-    ) == 3000.0
+    ) == 1500.0
 
 
 def test_consolidated_report_sorts_ipv4_numerically() -> None:
@@ -218,3 +218,11 @@ def test_fixed_monthly_printer_never_uses_page_counter_for_cost() -> None:
     assert rows[0]["cost_per_page"] == 0.0
     assert rows[0]["estimated_cost"] == 1500.0
     assert rows[0]["fixed_monthly_cost"] == 1500.0
+
+
+def test_fixed_monthly_contract_does_not_prorate_partial_cycle() -> None:
+    assert _fixed_cost_for_period(1500.0, date(2026, 9, 5), date(2026, 9, 8)) == 1500.0
+
+
+def test_fixed_monthly_contract_crossing_day_19_to_20_counts_two_cycles() -> None:
+    assert _fixed_cost_for_period(1500.0, date(2026, 9, 19), date(2026, 9, 20)) == 3000.0
