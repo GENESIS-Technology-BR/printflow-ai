@@ -259,11 +259,40 @@ try {
     # TOKEN
     # ============================================================
 
-    Write-Host "Lendo Token do Agent da area de transferencia."
-
-    $plainToken = [string](
-        Get-Clipboard -Raw
-    )
+    # Reutilizar credencial DPAPI da mesma maquina nas atualizacoes.
+    # Nunca exigir novo token nem sobrescrever configuracao existente silenciosamente.
+    $existingConfig = $null
+    $encryptedTokenMachine = $null
+    if (Test-Path -LiteralPath $configPath) {
+        try {
+            $existingConfig = Get-Content -LiteralPath $configPath -Raw -ErrorAction Stop |
+                ConvertFrom-Json -ErrorAction Stop
+            if ($existingConfig.token_protection -ne "dpapi-localmachine-v1" -or
+                [string]::IsNullOrWhiteSpace($existingConfig.encrypted_token_machine)) {
+                throw "Configuracao existente sem token DPAPI compativel."
+            }
+            $encryptedTokenMachine = [string]$existingConfig.encrypted_token_machine
+            $protectedBytes = [Convert]::FromBase64String($encryptedTokenMachine)
+            $plainBytes = [Security.Cryptography.ProtectedData]::Unprotect(
+                $protectedBytes, $null,
+                [Security.Cryptography.DataProtectionScope]::LocalMachine
+            )
+            try {
+                $plainToken = [Text.Encoding]::UTF8.GetString($plainBytes)
+            }
+            finally {
+                [Array]::Clear($plainBytes, 0, $plainBytes.Length)
+            }
+            Write-Host "[OK] Credencial existente recuperada via DPAPI LocalMachine."
+        }
+        catch {
+            throw "Atualizacao bloqueada: nao foi possivel reutilizar o token protegido. Configuracao preservada."
+        }
+    }
+    else {
+        Write-Host "Nova instalacao: lendo token da area de transferencia."
+        $plainToken = [string](Get-Clipboard -Raw)
+    }
 
     $plainToken = $plainToken.Trim()
 
@@ -314,6 +343,9 @@ try {
         "Redes adicionais em CIDR separadas por virgula ou ENTER para somente descoberta automatica"
 
     $extraNetworks = @()
+    if ($existingConfig -and $existingConfig.extra_networks) {
+        $extraNetworks = @($existingConfig.extra_networks)
+    }
 
     if (
         -not [string]::IsNullOrWhiteSpace(
@@ -444,8 +476,10 @@ try {
     # DPAPI LOCAL MACHINE
     # ============================================================
 
-    $encryptedTokenMachine = Protect-TALVOAToken `
-        -PlainToken $plainToken
+    if (-not $encryptedTokenMachine) {
+        $encryptedTokenMachine = Protect-TALVOAToken `
+            -PlainToken $plainToken
+    }
 
     $plainToken = $null
 
