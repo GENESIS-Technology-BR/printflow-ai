@@ -44,12 +44,16 @@ jobs:
 
       - name: Verify dashboard UI contract against current frontend
         shell: bash
+        run: python3 -m unittest discover -s backend/tests -p test_demo_preflight.py -v
+      - name: Run dashboard source contract tests
+        shell: bash
         run: |
           python3 - <<'PY'
           import runpy
           checks = runpy.run_path("backend/tests/test_dashboard_executive_clean.py")
-          for name, fn in sorted(checks.items()):
-              if name.startswith("test_") and callable(fn):
-                  fn()
-                  print(f"PASS {name}")
+          tests = [(name, fn) for name, fn in sorted(checks.items()) if name.startswith("test_") and callable(fn)]
+          assert tests, "No dashboard contract tests discovered"
+          for name, fn in tests:
+              fn()
+              print(f"PASS {name}")
           PY
