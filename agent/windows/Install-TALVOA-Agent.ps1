@@ -423,7 +423,12 @@ try {
         Win32_Process `
         -ErrorAction SilentlyContinue |
         Where-Object {
-            $_.Name -eq "TALVOA-Agent.exe"
+            $_.Name -eq "TALVOA-Agent.exe" -and
+            $_.ExecutablePath -and
+            $_.ExecutablePath.StartsWith(
+                $installRoot,
+                [StringComparison]::OrdinalIgnoreCase
+            )
         } |
         ForEach-Object {
 
