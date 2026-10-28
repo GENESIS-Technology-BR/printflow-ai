@@ -49,6 +49,8 @@ if qa.is_file():
     for item in sorted(unexpected):
         print(f"  {item}: unexpected")
     checks.append(len(rows) == 14 and not pending and not missing and not duplicate and not unexpected)
+    if len(rows) != 14:
+        print(f"BLOCKED: acceptance matrix must contain exactly 14 rows, found {len(rows)}")
 
 print("No deployments, external requests, database changes or secrets used.")
 if not all(checks):
