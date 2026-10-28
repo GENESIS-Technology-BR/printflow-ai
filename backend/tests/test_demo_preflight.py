@@ -40,6 +40,12 @@ class DemoPreflightTests(unittest.TestCase):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, source)
 
+    def test_preflight_requires_exactly_fourteen_acceptance_rows(self):
+        source = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("len(rows) == 14", source)
+        self.assertIn("not duplicate", source)
+        self.assertIn("not unexpected", source)
+
 
 if __name__ == "__main__":
     unittest.main()
