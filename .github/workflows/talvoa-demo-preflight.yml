@@ -1,0 +1,31 @@
+name: TALVOA Demo Preflight
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'ops/demo_preflight.py'
+      - 'backend/tests/test_demo_preflight.py'
+      - 'docs/qa/talvoa-1.0-homologacao.md'
+      - '.github/workflows/talvoa-demo-preflight.yml'
+permissions:
+  contents: read
+concurrency:
+  group: talvoa-demo-preflight-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run offline regression tests
+        run: python3 -m unittest discover -s backend/tests -p test_demo_preflight.py -v
+      - name: Verify fail-closed demo gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python3 ops/demo_preflight.py; then
+            echo "::error::Demo gate unexpectedly approved without functional homologation."
+            exit 1
+          fi
+          echo "Expected: demo blocked until all acceptance criteria are approved."
