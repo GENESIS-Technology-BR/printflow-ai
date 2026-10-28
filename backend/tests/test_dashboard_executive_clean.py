@@ -66,7 +66,7 @@ def test_dashboard_final_polish():
     assert "Última atualização:" in source
     assert "summary.agent.last_seen || summary.generated_at" in source
     assert "share:" in source
-    assert "Tudo normal" in source
+    assert "Sem alertas no momento" in source
 
 
 def test_dashboard_has_honest_empty_state():
