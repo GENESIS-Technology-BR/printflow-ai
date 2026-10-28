@@ -82,7 +82,7 @@ def test_health_check_requires_real_health_success(tmp_path, monkeypatch):
     assert client.health_check() is False
 
 
-def test_expired_queue_item_is_removed(tmp_path: Path):
+def test_expired_unsynced_queue_item_is_preserved(tmp_path: Path):
     client = _client(tmp_path)
     expired = client.queue_directory / "expired.json"
     expired.write_text(
@@ -96,8 +96,9 @@ def test_expired_queue_item_is_removed(tmp_path: Path):
 
     result = client.prune_queue()
 
-    assert result["expired"] == 1
-    assert not expired.exists()
+    assert result["expired"] == 0
+    assert expired.exists()
+    assert json.loads(expired.read_text(encoding="utf-8"))["payload"]["ip"] == "10.0.0.1"
 
 
 def test_heartbeat_sends_current_agent_state(tmp_path, monkeypatch):
