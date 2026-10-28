@@ -34,15 +34,21 @@ if qa.is_file():
     expected = {f"H{i:02d}" for i in range(1, 15)}
     found = {cells[1].strip() for cells in rows if len(cells) >= 5}
     missing = expected - found
+    unexpected = found - expected
+    duplicate = sorted({key for key in found if sum(1 for cells in rows if len(cells) >= 5 and cells[1].strip() == key) > 1})
     # Unit tests or partial results do not constitute end-to-end acceptance.
     pending = [(cells[1].strip(), cells[4].strip()) for cells in rows
                if len(cells) >= 5 and cells[4].strip().casefold() != "aprovado"]
-    print(f"Not approved: {len(pending)}; missing acceptance IDs: {len(missing)}")
+    print(f"Not approved: {len(pending)}; missing IDs: {len(missing)}; duplicate IDs: {len(duplicate)}; unexpected IDs: {len(unexpected)}")
     for item, status in pending:
         print(f"  {item}: {status}")
     for item in sorted(missing):
         print(f"  {item}: missing")
-    checks.append(not pending and not missing)
+    for item in duplicate:
+        print(f"  {item}: duplicate")
+    for item in sorted(unexpected):
+        print(f"  {item}: unexpected")
+    checks.append(not pending and not missing and not duplicate and not unexpected)
 
 print("No deployments, external requests, database changes or secrets used.")
 if not all(checks):
