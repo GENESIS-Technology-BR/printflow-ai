@@ -265,3 +265,12 @@ def test_fixed_monthly_contract_year_boundary_without_day_20_is_one_cycle() -> N
 
 def test_fixed_monthly_contract_year_boundary_day_20_starts_second_cycle() -> None:
     assert _fixed_cost_for_period(1500.0, date(2026, 12, 19), date(2026, 12, 20)) == 3000.0
+
+
+def test_fixed_monthly_contract_leap_year_february_remains_one_cycle() -> None:
+    """February 29 must not introduce an extra fixed monthly charge."""
+    assert _fixed_cost_for_period(1500.0, date(2028, 2, 20), date(2028, 3, 19)) == 1500.0
+
+
+def test_fixed_monthly_contract_leap_day_crossing_calendar_month_is_one_cycle() -> None:
+    assert _fixed_cost_for_period(1500.0, date(2028, 2, 29), date(2028, 3, 1)) == 1500.0
