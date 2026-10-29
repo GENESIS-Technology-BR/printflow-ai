@@ -9,6 +9,7 @@ on:
       - 'homolog-gateway.mjs'
       - 'backend/main.py'
       - 'tests/test_portable_homologation_static.py'
+      - 'tests/test_gateway_upstream_runtime.py'
       - '.github/workflows/portable-homolog-preflight.yml'
 
 permissions:
@@ -28,6 +29,8 @@ jobs:
           node-version: '22'
       - name: Python static regression checks
         run: python -m unittest discover -s tests -p test_portable_homologation_static.py -v
+      - name: Gateway upstream validation runtime tests
+        run: python -m unittest discover -s tests -p test_gateway_upstream_runtime.py -v
       - name: Gateway JavaScript syntax
         run: node --check homolog-gateway.mjs
       - name: API Python syntax
