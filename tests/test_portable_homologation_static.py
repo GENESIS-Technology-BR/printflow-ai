@@ -21,7 +21,10 @@ class PortableHomologationChecks(unittest.TestCase):
     def test_gateway_does_not_log_credentials(self):
         source = (ROOT / "homolog-gateway.mjs").read_text(encoding="utf-8")
         self.assertIn('headers.set("cookie", req.headers.cookie)', source)
-        self.assertNotRegex(source, r"console\\.(?:log|info|warn|error)\\([^\\n]*(?:req\\.headers\\.cookie|headers\\.get\\(\\s*['\\\"]authorization)")
+        for line in source.splitlines():
+            if "console." in line:
+                self.assertNotIn("req.headers.cookie", line)
+                self.assertNotIn('headers.get("authorization")', line)
 
     def test_staging_can_skip_legacy_startup_migrations(self):
         source = (ROOT / "backend/main.py").read_text(encoding="utf-8")
