@@ -13,6 +13,7 @@ on:
       - 'tests/test_supritech_access_sqlite.py'
       - 'tests/test_supritech_http_auth.py'
       - 'tests/test_supritech_real_login_router.py'
+      - 'tests/test_supritech_partner_scoping.py'
       - '.github/workflows/supritech-access-functional.yml'
 
 permissions:
@@ -39,3 +40,4 @@ jobs:
           python -m unittest discover -s tests -p test_supritech_access_sqlite.py -v
           python -m unittest discover -s tests -p test_supritech_http_auth.py -v
           python -m unittest discover -s tests -p test_supritech_real_login_router.py -v
+          python -m unittest discover -s tests -p test_supritech_partner_scoping.py -v
