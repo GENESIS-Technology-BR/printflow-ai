@@ -3,7 +3,12 @@ import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 const root = path.resolve("frontend/dist");
-const upstream = "https://talvoa-supritech-homolog-api.onrender.com";
+// Require an explicit HTTPS API origin in portable staging; keep Render as legacy default.
+const upstreamUrl = new URL(process.env.TALVOA_API_UPSTREAM || "https://talvoa-supritech-homolog-api.onrender.com");
+if (upstreamUrl.protocol !== "https:" || upstreamUrl.username || upstreamUrl.password || upstreamUrl.search || upstreamUrl.hash || upstreamUrl.pathname !== "/") {
+  throw new Error("TALVOA_API_UPSTREAM must be an HTTPS origin without credentials, path or query");
+}
+const upstream = upstreamUrl.origin;
 const mime = { ".html":"text/html; charset=utf-8", ".js":"text/javascript; charset=utf-8", ".css":"text/css; charset=utf-8", ".svg":"image/svg+xml", ".png":"image/png", ".ico":"image/x-icon", ".json":"application/json" };
 const port = Number(process.env.PORT || 10000);
 
