@@ -67,7 +67,7 @@ class SupritechRealLoginRouter(SupritechSqliteAuthorization):
     def test_registration_is_disabled_by_default(self):
         response = self.client.post("/api/v1/auth/register", json={
             "user_name": "Synthetic User",
-            "email": "new@example.invalid",
+            "email": "new@example.com",
             "password": "synthetic-pass-2026",
             "company_name": "Synthetic Tenant",
         })
