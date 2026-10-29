@@ -100,6 +100,23 @@ class SupritechSqliteAuthorization(unittest.TestCase):
     def test_platform_admin_is_explicitly_privileged(self):
         self.assertEqual(require_partner_company_access(self.db, self.actor(4), 20, write=True).id, 20)
 
+    def test_inactive_partner_blocks_members_even_with_active_membership(self):
+        self.db.get(Partner, 100).active = False
+        self.db.flush()
+        self.denied(403, lambda: require_partner_company_access(self.db, self.actor(1), 10))
+
+    def test_deactivated_membership_revokes_access(self):
+        membership = self.db.query(PartnerMembership).filter_by(partner_id=100, user_id=1).one()
+        membership.active = False
+        self.db.flush()
+        self.denied(403, lambda: require_partner_company_access(self.db, self.actor(1), 10))
+
+    def test_invalid_membership_role_does_not_grant_access(self):
+        membership = self.db.query(PartnerMembership).filter_by(partner_id=100, user_id=1).one()
+        membership.role = "unknown"
+        self.db.flush()
+        self.denied(403, lambda: require_partner_company_access(self.db, self.actor(1), 10))
+
     def test_missing_company_returns_404(self):
         self.denied(404, lambda: require_partner_company_access(self.db, self.actor(1), 999))
 
