@@ -41,8 +41,10 @@ except ImportError:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # SupriTech migrations run separately, never in HTTP startup.
-    if (engine.url.database or "").lower() != "talvoa_supritech_homolog_db":
+    # Portable staging explicitly opts out of legacy startup migrations.
+    # Preserve existing production behavior until a separately reviewed migration rollout.
+    skip_startup_migrations = os.getenv("TALVOA_SKIP_STARTUP_MIGRATIONS", "").lower() == "true"
+    if not skip_startup_migrations and (engine.url.database or "").lower() != "talvoa_supritech_homolog_db":
         Base.metadata.create_all(bind=engine)
         ensure_printer_columns(engine)
         ensure_printer_company_ip_constraint(engine)
