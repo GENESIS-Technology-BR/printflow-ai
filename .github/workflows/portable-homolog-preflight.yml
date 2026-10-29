@@ -1,0 +1,34 @@
+name: TALVOA portable homologation preflight
+
+on:
+  push:
+    branches:
+      - chore/portable-homolog-readiness
+  pull_request:
+    paths:
+      - 'homolog-gateway.mjs'
+      - 'backend/main.py'
+      - 'tests/test_portable_homologation_static.py'
+      - '.github/workflows/portable-homolog-preflight.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  portable-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Python static regression checks
+        run: python -m unittest discover -s tests -p test_portable_homologation_static.py -v
+      - name: Gateway JavaScript syntax
+        run: node --check homolog-gateway.mjs
+      - name: API Python syntax
+        run: python -m py_compile backend/main.py
