@@ -10,6 +10,7 @@ on:
       - 'backend/modules/auth/**'
       - 'backend/modules/companies/**'
       - 'tests/test_supritech_access_gates.py'
+      - 'tests/test_supritech_access_sqlite.py'
       - '.github/workflows/supritech-access-functional.yml'
 
 permissions:
@@ -30,5 +31,7 @@ jobs:
           python-version: '3.12'
       - name: Install isolated test dependencies
         run: python -m pip install 'fastapi>=0.110,<1' 'sqlalchemy>=2,<3' 'pydantic>=2,<3' 'pydantic-settings>=2,<3' 'psycopg2-binary>=2,<3' 'python-dotenv>=1,<2'
-      - name: Run synthetic partner/customer authorization cases
-        run: python -m unittest discover -s tests -p test_supritech_access_gates.py -v
+      - name: Run synthetic authorization cases (mocked and real SQLite)
+        run: |
+          python -m unittest discover -s tests -p test_supritech_access_gates.py -v
+          python -m unittest discover -s tests -p test_supritech_access_sqlite.py -v
