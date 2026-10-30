@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from backend.app.database.session import get_db
 from backend.modules.auth.dependencies import get_current_user
 from backend.modules.auth.model import User
+from backend.modules.partners.access import require_legacy_company_portal_access
 from backend.modules.companies.model import Company
 from backend.modules.printers.model import Printer
 
@@ -17,6 +18,14 @@ from .schema import DailyUsageResponse, UsageReportRow
 from .service import reporting_date
 
 router = APIRouter(prefix="/usage", tags=["Usage"])
+
+def get_legacy_portal_user(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    require_legacy_company_portal_access(db, current_user)
+    return current_user
+
 
 
 def _report_scope_label(rows: list[dict], printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None) -> str:
@@ -128,14 +137,15 @@ def _billing_cycle_index(day: date) -> int:
 
 
 def _fixed_cost_for_period(monthly_cost: float, start: date, end: date) -> float:
-    """Cobra uma mensalidade por mes calendario abrangido pela consulta.
+    """Cobra uma mensalidade por ciclo 20-19 abrangido pela consulta.
 
-    Periodos parciais nao sao proporcionais aos dias consultados.
+    Consultas parciais de um ciclo nao duplicam a mensalidade pela virada
+    do mes calendario. O valor nao e proporcional aos dias consultados.
     """
     if end < start:
         return 0.0
-    months = (end.year - start.year) * 12 + end.month - start.month + 1
-    return round(max(monthly_cost, 0.0) * months, 2)
+    cycles = _billing_cycle_index(end) - _billing_cycle_index(start) + 1
+    return round(max(monthly_cost, 0.0) * max(cycles, 0), 2)
 
 
 def _apply_cost_models(rows: list[dict], printers: list[Printer], start: date, end: date) -> list[dict]:
@@ -190,7 +200,7 @@ def _report_rows(db: Session, current_user: User, start: date, end: date, printe
 
 
 @router.get("/daily", response_model=list[DailyUsageResponse])
-def list_daily_usage(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_daily_usage(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_legacy_portal_user)):
     start, end = _resolve_period(start_date, end_date)
     _validate_report_filters(db, current_user.company_id, printer_uuid, unit_name, sector_name)
     rows = _usage_query(
@@ -222,12 +232,12 @@ def list_daily_usage(start_date: date | None = None, end_date: date | None = Non
 
 
 @router.get("/report", response_model=list[UsageReportRow])
-def usage_report(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def usage_report(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_legacy_portal_user)):
     start, end = _resolve_period(start_date, end_date); return _report_rows(db, current_user, start, end, printer_uuid, unit_name, sector_name)
 
 
 @router.get("/export.xlsx")
-def export_usage_excel(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def export_usage_excel(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_legacy_portal_user)):
     start, end = _resolve_period(start_date, end_date); rows, history = _report_data(db, current_user, start, end, printer_uuid, unit_name, sector_name); company = db.query(Company).filter(Company.id == current_user.company_id).first(); company_name = company.name if company else "Empresa"
     content = build_excel_report(
         company_name,
@@ -243,7 +253,7 @@ def export_usage_excel(start_date: date | None = None, end_date: date | None = N
 
 
 @router.get("/export.pdf")
-def export_usage_pdf(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def export_usage_pdf(start_date: date | None = None, end_date: date | None = None, printer_uuid: str | None = None, unit_name: str | None = None, sector_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_legacy_portal_user)):
     start, end = _resolve_period(start_date, end_date); rows, _ = _report_data(db, current_user, start, end, printer_uuid, unit_name, sector_name); company = db.query(Company).filter(Company.id == current_user.company_id).first(); company_name = company.name if company else "Empresa"
     content = build_pdf_report(
         company_name,

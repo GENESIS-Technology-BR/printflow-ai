@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TALVOA | Centro de Operações</title>
+<style>
+:root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#e9efff;background:#101827}*{box-sizing:border-box}body{margin:0}main{max-width:1160px;margin:auto;padding:30px 20px}header,.top,.row{display:flex;justify-content:space-between;align-items:center;gap:12px}h1{margin:0;font-size:26px}p{color:#aabbd5}.pill{border:1px solid #37516c;border-radius:99px;padding:6px 11px;font-size:12px;color:#c9dcfa}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.card{background:#1a2639;border:1px solid #2e425e;border-radius:14px;padding:18px}.stat{font-size:30px;font-weight:700;margin:8px 0}.ok{color:#72e6ae}.bad{color:#ff8e91}.wait{color:#ffd081}button{background:#2363cf;border:0;color:white;padding:11px 18px;border-radius:9px;cursor:pointer}a{color:#9fc2ff}.small{font-size:12px;color:#aabbd5}.task{border-top:1px solid #33465d;padding:13px 0}.task:first-child{border:0}.task a{font-weight:600}.hidden{display:none}
+</style></head><body><main>
+<header><div><div class="small">TALVOA · ADMINISTRAÇÃO INTERNA</div><h1>Centro de Operações</h1><p>Somente execuções verificadas · Nenhum robô fictício</p></div><span class="pill">Acesso administrativo obrigatório</span></header>
+<section class="card"><div class="top"><div><strong>GitHub Actions · feature/partner-multitenancy</strong><p id="updated">Aguardando consulta autorizada</p><div class="small" id="countdown" aria-live="off">Atualização automática a cada 30 segundos</div></div><button id="refresh">Atualizar</button></div><p id="error" role="alert" class="bad"></p></section>
+<div class="grid" style="margin:18px 0"><div class="card"><div class="small">Execuções retornadas</div><div class="stat" id="total">—</div></div><div class="card"><div class="small">Aprovadas</div><div class="stat ok" id="success">—</div></div><div class="card"><div class="small">Em andamento</div><div class="stat wait" id="running">—</div></div><div class="card"><div class="small">Falhas / canceladas</div><div class="stat bad" id="failed">—</div></div></div>
+<h2>Escritório virtual · atividade comprovada</h2><div id="office" class="grid" style="margin-bottom:20px"></div><h2>Atividade comprovada</h2><div id="tasks" class="card">Sem dados carregados.</div>
+<p class="small">Origem: API GitHub Actions. Sem acesso autorizado ou em caso de falha, a tela informa indisponibilidade — nunca inventa estados. Não hospedar publicamente sem autenticação TALVOA e proxy de leitura com permissões mínimas. Não inserir tokens neste arquivo.</p>
+</main><script>
+'use strict';
+const repo='GENESIS-Technology-BR/printflow-ai';
+const endpoint='https://api.github.com/repos/'+repo+'/actions/runs?branch=feature%2Fpartner-multitenancy&per_page=30';
+const el=id=>document.getElementById(id);
+function clean(t){return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function label(r){if(r.status!=='completed')return 'Em andamento';return ({success:'Aprovado',failure:'Falhou',cancelled:'Cancelado',skipped:'Ignorado'}[r.conclusion]||'Indeterminado');}
+async function refresh(){
+ el('error').textContent='';el('updated').textContent='Consultando GitHub...';
+ try{
+  const res=await fetch(endpoint,{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});
+  if(!res.ok)throw Error('HTTP '+res.status+' — acesso GitHub não disponível');
+  const data=await res.json();if(!Array.isArray(data.workflow_runs))throw Error('Resposta inesperada');
+  const runs=data.workflow_runs;el('total').textContent=runs.length;
+  el('success').textContent=runs.filter(r=>r.conclusion==='success').length;
+  el('running').textContent=runs.filter(r=>r.status!=='completed').length;
+  el('failed').textContent=runs.filter(r=>['failure','cancelled','timed_out'].includes(r.conclusion)).length;
+  const groups=[['Desenvolvimento','Build TALVOA Agent Windows'],['Deploy','TALVOA CTO Operations'],['Banco de dados','TALVOA SupriTech Migration Safety Checks'],['Segurança','Frontend security audit'],['Monitoramento','TALVOA Neon Free Usage Monitor'],['Qualidade','Partner tenancy validation']];
+  el('office').innerHTML=groups.map(([name,workflow])=>{
+    const match=runs.find(r=>r.name===workflow);
+    const state=!match?'Sem execução registrada':label(match);
+    const color=match?.status!=='completed'&&match?'wait':match?.conclusion==='success'?'ok':match?.conclusion==='failure'?'bad':'';
+    return '<div class="card"><div style="font-size:32px">🤖</div><strong>'+clean(name)+'</strong><p class="'+color+'">'+clean(state)+'</p><div class="small">'+(match?'Última atividade: '+clean(new Date(match.created_at).toLocaleString('pt-BR')):'Sem dados no histórico consultado')+'</div>'+(match?'<p><a href="'+clean(match.html_url)+'" target="_blank" rel="noopener noreferrer">Abrir execução real</a></p>':'')+'</div>';
+  }).join('');
+  el('tasks').innerHTML=runs.length?runs.map(r=>'<div class="task row"><div><a href="'+clean(r.html_url)+'" target="_blank" rel="noopener noreferrer">'+clean(r.name)+'</a><div class="small">'+clean(r.head_sha?.slice(0,8))+' · '+clean(r.created_at?new Date(r.created_at).toLocaleString('pt-BR'):'sem data')+'</div></div><span class="pill">'+clean(label(r))+'</span></div>').join(''):'Nenhuma execução retornada.';
+  el('updated').textContent='Última consulta: '+new Date().toLocaleString('pt-BR');
+ }catch(e){el('updated').textContent='Dados indisponíveis';el('error').textContent=e.message+'; nenhum status exibido como atual.';['total','success','running','failed'].forEach(id=>el(id).textContent='—');el('tasks').textContent='Não foi possível consultar execuções. Verifique autorização e conectividade.';el('office').innerHTML='';}
+}
+let remaining=30;let fetching=false;
+const originalRefresh=refresh;
+refresh=async function(){if(fetching)return;fetching=true;try{await originalRefresh();}finally{fetching=false;remaining=30;}};
+el('refresh').addEventListener('click',refresh);
+setInterval(()=>{if(document.hidden)return;remaining=Math.max(0,remaining-1);el('countdown').textContent='Próxima consulta em '+remaining+'s';if(remaining===0)refresh();},1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+refresh();
+</script></body></html>

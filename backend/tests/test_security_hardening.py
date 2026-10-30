@@ -14,6 +14,7 @@ def source(path: str) -> str:
 
 def test_jwt_secret_has_no_insecure_fallback(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.delenv("JWT_SECRET", raising=False)
+    monkeypatch.delenv("SECRET_KEY", raising=False)
 
     with pytest.raises(RuntimeError):
         security._secret_key()
@@ -80,7 +81,7 @@ def test_security_dependencies_avoid_known_blockers():
 
     assert "python-jose" not in requirements.lower()
     assert "PyJWT[crypto]" in requirements
-    assert "pillow>=12.3" in requirements.lower()
+    assert "pillow>=13.0" in requirements.lower()
 
 
 def test_access_tokens_are_short_lived_and_require_security_claims(
@@ -261,7 +262,8 @@ def test_security_gate_blocks_high_dependency_risk():
     workflow = source(".github/workflows/build-agent-windows.yml")
 
     assert "pip-audit -r requirements.txt" in workflow
-    assert "npm audit --audit-level=high" in workflow
+    frontend_security = source(".github/workflows/frontend-security.yml")
+    assert "npm audit --audit-level=high" in frontend_security
     assert "python -m pytest -q agent/python/tests backend/tests" in workflow
     assert "actions/checkout@v5" in workflow
     assert "actions/setup-python@v6" in workflow

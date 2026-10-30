@@ -1,0 +1,31 @@
+name: TALVOA SupriTech Migration Safety Checks
+on:
+  push:
+    branches: [feature/partner-multitenancy]
+    paths:
+      - backend/scripts/talvoa_supritech_migration_runner.py
+      - backend/tests/test_supritech_migration_runner.py
+      - backend/tests/test_supritech_verify_restore.py
+      - backend/tests/test_supritech_inventory.py
+      - backend/scripts/talvoa_supritech_inventory.py
+      - backend/scripts/talvoa_supritech_verify_restore.py
+      - .github/workflows/talvoa-supritech-migration-checks.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  safety-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile migration runner
+        run: python -m py_compile backend/scripts/talvoa_supritech_migration_runner.py backend/scripts/talvoa_supritech_inventory.py backend/scripts/talvoa_supritech_verify_restore.py
+      - name: Run isolated safety tests
+        run: python -m unittest discover -s backend/tests -p 'test_supritech_*.py' -v
+      - name: Confirm migration remains dry-run only
+        run: |
+          test ! -f supritech-homolog.dump
+          echo "No database connection or migration performed."

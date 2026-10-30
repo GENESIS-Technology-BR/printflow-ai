@@ -1299,3 +1299,297 @@ body {
 .shell.admin-shell aside nav button.active{background:#E7F3FC!important;color:#155781!important}
 .shell.admin-shell aside nav button.active .nav-icon{color:#155781!important}
 .shell.admin-shell aside nav button:hover:not(.active){background:#468FB8!important}
+
+
+/* TALVOA responsive homologation: mobile login and usable navigation */
+*,*::before,*::after{box-sizing:border-box}
+@media(max-width:640px){
+  html,body,#root{width:100%;max-width:100%;overflow-x:hidden}
+  .auth-page{
+    min-height:100dvh!important;
+    width:100%!important;
+    padding:32px 20px 28px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:center!important;
+  }
+  .auth-card.auth-card-erp{width:100%!important;max-width:420px!important;min-width:0!important}
+  .pf-login-brand{margin:0 0 32px!important;gap:9px!important}
+  .pf-login-brand-mark{width:42px!important;height:42px!important;flex-basis:42px!important}
+  .pf-login-brand strong{font-size:28px!important}
+  .pf-login-product-name{font-size:clamp(19px,5vw,24px)!important;line-height:1.2!important;margin:0 0 24px!important;letter-spacing:-.02em!important}
+  .auth-flow-title{font-size:23px!important;margin:0 0 24px!important}
+  .auth-card.auth-card-erp form{width:100%!important;gap:14px!important}
+  .auth-card.auth-card-erp form label{min-width:0!important;max-width:100%!important;font-size:15px!important}
+  .auth-input-wrap{width:100%!important;min-width:0!important}
+  .auth-card.auth-card-erp input,.auth-card.auth-card-erp .primary{
+    display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;
+    min-height:52px!important;font-size:16px!important;border-radius:8px!important
+  }
+  .auth-forgot-link{margin:8px 0 0!important;padding:8px!important}
+  .auth-card.auth-card-erp .message{overflow-wrap:anywhere;font-size:13px!important;padding:10px!important}
+}
+@media(max-width:800px){
+  .shell{grid-template-columns:minmax(0,1fr)!important}
+  .shell aside{
+    display:flex!important;position:relative!important;width:100%!important;
+    padding:10px 12px!important;gap:8px!important;overflow:hidden!important
+  }
+  .shell aside .brand{display:none!important}
+  .shell aside nav{
+    display:flex!important;flex-direction:row!important;overflow-x:auto!important;
+    gap:6px!important;scrollbar-width:thin!important;padding-bottom:4px!important
+  }
+  .shell aside nav .nav-section-title{display:none!important}
+  .shell aside nav button{
+    flex:0 0 auto!important;width:auto!important;min-width:max-content!important;
+    padding:10px 12px!important;white-space:nowrap!important
+  }
+  .shell aside .logout{align-self:flex-end!important}
+  .workspace-topbar{padding:12px!important;min-width:0!important}
+  .workspace-context{min-width:0!important;overflow-wrap:anywhere!important}
+  .dashboard{min-width:0!important;padding:14px!important}
+  .dashboard table{display:block;max-width:100%;overflow-x:auto}
+}
+
+
+/* TALVOA homologacao — azul corporativo intenso aprovado em 2026-10-20 */
+:root{--pf-accent:#1268ED;--pf-accent-soft:#E7F0FF}
+.shell.admin-shell > aside,.shell.admin-shell aside{background:#062B63!important;background-image:none!important;border-right-color:#052451!important}
+.shell.admin-shell .workspace-topbar,.workspace-topbar{background:#084594!important;background-image:none!important;border-bottom-color:#063778!important}
+.shell.admin-shell aside nav button.active{background:#1268ED!important;color:#fff!important;border-color:#1268ED!important}
+.shell.admin-shell aside nav button.active .nav-icon{color:#fff!important}
+.shell.admin-shell aside nav button:hover:not(.active){background:#104982!important;color:#fff!important}
+.shell.admin-shell aside .nav-section-title{color:#B9D8FF!important}
+.shell.admin-shell aside .brand-copy span{color:#D6E9FF!important}
+.shell.admin-shell aside .logout:hover{background:#104982!important}
+
+
+/* TALVOA Dashboard 2.0 — customer-facing homologation polish
+   Presentation only: no business logic, API or monitoring changes. */
+.shell.admin-shell{
+  --talvoa-navy:#062B63;
+  --talvoa-blue:#1268ED;
+  --talvoa-ink:#142B49;
+  --talvoa-line:#E0E8F3;
+  --talvoa-canvas:#F3F6FB;
+}
+.shell.admin-shell .dashboard{
+  background:var(--talvoa-canvas);
+  color:var(--talvoa-ink);
+}
+.shell.admin-shell aside{
+  box-shadow:4px 0 20px rgba(6,43,99,.09)!important;
+}
+.shell.admin-shell aside nav button{
+  min-height:41px;
+  border-radius:9px;
+  transition:background-color .16s ease,color .16s ease,transform .16s ease;
+}
+.shell.admin-shell aside nav button:hover:not(.active){
+  transform:translateX(2px);
+}
+.shell.admin-shell aside nav button.active{
+  box-shadow:inset 3px 0 0 #75B5FF,0 3px 12px rgba(0,23,75,.18);
+}
+.shell.admin-shell aside nav button:focus-visible,
+.shell.admin-shell button:focus-visible,
+.shell.admin-shell a:focus-visible{
+  outline:3px solid #70B8FF;
+  outline-offset:2px;
+}
+.shell.admin-shell .workspace-topbar{
+  box-shadow:0 2px 12px rgba(6,43,99,.13);
+}
+.shell.admin-shell .workspace-avatar{
+  border-color:rgba(255,255,255,.4);
+  color:#fff;
+  background:rgba(255,255,255,.12);
+}
+.shell.admin-shell .workspace-environment{
+  background:rgba(255,255,255,.13);
+  border-color:rgba(255,255,255,.3);
+}
+.shell.admin-shell .dashboard h1{
+  color:#112C50;
+  font-weight:800;
+  letter-spacing:-.035em;
+}
+.shell.admin-shell .dashboard .panel,
+.shell.admin-shell .dashboard .hero{
+  border:1px solid var(--talvoa-line);
+  border-radius:13px;
+  box-shadow:0 3px 16px rgba(13,47,91,.045);
+}
+.shell.admin-shell .dashboard .panel{
+  background:#fff;
+}
+.shell.admin-shell .dashboard .panel h3{
+  color:#173456;
+  letter-spacing:-.015em;
+}
+.shell.admin-shell .dashboard .grid{
+  gap:14px;
+}
+.shell.admin-shell .dashboard .primary{
+  background:var(--talvoa-blue);
+  border-radius:8px;
+  box-shadow:0 3px 10px rgba(18,104,237,.13);
+}
+.shell.admin-shell .dashboard .primary:hover{
+  background:#0954C8;
+}
+.shell.admin-shell .dashboard .actions button,
+.shell.admin-shell .dashboard button{
+  transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.shell.admin-shell .dashboard .status-box{
+  border-color:#D8E6F5;
+  background:#F5F9FF;
+}
+.shell.admin-shell .dashboard table{
+  border-collapse:separate;
+  border-spacing:0;
+  width:100%;
+}
+.shell.admin-shell .dashboard table th{
+  background:#F3F7FC;
+  color:#315474;
+  font-weight:750;
+}
+.shell.admin-shell .dashboard table th,
+.shell.admin-shell .dashboard table td{
+  border-bottom:1px solid #E8EDF5;
+}
+.shell.admin-shell .dashboard table tbody tr:hover{
+  background:#F6FAFF;
+}
+.shell.admin-shell .dashboard .printer-filter-empty{
+  border-color:#C9DDF4;
+  background:#F8FBFF;
+  color:#536B85;
+}
+@media(max-width:1100px) and (min-width:801px){
+  .shell.admin-shell .dashboard{padding-left:18px;padding-right:18px}
+  .shell.admin-shell .dashboard .grid{gap:12px}
+}
+@media(max-width:800px){
+  .shell.admin-shell aside nav button:hover:not(.active){transform:none}
+  .shell.admin-shell .dashboard .panel{border-radius:10px}
+  .shell.admin-shell .dashboard table{min-width:620px}
+}
+@media(prefers-reduced-motion:reduce){
+  .shell.admin-shell aside nav button,
+  .shell.admin-shell .dashboard button{transition:none}
+}
+
+/* TALVOA sidebar polish 2026-10-20 */
+.shell.admin-shell aside nav button::before{content:none!important;display:none!important}
+.shell.admin-shell aside nav button{display:flex;align-items:center;gap:10px;min-height:39px;padding:8px 11px;border-radius:7px;font-size:12px;line-height:1.35;font-weight:600}
+.shell.admin-shell aside nav .nav-icon{flex:0 0 19px;width:19px;height:19px;display:grid;place-items:center;color:#D5E6FF!important}
+.shell.admin-shell aside nav button.active{background:#2159C6!important;border-color:transparent!important;box-shadow:inset 3px 0 0 #79B7FF!important}
+.shell.admin-shell aside nav button.active .nav-icon{color:#fff!important}
+.shell.admin-shell aside .logout{background:#0D3C7B!important;border:1px solid #255A9C!important;border-radius:8px!important;color:#F5F9FF!important;min-height:41px;padding:10px 12px;font-weight:650}
+.shell.admin-shell aside .logout:hover{background:#1755A1!important;color:#fff!important}
+.shell.admin-shell aside .logout::before{margin-right:4px;color:#D5E6FF}
+
+
+/* TALVOA customer portal: restore readable navigation and dashboard viewport. */
+.shell.client-shell aside .brand strong,
+.shell.client-shell aside .brand-copy,
+.shell.client-shell aside .brand-copy span,
+.shell.client-shell aside .nav-section-title{color:#e8f2ff!important;opacity:1!important}
+.shell.client-shell aside nav button{
+  color:#e6f1ff!important;
+  opacity:1!important;
+  font-weight:650!important;
+  font-size:12px!important;
+  min-height:39px!important;
+  padding:8px 11px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+.shell.client-shell aside nav button::before{content:none!important;display:none!important}
+.shell.client-shell aside nav .nav-icon{color:#d3e7ff!important;opacity:1!important;flex:0 0 19px}
+.shell.client-shell aside nav button.active{
+  background:#2161b8!important;
+  border-color:#5c99e9!important;
+  color:#fff!important;
+}
+.shell.client-shell aside nav button.active .nav-icon{color:#fff!important}
+.shell.client-shell aside .logout{color:#f5f9ff!important;background:#17527b!important}
+/* The client dashboard owns its viewport layout in DashboardSap.css.
+   Do not force document-level scrolling or override its grid with flex. */
+@media (min-width:1200px) and (min-height:820px) {
+  html:has(.shell.client-shell .sap-dashboard-page),
+  body:has(.shell.client-shell .sap-dashboard-page),
+  #root:has(.shell.client-shell .sap-dashboard-page) {
+    height:100%!important;
+    min-height:0!important;
+    max-height:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:hidden!important;
+  }
+  /* Grid's implicit auto row may grow beyond the viewport even if
+     the dashboard itself has overflow:hidden. Constrain the grid track. */
+  .shell.client-shell:has(.sap-dashboard-page) {
+    grid-template-rows:minmax(0,1fr)!important;
+    align-content:stretch!important;
+    height:100dvh!important;
+    min-height:0!important;
+    max-height:100dvh!important;
+    overflow:hidden!important;
+  }
+  .shell.client-shell:has(.sap-dashboard-page) > .dashboard-modern-shell {
+    box-sizing:border-box!important;
+    height:100dvh!important;
+    min-height:0!important;
+    max-height:100dvh!important;
+    padding-top:48px!important;
+    padding-bottom:0!important;
+    min-height:0!important;
+    align-self:stretch!important;
+    overflow:hidden!important;
+  }
+}
+@media (max-width:1099px) {
+  .shell.client-shell .sap-dashboard-page .sap-dashboard-grid-overview {
+    grid-template-columns:1fr!important;
+  }
+  .shell.client-shell .sap-dashboard-page .sap-printer-ranking .sap-table-wrap {
+    overflow-x:auto!important;
+  }
+}
+
+/* TALVOA client dashboard: viewport anchored below the fixed 64px topbar.
+   Remove the dashboard from the grid scroll calculation entirely.
+   Keep inner ranking scrollable only if viewport content cannot fit. */
+@media (min-width:1200px) and (min-height:820px) {
+  .shell.client-shell:has(.sap-dashboard-page.sap-dashboard-v0993) > main.dashboard-modern-shell {
+    position:fixed!important;
+    inset:64px 0 0 248px!important;
+    width:auto!important;
+    height:auto!important;
+    max-height:none!important;
+    min-height:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+  }
+}
+
+
+/* Client overview: no outer scrollbar while the content fits the viewport.
+   Restrict the rule to the dashboard so other routes retain normal scrolling. */
+@media (min-width:1200px) and (min-height:820px) {
+  html:has(.shell.client-shell .sap-dashboard-page.sap-dashboard-v0993),
+  body:has(.shell.client-shell .sap-dashboard-page.sap-dashboard-v0993) {
+    overflow-y:hidden!important;
+    height:100dvh!important;
+  }
+  .shell.client-shell:has(.sap-dashboard-page.sap-dashboard-v0993) {
+    max-height:100dvh!important;
+    overflow:hidden!important;
+  }
+}

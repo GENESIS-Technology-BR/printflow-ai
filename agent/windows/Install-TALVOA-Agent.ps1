@@ -259,11 +259,40 @@ try {
     # TOKEN
     # ============================================================
 
-    Write-Host "Lendo Token do Agent da area de transferencia."
-
-    $plainToken = [string](
-        Get-Clipboard -Raw
-    )
+    # Reutilizar credencial DPAPI da mesma maquina nas atualizacoes.
+    # Nunca exigir novo token nem sobrescrever configuracao existente silenciosamente.
+    $existingConfig = $null
+    $encryptedTokenMachine = $null
+    if (Test-Path -LiteralPath $configPath) {
+        try {
+            $existingConfig = Get-Content -LiteralPath $configPath -Raw -ErrorAction Stop |
+                ConvertFrom-Json -ErrorAction Stop
+            if ($existingConfig.token_protection -ne "dpapi-localmachine-v1" -or
+                [string]::IsNullOrWhiteSpace($existingConfig.encrypted_token_machine)) {
+                throw "Configuracao existente sem token DPAPI compativel."
+            }
+            $encryptedTokenMachine = [string]$existingConfig.encrypted_token_machine
+            $protectedBytes = [Convert]::FromBase64String($encryptedTokenMachine)
+            $plainBytes = [Security.Cryptography.ProtectedData]::Unprotect(
+                $protectedBytes, $null,
+                [Security.Cryptography.DataProtectionScope]::LocalMachine
+            )
+            try {
+                $plainToken = [Text.Encoding]::UTF8.GetString($plainBytes)
+            }
+            finally {
+                [Array]::Clear($plainBytes, 0, $plainBytes.Length)
+            }
+            Write-Host "[OK] Credencial existente recuperada via DPAPI LocalMachine."
+        }
+        catch {
+            throw "Atualizacao bloqueada: nao foi possivel reutilizar o token protegido. Configuracao preservada."
+        }
+    }
+    else {
+        Write-Host "Nova instalacao: lendo token da area de transferencia."
+        $plainToken = [string](Get-Clipboard -Raw)
+    }
 
     $plainToken = $plainToken.Trim()
 
@@ -286,18 +315,26 @@ try {
     try {
 
         Invoke-RestMethod `
-            -Uri "https://printflow-api-3uwr.onrender.com/api/v1/printers/agent/heartbeat" `
+            -Uri "https://talvoa-supritech-homolog-api.onrender.com/api/v1/printers/agent/heartbeat" `
             -Method Post `
             -ContentType "application/json" `
+            -TimeoutSec 25 `
             -Body $validationBody |
             Out-Null
     }
     catch {
-
-        throw (
-            "Token recusado pela API. " +
-            "Copie novamente o Token do Agent no Dashboard."
-        )
+        $httpStatus = $null
+        if ($_.Exception.Response) {
+            try { $httpStatus = [int]$_.Exception.Response.StatusCode } catch {}
+        }
+        if ($httpStatus -eq 429) {
+            throw "HTTP 429: API limitada ou suspensa pelo provedor. Nao reinstale nem gere novo token. Agent anterior preservado."
+        }
+        if ($httpStatus -eq 401 -or $httpStatus -eq 403) {
+            throw "HTTP ${httpStatus}: API rejeitou a autorizacao. Verifique o token no painel. Agent anterior preservado."
+        }
+        throw ("Falha ao validar API de homologacao (HTTP: $httpStatus). " +
+               "Verifique disponibilidade do provedor e conectividade. Agent anterior preservado.")
     }
 
     $validationBody = $null
@@ -311,9 +348,12 @@ try {
     Write-Host ""
 
     $networkInput = Read-Host `
-        "Redes adicionais em CIDR separadas por virgula ou ENTER para somente descoberta automatica"
+        "Redes adicionais em CIDR (ENTER preserva redes existentes ou usa descoberta automatica)"
 
     $extraNetworks = @()
+    if ($existingConfig -and $existingConfig.extra_networks) {
+        $extraNetworks = @($existingConfig.extra_networks)
+    }
 
     if (
         -not [string]::IsNullOrWhiteSpace(
@@ -355,6 +395,22 @@ try {
         }
     }
 
+    # Preflight do pacote ANTES de parar qualquer Agent em producao.
+    $runtimeFiles = @(
+        "TALVOA-Agent.exe",
+        "Start-TALVOA-Agent.ps1",
+        "Watchdog-TALVOA-Agent.ps1",
+        "Uninstall-TALVOA-Agent.ps1",
+        "BUILD-VALIDATION.txt",
+        "README-TESTE.txt"
+    )
+    foreach ($runtimeFile in $runtimeFiles) {
+        $sourceFile = Join-Path $sourceRoot $runtimeFile
+        if (-not (Test-Path -LiteralPath $sourceFile -PathType Leaf)) {
+            throw "Pacote incompleto: $runtimeFile. Agent anterior preservado."
+        }
+    }
+
     # ============================================================
     # PARAR INSTALACAO ANTERIOR
     # ============================================================
@@ -383,7 +439,12 @@ try {
         Win32_Process `
         -ErrorAction SilentlyContinue |
         Where-Object {
-            $_.Name -eq "TALVOA-Agent.exe"
+            $_.Name -eq "TALVOA-Agent.exe" -and
+            $_.ExecutablePath -and
+            $_.ExecutablePath.StartsWith(
+                $installRoot,
+                [StringComparison]::OrdinalIgnoreCase
+            )
         } |
         ForEach-Object {
 
@@ -444,8 +505,10 @@ try {
     # DPAPI LOCAL MACHINE
     # ============================================================
 
-    $encryptedTokenMachine = Protect-TALVOAToken `
-        -PlainToken $plainToken
+    if (-not $encryptedTokenMachine) {
+        $encryptedTokenMachine = Protect-TALVOAToken `
+            -PlainToken $plainToken
+    }
 
     $plainToken = $null
 

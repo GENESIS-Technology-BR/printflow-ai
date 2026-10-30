@@ -1,0 +1,67 @@
+name: TALVOA Neon Free Usage Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 12 * * *'
+  push:
+    branches:
+      - feature/partner-multitenancy
+    paths:
+      - 'ops/neon_free_usage_monitor.py'
+      - 'tests/test_neon_free_usage_monitor.py'
+      - '.github/workflows/neon-free-usage-monitor.yml'
+      - '.github/workflows/render-backup-network-preflight.yml'
+  pull_request:
+    paths:
+      - 'ops/neon_free_usage_monitor.py'
+      - 'tests/test_neon_free_usage_monitor.py'
+      - '.github/workflows/neon-free-usage-monitor.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: talvoa-neon-free-monitor-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run offline monitor tests
+        run: python3 -m unittest discover -s tests -p 'test_neon_free_usage_monitor.py' -v
+
+  check-quotas:
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: offline-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Neon quotas
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: python3 ops/neon_free_usage_monitor.py
+
+  render-backup-preflight:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Probe Render PostgreSQL TLS without secrets
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import socket
+          host = "dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com"
+          with socket.create_connection((host, 5432), timeout=8) as conn:
+              conn.settimeout(8)
+              conn.sendall(bytes.fromhex("0000000804d2162f"))
+              response = conn.recv(1)
+          if response != b"S":
+              raise SystemExit("FAIL: Render PostgreSQL TLS negotiation unavailable")
+          print("PASS: TCP and PostgreSQL TLS negotiation reachable; credentials/allowlist not tested.")
+          PY

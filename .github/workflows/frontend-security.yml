@@ -1,0 +1,42 @@
+name: Frontend security audit
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-security.yml"
+      - ".github/workflows/build-agent-windows.yml"
+      - "backend/tests/test_security_hardening.py"
+  push:
+    branches:
+      - main
+      - feature/partner-multitenancy
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-security.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Audit frontend dependencies
+        working-directory: frontend
+        run: npm audit --audit-level=high
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build

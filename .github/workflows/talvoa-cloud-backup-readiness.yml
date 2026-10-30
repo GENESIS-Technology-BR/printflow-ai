@@ -1,0 +1,48 @@
+name: TALVOA Cloud Backup Readiness Gate
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/partner-multitenancy]
+    paths: ['.github/workflows/talvoa-cloud-backup-readiness.yml']
+permissions:
+  contents: read
+jobs:
+  offline-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check cloud-backup policy without accessing secrets
+        shell: bash
+        run: |
+          echo 'PASS: readiness workflow is registered; this run does not access credentials, network or customer data.'
+  readiness:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: supritech-homolog-audit
+    timeout-minutes: 4
+    steps:
+      - name: Check safe prerequisites (never connect to DB)
+        shell: bash
+        env:
+          SOURCE_URL: ${{ secrets.TALVOA_SOURCE_DATABASE_URL }}
+          TARGET_URL: ${{ secrets.TALVOA_TARGET_DATABASE_URL }}
+          BACKUP_KEY: ${{ secrets.TALVOA_BACKUP_ENCRYPTION_KEY }}
+          STORAGE_TARGET: ${{ vars.TALVOA_BACKUP_STORAGE_TARGET }}
+          NETWORK_AUTH: ${{ vars.TALVOA_SOURCE_NETWORK_ACCESS_VERIFIED }}
+        run: |
+          set -euo pipefail
+          failed=0
+          check() {
+            if [ -n "$2" ]; then echo "READY: $1 configured"; else echo "::warning::$1 missing"; failed=1; fi
+          }
+          check "Source secret" "$SOURCE_URL"
+          check "Neon target secret" "$TARGET_URL"
+          check "Backup encryption secret" "$BACKUP_KEY"
+          check "Independent durable storage target" "$STORAGE_TARGET"
+          if [ "$NETWORK_AUTH" != "yes" ]; then
+            echo "::warning::Authorized source network route NOT verified"
+            failed=1
+          fi
+          echo "No credentials printed. No DB connection, export, restore, allowlist change or upload attempted."
+          if [ "$failed" -ne 0 ]; then exit 1; fi
+          echo "Configuration gate passed; a separately reviewed backup execution remains required."

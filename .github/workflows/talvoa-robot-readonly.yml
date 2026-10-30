@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - feature/partner-multitenancy
     paths:
       - '.github/workflows/talvoa-robot-readonly.yml'
       - 'api/**'
@@ -27,7 +28,7 @@ on:
       - 'pyproject.toml'
   workflow_dispatch:
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '15 12 * * 1-5'
 permissions:
   contents: read
   actions: read

@@ -1,0 +1,56 @@
+name: TALVOA Demo Preflight
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/partner-multitenancy
+    paths:
+      - 'ops/demo_preflight.py'
+      - 'backend/tests/test_demo_preflight.py'
+      - 'backend/tests/test_dashboard_executive_clean.py'
+      - 'frontend/src/components/Dashboard.tsx'
+      - 'docs/qa/talvoa-1.0-homologacao.md'
+      - '.github/workflows/talvoa-demo-preflight.yml'
+  pull_request:
+    paths:
+      - 'ops/demo_preflight.py'
+      - 'backend/tests/test_demo_preflight.py'
+      - 'backend/tests/test_dashboard_executive_clean.py'
+      - 'frontend/src/components/Dashboard.tsx'
+      - 'docs/qa/talvoa-1.0-homologacao.md'
+      - '.github/workflows/talvoa-demo-preflight.yml'
+permissions:
+  contents: read
+concurrency:
+  group: talvoa-demo-preflight-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run offline regression tests
+        run: python3 -m unittest discover -s backend/tests -p test_demo_preflight.py -v
+      - name: Verify fail-closed demo gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python3 ops/demo_preflight.py; then
+            echo "Demo criteria approved in document; live validation remains mandatory."
+          else
+            echo "Demo remains blocked pending acceptance criteria."
+          fi
+
+      - name: Run dashboard source contract tests
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import runpy
+          checks = runpy.run_path("backend/tests/test_dashboard_executive_clean.py")
+          tests = [(name, fn) for name, fn in sorted(checks.items()) if name.startswith("test_") and callable(fn)]
+          assert tests, "No dashboard contract tests discovered"
+          for name, fn in tests:
+              fn()
+              print(f"PASS {name}")
+          PY

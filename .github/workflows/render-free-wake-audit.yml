@@ -1,0 +1,22 @@
+name: TALVOA Render Free Wake Audit
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'ops/render_wake_audit.py'
+  push:
+    branches: [feature/partner-multitenancy]
+    paths:
+      - '.github/workflows/**'
+      - 'ops/render_wake_audit.py'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Static audit (no HTTP requests to Render)
+        run: python3 ops/render_wake_audit.py

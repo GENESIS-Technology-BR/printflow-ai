@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TALVOA | Centro de Operações</title>
+<style>
+:root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#e9efff;background:#101827}*{box-sizing:border-box}body{margin:0}main{max-width:1160px;margin:auto;padding:30px 20px}header,.top,.row{display:flex;justify-content:space-between;align-items:center;gap:12px}h1{margin:0;font-size:26px}p{color:#aabbd5}.pill{border:1px solid #37516c;border-radius:99px;padding:6px 11px;font-size:12px;color:#c9dcfa}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.card{background:#1a2639;border:1px solid #2e425e;border-radius:14px;padding:18px}.stat{font-size:30px;font-weight:700;margin:8px 0}.ok{color:#72e6ae}.bad{color:#ff8e91}.wait{color:#ffd081}button{background:#2363cf;border:0;color:white;padding:11px 18px;border-radius:9px;cursor:pointer}a{color:#9fc2ff}.small{font-size:12px;color:#aabbd5}.task{border-top:1px solid #33465d;padding:13px 0}.task:first-child{border:0}.task a{font-weight:600}.hidden{display:none}
+
+body{background:radial-gradient(ellipse at 48% 25%,#173b62 0%,#081422 55%,#050b14 100%);min-height:100vh}
+main{max-width:1600px;padding:18px 22px}
+header{background:#071321dd;border:1px solid #214262;border-radius:12px;padding:15px 22px;margin-bottom:14px}
+h1{font-size:28px;letter-spacing:.4px}h2{font-size:17px;letter-spacing:.6px}
+.card{background:linear-gradient(150deg,#0d2135eF,#071421ef);border:1px solid #295479;box-shadow:0 8px 24px #0005}
+.pill{background:#0d2742}
+.stats{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.office-stage{background:linear-gradient(145deg,#173552aa,#091a2eea),repeating-linear-gradient(90deg,transparent 0 79px,#2e527a33 80px 81px);border:1px solid #2d618c;border-radius:15px;padding:22px;box-shadow:inset 0 0 90px #0008;position:relative}
+.office-stage:before{content:'TALVOA  /  CENTRO DE OPERAÇÕES';display:block;text-align:center;letter-spacing:4px;color:#7ccaff;font-size:12px;margin-bottom:22px}
+.office-stage .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.robot-station{min-height:260px;position:relative;overflow:hidden;background:linear-gradient(160deg,#0e2a47d9,#06111fdc);border:1px solid #3679a5;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:9px;transition:transform .2s,border-color .2s}
+.robot-station:hover{transform:translateY(-3px);border-color:#54bbff}
+.station-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;font-weight:700}
+.robot-art{height:96px;display:flex;align-items:center;justify-content:center;position:relative}
+.robot-art:before{content:'▣   ▣';display:flex;align-items:center;justify-content:center;color:#45d9ff;letter-spacing:12px;text-indent:12px;width:86px;height:66px;border:5px solid #a7d3f4;border-radius:26px;background:linear-gradient(#0b2842,#07101d);box-shadow:0 0 0 8px #173d5a,0 0 26px #1599ff77;font-size:20px}
+.robot-art:after{content:'';position:absolute;bottom:0;width:108px;height:20px;background:#2b6c9e;border-radius:18px 18px 4px 4px;box-shadow:0 5px 0 #112f4c}
+.robot-station[data-active="true"] .robot-art:before{animation:working 1.7s ease-in-out infinite alternate}
+@keyframes working{to{box-shadow:0 0 0 8px #21567a,0 0 38px #00c8ff;transform:translateY(-4px)}}
+.station-meta{color:#adc6db;font-size:12px;margin-top:auto}
+.station-status{font-size:12px;font-weight:700;border-radius:7px;padding:6px 9px;background:#153149;align-self:flex-start}
+.station-link{font-size:12px}
+@media(max-width:950px){.office-stage .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:560px){.office-stage .grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}header{align-items:flex-start;flex-direction:column}main{padding:12px}}
+
+.brand{display:flex;align-items:center;gap:13px}.brand-logo{font-size:40px;color:#159aff}.brand-sub{font-size:15px;font-weight:600;color:#d9eaff}.nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.nav a{color:#b6cce2;text-decoration:none;padding:12px 14px;border-radius:5px;font-size:13px}.nav a:first-child{background:#1167ce;color:#fff}.nav a:hover{background:#173a5c}
+.control-bar{padding:12px 20px}.control-bar p{margin:5px 0}
+.stats .card{border-radius:6px;min-height:105px;background:linear-gradient(135deg,#0b1b30,#09111d);border-color:#2872a9}
+.stats .stat{font-size:34px}.stats .small{text-transform:uppercase;letter-spacing:.5px}
+.office-stage{padding:25px 16px;background:linear-gradient(#071b2b8a,#0b1d30cc),repeating-linear-gradient(0deg,#1c3750 0px,#1c3750 2px,#0b1724 3px,#0b1724 74px);border-radius:4px}
+.office-stage:before{content:'TALVOA  •  AUTOMAÇÕES VERIFICADAS';color:#41aeff}
+.office-stage .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.robot-station{min-height:295px;border-radius:5px;border-color:#2b79b1;background:linear-gradient(180deg,#091f32d6,#07101be8);box-shadow:inset 0 0 25px #147ed11c}
+.robot-art{height:130px;background:linear-gradient(90deg,transparent 12%,#0d3350 12% 13%,transparent 13% 87%,#0d3350 87% 88%,transparent 88%),linear-gradient(0deg,#163650 0 4px,transparent 4px);background-size:100% 100%,100% 23px}
+.robot-art:before{width:94px;height:72px;border-radius:26px}
+.robot-art:after{width:124px;height:23px}
+.robot-station[data-active="true"]{border-color:#11bdf3}
+.station-head{background:#07111fcf;margin:-16px -16px 0;padding:13px 15px}
+.station-status{border-radius:4px}.station-status.ok{background:#105637;color:#7affb7}.station-status.bad{background:#601e29;color:#ff9b9b}.station-status.wait{background:#614b14;color:#ffda6a}
+.lower-panels{grid-template-columns:1.4fr 1fr!important}.lower-panels .card{min-height:280px}
+.task{border-color:#23405b}.task a{text-decoration:none}.task a:hover{text-decoration:underline}
+@media(max-width:1100px){header{flex-wrap:wrap}.office-stage .grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.office-stage .grid,.lower-panels{grid-template-columns:1fr!important}.brand-sub{display:block}.nav{gap:0}.nav a{padding:8px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+.robot-art{isolation:isolate;overflow:hidden;border-radius:7px;background:linear-gradient(180deg,#0a1a2d 0%,#102d48 62%,#142739 63%,#152435 100%);border:1px solid #224968}
+.robot-art:before{z-index:2;position:relative;margin-top:9px;transform:scale(.77);transform-origin:center}
+.robot-art:after{z-index:1;bottom:9px;background:#164268;border:1px solid #4084b0;box-shadow:0 5px 0 #071522,0 12px 12px #0008}
+.workdesk{position:absolute;inset:0;pointer-events:none}
+.workdesk .monitor{position:absolute;top:12px;width:67px;height:58px;background:repeating-linear-gradient(180deg,#0c4e78 0 2px,#071c32 3px 9px);border:4px solid #294f70;box-shadow:0 0 14px #009dff38}
+.workdesk .monitor.left{left:10px;transform:perspective(120px) rotateY(14deg)}.workdesk .monitor.right{right:10px;transform:perspective(120px) rotateY(-14deg)}
+.workdesk .monitor:after{content:'▰  ▰';font-size:9px;color:#38baff;display:block;margin:9px 3px}
+.workdesk .desk{position:absolute;bottom:4px;left:5%;width:90%;height:13px;background:linear-gradient(#3e7698,#14354d);border:1px solid #5b9dc1;border-radius:3px;box-shadow:0 6px 10px #000a}
+.station-head{z-index:2}.robot-station{min-height:300px}.robot-station[data-active="true"] .monitor{box-shadow:0 0 16px #04bfff}
+.robot-station[data-active="true"] .robot-art:before{animation:working 1.7s ease-in-out infinite alternate}
+@media(prefers-reduced-motion:reduce){.robot-station[data-active="true"] .robot-art:before{animation:none}.robot-station{transition:none}}
+
+.robot-station{cursor:pointer}.robot-station:focus-visible{outline:3px solid #67d8ff;outline-offset:3px}
+dialog{color:#e9efff;background:#0b1c2e;border:1px solid #3b85b9;border-radius:14px;max-width:min(600px,94vw);width:100%;box-shadow:0 20px 90px #000c;padding:24px}
+dialog::backdrop{background:#020912c9;backdrop-filter:blur(4px)}
+.detail-line{border-top:1px solid #274661;padding:13px 0}.detail-line strong{color:#8dcaff}
+
+/* Cenário isométrico inspirado na sala de controle, sem imagens externas nem bibliotecas */
+.office-stage{padding:0;overflow:hidden;border:1px solid #2e739f;background:#07111e;box-shadow:0 20px 50px #0009,inset 0 0 60px #0099ff12}
+.office-stage:before{display:none}
+.office-wall{height:110px;background:linear-gradient(90deg,#0a1c30,#163c5a 50%,#0a1c30);border-bottom:5px solid #315d7d;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;box-shadow:inset 0 -18px 28px #020a17}
+.office-wall>span{font-size:29px;font-weight:900;letter-spacing:9px;color:#bce7ff;text-shadow:0 0 22px #18a7ff}
+.office-wall>small{font-size:10px;letter-spacing:4px;color:#77bce5}
+.wall-lights{position:absolute;left:5%;right:5%;top:10px;display:flex;justify-content:space-between}.wall-lights i{width:7px;height:7px;border-radius:50%;background:#33caff;box-shadow:0 0 19px 5px #138aff77}
+.office-floor{padding:28px 28px 36px;background:repeating-linear-gradient(90deg,#28516a19 0 1px,transparent 1px 95px),repeating-linear-gradient(0deg,#28516a1c 0 1px,transparent 1px 65px),linear-gradient(165deg,#183650,#081725 72%);position:relative}
+.office-floor:before,.office-floor:after{content:'';position:absolute;top:0;bottom:0;width:18px;background:linear-gradient(90deg,#06111d,#205078,#071a2b);z-index:0}
+.office-floor:before{left:0}.office-floor:after{right:0}
+.office-floor .grid{position:relative;z-index:1;gap:22px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.robot-station{min-height:330px;border:1px solid #306e9d;border-radius:8px;padding:15px;background:linear-gradient(165deg,#133653b8,#061525e8);box-shadow:0 12px 0 #06101d,0 17px 22px #000a,inset 0 0 20px #278bcb15}
+.robot-station:before{content:'';position:absolute;inset:2px;border:1px solid #4b99cc18;border-radius:6px;pointer-events:none}
+.station-head{margin:-15px -15px 0;padding:14px;background:#061525dd;border-bottom:1px solid #367ca4}
+.robot-art{height:164px;overflow:hidden;background:radial-gradient(ellipse at 50% 5%,#2572a45a,transparent 65%),linear-gradient(#123650 0 58%,#11293d 58% 100%);border:1px solid #2d688f;border-radius:5px}
+.robot-art:before{height:69px;width:85px;position:absolute;top:24px;left:50%;margin:0;transform:translateX(-50%);z-index:5;border:5px solid #b1d8f2;border-radius:26px;background:linear-gradient(#1a4666,#081526);box-shadow:0 0 0 8px #225574,0 0 26px #0bb9ff88}
+.robot-art:after{width:103px;height:46px;bottom:19px;left:50%;transform:translateX(-50%);z-index:3;border-radius:38px 38px 10px 10px;background:linear-gradient(#3b86ae,#1b476d);border:3px solid #78b5d9;box-shadow:0 9px 0 #0b243b}
+.workdesk .monitor{top:20px;width:74px;height:70px;background:repeating-linear-gradient(180deg,#0b4b74 0 3px,#061a2c 4px 11px);border:5px solid #4a7c9b;z-index:2;box-shadow:0 0 17px #0ac7ff55}
+.workdesk .monitor.left{left:4%}.workdesk .monitor.right{right:4%}
+.workdesk .desk{height:22px;bottom:2px;left:0;width:100%;border-radius:3px;background:linear-gradient(#36799b,#12334f);z-index:7;box-shadow:0 5px 0 #081726}
+.workdesk .chair{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:116px;height:44px;border:7px solid #2e658a;border-radius:32px 32px 8px 8px;z-index:1}
+.workdesk .lamp{position:absolute;top:4px;left:50%;transform:translateX(-50%);height:8px;width:62px;background:#4f9ec9;box-shadow:0 0 22px 9px #118aff3d;border-radius:8px}
+.robot-station[data-active="true"] .robot-art:before{animation:robotPulse 1.5s ease-in-out infinite alternate}
+@keyframes robotPulse{to{box-shadow:0 0 0 8px #2d7091,0 0 45px #08e4ff;top:20px}}
+.office-footer{display:flex;justify-content:space-between;gap:10px;padding:12px 20px;background:#06111f;border-top:1px solid #28638d;color:#7bb9dc;font-size:10px;letter-spacing:2px}
+@media(max-width:1000px){.office-floor .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.office-floor{padding:18px}}
+@media(max-width:620px){.office-floor .grid{grid-template-columns:1fr}.office-wall>span{font-size:20px}.office-footer{flex-direction:column}.robot-station{min-height:315px}}
+@media(prefers-reduced-motion:reduce){.robot-station[data-active="true"] .robot-art:before{animation:none}}
+.robot-station[role="button"]{cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}.robot-station[role="button"]:hover{transform:translateY(-4px);border-color:#6ad3ff;box-shadow:0 15px 0 #06101d,0 19px 26px #000b,0 0 22px #12a9ff35}.robot-station[role="button"]:focus-visible{outline:3px solid #60d9ff;outline-offset:4px}.robot-station[role="button"]:active{transform:translateY(-1px)}.robot-station .station-head:after{content:"CLIQUE PARA DETALHES";display:block;font-size:9px;letter-spacing:1px;color:#7bc8ef;margin-top:5px}.robot-station:hover .station-head:after{color:#e2f7ff}@media(prefers-reduced-motion:reduce){.robot-station[role="button"]{transition:none}.robot-station[role="button"]:hover{transform:none}}.robot-station.robot-station{display:block;min-height:0;padding:0;overflow:hidden}.robot-summary{display:flex;flex-direction:column;gap:9px;min-height:325px;padding:15px;cursor:pointer;list-style:none}.robot-summary::-webkit-details-marker{display:none}.robot-summary::marker{content:''}.robot-summary:focus-visible{outline:3px solid #62dfff;outline-offset:-3px}.open-hint{display:block;margin-top:auto;text-align:center;background:#1473b7;padding:11px;border-radius:5px;font-size:12px;color:#fff}.robot-station[open] .open-hint{background:#174c6f}.robot-station[open] .open-hint::after{content:' · EXPANDIDO'}.native-details{padding:16px;border-top:1px solid #377da5;background:#061524;font-size:13px;overflow-wrap:anywhere}.native-details p{margin:8px 0}.native-details a{color:#7ad9ff}.robot-station[open]{border-color:#54caff}.diagnostic-banner{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px 16px;border-radius:8px;margin:0 0 14px;background:#19354d;border-left:4px solid #f4cb62}.diagnostic-banner strong{font-size:17px}.diagnostic-banner span{font-size:12px;color:#c9dbec}.diagnostic-banner.diag-ok{background:#103c34;border-color:#60e2ae}.diagnostic-banner.diag-error{background:#471d2b;border-color:#ff7c89}.diagnostic-banner.diag-wait{background:#3a311b;border-color:#f4cb62}#detailBody .task{padding:10px 6px}#detailBody .task .small{margin-top:7px;line-height:1.8}#detailBody .detail-line{line-height:1.6}#robotDetails{max-height:85vh;overflow-y:auto}@media(max-width:550px){.diagnostic-banner{flex-direction:column;align-items:flex-start}#robotDetails{padding:15px}}
+/* TALVOA Command Center v2 — layout inspirado no painel de referência */
+:root{color-scheme:dark;font-family:Inter,Segoe UI,Arial,sans-serif;background:#06101d;color:#e7f4ff}
+body{background:radial-gradient(ellipse at 50% 23%,#18466a 0%,#0a2038 32%,#050c17 85%);min-height:100vh}
+main{max-width:1920px;width:100%;margin:auto;padding:12px 18px 30px;display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,22%);gap:12px;align-items:start}
+main>header{grid-column:1/-1;min-height:64px;padding:7px 12px 14px;border-bottom:1px solid #286086;background:linear-gradient(90deg,#03101e,#071b2a);margin:-12px -18px 0}
+header .brand-logo{font-size:30px}.brand h1{font-size:27px}.brand-sub{font-size:13px;font-weight:500}.nav{gap:3px}.nav a{font-size:12px;padding:12px 13px}.nav a:first-child{background:#1269ce}
+main>#overview{grid-column:1/-1;grid-row:2;background:#071625d9;padding:10px 18px;border-radius:7px;margin:0}
+#overview .top{flex-wrap:wrap}#overview p{margin:3px 0}#overview .small{display:inline-block;margin-right:14px}
+main>.stats{grid-column:1/-1;grid-row:3;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0!important}
+.stats .card{background:linear-gradient(145deg,#102c47,#06111f 85%);border:1px solid #3975a7;min-height:90px;border-radius:6px;padding:15px}
+.stats .card .small{font-size:12px;color:#bed2e5}.stats .stat{font-size:36px;line-height:1.1}
+main>section.card:has(#last24){grid-column:1/-1;grid-row:4;margin:0!important;padding:12px 18px;border-radius:6px;background:#071726dd}
+main>section.card:has(#last24) .stat{font-size:24px}
+main>h2#robots{grid-column:1;grid-row:5;margin:4px 0 0;font-size:13px;letter-spacing:1.1px;color:#b8e7ff}
+main>.office-stage{grid-column:1;grid-row:6;margin:0;min-width:0}
+.office-stage{border-radius:7px;border:1px solid #3375a6;box-shadow:0 10px 40px #000b;background:#081725;overflow:hidden}
+.office-wall{height:68px;background:linear-gradient(90deg,#07172b,#194767,#07172b);border-bottom:3px solid #4086a8}
+.office-wall>span{font-size:21px;letter-spacing:6px}.office-wall>small{font-size:9px}
+.office-floor{padding:14px;background:radial-gradient(ellipse at 50% 30%,#2857757a,transparent 65%),repeating-linear-gradient(90deg,#244c6466 0 1px,transparent 1px 130px),repeating-linear-gradient(0deg,#23496155 0 1px,transparent 1px 90px),linear-gradient(135deg,#102c45,#081725)}
+.office-floor .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.robot-station.robot-station{border:1px solid #367ca7;background:linear-gradient(165deg,#123451e6,#071727e8);box-shadow:0 5px 14px #0008;border-radius:7px}
+.robot-summary{min-height:285px;padding:10px;gap:7px}
+.station-head{padding:10px!important;margin:-10px -10px 0!important;gap:6px;flex-wrap:wrap;font-size:12px;background:#061728ee}
+.station-status{font-size:10px;padding:4px 6px}
+.robot-art{height:142px;background:radial-gradient(ellipse at 50% 55%,#1b7bb066,transparent 70%),linear-gradient(#0c2c46,#102d45)}
+.robot-art:before{border-color:#c3e6f7;box-shadow:0 0 0 7px #1b5075,0 0 22px #00aeff9c}
+.open-hint{background:linear-gradient(90deg,#0b558b,#137cbe);padding:9px;letter-spacing:1px}
+.office-footer{padding:9px 13px}
+main>.lower-panels{display:contents}
+#feedPanel{grid-column:2;grid-row:6;min-height:100%;max-height:720px;overflow:auto;background:#061423f2;border:1px solid #3674a0;border-radius:7px;padding:14px}
+#feedPanel h2{font-size:14px;margin:2px 0 13px}
+#feed .task{padding:10px 4px;border-bottom:1px solid #1d3e57}
+#feed .small{margin:4px 0 0 19px}
+main>#security{grid-column:1/-1;grid-row:10;margin:0!important}
+main #infra{grid-column:1;grid-row:7}
+main>h2#executions{grid-column:2;grid-row:7;font-size:14px;margin:5px 0 0}
+main>.row:has(#statusFilter){grid-column:2;grid-row:8;align-self:start;z-index:1;margin:0!important;padding:0 10px}
+main>#tasks{grid-column:2;grid-row:9;max-height:360px;overflow:auto;background:#061423ee;border:1px solid #3674a0;border-radius:7px}
+main>p.small:last-child{grid-column:1/-1;grid-row:11}
+#infra{grid-column:1;grid-row:7;min-height:240px;background:#071625ee;border-radius:7px}
+#infra h2{font-size:14px}
+#infra .task{padding:10px 4px}
+main>dialog{grid-column:1/-1}
+#robotDetails{z-index:100;max-width:650px}
+@media(min-width:1200px){main{grid-template-columns:minmax(0,1fr) minmax(315px,23%)}}
+@media(max-width:1050px){main{grid-template-columns:minmax(0,1fr) 290px}.office-floor .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.robot-summary{min-height:275px}.nav a{padding:8px}}
+@media(max-width:760px){main{display:flex;flex-direction:column;padding:10px;gap:12px}main>*{width:100%}main>header{margin:-10px -10px 0;width:calc(100% + 20px)}main>.lower-panels{display:grid!important;grid-template-columns:1fr!important;width:100%}main>.stats{grid-template-columns:repeat(2,minmax(0,1fr))}main>.office-stage{width:100%}#feedPanel{max-height:420px}main>section.card:has(#last24) .row{flex-wrap:wrap}}
+@media(max-width:520px){.office-floor .grid{grid-template-columns:1fr}.robot-summary{min-height:270px}.nav{overflow-x:auto}.brand h1{font-size:22px}}
+</style></head><body><main>
+<header><div class="brand"><span class="brand-logo">☁</span><div><h1>TALVOA <span class="brand-sub">│ CENTRO DE OPERAÇÕES</span></h1><div class="small">Robôs conectados a execuções verificáveis</div></div></div><nav class="nav"><a href="./3d.html" style="background:#1167ce;color:#fff">◈ Escritório 3D</a><a href="#overview">Visão Geral</a><a href="#robots">Robôs</a><a href="#executions">Execuções</a><a href="#infra">Infraestrutura</a><a href="#feed">Atividades</a></nav><span class="pill">Prévia pública · somente leitura</span></header>
+<section id="overview" class="card control-bar"><div class="top"><div><strong>GitHub Actions · feature/partner-multitenancy</strong><p id="updated">Aguardando consulta autorizada</p><div class="small" id="countdown" aria-live="off">Atualização automática a cada 30 segundos</div><div class="small" id="freshness" aria-live="polite">Sem leitura validada</div></div><button id="refresh">Atualizar</button></div><p id="error" role="alert" class="bad"></p></section>
+<div class="grid stats" style="margin:18px 0"><div class="card"><div class="small">Execuções consultadas</div><div class="stat" id="total">—</div></div><div class="card"><div class="small">Aprovadas</div><div class="stat ok" id="success">—</div></div><div class="card"><div class="small">Em andamento</div><div class="stat wait" id="running">—</div></div><div class="card"><div class="small">Falhas / canceladas</div><div class="stat bad" id="failed">—</div></div></div>
+<section class="card" style="margin-bottom:16px"><div class="row" style="flex-wrap:wrap"><div><strong>Indicadores reais · últimas 24 horas</strong><p class="small">Calculados exclusivamente a partir das execuções retornadas pela API do GitHub.</p></div><div class="row" style="gap:26px;flex-wrap:wrap"><div><div class="small">Execuções 24h</div><div class="stat" id="last24">—</div></div><div><div class="small">Sucesso 24h</div><div class="stat ok" id="rate24">—</div></div><div><div class="small">Falhas 24h</div><div class="stat bad" id="fail24">—</div></div></div></div></section><h2 id="robots">CENTRO DE OPERAÇÕES · ROBÔS EM ATIVIDADE</h2><div class="office-stage"><div class="office-wall"><span>◈ TALVOA ◈</span><small>CENTRO DE AUTOMAÇÃO INTELIGENTE</small><div class="wall-lights"><i></i><i></i><i></i><i></i><i></i></div></div><div class="office-floor"><div id="office" class="grid"></div></div><div class="office-footer"><span>● WORKFLOWS VERIFICADOS</span><span>GITHUB ACTIONS · SOMENTE LEITURA</span></div></div><dialog id="robotDetails" aria-labelledby="detailTitle"><div class="row"><h2 id="detailTitle">Detalhes da estação</h2><button id="closeDetails" type="button">Fechar</button></div><div id="detailBody"></div></dialog><section class="card" style="margin-top:18px" id="security"><h2>SEGURANÇA E CONTROLE DE EXECUÇÃO</h2><p class="small">Este ambiente público permite apenas leitura. Nenhum comando de deploy, banco de dados ou infraestrutura é executado pelo navegador.</p><div class="row" style="flex-wrap:wrap"><span class="pill">Ações administrativas: bloqueadas</span><span class="pill">Credenciais: não utilizadas</span><span class="pill">Auditoria: GitHub Actions</span></div></section><div class="grid lower-panels" style="margin-top:18px"><section class="card" id="feedPanel"><h2>ATIVIDADES EM TEMPO REAL</h2><div id="feed" class="small">Aguardando dados reais...</div></section><section id="infra" class="card"><h2>INFRAESTRUTURA VERIFICADA</h2><div class="task row"><span>GitHub Actions</span><strong id="ghHealth">Consultando...</strong></div><div class="task row"><span>Render / API</span><span class="wait">Sem telemetria integrada</span></div><div class="task row"><span>Neon / Banco</span><span class="wait">Sem telemetria integrada</span></div><div class="task row"><span>Agentes Windows</span><span class="wait">Sem telemetria integrada</span></div><p class="small">Nenhum serviço é declarado operacional sem verificação.</p></section></div><h2 id="executions">EXECUÇÕES RECENTES · AUDITORIA</h2><div class="row" style="margin:0 0 12px;flex-wrap:wrap"><label for="statusFilter" class="small">Filtrar execuções <select id="statusFilter" style="background:#112b46;color:#fff;border:1px solid #35618c;border-radius:7px;padding:8px"><option value="all">Todas</option><option value="running">Em andamento</option><option value="success">Aprovadas</option><option value="failure">Falhas</option></select></label><a id="githubActions" href="https://github.com/GENESIS-Technology-BR/printflow-ai/actions" target="_blank" rel="noopener noreferrer">Abrir GitHub Actions ↗</a></div><div id="tasks" class="card">Sem dados carregados.</div>
+<p class="small">Origem: API GitHub Actions. Sem acesso autorizado ou em caso de falha, a tela informa indisponibilidade — nunca inventa estados. Apenas dados públicos do GitHub Actions. Não inserir tokens neste arquivo. Para informações privadas, integrar posteriormente ao login TALVOA.</p>
+</main><script>
+'use strict';
+const repo='GENESIS-Technology-BR/printflow-ai';
+const endpoint='https://api.github.com/repos/'+repo+'/actions/runs?branch=feature%2Fpartner-multitenancy&per_page=100';
+const allowedUrlPrefix='https://github.com/'+repo+'/actions/runs/';
+function safeRunUrl(r){const u=String(r?.html_url||'');return u.startsWith(allowedUrlPrefix)&&/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/[0-9]+$/.test(u)?u:'#executions';}
+const el=id=>document.getElementById(id);
+function clean(t){return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function label(r){if(r.status==='queued'||r.status==='pending'||r.status==='waiting'||r.status==='requested')return 'Na fila';if(r.status!=='completed')return 'Em andamento';return ({success:'Aprovado',failure:'Falhou',cancelled:'Cancelado',skipped:'Ignorado'}[r.conclusion]||'Indeterminado');}
+let cachedRuns=[];let lastSuccessfulFetch=0;
+const groups=[['Desenvolvimento','Build TALVOA Agent Windows'],['Deploy','TALVOA CTO Operations'],['Banco de dados','TALVOA SupriTech Migration Safety Checks'],['Segurança','Frontend security audit'],['Monitoramento','TALVOA Neon Free Usage Monitor'],['Qualidade','Partner tenancy validation']];
+async function showStation(i){const [name,workflow]=groups[i]||[];if(!name)return;const match=cachedRuns.find(r=>r.name===workflow);el('detailTitle').textContent='Robô '+(i+1)+' · '+name;el('robotDetails').setAttribute('aria-label','Detalhes operacionais de '+name);el('detailBody').innerHTML='<div class="detail-line"><strong>Workflow monitorado:</strong> '+clean(workflow)+'</div><div class="detail-line"><strong>Situação:</strong> '+clean(match?label(match):'Sem execução entre os registros consultados')+'</div><div class="detail-line"><strong>Última execução:</strong> '+clean(match?.created_at?new Date(match.created_at).toLocaleString('pt-BR'):'Não disponível')+'</div><div class="detail-line"><strong>Commit:</strong> '+clean(match?.head_sha?.slice(0,12)||'Não disponível')+'</div>'+(match?'<div class="detail-line"><strong>Execução:</strong> #'+clean(match.run_number||'—')+' · <strong>Disparo:</strong> '+clean(match.event||'—')+' · <strong>Branch:</strong> '+clean(match.head_branch||'—')+'</div><div class="detail-line"><strong>Início:</strong> '+clean(match.run_started_at?new Date(match.run_started_at).toLocaleString('pt-BR'):'Não informado')+' · <strong>Atualização:</strong> '+clean(match.updated_at?new Date(match.updated_at).toLocaleString('pt-BR'):'Não informado')+'</div><p><a href="'+clean(safeRunUrl(match))+'" target="_blank" rel="noopener noreferrer">Inspecionar logs e etapas no GitHub ↗</a></p>':'<p class="small">Nenhum resultado foi inventado para esta estação.</p>');el('detailBody').insertAdjacentHTML('afterbegin','<div class="diagnostic-banner '+(match?.conclusion==='failure'?'diag-error':match?.conclusion==='success'?'diag-ok':'diag-wait')+'"><strong>'+clean(match?label(match):'Sem registros')+'</strong><span>'+clean(match?.status==='completed'?'Execução finalizada':match?.status==='queued'||match?.status==='pending'?'Aguardando início':'Acompanhamento operacional')+'</span></div>');if(!el('robotDetails').open)el('robotDetails').showModal();if(match?.id){const detail=el('detailBody');const runId=match.id;const jobsBox=document.createElement('div');jobsBox.className='detail-line';jobsBox.textContent='Consultando etapas reais do workflow...';detail.appendChild(jobsBox);try{const resp=await fetch('https://api.github.com/repos/'+repo+'/actions/runs/'+encodeURIComponent(runId)+'/jobs?per_page=50',{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});if(!resp.ok)throw Error('HTTP '+resp.status);const payload=await resp.json();if(!Array.isArray(payload.jobs))throw Error('Resposta inválida');if(!el('robotDetails').open||!detail.isConnected)return;jobsBox.innerHTML=payload.jobs.length?'<strong>Jobs reais ('+payload.jobs.length+'):</strong>'+payload.jobs.map(j=>'<div class="task"><strong>'+clean(j.name)+'</strong> · <span class="'+(j.conclusion==='success'?'ok':j.conclusion==='failure'?'bad':'wait')+'">'+clean(j.status==='completed'?(j.conclusion||'indeterminado'):'em andamento')+'</span>'+(Array.isArray(j.steps)&&j.steps.length?'<div class="small">'+j.steps.map(s=>'↳ '+clean(s.name)+' — '+clean(s.status==='completed'?(s.conclusion||'indeterminado'):'em andamento')).join('<br>')+'</div>':'<div class="small">Etapas ainda não disponibilizadas pelo GitHub.</div>')+'</div>').join(''):'<strong>Jobs ainda não disponíveis.</strong><p class="small">A execução pode estar aguardando um runner ou ainda não ter criado jobs. Não significa conclusão nem falha. Consulte o link do GitHub para acompanhar.</p>';}catch(e){if(jobsBox.isConnected)jobsBox.textContent='Etapas indisponíveis: '+e.message+'. Consulte o GitHub para detalhes.';}}}
+el('closeDetails').addEventListener('click',()=>el('robotDetails').close());
+el('robotDetails').addEventListener('click',e=>{if(e.target===el('robotDetails'))el('robotDetails').close();});
+el('office').addEventListener('click',e=>{if(e.target.closest('a'))return;const station=e.target.closest('[data-station]');if(station)showStation(Number(station.dataset.station));});
+el('office').addEventListener('keydown',e=>{if(e.target.closest('a'))return;if(e.key==='Enter'||e.key===' '){const station=e.target.closest('[data-station]');if(station){e.preventDefault();showStation(Number(station.dataset.station));}}});
+function renderTasks(){const filter=el('statusFilter').value;const runs=cachedRuns.filter(r=>filter==='all'||(filter==='running'?r.status!=='completed':filter==='success'?r.conclusion==='success':['failure','timed_out'].includes(r.conclusion)));el('tasks').innerHTML=runs.length?runs.map(r=>'<div class="task row"><div><a href="'+clean(safeRunUrl(r))+'" target="_blank" rel="noopener noreferrer">'+clean(r.name)+'</a><div class="small">'+clean(r.head_sha?.slice(0,8))+' · '+clean(r.created_at?new Date(r.created_at).toLocaleString('pt-BR'):'sem data')+'</div></div><span class="pill">'+clean(label(r))+'</span></div>').join(''):'Nenhuma execução encontrada neste filtro.';}
+el('statusFilter').addEventListener('change',renderTasks);
+async function refresh(){
+ el('error').textContent='';el('updated').textContent='Consultando GitHub...';
+ try{
+  const res=await fetch(endpoint,{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});
+  if(!res.ok)throw Error('HTTP '+res.status+' — acesso GitHub não disponível');
+  const data=await res.json();if(!Array.isArray(data.workflow_runs))throw Error('Resposta inesperada');
+  const runs=data.workflow_runs;el('total').textContent=runs.length;
+  const dayAgo=Date.now()-86400000;const last24=runs.filter(r=>r.created_at&&new Date(r.created_at).getTime()>=dayAgo);const completed24=last24.filter(r=>r.status==='completed');const success24=completed24.filter(r=>r.conclusion==='success').length;
+  el('last24').textContent=last24.length;el('rate24').textContent=completed24.length?Math.round(success24/completed24.length*100)+'%':'—';el('fail24').textContent=completed24.filter(r=>['failure','timed_out'].includes(r.conclusion)).length;
+  el('success').textContent=runs.filter(r=>r.conclusion==='success').length;
+  el('running').textContent=runs.filter(r=>r.status!=='completed').length;
+  el('failed').textContent=runs.filter(r=>['failure','cancelled','timed_out'].includes(r.conclusion)).length;
+  el('office').innerHTML=groups.map(([name,workflow],i)=>{
+    const match=runs.find(r=>r.name===workflow);
+    const state=!match?'Sem registro':label(match);
+    const active=Boolean(match&&match.status!=='completed');
+    const color=active?'wait':match?.conclusion==='success'?'ok':match?.conclusion==='failure'?'bad':'';
+    const last=match?.created_at?new Date(match.created_at).toLocaleString('pt-BR'):'Não disponível';
+    return '<details class="robot-station" data-active="'+active+'"><summary class="robot-summary"><div class="station-head"><span>'+(i+1)+' · '+clean(name.toUpperCase())+'</span><span class="station-status '+color+'">'+clean(state)+'</span></div><div class="robot-art" aria-hidden="true"><div class="scene-light"></div><div class="workdesk"><span class="monitor left"></span><span class="monitor right"></span><span class="desk"></span><span class="chair"></span><span class="lamp"></span></div></div><div class="small">'+clean(workflow)+'</div><div class="station-meta">Última execução: '+clean(last)+'</div><strong class="open-hint">▼ ABRIR DETALHES</strong></summary><div class="native-details"><strong>Robô '+(i+1)+' · '+clean(name)+'</strong><p>Situação: '+clean(state)+'</p><p>Workflow: '+clean(workflow)+'</p><p>Última execução: '+clean(last)+'</p>'+(match?'<a href="'+clean(safeRunUrl(match))+'" target="_blank" rel="noopener noreferrer">Ver execução e etapas no GitHub ↗</a>':'<span>Sem execução encontrada nos registros consultados.</span>')+'</div></details>';
+  }).join('');
+  cachedRuns=runs;lastSuccessfulFetch=Date.now();renderTasks();
+  el('freshness').textContent='Dados recebidos agora · GitHub Actions';el('ghHealth').textContent='API respondeu';el('ghHealth').className='ok';
+  el('feed').innerHTML=runs.slice(0,8).map(r=>'<div class="task"><span class="'+(r.conclusion==='success'?'ok':r.conclusion==='failure'?'bad':'wait')+'">●</span> <a href="'+clean(safeRunUrl(r))+'" target="_blank" rel="noopener noreferrer">'+clean(r.name)+'</a><div class="small">'+clean(label(r))+' · '+clean(r.created_at?new Date(r.created_at).toLocaleString('pt-BR'):'Sem data')+'</div></div>').join('')||'Sem atividade registrada';
+  el('updated').textContent='Última consulta: '+new Date().toLocaleString('pt-BR');
+ }catch(e){el('updated').textContent='Dados indisponíveis';el('error').textContent=e.message+'; nenhum status exibido como atual.';['total','success','running','failed','last24','rate24','fail24'].forEach(id=>el(id).textContent='—');el('tasks').textContent='Não foi possível consultar execuções. Verifique autorização e conectividade.';el('office').innerHTML=groups.map(([name,workflow],i)=>'<article class="robot-station" role="button" tabindex="0" data-station="'+i+'" data-active="false"><div class="station-head"><strong>'+clean(name)+'</strong><span class="station-status wait">Indisponível</span></div><div class="robot-art" aria-hidden="true"><div class="workdesk"><span class="monitor left"></span><span class="monitor right"></span><span class="desk"></span></div></div><p class="small">'+clean(workflow)+'</p><p class="small">Clique para detalhes; consulta ao GitHub indisponível.</p></article>').join('');cachedRuns=[];el('freshness').textContent='Consulta falhou · dados não confiáveis';el('ghHealth').textContent='Indisponível';el('ghHealth').className='bad';el('feed').textContent='Não foi possível consultar as atividades.';}
+}
+let remaining=30;let fetching=false;
+const originalRefresh=refresh;
+refresh=async function(){if(fetching)return;fetching=true;try{await originalRefresh();}finally{fetching=false;remaining=30;}};
+el('refresh').addEventListener('click',refresh);
+setInterval(()=>{if(document.hidden)return;if(lastSuccessfulFetch){const seconds=Math.floor((Date.now()-lastSuccessfulFetch)/1000);el('freshness').textContent='Última leitura confirmada há '+seconds+'s'+(seconds>120?' · ATENÇÃO: dados desatualizados':'');}remaining=Math.max(0,remaining-1);el('countdown').textContent='Próxima consulta em '+remaining+'s';if(remaining===0)refresh();},1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+el('office').innerHTML=groups.map(([name,workflow],i)=>'<article class="robot-station" role="button" tabindex="0" data-station="'+i+'" data-active="false"><div class="station-head"><strong>'+clean(name)+'</strong><span class="station-status wait">Aguardando dados</span></div><div class="robot-art" aria-hidden="true"><div class="workdesk"><span class="monitor left"></span><span class="monitor right"></span><span class="desk"></span></div></div><p class="small">'+clean(workflow)+'</p><p class="small">Clique para consultar esta estação</p></article>').join('');
+refresh();
+</script></body></html>

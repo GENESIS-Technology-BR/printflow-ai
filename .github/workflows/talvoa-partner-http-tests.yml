@@ -1,0 +1,53 @@
+name: TALVOA Partner HTTP Isolation
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/partner-multitenancy
+    paths:
+      - 'backend/modules/partners/**'
+      - 'backend/modules/auth/**'
+      - 'backend/tests/test_partner_http.py'
+      - 'backend/tests/test_partner_populated_tenant_isolation.py'
+      - '.github/workflows/talvoa-partner-http-tests.yml'
+      - 'requirements.txt'
+      - 'requirements-dev.txt'
+      - 'backend/main.py'
+      - 'backend/app/database/**'
+  pull_request:
+    paths:
+      - 'backend/modules/partners/**'
+      - 'backend/modules/auth/**'
+      - 'backend/tests/test_partner_http.py'
+      - 'backend/tests/test_partner_populated_tenant_isolation.py'
+      - '.github/workflows/talvoa-partner-http-tests.yml'
+      - 'requirements.txt'
+      - 'requirements-dev.txt'
+      - 'backend/main.py'
+      - 'backend/app/database/**'
+permissions:
+  contents: read
+concurrency:
+  group: talvoa-partner-http-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  security-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+            agent/python/requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Verify HTTP authorization and tenant isolation
+        env:
+          PYTHONPATH: .
+          JWT_SECRET: 'talvoa-ci-isolated-test-only-secret-2026-no-production-use'
+        run: python -m pytest -q backend/tests/test_partner_http.py backend/tests/test_partner_populated_tenant_isolation.py

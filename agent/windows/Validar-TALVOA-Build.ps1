@@ -33,6 +33,9 @@ try {
         "INSTALAR-TALVOA-Agent.bat",
         "ATUALIZAR-TALVOA-Agent.bat",
         "Start-TALVOA-Agent.ps1",
+        "Watchdog-TALVOA-Agent.ps1",
+        "Sync-TALVOA-Watchdog.ps1",
+        "README-TALVOA.txt",
         "Install-TALVOA-Agent.ps1",
         "Update-TALVOA-Agent.ps1",
         "Uninstall-TALVOA-Agent.ps1",
@@ -83,13 +86,24 @@ try {
         Add-Check "Versao alinhada no instalador" $installerVersionAligned $versionDetail
     }
 
+    # SupriTech pilot must not silently send printer inventory to another tenant/API.
+    $expectedPilotApi = "https://talvoa-supritech-homolog-api.onrender.com"
+    foreach ($scriptName in @("Install-TALVOA-Agent.ps1", "Start-TALVOA-Agent.ps1")) {
+        $scriptPath = Join-Path $baseDir $scriptName
+        if (Test-Path $scriptPath) {
+            $scriptBody = Get-Content $scriptPath -Raw
+            $safeTarget = $scriptBody.Contains($expectedPilotApi) -and
+                -not $scriptBody.Contains("https://printflow-api-3uwr.onrender.com")
+            Add-Check "Destino homologacao $scriptName" $safeTarget "API SupriTech; nenhuma referencia ao endpoint legado"
+        }
+    }
+
     $exe = Join-Path $baseDir "TALVOA-Agent.exe"
     if (Test-Path $exe) {
         $hash = (Get-FileHash $exe -Algorithm SHA256).Hash
         Add-Check "Integridade do executavel" ($hash.Length -eq 64) "SHA256 $hash"
-        if (-not [string]::IsNullOrWhiteSpace($expectedExeHash)) {
-            Add-Check "SHA256 confere com a Build" ($hash -eq $expectedExeHash) "hash do executavel confere com BUILD-VALIDATION.txt"
-        }
+        Add-Check "SHA256 presente no manifesto" ($expectedExeHash -match '^[0-9a-fA-F]{64}$') "manifesto de integridade obrigatorio"
+        Add-Check "SHA256 confere com a Build" ($hash -eq $expectedExeHash) "hash do executavel confere com BUILD-VALIDATION.txt"
         $help = & $exe --help 2>&1 | Out-String
         Add-Check "Inicializacao do executavel" ($LASTEXITCODE -eq 0) "teste --help"
         Add-Check "Modo automatico" ($help -match "--daemon") "opcao disponivel"

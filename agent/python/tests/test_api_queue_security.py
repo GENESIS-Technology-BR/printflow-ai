@@ -35,6 +35,20 @@ def test_queue_never_persists_agent_token(tmp_path: Path):
     assert "agent_token" not in content["payload"]
 
 
+
+def test_same_millisecond_queue_writes_do_not_overwrite(tmp_path: Path, monkeypatch):
+    client = _client(tmp_path)
+    monkeypatch.setattr("api.client.time.time", lambda: 1234567890.123)
+
+    first = client.save_to_queue({"ip": "10.0.0.1", "counter": 1}, "offline")
+    second = client.save_to_queue({"ip": "10.0.0.1", "counter": 2}, "offline")
+
+    assert first != second
+    assert first.exists() and second.exists()
+    assert json.loads(first.read_text(encoding="utf-8"))["payload"]["counter"] == 1
+    assert json.loads(second.read_text(encoding="utf-8"))["payload"]["counter"] == 2
+
+
 def test_retry_sanitizes_legacy_queue_and_uses_current_token(
     tmp_path: Path,
     monkeypatch,
@@ -82,7 +96,7 @@ def test_health_check_requires_real_health_success(tmp_path, monkeypatch):
     assert client.health_check() is False
 
 
-def test_expired_queue_item_is_removed(tmp_path: Path):
+def test_expired_unsynced_queue_item_is_preserved(tmp_path: Path):
     client = _client(tmp_path)
     expired = client.queue_directory / "expired.json"
     expired.write_text(
@@ -96,8 +110,9 @@ def test_expired_queue_item_is_removed(tmp_path: Path):
 
     result = client.prune_queue()
 
-    assert result["expired"] == 1
-    assert not expired.exists()
+    assert result["expired"] == 0
+    assert expired.exists()
+    assert json.loads(expired.read_text(encoding="utf-8"))["payload"]["ip"] == "10.0.0.1"
 
 
 def test_heartbeat_sends_current_agent_state(tmp_path, monkeypatch):

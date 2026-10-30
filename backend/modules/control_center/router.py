@@ -352,6 +352,8 @@ def overview(
                 name=company.name,
                 plan=company.plan,
                 active=company.active,
+                partner_id=company.partner_id,
+                customer_portal_enabled=company.customer_portal_enabled,
                 agent_online=agent_online,
                 agent_stale=agent_stale,
                 agent_communication_state=agent_communication_state,
@@ -403,6 +405,24 @@ def _find_company_by_uuid(
             detail="Empresa não encontrada",
         )
     return company
+
+
+@router.get("/clients/{company_uuid}/agent-credential")
+def get_client_agent_credential(
+    company_uuid: str,
+    current_user: User = Depends(get_platform_admin),
+    db: Session = Depends(get_db),
+):
+    """Explicit platform-admin-only retrieval for onboarding a specific tenant."""
+    from fastapi.responses import JSONResponse
+
+    company = _find_company_by_uuid(db, company_uuid)
+    response = JSONResponse(
+        content={"company_uuid": company.uuid, "agent_token": company.agent_token}
+    )
+    response.headers["Cache-Control"] = "no-store, private"
+    response.headers["Pragma"] = "no-cache"
+    return response
 
 
 @router.get(
@@ -506,6 +526,16 @@ def create_client_preview(
     db: Session = Depends(get_db),
 ):
     company = _find_company_by_uuid(db, company_uuid)
+
+    # A preview must obey the same tenant portal gate as dashboard endpoints.
+    # Never issue a client token that is guaranteed to receive HTTP 403.
+    if not company.active:
+        raise HTTPException(status_code=409, detail="Empresa inativa. Ative a empresa antes de visualizar o portal.")
+    if company.partner_id is not None and not company.customer_portal_enabled:
+        raise HTTPException(
+            status_code=409,
+            detail="Portal do cliente desabilitado para esta empresa. Habilite o portal antes de iniciar a pré-visualização.",
+        )
 
     user = (
         db.query(User)

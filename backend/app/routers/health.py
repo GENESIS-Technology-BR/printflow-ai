@@ -40,3 +40,20 @@ def health():
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     return JSONResponse(content=payload, status_code=http_status)
+
+
+@router.get("/health/live")
+def liveness():
+    """Process liveness: no database, network, or migrations required."""
+    return {"status": "alive", "application": settings.app_name}
+
+
+@router.get("/health/ready")
+def readiness():
+    """Readiness requires a successful database round trip."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except Exception:
+        return JSONResponse(content={"status": "not_ready", "database": "unavailable"}, status_code=503)
+    return {"status": "ready", "database": "connected"}

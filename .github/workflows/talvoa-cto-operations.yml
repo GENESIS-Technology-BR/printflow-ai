@@ -1,0 +1,50 @@
+name: TALVOA CTO Operations
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Authorized read-only operation'
+        required: true
+        type: choice
+        options:
+          - verify-code
+          - neon-inventory
+          - source-connectivity-preflight
+permissions:
+  contents: read
+concurrency:
+  group: talvoa-cto-operations
+  cancel-in-progress: false
+jobs:
+  operate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify source code
+        if: inputs.operation == 'verify-code'
+        run: |
+          python -m compileall -q backend/scripts
+          python -m unittest discover -s backend/tests -p 'test_supritech_*.py'
+      - name: Explain private Render connectivity requirement
+        if: inputs.operation == 'source-connectivity-preflight'
+        run: |
+          echo 'Render source PostgreSQL is allowlisted and inaccessible to hosted GitHub runners.'
+          echo 'Use a private Render-side executor with short-lived credentials; no firewall changes authorized.'
+          echo 'No database operation attempted.'
+      - name: Install PostgreSQL client
+        if: inputs.operation == 'neon-inventory'
+        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+      - name: Inventory isolated Neon staging
+        if: inputs.operation == 'neon-inventory'
+        env:
+          TALVOA_TARGET_DATABASE_URL: ${{ secrets.TALVOA_TARGET_DATABASE_URL }}
+          TALVOA_EXPECTED_NEON_HOST: ${{ vars.TALVOA_EXPECTED_NEON_HOST }}
+        run: |
+          set -euo pipefail
+          test -n "$TALVOA_TARGET_DATABASE_URL" || { echo "::error::Missing target secret"; exit 1; }
+          test -n "$TALVOA_EXPECTED_NEON_HOST" || { echo "::error::Missing target host pin"; exit 1; }
+          python backend/scripts/talvoa_supritech_inventory.py --target
