@@ -46,6 +46,9 @@ def main():
         if not isinstance(rows, list):
             raise SystemExit("FALHA: formato inesperado de empresas")
         print("EMPRESAS VINCULADAS:", len(rows))
+        if not rows:
+            raise SystemExit("FALHA: parceiro sem empresas vinculadas")
+        total_printers = 0
         for company in rows:
             company_id = company.get("id")
             if not isinstance(company_id, int):
@@ -59,10 +62,13 @@ def main():
             printers = result.json()
             if not isinstance(printers, list):
                 raise SystemExit("FALHA: formato inesperado de impressoras")
+            total_printers += len(printers)
             simulated = sum(p.get("source") == "demo" for p in printers)
             print(f"  TOTAL: {len(printers)} | MARCADAS DEMO: {simulated}")
             for printer in printers:
                 print(" ", printer.get("name"), "|", printer.get("ip"), "|", printer.get("status"))
+        if total_printers == 0:
+            raise SystemExit("FALHA: nenhuma impressora visivel ao parceiro")
         print("SMOKE TEST: APROVADO (somente API; Agent Windows e portal web nao testados)")
 
 
