@@ -1,32 +1,28 @@
-"""Carga opt-in de impressoras FICTICIAS para o SQLite isolado da demo SupriTech.
+"""Carga opt-in e idempotente de impressoras ficticias no SQLite isolado SupriTech.
 
-Uso:
+Executar a partir da raiz do repositorio com:
  DATABASE_URL=sqlite:////tmp/talvoa_mvp_demo_20261030.db ENVIRONMENT=development \
- TALVOA_DEMO_SEED=YES python scripts/seed_supritech_demo_printers.py
+ TALVOA_DEMO_SEED=YES python -m scripts.seed_supritech_demo_printers
 
-Nao cria usuarios, empresas ou tabelas. Nao altera dados de agentes reais.
+Usa reflexao SQLAlchemy Core: nao depende do registro de modelos ORM.
+Nao cria tabelas, contas ou empresas; nao acessa ambientes remotos.
 """
 import os
 from pathlib import Path
 
-from sqlalchemy import select
-
 EXPECTED_DB = "/tmp/talvoa_mvp_demo_20261030.db"
 if os.environ.get("TALVOA_DEMO_SEED") != "YES":
-    raise SystemExit("BLOQUEADO: defina TALVOA_DEMO_SEED=YES explicitamente")
+    raise SystemExit("BLOQUEADO: defina TALVOA_DEMO_SEED=YES")
 if os.environ.get("ENVIRONMENT") != "development":
     raise SystemExit("BLOQUEADO: ENVIRONMENT deve ser development")
 if os.environ.get("DATABASE_URL") != "sqlite:///" + EXPECTED_DB:
-    raise SystemExit("BLOQUEADO: DATABASE_URL nao corresponde ao SQLite de demo")
-if not Path(EXPECTED_DB).is_file():
-    raise SystemExit("BLOQUEADO: arquivo SQLite de demo inexistente")
+    raise SystemExit("BLOQUEADO: DATABASE_URL diferente do SQLite isolado")
+if not Path(EXPECTED_DB).is_file() or Path(EXPECTED_DB).is_symlink():
+    raise SystemExit("BLOQUEADO: banco isolado inexistente ou link simbolico")
 
-from backend.app.database.connection import SessionLocal, engine
-from backend.modules.auth.model import User
-from backend.modules.companies.model import Company
-from backend.modules.partners.model import Partner, PartnerMembership
-from backend.modules.printers.model import Printer
+from sqlalchemy import MetaData, Table, create_engine, select
 
+engine = create_engine(os.environ["DATABASE_URL"])
 if engine.dialect.name != "sqlite" or engine.url.database != EXPECTED_DB:
     raise SystemExit("BLOQUEADO: engine nao aponta para o banco isolado")
 
@@ -35,39 +31,50 @@ DEMO = (
     ("192.0.2.12", "DEMO - IMPRESSORA FISCAL", "FISCAL", "Ricoh", "IM C3000", 38420, "DEMO-FIS-002"),
     ("192.0.2.13", "DEMO - IMPRESSORA ENGENHARIA", "ENGENHARIA", "Canon", "imageRUNNER", 9120, "DEMO-ENG-003"),
 )
+metadata = MetaData()
+try:
+    users = Table("users_v2", metadata, autoload_with=engine)
+    companies = Table("companies_v2", metadata, autoload_with=engine)
+    partners = Table("partners", metadata, autoload_with=engine)
+    memberships = Table("partner_memberships", metadata, autoload_with=engine)
+    printers = Table("printers", metadata, autoload_with=engine)
+except Exception as exc:
+    raise SystemExit(f"BLOQUEADO: estrutura de demo incompleta: {type(exc).__name__}") from exc
 
-with SessionLocal() as db:
-    user = db.scalar(select(User).where(User.username == "supritech_demo"))
-    if user is None:
-        raise SystemExit("BLOQUEADO: usuario supritech_demo inexistente")
-    company = db.get(Company, user.company_id)
-    if company is None or company.name != "SUPRITECH DEMONSTRACAO":
-        raise SystemExit("BLOQUEADO: empresa demo nao corresponde ao esperado")
-    membership = db.scalar(select(PartnerMembership).where(
-        PartnerMembership.user_id == user.id,
-        PartnerMembership.active.is_(True),
-    ))
-    if membership is None or membership.role != "partner_admin" or company.partner_id != membership.partner_id:
-        raise SystemExit("BLOQUEADO: vinculo de parceiro demo nao validado")
-    partner = db.get(Partner, membership.partner_id)
-    if partner is None or partner.name != "SUPRITECH DEMONSTRACAO":
-        raise SystemExit("BLOQUEADO: parceiro nao corresponde ao esperado")
+with engine.begin() as conn:
+    user = conn.execute(select(users).where(users.c.username == "supritech_demo")).mappings().one_or_none()
+    if not user:
+        raise SystemExit("BLOQUEADO: usuario demo inexistente")
+    company = conn.execute(select(companies).where(companies.c.id == user["company_id"])).mappings().one_or_none()
+    if not company or company["name"] != "SUPRITECH DEMONSTRACAO":
+        raise SystemExit("BLOQUEADO: empresa demo inesperada")
+    membership = conn.execute(select(memberships).where(
+        memberships.c.user_id == user["id"],
+        memberships.c.active.is_(True),
+        memberships.c.role == "partner_admin",
+    )).mappings().one_or_none()
+    if not membership or company["partner_id"] != membership["partner_id"]:
+        raise SystemExit("BLOQUEADO: vinculo de parceiro invalido")
+    partner = conn.execute(select(partners).where(partners.c.id == membership["partner_id"])).mappings().one_or_none()
+    if not partner or partner["name"] != "SUPRITECH DEMONSTRACAO":
+        raise SystemExit("BLOQUEADO: parceiro inesperado")
 
     created = 0
     for ip, name, sector, manufacturer, model, pages, serial in DEMO:
-        existing = db.scalar(select(Printer).where(Printer.company_id == company.id, Printer.ip == ip))
+        existing = conn.execute(select(printers).where(
+            printers.c.company_id == company["id"], printers.c.ip == ip,
+        )).mappings().one_or_none()
         if existing:
-            if existing.source != "demo" or existing.serial != serial:
+            if existing["source"] != "demo" or existing["serial"] != serial:
                 raise SystemExit(f"BLOQUEADO: IP {ip} ja utilizado por outro registro")
             continue
-        db.add(Printer(
-            company_id=company.id, ip=ip, name=name, custom_name=name,
+        conn.execute(printers.insert().values(
+            company_id=company["id"], ip=ip, name=name, custom_name=name,
             sector_name=sector, manufacturer=manufacturer, model=model,
             page_count=pages, serial=serial, source="demo",
             status="online", active=True, page_count_source="demo",
             serial_source="demo",
         ))
         created += 1
-    db.commit()
-    print(f"DEMO SUPRITECH: {created} impressoras ficticias criadas; {len(DEMO)} esperadas.")
-    print("ATENCAO: status e contadores sao simulados, sem Agent Windows.")
+print(f"DEMO SUPRITECH: {created} impressoras ficticias criadas; {len(DEMO)} esperadas.")
+print("ATENCAO: status e contadores simulados; nenhum Agent Windows foi testado.")
