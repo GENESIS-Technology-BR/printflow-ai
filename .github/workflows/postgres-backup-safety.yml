@@ -1,0 +1,41 @@
+name: TALVOA PostgreSQL Backup Safety (Offline)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'ops/backup_supritech_homolog.sh'
+      - '.github/workflows/postgres-backup-safety.yml'
+  push:
+    branches: [feature/partner-multitenancy]
+    paths:
+      - 'ops/backup_supritech_homolog.sh'
+      - '.github/workflows/postgres-backup-safety.yml'
+permissions:
+  contents: read
+jobs:
+  offline-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate bash syntax
+        shell: bash
+        run: bash -n ops/backup_supritech_homolog.sh
+      - name: Enforce non-executing backup safety contract
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('ops/backup_supritech_homolog.sh').read_text()
+          required=[
+            'set -Eeuo pipefail', 'umask 077',
+            '${DATABASE_URL:?', '${BACKUP_DIR:?',
+            'PGSSLMODE=require', 'pg_dump', '--format=custom',
+            '--no-owner', '--no-acl', 'pg_restore --list',
+            'sha256sum', '.partial'
+          ]
+          missing=[x for x in required if x not in s]
+          assert not missing, f'Missing backup safeguards: {missing}'
+          assert 'pg_restore --dbname' not in s, 'CI must never restore customer data'
+          print('PASS: offline syntax and guardrails; NO DATABASE CONNECTION, NO BACKUP CREATED.')
+          PY
