@@ -9,6 +9,7 @@ Nao cria tabelas, contas ou empresas; nao acessa ambientes remotos.
 """
 import os
 from pathlib import Path
+from uuid import uuid4
 
 EXPECTED_DB = "/tmp/talvoa_mvp_demo_20261030.db"
 if os.environ.get("TALVOA_DEMO_SEED") != "YES":
@@ -69,7 +70,7 @@ with engine.begin() as conn:
                 raise SystemExit(f"BLOQUEADO: IP {ip} ja utilizado por outro registro")
             continue
         conn.execute(printers.insert().values(
-            company_id=company["id"], ip=ip, name=name, custom_name=name,
+            company_id=company["id"], uuid=str(uuid4()), ip=ip, name=name, custom_name=name,
             sector_name=sector, manufacturer=manufacturer, model=model,
             page_count=pages, serial=serial, source="demo",
             status="online", active=True, page_count_source="demo",
