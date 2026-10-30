@@ -41,17 +41,8 @@ except ImportError:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # SupriTech migrations run separately, never in HTTP startup.
-    if (engine.url.database or "").lower() != "talvoa_supritech_homolog_db":
-        Base.metadata.create_all(bind=engine)
-        ensure_printer_columns(engine)
-        ensure_printer_company_ip_constraint(engine)
-        ensure_company_agent_columns(engine)
-        ensure_operational_alert_columns(engine)
-        ensure_user_security_columns(engine)
-        ensure_partner_company_columns(engine)
-        clean_descriptive_printer_serials(engine)
-        configure_guerra_pilot_financials(engine)
+    # Database schema changes must be executed by a separate, reviewed migration job.
+    # Never mutate schema or financial settings as a side effect of HTTP startup.
     if os.getenv("TALVOA_ALLOW_STAGING_BOOTSTRAP") == "true":
         from backend.scripts.bootstrap_staging_admin import main as bootstrap_staging_admin
         bootstrap_staging_admin()
