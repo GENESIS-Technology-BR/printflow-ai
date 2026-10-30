@@ -43,9 +43,6 @@ except ImportError:
 async def lifespan(app: FastAPI):
     # Database schema changes must be executed by a separate, reviewed migration job.
     # Never mutate schema or financial settings as a side effect of HTTP startup.
-    if os.getenv("TALVOA_ALLOW_STAGING_BOOTSTRAP") == "true":
-        from backend.scripts.bootstrap_staging_admin import main as bootstrap_staging_admin
-        bootstrap_staging_admin()
     yield
 
 
