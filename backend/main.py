@@ -6,18 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.app.config.settings import settings
-from backend.app.database.connection import Base, engine
-from backend.app.database import models as database_models
-from backend.app.database.migrations import (
-    clean_descriptive_printer_serials,
-    configure_guerra_pilot_financials,
-    ensure_printer_columns,
-    ensure_printer_company_ip_constraint,
-    ensure_company_agent_columns,
-    ensure_operational_alert_columns,
-    ensure_user_security_columns,
-    ensure_partner_company_columns,
-)
 from backend.app.routers.health import router as health_router
 from backend.modules.auth.model import User
 from backend.modules.auth.router import router as auth_router
