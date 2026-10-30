@@ -10,6 +10,7 @@ Nao cria tabelas, contas ou empresas; nao acessa ambientes remotos.
 import os
 from pathlib import Path
 from uuid import uuid4
+from datetime import datetime, timezone
 
 EXPECTED_DB = "/tmp/talvoa_mvp_demo_20261030.db"
 if os.environ.get("TALVOA_DEMO_SEED") != "YES":
@@ -74,7 +75,9 @@ with engine.begin() as conn:
             sector_name=sector, manufacturer=manufacturer, model=model,
             page_count=pages, serial=serial, source="demo",
             status="online", active=True, page_count_source="demo",
-            serial_source="demo",
+            page_count_confirmed=False, serial_source="demo",
+            serial_confirmed=False, cost_model="per_page",
+            last_seen=datetime.now(timezone.utc), created_at=datetime.now(timezone.utc),
         ))
         created += 1
 print(f"DEMO SUPRITECH: {created} impressoras ficticias criadas; {len(DEMO)} esperadas.")
