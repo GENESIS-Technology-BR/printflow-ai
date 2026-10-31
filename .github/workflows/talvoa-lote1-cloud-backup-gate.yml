@@ -1,0 +1,40 @@
+# TALVOA Lote 1 — executable cloud backup readiness checklist
+# This does NOT run pg_dump or change IP allowlists.
+# Requires private runner with access to source PostgreSQL and durable encrypted storage.
+name: TALVOA Lote 1 Cloud Backup Gate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    environment: supritech-homolog-audit
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check prerequisites without disclosing credentials
+        env:
+          SOURCE_URL: ${{ secrets.TALVOA_SOURCE_DATABASE_URL }}
+          TARGET_URL: ${{ secrets.TALVOA_TARGET_DATABASE_URL }}
+          BACKUP_KEY: ${{ secrets.TALVOA_BACKUP_ENCRYPTION_KEY }}
+          STORAGE_TARGET: ${{ vars.TALVOA_BACKUP_STORAGE_TARGET }}
+          NETWORK_AUTH: ${{ vars.TALVOA_SOURCE_NETWORK_ACCESS_VERIFIED }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=0
+          for name in SOURCE_URL TARGET_URL BACKUP_KEY STORAGE_TARGET; do
+            if [[ -n "${!name:-}" ]]; then
+              echo "READY $name"
+            else
+              echo "::warning::Missing $name"
+              failed=1
+            fi
+          done
+          if [[ "$NETWORK_AUTH" != "yes" ]]; then
+            echo "::warning::Private source network access is not verified"
+            failed=1
+          fi
+          echo "Gate only: no customer data accessed, no secrets printed, no network rules changed."
+          exit "$failed"
