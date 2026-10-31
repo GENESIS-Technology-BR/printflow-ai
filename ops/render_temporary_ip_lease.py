@@ -46,8 +46,8 @@ def main():
     try:
         patched = [{"cidrBlock": r["cidrBlock"], "description": r.get("description", "")} for r in before]
         patched.append({"cidrBlock": cidr, "description": LABEL})
+        added = True  # cleanup even if PATCH succeeded but response failed
         patch(patched)
-        added = True
         print("Temporary /32 access added; other existing CIDRs preserved.")
         if os.environ.get("TALVOA_LEASE_ONLY") != "yes":
             raise RuntimeError("Lease-only mode required; backup execution not yet configured")
