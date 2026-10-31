@@ -4,15 +4,17 @@ on:
   pull_request:
     paths:
       - 'ops/render_temporary_ip_lease.py'
+      - 'ops/render_stale_ip_cleanup.py'
       - 'tests/test_render_temporary_ip_lease.py'
       - 'tests/test_render_stale_ip_cleanup.py'
-      - 'ops/render_stale_ip_cleanup.py'
       - '.github/workflows/render-ip-lease-tests.yml'
   push:
     branches: [feature/partner-multitenancy]
     paths:
       - 'ops/render_temporary_ip_lease.py'
+      - 'ops/render_stale_ip_cleanup.py'
       - 'tests/test_render_temporary_ip_lease.py'
+      - 'tests/test_render_stale_ip_cleanup.py'
       - '.github/workflows/render-ip-lease-tests.yml'
 permissions:
   contents: read
@@ -22,7 +24,9 @@ jobs:
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
-      - name: Test temporary IP lease without calling Render
+      - name: Validate IP lease and cleanup (offline)
+        shell: bash
         run: |
+          set -euo pipefail
           python3 -m unittest discover -s tests -p 'test_render_temporary_ip_lease.py' -v
           python3 -m unittest discover -s tests -p 'test_render_stale_ip_cleanup.py' -v
