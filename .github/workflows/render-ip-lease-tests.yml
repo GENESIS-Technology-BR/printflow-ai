@@ -5,6 +5,8 @@ on:
     paths:
       - 'ops/render_temporary_ip_lease.py'
       - 'tests/test_render_temporary_ip_lease.py'
+      - 'tests/test_render_stale_ip_cleanup.py'
+      - 'ops/render_stale_ip_cleanup.py'
       - '.github/workflows/render-ip-lease-tests.yml'
   push:
     branches: [feature/partner-multitenancy]
@@ -21,4 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Test temporary IP lease without calling Render
-        run: python3 -m unittest discover -s tests -p 'test_render_temporary_ip_lease.py' -v
+        run: |
+          python3 -m unittest discover -s tests -p 'test_render_temporary_ip_lease.py' -v
+          python3 -m unittest discover -s tests -p 'test_render_stale_ip_cleanup.py' -v
