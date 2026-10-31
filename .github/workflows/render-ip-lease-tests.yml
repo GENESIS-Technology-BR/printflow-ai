@@ -1,0 +1,24 @@
+name: TALVOA Render IP Lease Offline Tests
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'ops/render_temporary_ip_lease.py'
+      - 'tests/test_render_temporary_ip_lease.py'
+      - '.github/workflows/render-ip-lease-tests.yml'
+  push:
+    branches: [feature/partner-multitenancy]
+    paths:
+      - 'ops/render_temporary_ip_lease.py'
+      - 'tests/test_render_temporary_ip_lease.py'
+      - '.github/workflows/render-ip-lease-tests.yml'
+permissions:
+  contents: read
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test temporary IP lease without calling Render
+        run: python3 -m unittest discover -s tests -p 'test_render_temporary_ip_lease.py' -v
