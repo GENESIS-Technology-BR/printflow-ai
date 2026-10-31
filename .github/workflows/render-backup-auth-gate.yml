@@ -1,0 +1,46 @@
+name: TALVOA Render Backup Authentication Gate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  auth-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: supritech-homolog-audit
+    steps:
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - name: Validate source identity and read-only TLS authentication
+        env:
+          DATABASE_URL: ${{ secrets.TALVOA_SOURCE_DATABASE_URL }}
+          PGCONNECT_TIMEOUT: '8'
+          PGSSLMODE: require
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ -z "${DATABASE_URL:-}" ]]; then
+            echo "::error::TALVOA_SOURCE_DATABASE_URL is missing"
+            exit 1
+          fi
+          python3 - <<'PY'
+          import os
+          from urllib.parse import urlsplit,parse_qs
+          url=urlsplit(os.environ['DATABASE_URL'])
+          expected='dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com'
+          if url.scheme not in ('postgres','postgresql') or url.hostname != expected or url.path != '/talvoa_supritech_homolog_db':
+              raise SystemExit('BLOCKED: source database identity mismatch')
+          modes=parse_qs(url.query).get('sslmode',[])
+          if modes and modes[0] not in ('require','verify-ca','verify-full'):
+              raise SystemExit('BLOCKED: URL overrides TLS requirement')
+          print('PASS: source URL identity verified (credentials not displayed)')
+          PY
+          if ! output=$(psql "$DATABASE_URL" -X -w -A -t -v ON_ERROR_STOP=1 -c "BEGIN READ ONLY; SELECT CASE WHEN current_database()='talvoa_supritech_homolog_db' AND EXISTS (SELECT 1 FROM pg_stat_ssl WHERE pid=pg_backend_pid() AND ssl) THEN 'CONNECTED_TLS' ELSE 'INVALID' END; ROLLBACK;" 2>/dev/null); then
+            echo "::error::PostgreSQL authentication or network allowlist failed; no data read"
+            exit 1
+          fi
+          if ! grep -qx CONNECTED_TLS <<< "$output"; then
+            echo "::error::Unexpected PostgreSQL identity or TLS status"
+            exit 1
+          fi
+          echo 'PASS: PostgreSQL authenticated over TLS (read-only transaction); no backup or data export.'
