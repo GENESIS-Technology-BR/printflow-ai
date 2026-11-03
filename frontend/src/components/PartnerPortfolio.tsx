@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 const API_URL = (
@@ -15,7 +15,7 @@ type PartnerCompany = {
 
 type FleetAlert = { id: number; title: string; severity: string; status: string; description: string };
 
-type FleetPrinter = { id: number | null; name: string; ip: string | null; status: string; model: string | null; sector_name: string | null };
+type FleetPrinter = { id: number | null; name: string; ip: string | null; status: string; model: string | null; sector_name: string | null; page_count: number | null };
 
 type PortfolioSummary = { companies: number; active_printers: number; online_printers: number; offline_printers: number };
 
@@ -48,6 +48,12 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       ...(init.headers || {}),
     },
   });
+  if (response.status === 401) {
+    sessionStorage.removeItem("printflow_preview_token");
+    sessionStorage.removeItem("printflow_preview_company");
+    window.dispatchEvent(new Event("talvoa:unauthorized"));
+    throw new Error("Sua sessão expirou. Entre novamente para consultar dados atualizados.");
+  }
   if (!response.ok) throw new Error(response.status === 403 ? "Acesso não autorizado" : "Não foi possível carregar a carteira");
   return response.json() as Promise<T>;
 }
@@ -56,6 +62,7 @@ export default function PartnerPortfolio() {
   const [context, setContext] = useState<PartnerContext | null>(null);
   const [companies, setCompanies] = useState<PartnerCompany[]>([]);
   const [loading, setLoading] = useState(true);
+  const [portfolioLoadFailed, setPortfolioLoadFailed] = useState(false);
   const [showPartnerAdmin, setShowPartnerAdmin] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
   const [companySearch, setCompanySearch] = useState("");
@@ -67,11 +74,13 @@ export default function PartnerPortfolio() {
   const [createdClient, setCreatedClient] = useState<{ company_name: string; email: string; temporary_password: string } | null>(null);
   const [companyStatusFilter, setCompanyStatusFilter] = useState<"all" | "attention" | "online">("all");
   const [overviews, setOverviews] = useState<Record<number, CompanyOverview>>({});
+  const [overviewLoadFailed, setOverviewLoadFailed] = useState(false);
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<PartnerCompany | null>(null);
   const [fleet, setFleet] = useState<FleetPrinter[]>([]);
   const [alerts, setAlerts] = useState<FleetAlert[]>([]);
   const [fleetLoading, setFleetLoading] = useState(false);
+  const [fleetError, setFleetError] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [directory, setDirectory] = useState<PartnerDirectoryEntry[]>([]);
@@ -94,41 +103,73 @@ export default function PartnerPortfolio() {
   const [partnerMembers, setPartnerMembers] = useState<PartnerMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [changingMemberId, setChangingMemberId] = useState<number | null>(null);
+  const requestIds = useRef({ portfolio: 0, fleet: 0 });
 
   const reload = useCallback(async () => {
+    const requestId = ++requestIds.current.portfolio;
+    ++requestIds.current.fleet;
     setLoading(true);
     setError("");
+    setPortfolioLoadFailed(false);
+    setSummary(null);
+    setOverviews({});
+    setOverviewLoadFailed(false);
+    setCompanies([]);
+    setSelectedCompany(null);
+    setFleet([]);
+    setAlerts([]);
+    setFleetError("");
+    setFleetLoading(false);
     try {
       const [ctx, list] = await Promise.all([
         api<PartnerContext>("/partners/me"),
         api<PartnerCompany[]>("/partners/my-companies"),
       ]);
+      if (requestId !== requestIds.current.portfolio) return;
       setContext(ctx);
       setCompanies(list);
       if (ctx.platform_admin) {
-        setDirectory(await api<PartnerDirectoryEntry[]>("/partners/directory"));
+        const entries = await api<PartnerDirectoryEntry[]>("/partners/directory");
+        if (requestId !== requestIds.current.portfolio) return;
+        setDirectory(entries);
       } else {
         setDirectory([]);
         setPreview(null);
       }
       const totals = await api<PortfolioSummary>("/partners/portfolio-summary");
+      if (requestId !== requestIds.current.portfolio) return;
       setSummary(totals);
       const overviewResults = await Promise.allSettled(
         list.map((company) => api<CompanyOverview>(`/partners/companies/${company.id}/overview`))
       );
+      if (requestId !== requestIds.current.portfolio) return;
       const scoped: Record<number, CompanyOverview> = {};
       overviewResults.forEach((result) => {
         if (result.status === "fulfilled") scoped[result.value.company_id] = result.value;
       });
       setOverviews(scoped);
+      setOverviewLoadFailed(overviewResults.some((result) => result.status === "rejected"));
     } catch (err) {
+      if (requestId !== requestIds.current.portfolio) return;
+      setContext(null);
+      setCompanies([]);
+      setOverviews({});
+      setSummary(null);
+      setPortfolioLoadFailed(true);
       setError(err instanceof Error ? err.message : "Erro ao consultar parceiros");
     } finally {
-      setLoading(false);
+      if (requestId === requestIds.current.portfolio) setLoading(false);
     }
   }, []);
 
-  useEffect(() => { void reload(); }, [reload]);
+  useEffect(() => {
+    const activeRequests = requestIds.current;
+    void reload();
+    return () => {
+      ++activeRequests.portfolio;
+      ++activeRequests.fleet;
+    };
+  }, [reload]);
 
   async function createPartner(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -263,22 +304,28 @@ export default function PartnerPortfolio() {
   }
 
   async function openFleet(company: PartnerCompany) {
+    const requestId = ++requestIds.current.fleet;
     setSelectedCompany(company);
     setFleet([]);
     setAlerts([]);
     setFleetLoading(true);
+    setFleetError("");
     setError("");
     try {
       const [printers, companyAlerts] = await Promise.all([
         api<FleetPrinter[]>(`/partners/companies/${company.id}/printers`),
         api<FleetAlert[]>(`/partners/companies/${company.id}/alerts`),
       ]);
+      if (requestId !== requestIds.current.fleet) return;
       setFleet(printers);
       setAlerts(companyAlerts);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao consultar impressoras");
+      if (requestId !== requestIds.current.fleet) return;
+      setFleet([]);
+      setAlerts([]);
+      setFleetError(err instanceof Error ? err.message : "Erro ao consultar impressoras");
     } finally {
-      setFleetLoading(false);
+      if (requestId === requestIds.current.fleet) setFleetLoading(false);
     }
   }
 
@@ -508,14 +555,17 @@ export default function PartnerPortfolio() {
           </div>}
         </div>
       )}
-      {loading ? <p>Carregando carteira...</p> : (
+      {loading ? <p>Carregando carteira...</p> : portfolioLoadFailed ? (
+        <p role="alert">Não foi possível atualizar a carteira. Os indicadores anteriores foram ocultados para evitar informações desatualizadas.</p>
+      ) : (
         <>
+          {overviewLoadFailed && <p role="alert">Não foi possível atualizar todos os indicadores por empresa. O total de clientes com impressoras offline está indisponível.</p>}
           <div className="grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
             <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Empresas</strong><h2>{summary?.companies ?? companies.length}</h2></article>
             <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Impressoras ativas</strong><h2>{summary?.active_printers ?? "—"}</h2></article>
             <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Online</strong><h2>{summary?.online_printers ?? "—"}</h2></article>
             <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Offline</strong><h2>{summary?.offline_printers ?? "—"}</h2></article>
-            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Clientes com impressoras offline</strong><h2>{companiesNeedingAttention}</h2></article>
+            <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Clientes com impressoras offline</strong><h2>{overviewLoadFailed ? "—" : companiesNeedingAttention}</h2></article>
           </div>
           <div className="panel">
             <h2 style={{ marginTop: 0, marginBottom: 12 }}>Clientes da carteira</h2>
@@ -569,21 +619,24 @@ export default function PartnerPortfolio() {
         <div className="panel">
           <header>
             <div><small>INVENTÁRIO POR EMPRESA</small><h2>{selectedCompany.name}</h2></div>
-            <button type="button" onClick={() => setSelectedCompany(null)}>Fechar</button>
+            <button type="button" onClick={() => { ++requestIds.current.fleet; setSelectedCompany(null); }}>Fechar</button>
           </header>
-          {fleetLoading ? <p>Carregando impressoras...</p> : (
+          {fleetLoading ? <p>Carregando impressoras...</p> : fleetError ? (
+            <p role="alert">{fleetError}. Nenhum dado foi atualizado; faça login novamente se necessário.</p>
+          ) : (
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr><th>Nome</th><th>IP</th><th>Modelo</th><th>Setor</th><th>Status</th></tr></thead>
+              <thead><tr><th>Nome</th><th>IP</th><th>Modelo</th><th>Setor</th><th>Contador total</th><th>Status</th></tr></thead>
               <tbody>{fleet.map((printer) => (
                 <tr key={printer.id ?? printer.ip ?? printer.name}>
                   <td>{printer.name}</td><td>{printer.ip ?? "—"}</td>
-                  <td>{printer.model ?? "—"}</td><td>{printer.sector_name ?? "—"}</td><td>{printer.status}</td>
+                  <td>{printer.model ?? "—"}</td><td>{printer.sector_name ?? "—"}</td>
+                  <td>{printer.page_count == null ? "—" : printer.page_count.toLocaleString("pt-BR")}</td><td>{printer.status}</td>
                 </tr>
               ))}</tbody>
             </table>
           )}
-          {!fleetLoading && fleet.length === 0 && <p>Nenhuma impressora cadastrada.</p>}
-          {!fleetLoading && <div><h3>Alertas pendentes ({openAlertCount})</h3>
+          {!fleetLoading && !fleetError && fleet.length === 0 && <p>Nenhuma impressora cadastrada.</p>}
+          {!fleetLoading && !fleetError && <div><h3>Alertas pendentes ({openAlertCount})</h3>
             {alerts.filter((item) => item.status !== "resolved").slice(0, 10).map((item) => (
               <p key={item.id}><strong>{item.severity.toUpperCase()}</strong> — {item.title}: {item.description}</p>
             ))}
