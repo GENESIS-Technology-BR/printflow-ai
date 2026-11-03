@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from api.client import PrintflowApiClient
-from config.settings import AgentSettings
+from config.settings import AgentSettings, env_float, env_int
 from discovery_runner import scan_network
 from network_manager import get_authorized_networks
 from snmp.engine import collect_printer_intelligence
@@ -41,6 +41,8 @@ class TalvoaAgentService:
                 settings.output_directory
                 / "api_queue"
             ),
+            queue_batch_size=env_int("TALVOA_QUEUE_BATCH_SIZE", 2),
+            queue_retry_interval_seconds=env_float("TALVOA_QUEUE_RETRY_INTERVAL_SECONDS", 60.0),
         )
 
     def _send_heartbeat_safe(
@@ -588,6 +590,12 @@ class TalvoaAgentService:
             devices = self.discover_devices()
             printers = asyncio.run(
                 self.collect_snmp_data(devices)
+            )
+            # Preserve the current collection before any potentially slow HTTP replay.
+            self.save_inventory(
+                devices=devices,
+                printers=printers,
+                api_result={"success": 0, "failed": 0, "skipped": len(printers)},
             )
             api_result = self.synchronize_api(
                 printers=printers

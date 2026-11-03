@@ -114,6 +114,8 @@ def test_queue_pressure_preserves_all_pending_readings(tmp_path, monkeypatch):
 
 def test_old_reading_is_retried_and_removed_only_after_ack(tmp_path, monkeypatch):
     client = _client(tmp_path)
+    clock = [0.0]
+    monkeypatch.setattr("api.client.time.monotonic", lambda: clock[0])
     queued = client.queue_directory / "old.json"
     queued.write_text(json.dumps({
         "created_at_unix": 1,
@@ -129,6 +131,8 @@ def test_old_reading_is_retried_and_removed_only_after_ack(tmp_path, monkeypatch
     monkeypatch.setattr("api.client.requests.post", fake_post)
     assert client.retry_queue() == {"processed": 1, "success": 0, "failed": 1}
     assert queued.exists()
+    assert client.retry_queue() == {"processed": 0, "success": 0, "failed": 0}
+    clock[0] += client.queue_retry_interval_seconds
     assert client.retry_queue() == {"processed": 1, "success": 1, "failed": 0}
     assert not queued.exists()
     assert all(payload["page_count"] == 12345 for payload in posted)

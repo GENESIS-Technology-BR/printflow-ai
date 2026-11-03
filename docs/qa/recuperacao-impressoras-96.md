@@ -103,6 +103,66 @@ Resultado: **27 passaram em 1,69 s**. Build frontend repetido com sucesso
 (`pnpm run build`, 92 módulos). `git diff --check` sem erros. Os resultados
 temporários de teste não integram os seis arquivos destinados ao commit.
 
+## Correção P1 do replay — continuação do PR #97
+
+O replay agora processa no máximo um lote por chamada: padrão de **2 arquivos**,
+configurável por `TALVOA_QUEUE_BATCH_SIZE` (faixa efetiva 1–20). O limite conta
+também arquivos inválidos, evitando ultrapassar o lote ao encontrar dados ruins.
+Os arquivos restantes continuam no disco, inclusive acima do limite operacional.
+
+Na primeira falha de conexão/timeout ou resposta diferente de HTTP 200/201,
+o lote para. Novas chamadas de replay aguardam **60 segundos** por padrão,
+configuráveis por `TALVOA_QUEUE_RETRY_INTERVAL_SECONDS` (mínimo 1 segundo).
+O relógio é monotônico; o intervalo fica em memória no cliente do daemon e
+reinicia com o processo. Não há sleep bloqueante. Após o intervalo, uma tentativa
+bem-sucedida retoma o lote. Resposta sem confirmação não remove o arquivo.
+
+O cooldown vale para replay, não para heartbeat ou envio do inventário corrente.
+Este último continua tendo sua política existente de timeout/retries. O inventário
+local corrente é salvo antes de qualquer sincronização HTTP e atualizado depois
+com o resultado, evitando que a espera do replay deixe a coleta apenas em memória.
+O lote limita tentativas, não estabelece deadline absoluto para o ciclo inteiro.
+
+O alerta de pressão da fila (>500 arquivos) continua ativo mesmo durante cooldown,
+sem descartar pendências. Os novos logs de falha usam apenas status HTTP e tempo
+de espera; não incluem payload, token, corpo de resposta ou texto da exceção.
+Arquivos malformados são preservados e falhas de processamento geram aviso.
+Rejeição permanente do primeiro item (por exemplo HTTP 422) interrompe o lote e
+exige diagnóstico operacional; esta correção não descarta nem quarentena dados.
+
+Testes desta continuação:
+
+- Suíte Agent + backend: **297 passaram em 9,53 s**; JUnit externo ao repositório
+  `pr97-p1-full.xml`. Inclui todos os testes presentes no início dessa execução.
+- Após adicionar mais um cenário de progresso do inventário corrente, testes
+  focados finais: **25 passaram em 1,80 s**, JUnit `pr97-p1-final.xml`.
+  São 298 testes distintos aprovados no conjunto das duas execuções.
+- Cobertura: 501 pendências/lote configurável, limites de configuração e leitura
+  das variáveis pelo serviço, timeout/erro de conexão/HTTP 401, 422, 429 e 503,
+  nenhuma nova tentativa durante cooldown, recuperação por HTTP 201, preservação
+  dos dados, ausência do token nos logs e persistência corrente antes do HTTP.
+- A reprodução anterior de 501 timeouts antes do envio corrente agora tenta
+  somente um item, interrompe o replay e segue para o inventário corrente; uma
+  chamada subsequente durante cooldown não tenta a fila.
+- `git diff --check` sem erros. Nenhuma alteração de frontend, dependência,
+  configuração de provedor, credencial ou banco real nesta continuação.
+
+Comandos usados (mesmos DATABASE_URL, ENVIRONMENT e PYTHONPATH acima; basetemp
+e JUnit direcionados à pasta externa de evidências):
+
+```text
+.venv/Scripts/python.exe -m pytest -q agent/python/tests backend/tests
+.venv/Scripts/python.exe -m pytest -q agent/python/tests/test_queue_replay_budget.py agent/python/tests/test_api_queue_security.py agent/python/tests/test_api_queue_resilience.py agent/python/tests/test_api_sync_resilience.py
+```
+
+Evidências externas preservadas em
+`C:/Users/jandi/.codex/visualizations/2026/11/03/01a1a194-d8a8-7683-9b12-70878c053eb8/`.
+A suíte completa foi executada fora do sandbox devido ao bloqueio de socket local
+do asyncio no Windows, com dados sintéticos e SQLite em memória. Não houve rede
+de impressoras, produção, Render ou Neon. A homologação física segue pendente.
+Riscos herdados de colisão de nome por IP/milissegundo, escrita não atômica e
+capacidade de disco não foram ampliados de escopo nesta correção do replay.
+
 ## Homologação pendente no cliente — não executada
 
 1. Em ambiente de homologação autorizado, conferir que Agent e frontend usam a

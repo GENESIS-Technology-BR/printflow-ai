@@ -32,6 +32,8 @@ class PrintflowApiClient:
         queue_directory: Path,
         timeout_seconds: float = 30.0,
         retries: int = 2,
+        queue_batch_size: int = 2,
+        queue_retry_interval_seconds: float = 60.0,
     ) -> None:
         self.api_url = api_url.rstrip("/")
         self.agent_token = agent_token.strip()
@@ -39,6 +41,9 @@ class PrintflowApiClient:
         self.queue_directory = queue_directory
         self.timeout_seconds = timeout_seconds
         self.retries = max(retries, 0)
+        self.queue_batch_size = max(1, min(int(queue_batch_size), 20))
+        self.queue_retry_interval_seconds = max(1.0, float(queue_retry_interval_seconds))
+        self._queue_retry_after = 0.0
 
         self.printers_endpoint = (
             f"{self.api_url}/api/v1/printers/agent"
@@ -602,13 +607,15 @@ class PrintflowApiClient:
             return summary
 
         self.prune_queue()
+        if time.monotonic() < self._queue_retry_after:
+            return summary
         queue_files = sorted(
             self.queue_directory.glob(
                 "*.json"
             )
         )
 
-        for queue_file in queue_files:
+        for queue_file in queue_files[:self.queue_batch_size]:
             summary["processed"] += 1
 
             try:
@@ -662,9 +669,25 @@ class PrintflowApiClient:
                     summary["success"] += 1
                 else:
                     summary["failed"] += 1
+                    self._queue_retry_after = time.monotonic() + self.queue_retry_interval_seconds
+                    self.logger.warning(
+                        "Replay da fila interrompido: HTTP %s; nova tentativa em %.0fs.",
+                        response.status_code,
+                        self.queue_retry_interval_seconds,
+                    )
+                    break
 
+            except requests.RequestException:
+                summary["failed"] += 1
+                self._queue_retry_after = time.monotonic() + self.queue_retry_interval_seconds
+                self.logger.warning(
+                    "Replay da fila interrompido por falha de conexao; nova tentativa em %.0fs.",
+                    self.queue_retry_interval_seconds,
+                )
+                break
             except Exception:
                 summary["failed"] += 1
+                self.logger.warning("Leitura pendente nao processada; arquivo preservado.")
 
         return summary
 
