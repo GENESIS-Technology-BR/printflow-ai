@@ -15,7 +15,7 @@ type PartnerCompany = {
 
 type FleetAlert = { id: number; title: string; severity: string; status: string; description: string };
 
-type FleetPrinter = { id: number | null; name: string; ip: string | null; status: string; model: string | null; sector_name: string | null };
+type FleetPrinter = { id: number | null; name: string; ip: string | null; status: string; model: string | null; sector_name: string | null; page_count: number | null };
 
 type PortfolioSummary = { companies: number; active_printers: number; online_printers: number; offline_printers: number };
 
@@ -48,6 +48,12 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       ...(init.headers || {}),
     },
   });
+  if (response.status === 401) {
+    sessionStorage.removeItem("printflow_preview_token");
+    sessionStorage.removeItem("printflow_preview_company");
+    window.dispatchEvent(new Event("talvoa:unauthorized"));
+    throw new Error("Sua sessão expirou. Entre novamente para consultar dados atualizados.");
+  }
   if (!response.ok) throw new Error(response.status === 403 ? "Acesso não autorizado" : "Não foi possível carregar a carteira");
   return response.json() as Promise<T>;
 }
@@ -72,6 +78,7 @@ export default function PartnerPortfolio() {
   const [fleet, setFleet] = useState<FleetPrinter[]>([]);
   const [alerts, setAlerts] = useState<FleetAlert[]>([]);
   const [fleetLoading, setFleetLoading] = useState(false);
+  const [fleetError, setFleetError] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [directory, setDirectory] = useState<PartnerDirectoryEntry[]>([]);
@@ -98,6 +105,12 @@ export default function PartnerPortfolio() {
   const reload = useCallback(async () => {
     setLoading(true);
     setError("");
+    setSummary(null);
+    setOverviews({});
+    setCompanies([]);
+    setSelectedCompany(null);
+    setFleet([]);
+    setAlerts([]);
     try {
       const [ctx, list] = await Promise.all([
         api<PartnerContext>("/partners/me"),
@@ -267,6 +280,7 @@ export default function PartnerPortfolio() {
     setFleet([]);
     setAlerts([]);
     setFleetLoading(true);
+    setFleetError("");
     setError("");
     try {
       const [printers, companyAlerts] = await Promise.all([
@@ -276,7 +290,9 @@ export default function PartnerPortfolio() {
       setFleet(printers);
       setAlerts(companyAlerts);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao consultar impressoras");
+      setFleet([]);
+      setAlerts([]);
+      setFleetError(err instanceof Error ? err.message : "Erro ao consultar impressoras");
     } finally {
       setFleetLoading(false);
     }
@@ -571,19 +587,22 @@ export default function PartnerPortfolio() {
             <div><small>INVENTÁRIO POR EMPRESA</small><h2>{selectedCompany.name}</h2></div>
             <button type="button" onClick={() => setSelectedCompany(null)}>Fechar</button>
           </header>
-          {fleetLoading ? <p>Carregando impressoras...</p> : (
+          {fleetLoading ? <p>Carregando impressoras...</p> : fleetError ? (
+            <p role="alert">{fleetError}. Nenhum dado foi atualizado; faça login novamente se necessário.</p>
+          ) : (
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr><th>Nome</th><th>IP</th><th>Modelo</th><th>Setor</th><th>Status</th></tr></thead>
+              <thead><tr><th>Nome</th><th>IP</th><th>Modelo</th><th>Setor</th><th>Contador total</th><th>Status</th></tr></thead>
               <tbody>{fleet.map((printer) => (
                 <tr key={printer.id ?? printer.ip ?? printer.name}>
                   <td>{printer.name}</td><td>{printer.ip ?? "—"}</td>
-                  <td>{printer.model ?? "—"}</td><td>{printer.sector_name ?? "—"}</td><td>{printer.status}</td>
+                  <td>{printer.model ?? "—"}</td><td>{printer.sector_name ?? "—"}</td>
+                  <td>{printer.page_count == null ? "—" : printer.page_count.toLocaleString("pt-BR")}</td><td>{printer.status}</td>
                 </tr>
               ))}</tbody>
             </table>
           )}
-          {!fleetLoading && fleet.length === 0 && <p>Nenhuma impressora cadastrada.</p>}
-          {!fleetLoading && <div><h3>Alertas pendentes ({openAlertCount})</h3>
+          {!fleetLoading && !fleetError && fleet.length === 0 && <p>Nenhuma impressora cadastrada.</p>}
+          {!fleetLoading && !fleetError && <div><h3>Alertas pendentes ({openAlertCount})</h3>
             {alerts.filter((item) => item.status !== "resolved").slice(0, 10).map((item) => (
               <p key={item.id}><strong>{item.severity.toUpperCase()}</strong> — {item.title}: {item.description}</p>
             ))}
