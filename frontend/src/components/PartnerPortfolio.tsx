@@ -62,6 +62,7 @@ export default function PartnerPortfolio() {
   const [context, setContext] = useState<PartnerContext | null>(null);
   const [companies, setCompanies] = useState<PartnerCompany[]>([]);
   const [loading, setLoading] = useState(true);
+  const [portfolioLoadFailed, setPortfolioLoadFailed] = useState(false);
   const [showPartnerAdmin, setShowPartnerAdmin] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
   const [companySearch, setCompanySearch] = useState("");
@@ -105,6 +106,7 @@ export default function PartnerPortfolio() {
   const reload = useCallback(async () => {
     setLoading(true);
     setError("");
+    setPortfolioLoadFailed(false);
     setSummary(null);
     setOverviews({});
     setCompanies([]);
@@ -135,6 +137,11 @@ export default function PartnerPortfolio() {
       });
       setOverviews(scoped);
     } catch (err) {
+      setContext(null);
+      setCompanies([]);
+      setOverviews({});
+      setSummary(null);
+      setPortfolioLoadFailed(true);
       setError(err instanceof Error ? err.message : "Erro ao consultar parceiros");
     } finally {
       setLoading(false);
@@ -524,7 +531,9 @@ export default function PartnerPortfolio() {
           </div>}
         </div>
       )}
-      {loading ? <p>Carregando carteira...</p> : (
+      {loading ? <p>Carregando carteira...</p> : portfolioLoadFailed ? (
+        <p role="alert">Não foi possível atualizar a carteira. Os indicadores anteriores foram ocultados para evitar informações desatualizadas.</p>
+      ) : (
         <>
           <div className="grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
             <article className="panel" style={{ padding: "12px 16px", minHeight: 78 }}><strong style={{ fontSize: 12 }}>Empresas</strong><h2>{summary?.companies ?? companies.length}</h2></article>
