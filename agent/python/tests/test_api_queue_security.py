@@ -82,7 +82,7 @@ def test_health_check_requires_real_health_success(tmp_path, monkeypatch):
     assert client.health_check() is False
 
 
-def test_expired_queue_item_is_removed(tmp_path: Path):
+def test_expired_queue_item_is_preserved(tmp_path: Path):
     client = _client(tmp_path)
     expired = client.queue_directory / "expired.json"
     expired.write_text(
@@ -96,8 +96,47 @@ def test_expired_queue_item_is_removed(tmp_path: Path):
 
     result = client.prune_queue()
 
-    assert result["expired"] == 1
-    assert not expired.exists()
+    assert result["expired"] == 0
+    assert expired.exists()
+
+
+def test_queue_pressure_preserves_all_pending_readings(tmp_path, monkeypatch):
+    client = _client(tmp_path)
+    monkeypatch.setattr(client, "MAX_QUEUE_FILES", 2)
+    files = [
+        client.save_to_queue({"ip": f"192.0.2.{index}"}, "offline")
+        for index in range(1, 5)
+    ]
+
+    assert client.prune_queue() == {"expired": 0, "excess": 2}
+    assert all(path.exists() for path in files)
+
+
+def test_old_reading_is_retried_and_removed_only_after_ack(tmp_path, monkeypatch):
+    client = _client(tmp_path)
+    clock = [0.0]
+    monkeypatch.setattr("api.client.time.monotonic", lambda: clock[0])
+    queued = client.queue_directory / "old.json"
+    queued.write_text(json.dumps({
+        "created_at_unix": 1,
+        "payload": {"ip": "192.0.2.1", "page_count": 12345},
+    }), encoding="utf-8")
+    posted = []
+    responses = iter([503, 200])
+
+    def fake_post(url, json, timeout):
+        posted.append(json)
+        return SimpleNamespace(status_code=next(responses))
+
+    monkeypatch.setattr("api.client.requests.post", fake_post)
+    assert client.retry_queue() == {"processed": 1, "success": 0, "failed": 1}
+    assert queued.exists()
+    assert client.retry_queue() == {"processed": 0, "success": 0, "failed": 0}
+    clock[0] += client.queue_retry_interval_seconds
+    assert client.retry_queue() == {"processed": 1, "success": 1, "failed": 0}
+    assert not queued.exists()
+    assert all(payload["page_count"] == 12345 for payload in posted)
+    assert all(payload["agent_token"] == client.agent_token for payload in posted)
 
 
 def test_heartbeat_sends_current_agent_state(tmp_path, monkeypatch):

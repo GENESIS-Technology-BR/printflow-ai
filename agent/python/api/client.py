@@ -32,6 +32,8 @@ class PrintflowApiClient:
         queue_directory: Path,
         timeout_seconds: float = 30.0,
         retries: int = 2,
+        queue_batch_size: int = 2,
+        queue_retry_interval_seconds: float = 60.0,
     ) -> None:
         self.api_url = api_url.rstrip("/")
         self.agent_token = agent_token.strip()
@@ -39,6 +41,9 @@ class PrintflowApiClient:
         self.queue_directory = queue_directory
         self.timeout_seconds = timeout_seconds
         self.retries = max(retries, 0)
+        self.queue_batch_size = max(1, min(int(queue_batch_size), 20))
+        self.queue_retry_interval_seconds = max(1.0, float(queue_retry_interval_seconds))
+        self._queue_retry_after = 0.0
 
         self.printers_endpoint = (
             f"{self.api_url}/api/v1/printers/agent"
@@ -602,13 +607,15 @@ class PrintflowApiClient:
             return summary
 
         self.prune_queue()
+        if time.monotonic() < self._queue_retry_after:
+            return summary
         queue_files = sorted(
             self.queue_directory.glob(
                 "*.json"
             )
         )
 
-        for queue_file in queue_files:
+        for queue_file in queue_files[:self.queue_batch_size]:
             summary["processed"] += 1
 
             try:
@@ -662,9 +669,25 @@ class PrintflowApiClient:
                     summary["success"] += 1
                 else:
                     summary["failed"] += 1
+                    self._queue_retry_after = time.monotonic() + self.queue_retry_interval_seconds
+                    self.logger.warning(
+                        "Replay da fila interrompido: HTTP %s; nova tentativa em %.0fs.",
+                        response.status_code,
+                        self.queue_retry_interval_seconds,
+                    )
+                    break
 
+            except requests.RequestException:
+                summary["failed"] += 1
+                self._queue_retry_after = time.monotonic() + self.queue_retry_interval_seconds
+                self.logger.warning(
+                    "Replay da fila interrompido por falha de conexao; nova tentativa em %.0fs.",
+                    self.queue_retry_interval_seconds,
+                )
+                break
             except Exception:
                 summary["failed"] += 1
+                self.logger.warning("Leitura pendente nao processada; arquivo preservado.")
 
         return summary
 
@@ -715,37 +738,20 @@ class PrintflowApiClient:
         return output_file
 
     def prune_queue(self) -> dict[str, int]:
-        now_ms = int(time.time() * 1000)
-        maximum_age_ms = self.MAX_QUEUE_AGE_SECONDS * 1000
-        removed_expired = 0
-        removed_excess = 0
-        queue_files = sorted(
-            self.queue_directory.glob("*.json"),
-            key=lambda item: item.stat().st_mtime,
-        )
-
-        for queue_file in list(queue_files):
-            try:
-                content = json.loads(
-                    queue_file.read_text(encoding="utf-8")
-                )
-                created_at = int(content.get("created_at_unix", 0))
-            except (OSError, ValueError, TypeError):
-                created_at = 0
-
-            if created_at <= 0 or now_ms - created_at > maximum_age_ms:
-                queue_file.unlink(missing_ok=True)
-                queue_files.remove(queue_file)
-                removed_expired += 1
-
+        # Pending measurements are evidence, even after a prolonged outage.
+        # Only retry_queue may remove them, after API acknowledgement.
+        queue_files = list(self.queue_directory.glob("*.json"))
         excess = max(0, len(queue_files) - self.MAX_QUEUE_FILES)
-        for queue_file in queue_files[:excess]:
-            queue_file.unlink(missing_ok=True)
-            removed_excess += 1
+        if excess:
+            self.logger.error(
+                "Fila local acima do limite operacional: %s arquivos; "
+                "nenhuma leitura pendente foi excluida.",
+                len(queue_files),
+            )
 
         return {
-            "expired": removed_expired,
-            "excess": removed_excess,
+            "expired": 0,
+            "excess": excess,
         }
 
     @staticmethod
