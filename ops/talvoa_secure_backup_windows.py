@@ -141,7 +141,11 @@ def main() -> None:
             raise RuntimeError("pg_restore archive-list validation failed")
         encrypt_dump(plain, partial, password)
         os.replace(partial, encrypted)
-        digest = hashlib.file_digest(encrypted.open("rb"), "sha256").hexdigest()
+        with encrypted.open("rb") as stream:
+            digest_hasher = hashlib.sha256()
+            for block in iter(lambda: stream.read(CHUNK), b""):
+                digest_hasher.update(block)
+            digest = digest_hasher.hexdigest()
         print("ENCRYPTED BACKUP READY:", encrypted)
         print("Encrypted archive SHA256:", digest)
         print("IMPORTANT: copy .aesgcm file to protected independent cloud storage.")
