@@ -17,6 +17,7 @@ import subprocess
 import sys
 import time
 import re
+import warnings
 from urllib.parse import unquote, urlsplit
 
 DB_NAME = "talvoa_supritech_homolog_db"
@@ -28,27 +29,38 @@ CHUNK = 1024 * 1024
 
 
 def parse_source(raw: str) -> dict[str, str]:
-    parsed = urlsplit(raw.strip())
+    # urllib can embed user-provided URL fragments in ValueError details.
+    # Never propagate those details: the URL contains database credentials.
+    if any(ord(char) < 32 or ord(char) == 127 for char in unquote(raw)):
+        raise ValueError("Invalid PostgreSQL connection URL")
+    try:
+        parsed = urlsplit(raw)
+        hostname = parsed.hostname
+        port = parsed.port
+        username = parsed.username
+        password = parsed.password
+    except (ValueError, UnicodeError) as exc:
+        raise ValueError("Invalid PostgreSQL connection URL") from None
     if parsed.scheme not in {"postgres", "postgresql"}:
         raise ValueError("Connection URL must use postgresql://")
-    if parsed.hostname != DB_HOST:
+    if hostname != DB_HOST:
         raise ValueError("Refusing unexpected Render hostname")
-    if parsed.port not in (None, DB_PORT):
+    if port not in (None, DB_PORT):
         raise ValueError("Refusing unexpected PostgreSQL port")
-    if unquote(parsed.username or "") != DB_USER:
+    if unquote(username or "") != DB_USER:
         raise ValueError("Refusing unexpected PostgreSQL user")
     if parsed.path != "/" + DB_NAME:
         raise ValueError("Refusing to back up an unexpected database")
-    if not parsed.username or parsed.password is None:
+    if not username or password is None:
         raise ValueError("Missing username/password")
     if parsed.query or parsed.fragment:
         raise ValueError("Unexpected connection URL options")
     return {
-        "PGHOST": parsed.hostname,
+        "PGHOST": hostname,
         "PGPORT": str(DB_PORT),
         "PGDATABASE": DB_NAME,
-        "PGUSER": unquote(parsed.username),
-        "PGPASSWORD": unquote(parsed.password),
+        "PGUSER": unquote(username),
+        "PGPASSWORD": unquote(password),
         "PGSSLMODE": "require",
         "PGCONNECT_TIMEOUT": "20",
     }
@@ -149,6 +161,16 @@ def encrypt_dump(plain: pathlib.Path, encrypted: pathlib.Path, password: str, *,
             raise RuntimeError("Encrypted archive authentication FAILED") from exc
 
 
+def read_secret(prompt: str) -> str:
+    """Abort instead of allowing getpass to fall back to echoing plaintext."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", getpass.GetPassWarning)
+        try:
+            return getpass.getpass(prompt)
+        except (getpass.GetPassWarning, EOFError, KeyboardInterrupt, OSError):
+            raise RuntimeError("Secure secret input unavailable; refusing to continue") from None
+
+
 def main() -> None:
     clients = require_clients()
     try:
@@ -157,13 +179,13 @@ def main() -> None:
         raise RuntimeError("Install 'cryptography' in a trusted Python environment") from exc
 
     print("Secure backup of SupriTech homologation ONLY. Never paste secrets into chat.")
-    raw = getpass.getpass("Render external DATABASE URL (hidden input): ")
+    raw = read_secret("Render external DATABASE URL (hidden input): ")
     envvars = parse_source(raw)
     raw = ""  # Do not retain the complete URL for later use.
-    password = getpass.getpass("New backup encryption PASSPHRASE (20+ chars): ")
+    password = read_secret("New backup encryption PASSPHRASE (20+ chars): ")
     if len(password) < 20:
         raise ValueError("Encryption passphrase must contain at least 20 characters")
-    if password != getpass.getpass("Confirm encryption passphrase: "):
+    if password != read_secret("Confirm encryption passphrase: "):
         raise ValueError("Passphrases differ")
 
     outdir = pathlib.Path.home() / "TALVOA_Backups"
