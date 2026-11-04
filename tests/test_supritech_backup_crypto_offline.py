@@ -5,6 +5,7 @@ import pathlib
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 OPS = pathlib.Path(__file__).resolve().parents[1] / "ops"
 sys.path.insert(0, str(OPS))
@@ -40,6 +41,36 @@ class BackupCryptoOfflineTests(unittest.TestCase):
             archive.write_bytes(raw)
             with self.assertRaises(Exception):
                 decrypt_archive(archive, "test-only-long-passphrase-000", None)
+
+    def test_encryption_never_overwrites_existing_destination(self):
+        with tempfile.TemporaryDirectory() as td:
+            d = pathlib.Path(td)
+            source = d / "source.dump"
+            out = d / "protected.aesgcm"
+            source.write_bytes(b"synthetic")
+            out.write_bytes(b"existing-backup-must-survive")
+            with self.assertRaises(FileExistsError):
+                encrypt_dump(source, out, "synthetic-test-password-very-long")
+            self.assertEqual(out.read_bytes(), b"existing-backup-must-survive")
+
+    def test_decryption_never_deletes_existing_partial_or_output(self):
+        with tempfile.TemporaryDirectory() as td:
+            d = pathlib.Path(td)
+            plain = d / "synthetic.dump"
+            encrypted = d / "synthetic.aesgcm"
+            output = d / "out.dump"
+            partial = d / "out.dump.partial"
+            plain.write_bytes(b"synthetic")
+            encrypt_dump(plain, encrypted, "synthetic-test-password-very-long")
+            partial.write_bytes(b"preexisting-protected")
+            with self.assertRaises(FileExistsError):
+                decrypt_archive(encrypted, "synthetic-test-password-very-long", output)
+            self.assertEqual(partial.read_bytes(), b"preexisting-protected")
+            partial.unlink()
+            output.write_bytes(b"must-not-overwrite")
+            with self.assertRaises(FileExistsError):
+                decrypt_archive(encrypted, "synthetic-test-password-very-long", output)
+            self.assertEqual(output.read_bytes(), b"must-not-overwrite")
 
 
 if __name__ == "__main__":
