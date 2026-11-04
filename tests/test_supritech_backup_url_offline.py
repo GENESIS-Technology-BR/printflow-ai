@@ -1,6 +1,7 @@
 """Offline checks: no Render connection and no customer data."""
 import importlib.util
 import pathlib
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -15,7 +16,7 @@ class BackupOfflineTests(unittest.TestCase):
     def test_accepts_only_dedicated_render_database(self):
         env = module.parse_source(
             "postgresql://talvoa_supritech_homolog_db_user:p%40ss@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com:5432/"
-            "talvoa_supritech_homolog_db?sslmode=require"
+            "talvoa_supritech_homolog_db"
         )
         self.assertEqual(env["PGPASSWORD"], "p@ss")
         self.assertEqual(env["PGSSLMODE"], "require")
@@ -47,7 +48,7 @@ class BackupOfflineTests(unittest.TestCase):
                 module.parse_source(url)
 
     def test_clients_must_both_be_postgresql_16(self):
-        with mock.patch.object(module.shutil, "which", return_value="pg-tool"):
+        with mock.patch.object(module.shutil, "which", return_value=sys.executable):
             with mock.patch.object(module.subprocess, "run") as run:
                 run.side_effect = [
                     mock.Mock(stdout="pg_dump (PostgreSQL) 16.15"),
@@ -60,7 +61,10 @@ class BackupOfflineTests(unittest.TestCase):
                     mock.Mock(stdout="pg_dump (PostgreSQL) 16.15"),
                     mock.Mock(stdout="pg_restore (PostgreSQL) 16.15"),
                 ]
-                module.require_clients()
+                paths = module.require_clients()
+                self.assertEqual(paths["pg_dump"], str(pathlib.Path(sys.executable).resolve()))
+                self.assertEqual(paths["pg_restore"], str(pathlib.Path(sys.executable).resolve()))
+                self.assertEqual(run.call_args_list[0].args[0][0], paths["pg_dump"])
 
 if __name__ == "__main__":
     unittest.main()
