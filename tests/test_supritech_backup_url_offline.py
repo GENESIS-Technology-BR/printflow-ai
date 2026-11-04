@@ -13,7 +13,7 @@ spec.loader.exec_module(module)
 class BackupOfflineTests(unittest.TestCase):
     def test_accepts_only_dedicated_render_database(self):
         env = module.parse_source(
-            "postgresql://limited_user:p%40ss@dpg-example.oregon-postgres.render.com:5432/"
+            "postgresql://talvoa_supritech_homolog_db_user:p%40ss@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com:5432/"
             "talvoa_supritech_homolog_db?sslmode=require"
         )
         self.assertEqual(env["PGPASSWORD"], "p@ss")
@@ -22,9 +22,24 @@ class BackupOfflineTests(unittest.TestCase):
 
     def test_rejects_wrong_database_and_host(self):
         cases = (
-            "postgresql://u:p@dpg-example.oregon-postgres.render.com/printflow_production",
+            "postgresql://talvoa_supritech_homolog_db_user:p@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/printflow_production",
             "postgresql://u:p@attacker.example.com/talvoa_supritech_homolog_db",
-            "http://u:p@dpg-example.oregon-postgres.render.com/talvoa_supritech_homolog_db",
+            "http://talvoa_supritech_homolog_db_user:p@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/talvoa_supritech_homolog_db",
+        )
+        for url in cases:
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                module.parse_source(url)
+
+
+    def test_rejects_same_db_on_wrong_render_host_or_user_or_port(self):
+        host = "dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com"
+        name = module.DB_NAME
+        user = module.DB_USER
+        cases = (
+            f"postgresql://{user}:p@another-db.oregon-postgres.render.com/{name}",
+            f"postgresql://different_user:p@{host}/{name}",
+            f"postgresql://{user}:p@{host}:5433/{name}",
+            f"postgresql://{user}:p@{host}.attacker.example.com/{name}",
         )
         for url in cases:
             with self.subTest(url=url), self.assertRaises(ValueError):
