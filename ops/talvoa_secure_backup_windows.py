@@ -22,7 +22,7 @@ from urllib.parse import unquote, urlsplit
 
 DB_NAME = "talvoa_supritech_homolog_db"
 DB_HOST = "dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com"
-DB_USER = "talvoa_supritech_homolog_db_user"
+DB_USER = "talvoa_supritech_admin_v2"
 DB_PORT = 5432
 HEADER = b"TLVOBK01"
 CHUNK = 1024 * 1024
