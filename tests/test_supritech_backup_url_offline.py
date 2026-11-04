@@ -98,5 +98,37 @@ class BackupOfflineTests(unittest.TestCase):
             with self.subTest(url=url), self.assertRaises(ValueError):
                 module.parse_source(url)
 
+    def test_secret_prompt_refuses_getpass_echo_fallback(self):
+        with mock.patch.object(module.getpass, "getpass") as prompt:
+            prompt.side_effect = module.getpass.GetPassWarning("terminal unavailable")
+            with self.assertRaisesRegex(RuntimeError, "Secure secret input unavailable"):
+                module.read_secret("Hidden secret: ")
+        with mock.patch.object(module.getpass, "getpass", return_value="synthetic-only"):
+            self.assertEqual(module.read_secret("Hidden secret: "), "synthetic-only")
+
+    def test_url_parser_does_not_expose_secrets_in_exceptions(self):
+        secret = "privateSyntheticPassShouldNotAppear"
+        test_urls = (
+            f"postgresql://user:{secret}@[invalid-host/db",
+            f"postgresql://user:{secret}@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com:badport/talvoa_supritech_homolog_db",
+        )
+        for url in test_urls:
+            with self.subTest(malformed=True), self.assertRaises(ValueError) as caught:
+                module.parse_source(url)
+            self.assertNotIn(secret, str(caught.exception))
+            self.assertNotIn(url, str(caught.exception))
+
+    def test_url_parser_rejects_control_characters_including_percent_encoded(self):
+        prefix = (
+            "postgresql://talvoa_supritech_homolog_db_user:p"
+        )
+        suffix = (
+            "@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/"
+            "talvoa_supritech_homolog_db"
+        )
+        for separator in ("\\n", "\\r", "\\t", "%0A", "%0D", "%00", "%7F"):
+            with self.subTest(separator=repr(separator)), self.assertRaises(ValueError):
+                module.parse_source(prefix + separator + suffix)
+
 if __name__ == "__main__":
     unittest.main()
