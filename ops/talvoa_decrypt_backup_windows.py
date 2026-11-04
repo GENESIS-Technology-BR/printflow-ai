@@ -17,7 +17,7 @@ import sys
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
-from talvoa_secure_backup_windows import HEADER, CHUNK, require_clients
+from talvoa_secure_backup_windows import HEADER, CHUNK, require_clients, verify_private_windows_acl
 
 
 def decrypt_archive(archive: pathlib.Path, passphrase: str, output: pathlib.Path | None) -> None:
@@ -74,8 +74,9 @@ def main() -> None:
     args = parser.parse_args()
     clients = require_clients() if args.output else {}
     if args.output:
-        if os.name == "nt" and os.environ.get("TALVOA_BACKUP_ACL_VERIFIED") != "yes":
-            raise RuntimeError("Private Windows ACL must be verified before plaintext decryption")
+        if args.output.parent.is_symlink():
+            raise RuntimeError("Output folder symlink is not allowed")
+        verify_private_windows_acl(args.output.parent.resolve(strict=True))
         print("WARNING: --output writes SENSITIVE PLAINTEXT customer data.")
         if input("Type DECRYPT to proceed: ") != "DECRYPT":
             raise RuntimeError("Cancelled")
