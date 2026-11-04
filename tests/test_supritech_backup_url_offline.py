@@ -66,5 +66,37 @@ class BackupOfflineTests(unittest.TestCase):
                 self.assertEqual(paths["pg_restore"], str(pathlib.Path(sys.executable).resolve()))
                 self.assertEqual(run.call_args_list[0].args[0][0], paths["pg_dump"])
 
+    def test_removes_all_inherited_libpq_overrides(self):
+        sample = {
+            "PGHOSTADDR": "203.0.113.10",
+            "PGSERVICE": "unexpected-service",
+            "PGOPTIONS": "other-options",
+            "PGUSER": "untrusted",
+            "PATH": "trusted-path",
+        }
+        verified = module.parse_source(
+            "postgresql://talvoa_supritech_homolog_db_user:p@"
+            "dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/"
+            "talvoa_supritech_homolog_db"
+        )
+        with mock.patch.dict(module.os.environ, sample, clear=True):
+            env = module.pg_environment(verified)
+        self.assertEqual(env["PGHOST"], module.DB_HOST)
+        self.assertEqual(env["PGUSER"], module.DB_USER)
+        self.assertEqual(env["PATH"], "trusted-path")
+        for key in ("PGHOSTADDR", "PGSERVICE", "PGOPTIONS"):
+            self.assertNotIn(key, env)
+
+    def test_rejects_double_slash_database_path_and_query_overrides(self):
+        host = module.DB_HOST
+        user = module.DB_USER
+        name = module.DB_NAME
+        for url in (
+            f"postgresql://{user}:p@{host}//{name}",
+            f"postgresql://{user}:p@{host}/{name}?hostaddr=203.0.113.10",
+        ):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                module.parse_source(url)
+
 if __name__ == "__main__":
     unittest.main()
