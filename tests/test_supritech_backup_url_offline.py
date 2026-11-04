@@ -126,7 +126,7 @@ class BackupOfflineTests(unittest.TestCase):
             "@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/"
             "talvoa_supritech_homolog_db"
         )
-        for separator in ("\\n", "\\r", "\\t", "%0A", "%0D", "%00", "%7F"):
+        for separator in (chr(10), chr(13), chr(9), "%0A", "%0D", "%00", "%7F"):
             with self.subTest(separator=repr(separator)), self.assertRaises(ValueError):
                 module.parse_source(prefix + separator + suffix)
 
