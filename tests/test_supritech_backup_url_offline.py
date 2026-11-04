@@ -15,7 +15,7 @@ spec.loader.exec_module(module)
 class BackupOfflineTests(unittest.TestCase):
     def test_accepts_only_dedicated_render_database(self):
         env = module.parse_source(
-            "postgresql://talvoa_supritech_homolog_db_user:p%40ss@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com:5432/"
+            "postgresql://talvoa_supritech_admin_v2:p%40ss@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com:5432/"
             "talvoa_supritech_homolog_db"
         )
         self.assertEqual(env["PGPASSWORD"], "p@ss")
@@ -24,9 +24,9 @@ class BackupOfflineTests(unittest.TestCase):
 
     def test_rejects_wrong_database_and_host(self):
         cases = (
-            "postgresql://talvoa_supritech_homolog_db_user:p@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/printflow_production",
+            "postgresql://talvoa_supritech_admin_v2:p@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/printflow_production",
             "postgresql://u:p@attacker.example.com/talvoa_supritech_homolog_db",
-            "http://talvoa_supritech_homolog_db_user:p@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/talvoa_supritech_homolog_db",
+            "http://talvoa_supritech_admin_v2:p@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/talvoa_supritech_homolog_db",
         )
         for url in cases:
             with self.subTest(url=url), self.assertRaises(ValueError):
@@ -75,7 +75,7 @@ class BackupOfflineTests(unittest.TestCase):
             "PATH": "trusted-path",
         }
         verified = module.parse_source(
-            "postgresql://talvoa_supritech_homolog_db_user:p@"
+            "postgresql://talvoa_supritech_admin_v2:p@"
             "dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/"
             "talvoa_supritech_homolog_db"
         )
@@ -120,7 +120,7 @@ class BackupOfflineTests(unittest.TestCase):
 
     def test_url_parser_rejects_control_characters_including_percent_encoded(self):
         prefix = (
-            "postgresql://talvoa_supritech_homolog_db_user:p"
+            "postgresql://talvoa_supritech_admin_v2:p"
         )
         suffix = (
             "@dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/"
