@@ -3,6 +3,7 @@ import importlib.util
 import pathlib
 import tempfile
 import unittest
+from unittest import mock
 
 SCRIPT = pathlib.Path(__file__).resolve().parents[1] / "ops" / "talvoa_secure_backup_windows.py"
 spec = importlib.util.spec_from_file_location("talvoa_backup", SCRIPT)
@@ -44,6 +45,22 @@ class BackupOfflineTests(unittest.TestCase):
         for url in cases:
             with self.subTest(url=url), self.assertRaises(ValueError):
                 module.parse_source(url)
+
+    def test_clients_must_both_be_postgresql_16(self):
+        with mock.patch.object(module.shutil, "which", return_value="pg-tool"):
+            with mock.patch.object(module.subprocess, "run") as run:
+                run.side_effect = [
+                    mock.Mock(stdout="pg_dump (PostgreSQL) 16.15"),
+                    mock.Mock(stdout="pg_restore (PostgreSQL) 15.8"),
+                ]
+                with self.assertRaises(RuntimeError):
+                    module.require_clients()
+            with mock.patch.object(module.subprocess, "run") as run:
+                run.side_effect = [
+                    mock.Mock(stdout="pg_dump (PostgreSQL) 16.15"),
+                    mock.Mock(stdout="pg_restore (PostgreSQL) 16.15"),
+                ]
+                module.require_clients()
 
 if __name__ == "__main__":
     unittest.main()
