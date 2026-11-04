@@ -37,10 +37,12 @@ def parse_source(raw: str) -> dict[str, str]:
         raise ValueError("Refusing unexpected PostgreSQL port")
     if unquote(parsed.username or "") != DB_USER:
         raise ValueError("Refusing unexpected PostgreSQL user")
-    if unquote(parsed.path.lstrip("/")) != DB_NAME:
+    if parsed.path != "/" + DB_NAME:
         raise ValueError("Refusing to back up an unexpected database")
     if not parsed.username or parsed.password is None:
         raise ValueError("Missing username/password")
+    if parsed.query or parsed.fragment:
+        raise ValueError("Unexpected connection URL options")
     return {
         "PGHOST": parsed.hostname,
         "PGPORT": str(DB_PORT),
@@ -52,15 +54,19 @@ def parse_source(raw: str) -> dict[str, str]:
     }
 
 
-def require_clients() -> None:
+def require_clients() -> dict[str, str]:
+    binaries = {}
     for name in ("pg_dump", "pg_restore"):
-        if not shutil.which(name):
+        binary = shutil.which(name)
+        if not binary:
             raise RuntimeError(f"{name} not found. Install PostgreSQL 16 client tools.")
-    for name in ("pg_dump", "pg_restore"):
-        result = subprocess.run([name, "--version"], capture_output=True, text=True, check=True)
+        resolved = str(pathlib.Path(binary).resolve(strict=True))
+        result = subprocess.run([resolved, "--version"], capture_output=True, text=True, check=True)
         if not re.search(r"\bPostgreSQL\) 16(?:\.|\b)", result.stdout):
             raise RuntimeError(f"{name} must be PostgreSQL major version 16")
+        binaries[name] = resolved
         print("Client:", name, "PostgreSQL 16")
+    return binaries
 
 
 def encrypt_dump(plain: pathlib.Path, encrypted: pathlib.Path, password: str, *, reserved: bool = False) -> None:
@@ -107,7 +113,7 @@ def encrypt_dump(plain: pathlib.Path, encrypted: pathlib.Path, password: str, *,
 
 
 def main() -> None:
-    require_clients()
+    clients = require_clients()
     try:
         import cryptography  # noqa: F401
     except ImportError as exc:
@@ -125,11 +131,17 @@ def main() -> None:
 
     outdir = pathlib.Path.home() / "TALVOA_Backups"
     outdir.mkdir(mode=0o700, parents=True, exist_ok=True)
+    if os.name == "nt" and os.environ.get("TALVOA_BACKUP_ACL_VERIFIED") != "yes":
+        raise RuntimeError("Windows private ACL not verified; refusing plaintext dump")
+    if outdir.is_symlink():
+        raise RuntimeError("Backup directory symlinks are not permitted")
     stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()) + "-" + secrets.token_hex(8)
     plain = outdir / f".supritech-{stamp}.dump.partial"
     encrypted = outdir / f"supritech-{stamp}.dump.aesgcm"
     partial = outdir / f".supritech-{stamp}.aesgcm.partial"
-    env = {**os.environ, **envvars}
+    # libpq can override PGHOST via PGHOSTADDR and other inherited PG* settings.
+    env = {k: v for k, v in os.environ.items() if not k.upper().startswith("PG")}
+    env.update(envvars)
     owned_plain = False
     owned_partial = False
     try:
@@ -137,7 +149,7 @@ def main() -> None:
         with plain.open("xb") as output:
             owned_plain = True
             job = subprocess.run(
-                ["pg_dump", "--format=custom", "--no-owner", "--no-acl"],
+                [clients["pg_dump"], "--format=custom", "--no-owner", "--no-acl"],
                 stdout=output,
                 stderr=subprocess.DEVNULL,
                 env=env,
@@ -147,7 +159,7 @@ def main() -> None:
         if job.returncode != 0 or plain.stat().st_size == 0:
             raise RuntimeError("pg_dump failed; check database access and PostgreSQL client version")
         with open(os.devnull, "wb") as sink:
-            check = subprocess.run(["pg_restore", "--list", str(plain)],
+            check = subprocess.run([clients["pg_restore"], "--list", str(plain)],
                                    stdout=sink, stderr=subprocess.DEVNULL, check=False)
         if check.returncode:
             raise RuntimeError("pg_restore archive-list validation failed")
