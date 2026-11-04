@@ -16,9 +16,13 @@ import shutil
 import subprocess
 import sys
 import time
+import re
 from urllib.parse import unquote, urlsplit
 
 DB_NAME = "talvoa_supritech_homolog_db"
+DB_HOST = "dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com"
+DB_USER = "talvoa_supritech_homolog_db_user"
+DB_PORT = 5432
 HEADER = b"TLVOBK01"
 CHUNK = 1024 * 1024
 
@@ -27,15 +31,19 @@ def parse_source(raw: str) -> dict[str, str]:
     parsed = urlsplit(raw.strip())
     if parsed.scheme not in {"postgres", "postgresql"}:
         raise ValueError("Connection URL must use postgresql://")
-    if not parsed.hostname or not parsed.hostname.endswith(".oregon-postgres.render.com"):
-        raise ValueError("Refusing an unexpected Render host")
+    if parsed.hostname != DB_HOST:
+        raise ValueError("Refusing unexpected Render hostname")
+    if parsed.port not in (None, DB_PORT):
+        raise ValueError("Refusing unexpected PostgreSQL port")
+    if unquote(parsed.username or "") != DB_USER:
+        raise ValueError("Refusing unexpected PostgreSQL user")
     if unquote(parsed.path.lstrip("/")) != DB_NAME:
         raise ValueError("Refusing to back up an unexpected database")
     if not parsed.username or parsed.password is None:
         raise ValueError("Missing username/password")
     return {
         "PGHOST": parsed.hostname,
-        "PGPORT": str(parsed.port or 5432),
+        "PGPORT": str(DB_PORT),
         "PGDATABASE": DB_NAME,
         "PGUSER": unquote(parsed.username),
         "PGPASSWORD": unquote(parsed.password),
@@ -48,10 +56,11 @@ def require_clients() -> None:
     for name in ("pg_dump", "pg_restore"):
         if not shutil.which(name):
             raise RuntimeError(f"{name} not found. Install PostgreSQL 16 client tools.")
-    result = subprocess.run(["pg_dump", "--version"], capture_output=True, text=True, check=True)
-    if "PostgreSQL" not in result.stdout:
-        raise RuntimeError("Unexpected pg_dump binary")
-    print("Client:", result.stdout.strip())
+    for name in ("pg_dump", "pg_restore"):
+        result = subprocess.run([name, "--version"], capture_output=True, text=True, check=True)
+        if not re.search(r"\bPostgreSQL\) 16(?:\.|\b)", result.stdout):
+            raise RuntimeError(f"{name} must be PostgreSQL major version 16")
+        print("Client:", name, "PostgreSQL 16")
 
 
 def encrypt_dump(plain: pathlib.Path, encrypted: pathlib.Path, password: str) -> None:
@@ -116,14 +125,17 @@ def main() -> None:
 
     outdir = pathlib.Path.home() / "TALVOA_Backups"
     outdir.mkdir(mode=0o700, parents=True, exist_ok=True)
-    stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+    stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()) + "-" + secrets.token_hex(8)
     plain = outdir / f".supritech-{stamp}.dump.partial"
     encrypted = outdir / f"supritech-{stamp}.dump.aesgcm"
     partial = outdir / f".supritech-{stamp}.aesgcm.partial"
     env = {**os.environ, **envvars}
+    owned_plain = False
+    owned_partial = False
     try:
         print("Running pg_dump with TLS; source database is read-only for this operation...")
         with plain.open("xb") as output:
+            owned_plain = True
             job = subprocess.run(
                 ["pg_dump", "--format=custom", "--no-owner", "--no-acl"],
                 stdout=output,
@@ -139,8 +151,12 @@ def main() -> None:
                                    stdout=sink, stderr=subprocess.DEVNULL, check=False)
         if check.returncode:
             raise RuntimeError("pg_restore archive-list validation failed")
+        owned_partial = True  # Created exclusively by encrypt_dump("xb"); cleanup even on exception.
         encrypt_dump(plain, partial, password)
-        os.replace(partial, encrypted)
+        # Atomic create-if-absent on the same volume: refuse overwrites (no os.replace).
+        os.link(partial, encrypted)
+        partial.unlink()
+        owned_partial = False
         with encrypted.open("rb") as stream:
             digest_hasher = hashlib.sha256()
             for block in iter(lambda: stream.read(CHUNK), b""):
@@ -154,9 +170,10 @@ def main() -> None:
         envvars["PGPASSWORD"] = ""
         env["PGPASSWORD"] = ""
         password = ""
-        for unsafe in (plain, partial):
-            if unsafe.exists():
-                unsafe.unlink()
+        if owned_plain:
+            plain.unlink(missing_ok=True)
+        if owned_partial:
+            partial.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
