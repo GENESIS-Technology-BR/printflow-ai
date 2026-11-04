@@ -69,6 +69,43 @@ def require_clients() -> dict[str, str]:
     return binaries
 
 
+def verify_private_windows_acl(directory: pathlib.Path) -> None:
+    """Fail closed unless access is restricted to owner, Administrators and SYSTEM."""
+    if os.name != "nt":
+        return
+    script = (
+        "$ErrorActionPreference='Stop'; "
+        "$acl=Get-Acl -LiteralPath $env:TALVOA_ACL_CHECK_PATH; "
+        "if(-not $acl.AreAccessRulesProtected){exit 3}; "
+        "$owner=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value; "
+        "$allowed=@($owner,'S-1-5-18','S-1-5-32-544'); "
+        "foreach($ace in $acl.Access){ "
+        "if($ace.AccessControlType -eq 'Allow'){ "
+        "$sid=$ace.IdentityReference.Translate("
+        "[Security.Principal.SecurityIdentifier]).Value; "
+        "if($sid -notin $allowed){exit 4} "
+        "}}; Write-Output 'PASS'"
+    )
+    env = {**os.environ, "TALVOA_ACL_CHECK_PATH": str(directory)}
+    result = subprocess.run(
+        ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
+        env=env, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+        text=True, check=False, timeout=30,
+    )
+    if result.returncode != 0 or result.stdout.strip() != "PASS":
+        raise RuntimeError(
+            "Windows backup folder ACL not private. Protect the directory "
+            "before exporting any plaintext customer data."
+        )
+
+
+def pg_environment(envvars: dict[str, str]) -> dict[str, str]:
+    """Remove ALL inherited libpq settings, then apply verified connection."""
+    env = {k: v for k, v in os.environ.items() if not k.upper().startswith("PG")}
+    env.update(envvars)
+    return env
+
+
 def encrypt_dump(plain: pathlib.Path, encrypted: pathlib.Path, password: str, *, reserved: bool = False) -> None:
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -131,17 +168,15 @@ def main() -> None:
 
     outdir = pathlib.Path.home() / "TALVOA_Backups"
     outdir.mkdir(mode=0o700, parents=True, exist_ok=True)
-    if os.name == "nt" and os.environ.get("TALVOA_BACKUP_ACL_VERIFIED") != "yes":
-        raise RuntimeError("Windows private ACL not verified; refusing plaintext dump")
     if outdir.is_symlink():
         raise RuntimeError("Backup directory symlinks are not permitted")
+    verify_private_windows_acl(outdir)
     stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()) + "-" + secrets.token_hex(8)
     plain = outdir / f".supritech-{stamp}.dump.partial"
     encrypted = outdir / f"supritech-{stamp}.dump.aesgcm"
     partial = outdir / f".supritech-{stamp}.aesgcm.partial"
     # libpq can override PGHOST via PGHOSTADDR and other inherited PG* settings.
-    env = {k: v for k, v in os.environ.items() if not k.upper().startswith("PG")}
-    env.update(envvars)
+    env = pg_environment(envvars)
     owned_plain = False
     owned_partial = False
     try:
