@@ -63,7 +63,7 @@ def require_clients() -> None:
         print("Client:", name, "PostgreSQL 16")
 
 
-def encrypt_dump(plain: pathlib.Path, encrypted: pathlib.Path, password: str) -> None:
+def encrypt_dump(plain: pathlib.Path, encrypted: pathlib.Path, password: str, *, reserved: bool = False) -> None:
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
@@ -71,7 +71,7 @@ def encrypt_dump(plain: pathlib.Path, encrypted: pathlib.Path, password: str) ->
     nonce = secrets.token_bytes(12)
     key = Scrypt(salt=salt, length=32, n=2**15, r=8, p=1).derive(password.encode("utf-8"))
     encryptor = Cipher(algorithms.AES(key), modes.GCM(nonce)).encryptor()
-    with plain.open("rb") as source, encrypted.open("xb") as target:
+    with plain.open("rb") as source, encrypted.open("wb" if reserved else "xb") as target:
         target.write(HEADER + salt + nonce)
         for block in iter(lambda: source.read(CHUNK), b""):
             target.write(encryptor.update(block))
@@ -151,8 +151,9 @@ def main() -> None:
                                    stdout=sink, stderr=subprocess.DEVNULL, check=False)
         if check.returncode:
             raise RuntimeError("pg_restore archive-list validation failed")
-        owned_partial = True  # Created exclusively by encrypt_dump("xb"); cleanup even on exception.
-        encrypt_dump(plain, partial, password)
+        partial.touch(exist_ok=False)  # Reserve a unique file; refuse any collision.
+        owned_partial = True
+        encrypt_dump(plain, partial, password, reserved=True)
         # Atomic create-if-absent on the same volume: refuse overwrites (no os.replace).
         os.link(partial, encrypted)
         partial.unlink()
