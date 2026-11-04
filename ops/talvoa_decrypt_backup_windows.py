@@ -17,7 +17,7 @@ import sys
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
-from talvoa_secure_backup_windows import HEADER, CHUNK
+from talvoa_secure_backup_windows import HEADER, CHUNK, require_clients
 
 
 def decrypt_archive(archive: pathlib.Path, passphrase: str, output: pathlib.Path | None) -> None:
@@ -72,7 +72,10 @@ def main() -> None:
     parser.add_argument("archive", type=pathlib.Path)
     parser.add_argument("--output", type=pathlib.Path, help="Explicit path for plaintext dump (sensitive)")
     args = parser.parse_args()
+    clients = require_clients() if args.output else {}
     if args.output:
+        if os.name == "nt" and os.environ.get("TALVOA_BACKUP_ACL_VERIFIED") != "yes":
+            raise RuntimeError("Private Windows ACL must be verified before plaintext decryption")
         print("WARNING: --output writes SENSITIVE PLAINTEXT customer data.")
         if input("Type DECRYPT to proceed: ") != "DECRYPT":
             raise RuntimeError("Cancelled")
@@ -80,7 +83,7 @@ def main() -> None:
     decrypt_archive(args.archive, password, args.output)
     if args.output:
         with open(os.devnull, "wb") as output:
-            check = subprocess.run(["pg_restore", "--list", str(args.output)],
+            check = subprocess.run([clients["pg_restore"], "--list", str(args.output)],
                                    stdout=output, stderr=subprocess.DEVNULL, check=False)
         if check.returncode:
             raise RuntimeError("pg_restore cannot read decrypted archive")
