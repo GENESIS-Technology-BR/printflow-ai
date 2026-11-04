@@ -47,6 +47,16 @@ class BackupOfflineTests(unittest.TestCase):
             with self.subTest(url=url), self.assertRaises(ValueError):
                 module.parse_source(url)
 
+    def test_exposed_old_credential_is_rejected(self):
+        # The prior credential was exposed; never accept it as a backup source.
+        old = (
+            "postgresql://talvoa_supritech_homolog_db_user:synthetic-only@"
+            "dpg-db7rsb25b2lc739g0img-a.oregon-postgres.render.com/"
+            "talvoa_supritech_homolog_db"
+        )
+        with self.assertRaises(ValueError):
+            module.parse_source(old)
+
     def test_clients_must_both_be_postgresql_16(self):
         with mock.patch.object(module.shutil, "which", return_value=sys.executable):
             with mock.patch.object(module.subprocess, "run") as run:
