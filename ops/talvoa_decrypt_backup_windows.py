@@ -17,7 +17,7 @@ import sys
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
-from talvoa_secure_backup_windows import HEADER, CHUNK, require_clients, verify_private_windows_acl
+from talvoa_secure_backup_windows import HEADER, CHUNK, require_clients, verify_private_windows_acl, read_secret
 
 
 def decrypt_archive(archive: pathlib.Path, passphrase: str, output: pathlib.Path | None) -> None:
@@ -80,7 +80,7 @@ def main() -> None:
         print("WARNING: --output writes SENSITIVE PLAINTEXT customer data.")
         if input("Type DECRYPT to proceed: ") != "DECRYPT":
             raise RuntimeError("Cancelled")
-    password = getpass.getpass("Backup passphrase (hidden input): ")
+    password = read_secret("Backup passphrase (hidden input): ")
     decrypt_archive(args.archive, password, args.output)
     if args.output:
         with open(os.devnull, "wb") as output:
