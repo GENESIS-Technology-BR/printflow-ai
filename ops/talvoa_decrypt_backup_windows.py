@@ -35,10 +35,12 @@ def decrypt_archive(archive: pathlib.Path, passphrase: str, output: pathlib.Path
         key = Scrypt(salt=salt, length=32, n=2**15, r=8, p=1).derive(passphrase.encode("utf-8"))
         decryptor = Cipher(algorithms.AES(key), modes.GCM(nonce, tag)).decryptor()
         partial = output.with_suffix(output.suffix + ".partial") if output else None
+        owned_partial = False
         try:
             if partial and (partial.exists() or output.exists()):
                 raise FileExistsError("Destination already exists")
             target = partial.open("xb") if partial else None
+            owned_partial = target is not None
             try:
                 remaining = payload_bytes
                 while remaining:
@@ -56,9 +58,12 @@ def decrypt_archive(archive: pathlib.Path, passphrase: str, output: pathlib.Path
                 if target:
                     target.close()
             if partial:
-                os.replace(partial, output)
+                # Link is atomic and fails if output exists; never replace prior backup.
+                os.link(partial, output)
+                partial.unlink()
+                owned_partial = False
         finally:
-            if partial and partial.exists():
+            if owned_partial and partial and partial.exists():
                 partial.unlink()
 
 
