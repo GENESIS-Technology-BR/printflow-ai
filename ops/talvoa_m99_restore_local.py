@@ -48,7 +48,7 @@ def validate_archive(
     import re
     if path.is_symlink() or not path.is_file():
         raise RuntimeError("Arquivo ausente ou link simbolico: use download local regular")
-    if not re.fullmatch(r"supritech-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{16}\\.dump\\.aesgcm", path.name):
+    if not re.fullmatch(r"supritech-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{16}\.dump\.aesgcm", path.name):
         raise RuntimeError("Nome do backup nao corresponde ao formato SupriTech esperado")
     if not re.fullmatch(r"[0-9a-fA-F]{64}", expected_sha256):
         raise ValueError("SHA-256 esperado invalido")
