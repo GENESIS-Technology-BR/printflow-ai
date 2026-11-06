@@ -118,6 +118,30 @@ def pg_environment(envvars: dict[str, str]) -> dict[str, str]:
     return env
 
 
+def publish_exclusive(source: pathlib.Path, destination: pathlib.Path) -> None:
+    """Publish a completed file without hardlinks, overwrite, or partial output.
+
+    Destination is created with exclusive 'xb' mode, which rejects pre-existing
+    regular files and symlinks on Windows too. An incomplete destination created
+    by this invocation is cleaned up on failure; existing files stay untouched.
+    Source is intentionally not deleted here so callers can control cleanup.
+    """
+    created = False
+    try:
+        with destination.open("xb") as target:
+            created = True
+            with source.open("rb") as origin:
+                shutil.copyfileobj(origin, target, CHUNK)
+            target.flush()
+            os.fsync(target.fileno())
+        if destination.stat().st_size != source.stat().st_size:
+            raise RuntimeError("Published file size mismatch")
+    except BaseException:
+        if created:
+            destination.unlink(missing_ok=True)
+        raise
+
+
 def encrypt_dump(plain: pathlib.Path, encrypted: pathlib.Path, password: str, *, reserved: bool = False) -> None:
     from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
     from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -223,8 +247,9 @@ def main() -> None:
         partial.touch(exist_ok=False)  # Reserve a unique file; refuse any collision.
         owned_partial = True
         encrypt_dump(plain, partial, password, reserved=True)
-        # Atomic create-if-absent on the same volume: refuse overwrites (no os.replace).
-        os.link(partial, encrypted)
+        # Avoid Windows hardlink permissions errors. Exclusive 'xb' publication
+        # rejects existing names and cleans up an incomplete destination on failure.
+        publish_exclusive(partial, encrypted)
         partial.unlink()
         owned_partial = False
         with encrypted.open("rb") as stream:
