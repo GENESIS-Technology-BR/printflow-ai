@@ -40,12 +40,21 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def validate_archive(path: Path) -> None:
+def validate_archive(
+    path: Path, *,
+    expected_sha256: str = EXPECTED_SHA,
+    expected_size: int = EXPECTED_BYTES,
+) -> None:
+    import re
     if path.is_symlink() or not path.is_file():
         raise RuntimeError("Arquivo ausente ou link simbolico: use download local regular")
-    if path.name != EXPECTED_NAME:
-        raise RuntimeError("Nome do arquivo diferente do backup auditado")
-    if path.stat().st_size != EXPECTED_BYTES or sha256(path).lower() != EXPECTED_SHA:
+    if not re.fullmatch(r"supritech-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{16}\\.dump\\.aesgcm", path.name):
+        raise RuntimeError("Nome do backup nao corresponde ao formato SupriTech esperado")
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", expected_sha256):
+        raise ValueError("SHA-256 esperado invalido")
+    if expected_size <= 64:
+        raise ValueError("Tamanho esperado invalido")
+    if path.stat().st_size != expected_size or sha256(path).lower() != expected_sha256.lower():
         raise RuntimeError("Backup nao corresponde ao tamanho/SHA-256 auditado")
 
 
@@ -152,12 +161,18 @@ def main() -> int:
     p = argparse.ArgumentParser(description="TALVOA M99: recuperacao real em banco LOCAL descartavel")
     p.add_argument("--backup", required=True, type=Path, help="Arquivo AESGCM baixado do OneDrive")
     p.add_argument("--pg-bin", help="Diretorio contendo PostgreSQL 16 initdb, pg_ctl, pg_restore e psql")
+    p.add_argument("--expected-sha256", default=EXPECTED_SHA,
+                   help="SHA-256 do novo .aesgcm obtido do manifesto validado; omitir para backup antigo")
+    p.add_argument("--expected-size", default=EXPECTED_BYTES, type=int,
+                   help="Tamanho em bytes do novo .aesgcm; omitir para backup antigo")
     args = p.parse_args()
-    validate_archive(args.backup)
+    if (args.expected_sha256 != EXPECTED_SHA) != (args.expected_size != EXPECTED_BYTES):
+        raise ValueError("Para backup novo, informe SHA-256 e tamanho juntos")
+    validate_archive(args.backup, expected_sha256=args.expected_sha256, expected_size=args.expected_size)
     bins = pg_binaries(args.pg_bin)
     check_pg16(bins)
     verify_local_listener()
-    print("BACKUP VALIDADO: 55.687 bytes, SHA-256 correspondente.")
+    print("BACKUP VALIDADO: tamanho", args.expected_size, "bytes, SHA-256 correspondente.")
     print("Destino: SOMENTE 127.0.0.1:" + str(PORT) + "/" + DB)
     print("A restauracao ira criar e remover um cluster descartavel e plaintext temporario.")
     if input("Digite RESTAURAR LOCAL para autorizar: ").strip() != "RESTAURAR LOCAL":
@@ -204,7 +219,7 @@ def main() -> int:
         print("Tabelas de usuario:", tables)
         print("Total de linhas (tabelas de usuario):", rows)
         print("Arquivo: ", args.backup.name)
-        print("SHA-256:", EXPECTED_SHA)
+        print("SHA-256:", args.expected_sha256.lower())
         return 0
     finally:
         secret = ""
