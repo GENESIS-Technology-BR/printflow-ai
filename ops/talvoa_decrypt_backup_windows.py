@@ -17,7 +17,7 @@ import sys
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
-from talvoa_secure_backup_windows import HEADER, CHUNK, require_clients, verify_private_windows_acl, read_secret
+from talvoa_secure_backup_windows import HEADER, CHUNK, require_clients, verify_private_windows_acl, read_secret, publish_exclusive
 
 
 def decrypt_archive(archive: pathlib.Path, passphrase: str, output: pathlib.Path | None) -> None:
@@ -58,8 +58,9 @@ def decrypt_archive(archive: pathlib.Path, passphrase: str, output: pathlib.Path
                 if target:
                     target.close()
             if partial:
-                # Link is atomic and fails if output exists; never replace prior backup.
-                os.link(partial, output)
+                # Exclusive publish on Windows without hardlink privileges.
+                # File is already AES-GCM authenticated before publication.
+                publish_exclusive(partial, output)
                 partial.unlink()
                 owned_partial = False
         finally:
