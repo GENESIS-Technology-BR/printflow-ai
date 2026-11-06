@@ -22,6 +22,30 @@ class Mission99RestoreSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "tamanho/SHA"):
                 module.validate_archive(f)
 
+    def test_new_archive_with_separate_verified_hash_and_size(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as td:
+            name = "supritech-20261106T180000Z-0123456789abcdef.dump.aesgcm"
+            path = Path(td) / name
+            payload = b"synthetic-encrypted-file-placeholder" * 4
+            path.write_bytes(payload)
+            digest = hashlib.sha256(payload).hexdigest()
+            module.validate_archive(path, expected_sha256=digest, expected_size=len(payload))
+            with self.assertRaisesRegex(RuntimeError, "tamanho/SHA"):
+                module.validate_archive(path, expected_sha256="0" * 64,
+                                        expected_size=len(payload))
+            with self.assertRaisesRegex(RuntimeError, "tamanho/SHA"):
+                module.validate_archive(path, expected_sha256=digest,
+                                        expected_size=len(payload) + 1)
+
+    def test_archive_rejects_unexpected_filename(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "customer-unknown.dump.aesgcm"
+            path.write_bytes(b"a" * 128)
+            with self.assertRaisesRegex(RuntimeError, "Nome"):
+                module.validate_archive(path, expected_sha256="f" * 64,
+                                        expected_size=128)
+
     def test_libpq_configuration_is_local_only(self):
         inherited = {"PGHOSTADDR": "203.0.113.12", "PGSERVICE": "remote",
                      "PGOPTIONS": "-c some=setting", "PATH": "unchanged"}
