@@ -232,6 +232,22 @@ def main() -> None:
             for block in iter(lambda: stream.read(CHUNK), b""):
                 digest_hasher.update(block)
             digest = digest_hasher.hexdigest()
+        # Verify a NEW, independently entered passphrase against the actual
+        # completed ciphertext. This catches an incorrectly remembered/stored
+        # passphrase before anyone treats the archive as recoverable.
+        from talvoa_decrypt_backup_windows import decrypt_archive
+        print("Re-enter the passphrase from your password manager to prove recovery.")
+        reread_password = read_secret("BACKUP recovery passphrase (hidden input): ")
+        try:
+            decrypt_archive(encrypted, reread_password, None)
+        except Exception:
+            raise RuntimeError(
+                "Backup recovery check FAILED: passphrase did not authenticate archive; "
+                "encrypted file preserved, DO NOT declare backup recoverable."
+            ) from None
+        finally:
+            reread_password = ""
+        print("PASS: independently re-entered passphrase authenticates saved archive.")
         print("ENCRYPTED BACKUP READY:", encrypted)
         print("Encrypted archive SHA256:", digest)
         print("IMPORTANT: copy .aesgcm file to protected independent cloud storage.")
