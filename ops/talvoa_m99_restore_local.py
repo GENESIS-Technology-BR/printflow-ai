@@ -209,15 +209,20 @@ def main() -> int:
     finally:
         secret = ""
         if folder is not None:
-            if cluster_started:
+            cluster_path = folder / "pgdata"
+            # pg_ctl may start postgres and then return an error. Always check
+            # our own cluster PID file, even if start did not report success.
+            potentially_running = cluster_started or (cluster_path / "postmaster.pid").exists()
+            safely_stopped = not potentially_running
+            if potentially_running:
                 try:
-                    run([str(bins["pg_ctl"]), "-D", str(folder / "pgdata"),
+                    run([str(bins["pg_ctl"]), "-D", str(cluster_path),
                          "-m", "immediate", "-w", "stop"], timeout=45)
-                    cluster_started = False
+                    safely_stopped = True
                 except Exception:
                     print("ALERTA: cluster nao parou; dados temporarios podem permanecer!",
                           file=sys.stderr)
-            if not cluster_started:
+            if safely_stopped:
                 try:
                     shutil.rmtree(folder)
                 except Exception:
