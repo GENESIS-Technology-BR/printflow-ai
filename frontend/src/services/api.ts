@@ -503,3 +503,24 @@ export async function createControlCenterClientPreview(
     { method: "POST" },
   );
 }
+
+
+export type OperationalStatusResponse = {
+  tenant_id: number;
+  agent_status: "online" | "delayed" | "offline" | "unknown";
+  cards: { total: number; online: number; attention: number; critical: number; unknown: number };
+  printers: Array<{
+    id: number | null;
+    uuid: string | null;
+    name: string;
+    ip: string | null;
+    operational_status: "online" | "delayed" | "offline" | "unknown";
+    last_seen: string | null;
+  }>;
+  policy_version: string;
+  generated_at: string;
+};
+
+export async function getDashboardOperationalStatus(): Promise<OperationalStatusResponse> {
+  return request<OperationalStatusResponse>("/api/v1/dashboard/operational-status");
+}
