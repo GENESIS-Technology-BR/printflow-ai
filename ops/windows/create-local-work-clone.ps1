@@ -45,7 +45,10 @@ try {
     $started = $true
 
     # pg_isready is not sufficient to identify the intended cluster; verify settings via authenticated connection.
-    Invoke-Pg "psql.exe" @("-X","-W","-v","ON_ERROR_STOP=1","-h","127.0.0.1","-p","$port","-U",$user,"-d","postgres","-Atc","SELECT CASE WHEN current_setting('port') = '$port' AND current_setting('listen_addresses') = '127.0.0.1' THEN 1 ELSE 1/0 END;")
+    $identity = & (Join-Path $pg "psql.exe") -X -W -v ON_ERROR_STOP=1 -h 127.0.0.1 -p $port -U $user -d postgres -Atc "SELECT current_setting('port') = '$port' AND current_setting('listen_addresses') = '127.0.0.1' AND current_user = '$user';"
+    if ($LASTEXITCODE -ne 0 -or ($identity | Select-Object -Last 1) -ne "t") {
+        throw "Work PostgreSQL identity check failed. Refusing to proceed."
+    }
 
     Invoke-Pg "createdb.exe" @("-h","127.0.0.1","-p","$port","-U",$user,"--maintenance-db=postgres","--template=template0",$db)
 
