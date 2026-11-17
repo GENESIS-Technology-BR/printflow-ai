@@ -145,5 +145,5 @@ BEGIN
   THEN
     RAISE EXCEPTION 'Missing required partner integration columns';
   END IF;
-  RAISE NOTICE 'TALVOA local partner migration structurally validated: 9 tables / 1303 rows';
+  -- No RAISE NOTICE: Windows PowerShell 5.1 may treat psql stderr as a terminating error.
 END $$;
