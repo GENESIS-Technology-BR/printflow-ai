@@ -15,10 +15,36 @@ BEGIN
   THEN
     RAISE EXCEPTION 'Unsafe TALVOA local migration target';
   END IF;
+  SELECT count(*) INTO tcount
+    FROM information_schema.tables
+    WHERE table_schema='public' AND table_type='BASE TABLE'
+      AND table_name IN ('companies_v2','users_v2','company_units',
+                         'company_sectors','printers','printer_usage_daily',
+                         'operational_alerts');
+  IF tcount <> 7 THEN
+    RAISE EXCEPTION 'Historical base table names differ. Found % of expected 7',tcount;
+  END IF;
   SELECT count(*) INTO tcount FROM information_schema.tables
     WHERE table_schema='public' AND table_type='BASE TABLE';
   IF tcount <> 7 THEN
-    RAISE EXCEPTION 'Expected 7 public base tables before migration; got %',tcount;
+    RAISE EXCEPTION 'Unexpected additional public tables; found %',tcount;
+  END IF;
+  -- Match the user's 17/11/2026 schema inventory before doing any DDL.
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('companies_v2',18), ('company_sectors',7),('company_units',6),
+      ('operational_alerts',14),('printer_usage_daily',23),
+      ('printers',32),('users_v2',10)
+    ) AS expected(name, columns_expected)
+    LEFT JOIN (
+      SELECT table_name, count(*)::integer AS columns_actual
+        FROM information_schema.columns
+       WHERE table_schema='public'
+       GROUP BY table_name
+    ) AS actual ON actual.table_name=expected.name
+    WHERE actual.columns_actual IS DISTINCT FROM expected.columns_expected
+  ) THEN
+    RAISE EXCEPTION 'Historical schema columns changed since audit. Inspect before DDL.';
   END IF;
   SELECT count(*) INTO nbig FROM public.companies_v2;
   IF nbig <> 3 THEN RAISE EXCEPTION 'companies_v2 unexpected count: %', nbig; END IF;
@@ -83,3 +109,41 @@ UNION ALL SELECT 'printer_usage_daily',count(*) FROM public.printer_usage_daily
 UNION ALL SELECT 'operational_alerts',count(*) FROM public.operational_alerts
 UNION ALL SELECT 'partners',count(*) FROM public.partners
 UNION ALL SELECT 'partner_memberships',count(*) FROM public.partner_memberships;
+
+-- Fail closed if any expected structure/count is absent after this migration.
+DO $$
+DECLARE
+  table_count integer;
+  total_rows bigint;
+BEGIN
+  SELECT count(*) INTO table_count
+    FROM information_schema.tables
+   WHERE table_schema='public' AND table_type='BASE TABLE';
+  IF table_count <> 9 THEN
+    RAISE EXCEPTION 'Expected 9 tables after migration, found %', table_count;
+  END IF;
+  SELECT
+    (SELECT count(*) FROM public.companies_v2) +
+    (SELECT count(*) FROM public.users_v2) +
+    (SELECT count(*) FROM public.company_units) +
+    (SELECT count(*) FROM public.company_sectors) +
+    (SELECT count(*) FROM public.printers) +
+    (SELECT count(*) FROM public.printer_usage_daily) +
+    (SELECT count(*) FROM public.operational_alerts) +
+    (SELECT count(*) FROM public.partners) +
+    (SELECT count(*) FROM public.partner_memberships)
+  INTO total_rows;
+  IF total_rows <> 1303 THEN
+    RAISE EXCEPTION 'Unexpected total row count after migration: %',total_rows;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema='public' AND table_name='users_v2' AND column_name='username')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns
+                    WHERE table_schema='public' AND table_name='companies_v2' AND column_name='partner_id')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns
+                    WHERE table_schema='public' AND table_name='companies_v2' AND column_name='customer_portal_enabled')
+  THEN
+    RAISE EXCEPTION 'Missing required partner integration columns';
+  END IF;
+  RAISE NOTICE 'TALVOA local partner migration structurally validated: 9 tables / 1303 rows';
+END $$;
