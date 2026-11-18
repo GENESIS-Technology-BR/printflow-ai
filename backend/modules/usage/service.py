@@ -105,16 +105,26 @@ def record_daily_printer_usage(
         last_anomaly_type = None
 
         if previous is not None:
-            delta = calculate_counter_delta(
-                previous.closing_page_count,
-                current_count,
-            )
-            if delta.anomaly_type is None:
-                opening_count = previous.closing_page_count
-                pages_printed = delta.pages
-            else:
+            # A fresh Agent reading after historical downtime is NOT today's
+            # consumption. Preserve the current absolute counter while avoiding
+            # a false daily/billing spike attributed to the recovery date.
+            # Unobserved delta remains unavailable for per-day attribution.
+            if (day - previous.usage_date).days > 1:
+                opening_count = current_count
+                pages_printed = 0
                 anomaly_count = 1
-                last_anomaly_type = delta.anomaly_type
+                last_anomaly_type = "history_gap"
+            else:
+                delta = calculate_counter_delta(
+                    previous.closing_page_count,
+                    current_count,
+                )
+                if delta.anomaly_type is None:
+                    opening_count = previous.closing_page_count
+                    pages_printed = delta.pages
+                else:
+                    anomaly_count = 1
+                    last_anomaly_type = delta.anomaly_type
 
         usage = PrinterUsageDaily(
             company_id=printer.company_id,

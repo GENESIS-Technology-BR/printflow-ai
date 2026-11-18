@@ -595,6 +595,40 @@ class PrinterIntelligenceEngine:
         # Criado ANTES de qualquer regra de fabricante.
         candidates: dict[str, int] = {}
 
+        # HP Laser MFP 432: no heuristic "largest counter" and no guessed
+        # additions. Use the exact lifetime marker only if the matching
+        # counter unit explicitly says impressions(7), per RFC 3805.
+        # Fails closed: an unavailable/mismatched unit is NOT billing data.
+        hp_identity = " ".join(
+            str(raw_data.get(field) or "")
+            for field in ("descricao", "nome_dispositivo", "nome")
+        ).lower()
+        if vendor_key == "hp" and re.search(r"laser\s+mfp\s+432", hp_identity):
+            life_oid = PRINTER_OIDS["contador_paginas"]
+            unit_oid = "1.3.6.1.2.1.43.10.2.1.3.1.1"
+            candidates[life_oid] = generic_count if generic_count is not None else -1
+            unit_result = await self.get_value(
+                ip_address=ip_address,
+                oid=unit_oid,
+            )
+            unit = (
+                parser(unit_result.value)
+                if getattr(unit_result, "success", False)
+                else None
+            )
+            candidates[unit_oid] = unit if unit is not None else -1
+            if generic_count is None or generic_count < 0 or unit != 7:
+                return (
+                    None,
+                    "hp432-counter-unit-not-verified",
+                    candidates,
+                )
+            return (
+                generic_count,
+                "hp432-prt-marker-impressions",
+                candidates,
+            )
+
         # ====================================================
         # KYOCERA
         #

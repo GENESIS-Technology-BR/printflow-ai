@@ -1,6 +1,8 @@
 import os
 from dataclasses import dataclass
 
+from backend.app.config.local_guard import LOCAL_ENVIRONMENT, validate_local_database_url
+
 
 def _env_bool(name: str, default: bool) -> bool:
     value = os.getenv(name)
@@ -22,6 +24,10 @@ def _env_bool_compat(primary: str, legacy: str, default: bool) -> bool:
 def _database_url() -> str:
     environment = os.getenv("ENVIRONMENT", "development").strip().lower()
     value = os.getenv("DATABASE_URL", "").strip()
+
+    if environment == LOCAL_ENVIRONMENT:
+        validate_local_database_url(value)
+        return value
 
     if environment in {"production", "staging", "homologation"}:
         if not value:

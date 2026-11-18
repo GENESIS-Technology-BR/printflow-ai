@@ -1,0 +1,26 @@
+name: TALVOA Local Guard Unit Tests
+
+on:
+  pull_request:
+    paths:
+      - 'backend/app/config/local_guard.py'
+      - 'backend/app/config/settings.py'
+      - 'backend/main.py'
+      - 'tests/test_local_homologation_guard.py'
+      - '.github/workflows/local-guard-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify local homologation DB guard without any database connection
+        run: python -m unittest discover -s tests -p 'test_local_homologation_guard.py' -v

@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.app.config.settings import settings
+from backend.app.config.local_guard import LOCAL_ENVIRONMENT, should_run_startup_migrations
 from backend.app.database.connection import Base, engine
 from backend.app.database import models as database_models
 from backend.app.database.migrations import (
@@ -41,8 +42,9 @@ except ImportError:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # SupriTech migrations run separately, never in HTTP startup.
-    if (engine.url.database or "").lower() != "talvoa_supritech_homolog_db":
+    # Local homologation must never mutate schema or customer data at HTTP startup.
+    # Run schema changes explicitly on a disposable clone after review.
+    if should_run_startup_migrations(settings.environment, engine.url.database or ""):
         Base.metadata.create_all(bind=engine)
         ensure_printer_columns(engine)
         ensure_printer_company_ip_constraint(engine)
@@ -52,7 +54,7 @@ async def lifespan(app: FastAPI):
         ensure_partner_company_columns(engine)
         clean_descriptive_printer_serials(engine)
         configure_guerra_pilot_financials(engine)
-    if os.getenv("TALVOA_ALLOW_STAGING_BOOTSTRAP") == "true":
+    if settings.environment.strip().lower() != LOCAL_ENVIRONMENT and os.getenv("TALVOA_ALLOW_STAGING_BOOTSTRAP") == "true":
         from backend.scripts.bootstrap_staging_admin import main as bootstrap_staging_admin
         bootstrap_staging_admin()
     yield
