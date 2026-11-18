@@ -10,7 +10,11 @@ from __future__ import annotations
 
 import asyncio
 import os
+import sys
+from pathlib import Path
 from datetime import datetime, timezone
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'agent' / 'python'))
 
 from snmp.engine import PrinterIntelligenceEngine
 from snmp.oids import PRINTER_OIDS
