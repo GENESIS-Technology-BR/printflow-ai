@@ -603,7 +603,7 @@ class PrinterIntelligenceEngine:
             str(raw_data.get(field) or "")
             for field in ("descricao", "nome_dispositivo", "nome")
         ).lower()
-        if vendor_key == "hp" and re.search(r"laser\\s+mfp\\s+432", hp_identity):
+        if vendor_key == "hp" and re.search(r"laser\s+mfp\s+432", hp_identity):
             life_oid = PRINTER_OIDS["contador_paginas"]
             unit_oid = "1.3.6.1.2.1.43.10.2.1.3.1.1"
             candidates[life_oid] = generic_count if generic_count is not None else -1
